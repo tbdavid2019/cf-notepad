@@ -1,0 +1,8 @@
+name = "cloud-notepad"
+main = "src/index.js"
+compatibility_date = "2022-05-13"
+
+kv_namespaces = [
+  { binding = "NOTES", id = "創建後取回ID" },
+  { binding = "SHARE", id = "創建後取回ID" }
+]
