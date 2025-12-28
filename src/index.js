@@ -24,7 +24,29 @@ router.get(ADMIN_PATH, async (request) => {
         // Logged in, list notes
         try {
             const list = await NOTES.list()
-            return returnPage('Admin', { lang, notes: list.keys })
+
+            // Fetch content for each note to extract title
+            const notesWithTitles = await Promise.all(
+                list.keys.map(async (note) => {
+                    try {
+                        const value = await NOTES.get(note.name)
+                        const firstLine = value ? value.split('\n')[0] : ''
+                        const title = note.metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || ''
+
+                        return {
+                            ...note,
+                            extractedTitle: title
+                        }
+                    } catch (e) {
+                        return {
+                            ...note,
+                            extractedTitle: ''
+                        }
+                    }
+                })
+            )
+
+            return returnPage('Admin', { lang, notes: notesWithTitles })
         } catch (e) {
             return returnPage('Admin', { lang, error: 'Failed to retrieve notes: ' + e.message })
         }
@@ -36,10 +58,41 @@ router.get(ADMIN_PATH, async (request) => {
 router.post(ADMIN_PATH, async (request) => {
     const lang = getI18n(request)
     try {
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+
+        // Check if it's JSON request (batch delete)
+        if (request.headers.get('Content-Type') === 'application/json') {
+            if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+                const { action, paths } = await request.json()
+
+                if (action === 'batch-delete' && Array.isArray(paths)) {
+                    try {
+                        // Delete all selected notes
+                        await Promise.all(paths.map(async (path) => {
+                            await NOTES.delete(path)
+                            const md5 = await MD5(path)
+                            await SHARE.delete(md5)
+                        }))
+
+                        return new Response(JSON.stringify({ success: true }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                    } catch (e) {
+                        return new Response(JSON.stringify({ success: false, message: e.message }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                    }
+                }
+            }
+            return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
+                headers: { 'Content-Type': 'application/json' }
+            })
+        }
+
+        // Original formData logic
         const formData = await request.formData()
         const password = formData.get('password')
         const action = formData.get('action')
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
         // Login Logic
         if (password === ADMIN_PW && ADMIN_PW) {
@@ -107,9 +160,13 @@ router.get('/share/:md5', async (request) => {
     if (!!path) {
         const { value, metadata } = await queryNote(path)
 
+        // Extract title from first line of content, remove markdown # symbols
+        const firstLine = value.split('\n')[0] || ''
+        const title = metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || decodeURIComponent(path)
+
         return returnPage('Share', {
             lang,
-            title: decodeURIComponent(path),
+            title,
             content: value,
             ext: metadata,
         })
@@ -122,11 +179,14 @@ router.get('/:path', async (request) => {
     const lang = getI18n(request)
 
     const { path } = request.params
-    const title = decodeURIComponent(path)
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
     const { value, metadata } = await queryNote(path)
+
+    // Extract title from first line of content, remove markdown # symbols
+    const firstLine = value.split('\n')[0] || ''
+    const title = metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || decodeURIComponent(path)
 
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null

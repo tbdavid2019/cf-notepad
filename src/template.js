@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { CDN_PREFIX, SUPPORTED_LANG } from './constant'
+import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from './constant'
 
 dayjs.extend(relativeTime)
 
@@ -18,7 +18,14 @@ const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path })
                 <button class="opt-button opt-pw" data-type="edit">${pw ? SUPPORTED_LANG[lang].changePW : SUPPORTED_LANG[lang].setPW}</button>
                 <button class="opt-button opt-pw-view" data-type="view">${vpw ? SUPPORTED_LANG[lang].changeViewPW : SUPPORTED_LANG[lang].setViewPW}</button>
                 ${SWITCHER('Markdown', mode === 'md', 'opt-mode')}
-                ${SWITCHER(SUPPORTED_LANG[lang].share, share, 'opt-share')}
+                ${share && shareId ? `
+                    <div class="opt-share-link" style="display:flex;align-items:center;gap:5px;background:#e8f5e9;padding:2px 8px;border-radius:4px;border:1px solid #4caf50;">
+                        <span style="font-size:12px;color:#2e7d32;font-weight:500;">✓ 已發布:</span>
+                        <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" style="border:none;background:transparent;width:200px;font-size:12px;color:#1976d2;font-weight:500;">
+                        <button id="copy-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.8;padding:2px 6px;font-size:16px;" title="Copy">📋</button>
+                        <button class="unpublish-btn" style="border:none;background:#ff5722;color:white;cursor:pointer;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:4px;" title="取消發布">✕</button>
+                    </div>
+                ` : SWITCHER(SUPPORTED_LANG[lang].share, share, 'opt-share')}
             </div>
             ` : (path ? `<a href="/${path}" class="opt-button" style="text-decoration:none;">EDIT</a>` : '')
     }
@@ -47,7 +54,7 @@ const HTML = ({ lang, title, content, ext = {}, tips, isEdit, showPwPrompt, path
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - ${isEdit ? 'Edit' : 'View'}</title>
+    <title>${title} - ${APP_NAME}</title>
     <style>
 /* Reset & Base */
 body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; overflow: hidden; }
@@ -521,7 +528,54 @@ textarea#contents {
             }
         }
 
-
+        // Handle published share URL
+        const $shareUrlInput = document.querySelector('.share-url-input');
+        const $shareCopyBtn = document.querySelector('#copy-share-btn');
+        const $unpublishBtn = document.querySelector('.unpublish-btn');
+        
+        if ($shareUrlInput && $shareCopyBtn) {
+            // Update input with full URL
+            try {
+                const currentValue = $shareUrlInput.getAttribute('value') || $shareUrlInput.value;
+                $shareUrlInput.value = window.location.origin + currentValue;
+            } catch(e) {
+                console.error('Failed to update share URL:', e);
+            }
+            
+            // Copy button handler
+            $shareCopyBtn.addEventListener('click', async () => {
+                try {
+                    await clipboardCopy($shareUrlInput.value);
+                    const originalText = $shareCopyBtn.innerText;
+                    $shareCopyBtn.innerText = '✅';
+                    setTimeout(() => $shareCopyBtn.innerText = originalText, 2000);
+                } catch (e) {
+                    alert('Copy failed');
+                }
+            });
+        }
+        
+        // Unpublish button handler
+        if ($unpublishBtn) {
+            $unpublishBtn.addEventListener('click', () => {
+                if (!confirm('確定要取消發布此分享連結嗎？')) return;
+                
+                const path = window.location.pathname;
+                window.fetch(path + '/setting', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ share: false }),
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.err !== 0) {
+                        return errHandle(res.msg);
+                    }
+                    window.location.reload();
+                })
+                .catch(err => errHandle(err));
+            });
+        }
 
         if ($shareBtn) {
             $shareBtn.onclick = function (e) {
@@ -621,20 +675,39 @@ export const Admin = ({ lang, notes, error }) => `
                 <h1>Cloud Notepad Admin</h1>
                 ${error ? `<div class="error">${error}</div>` : ''}
                 ${notes ? `
+    <div style="margin-bottom: 15px;">
+        <button id="batch-delete-btn" onclick="batchDelete()" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: none;">
+            🗑 刪除選中項
+        </button>
+        <span id="selected-count" style="margin-left: 10px; color: #666; font-size: 14px;"></span>
+    </div>
     <table id="notesTable">
         <thead>
             <tr>
-                <th onclick="sortTable(0)">Title / URL</th>
-                <th onclick="sortTable(1)">Views</th>
-                <th onclick="sortTable(2)">Password</th>
-                <th onclick="sortTable(3)">Last Modified</th>
-                <th>Action</th>
+                <th style="width: 40px; cursor: default;">
+                    <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="cursor: pointer;">
+                </th>
+                <th onclick="sortTable(1)">Title / URL</th>
+                <th onclick="sortTable(2)">Views</th>
+                <th onclick="sortTable(3)">Password</th>
+                <th onclick="sortTable(4)">Last Modified</th>
+                <th style="cursor: default;">Action</th>
             </tr>
         </thead>
         <tbody>
             ${notes.map(n => `
             <tr>
-                <td data-val="${decodeURIComponent(n.name)}"><a href="/${n.name}" target="_blank">${decodeURIComponent(n.name)}</a></td>
+                <td>
+                    <input type="checkbox" class="note-checkbox" value="${n.name}" onchange="updateBatchDeleteButton()" style="cursor: pointer;">
+                </td>
+                <td data-val="${n.extractedTitle || decodeURIComponent(n.name)}">
+                    ${n.extractedTitle ? `
+                        <a href="/${n.name}" target="_blank" style="font-weight:500;">${n.extractedTitle}</a>
+                        <br><small style="color:#888;">/${decodeURIComponent(n.name)}</small>
+                    ` : `
+                        <a href="/${n.name}" target="_blank">${decodeURIComponent(n.name)}</a>
+                    `}
+                </td>
                 <td data-val="${n.metadata?.views || 0}">${n.metadata?.views || 0}</td>
                 <td data-val="${n.metadata?.pw ? 1 : 0}">${n.metadata?.pw ? '🔒 Yes' : '—'}</td>
                 <td data-val="${n.metadata?.updateAt || 0}">${n.metadata?.updateAt ? dayjs.unix(n.metadata.updateAt).fromNow() : '-'}</td>
@@ -650,6 +723,75 @@ export const Admin = ({ lang, notes, error }) => `
         </tbody>
     </table>
     <script>
+    function toggleSelectAll(source) {
+        checkboxes = document.querySelectorAll('.note-checkbox');
+        for(var i=0, n=checkboxes.length;i<n;i++) {
+            checkboxes[i].checked = source.checked;
+        }
+        updateBatchDeleteButton();
+    }
+
+    function updateBatchDeleteButton() {
+        const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
+        const batchDeleteBtn = document.getElementById('batch-delete-btn');
+        const selectedCountSpan = document.getElementById('selected-count');
+        
+        if (selectedCheckboxes.length > 0) {
+            batchDeleteBtn.style.display = 'inline-block';
+            selectedCountSpan.textContent = \`已選中 \${selectedCheckboxes.length} 項\`;
+        } else {
+            batchDeleteBtn.style.display = 'none';
+            selectedCountSpan.textContent = '';
+        }
+
+        const allCheckboxes = document.querySelectorAll('.note-checkbox');
+        const selectAllCheckbox = document.getElementById('select-all');
+        if (allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length) {
+            selectAllCheckbox.checked = true;
+        } else {
+            selectAllCheckbox.checked = false;
+        }
+    }
+
+    async function batchDelete() {
+        const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('請選擇要刪除的筆記。');
+            return;
+        }
+
+        if (!confirm(\`確定要刪除這 \${selectedCheckboxes.length} 個筆記嗎？\`)) {
+            return;
+        }
+
+        const pathsToDelete = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'batch-delete',
+                    paths: pathsToDelete,
+                }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('選中的筆記已成功刪除！');
+                location.reload();
+            } else {
+                alert('刪除失敗: ' + (result.message || '未知錯誤'));
+            }
+        } catch (error) {
+            console.error('Error during batch delete:', error);
+            alert('刪除過程中發生錯誤。');
+        }
+    }
+
     function sortTable(n) {
         var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
         table = document.getElementById("notesTable");

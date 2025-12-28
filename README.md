@@ -1,6 +1,6 @@
 # Cloud Notepad - 基於 Cloudflare Workers 的無伺服器記事本
-
-本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)，是一個運行在 Cloudflare Workers 上的輕量級雲端記事本。
+![alt text](image.png)
+是一個運行在 Cloudflare Workers 上的輕量級雲端記事本。
 
 它支援 Markdown 預覽、密碼保護、分享功能，以及一個隱藏的超級管理員介面。
 
@@ -230,3 +230,7 @@ wrangler deploy
 ### 5. Admin Interface
 
 Visit your configured `SCN_ADMIN_PATH` (e.g., `https://your-worker.workers.dev/secret-admin`), enter your `SCN_ADMIN_PW` to manage and delete notes.
+
+
+---
+本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)，
