@@ -128,14 +128,20 @@ router.get('/:path', async (request) => {
 
     const { value, metadata } = await queryNote(path)
 
-    // View Tracking
+    // Calculate shareId
+    const shareId = await MD5(path)
+
+    // View Tracking & Auto-Share
     if (request.event) {
-        request.event.waitUntil(NOTES.put(path, value, {
-            metadata: {
-                ...metadata,
-                views: (metadata.views || 0) + 1
-            }
-        }))
+        request.event.waitUntil(Promise.all([
+            NOTES.put(path, value, {
+                metadata: {
+                    ...metadata,
+                    views: (metadata.views || 0) + 1
+                }
+            }),
+            SHARE.put(shareId, path)
+        ]))
     }
 
     if (!metadata.pw) {
@@ -145,6 +151,8 @@ router.get('/:path', async (request) => {
             content: value,
             ext: metadata,
             enableR2: ENABLE_R2,
+            shareId,
+            path,
         })
     }
 
@@ -156,6 +164,8 @@ router.get('/:path', async (request) => {
             content: value,
             ext: metadata,
             enableR2: ENABLE_R2,
+            shareId,
+            path,
         })
     }
 
@@ -194,18 +204,19 @@ router.post('/:path/pw', async request => {
     const { path } = request.params
     if (request.headers.get('Content-Type') === 'application/json') {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const { passwd } = await request.json()
+        const { passwd, type } = await request.json()
 
         const { value, metadata } = await queryNote(path)
         const valid = await checkAuth(cookie, path)
 
         if (!metadata.pw || valid) {
+            const pwField = type === 'view' ? 'vpw' : 'pw'
             const pw = passwd ? await saltPw(passwd) : undefined
             try {
                 await NOTES.put(path, value, {
                     metadata: {
                         ...metadata,
-                        pw,
+                        [pwField]: pw,
                     },
                 })
 

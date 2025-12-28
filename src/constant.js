@@ -13,6 +13,7 @@ export const ADMIN_PW = SCN_ADMIN_PW
 export const SLUG_LENGTH = parseInt(SCN_SLUG_LENGTH || '3')
 export const ENABLE_R2 = SCN_ENABLE_R2 === '1'
 export const R2_DOMAIN = SCN_R2_DOMAIN
+export const APP_NAME = (typeof SCN_APP_NAME !== 'undefined') ? SCN_APP_NAME : 'david888 wiki'
 
 // supported language
 export const SUPPORTED_LANG = {
@@ -26,7 +27,7 @@ export const SUPPORTED_LANG = {
         tipEncrypt: 'This Note has been encrypted, please enter password!',
         tip404: '404, Nothing here',
     },
-    'zh': {
+    'zh-CN': {
         setPW: '设置密码',
         changePW: '修改密码',
         share: '分享',

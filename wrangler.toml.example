@@ -8,6 +8,7 @@ kv_namespaces = [
 ]
 
 [vars]
+SCN_APP_NAME = "david888 wiki"
 SCN_SALT = "random string for salt 例如 25A39F3A-BA6E-4ED3-9E5B-3FDC8A8B2406 "
 SCN_SECRET = "random string for jwt secret 例如 10BD2ACC-CD16-4218-A92D-CA808D682CFF"
 SCN_ADMIN_PATH = "/admin"

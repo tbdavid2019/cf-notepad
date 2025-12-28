@@ -1,27 +1,27 @@
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
-import { CDN_PREFIX, SUPPORTED_LANG } from './constant'
+import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from './constant'
 
 dayjs.extend(relativeTime)
 
-const SWITCHER = (text, open, className = '') => `
-<span class="opt-desc">${text}</span>
-<label class="opt-switcher ${className}">
-  <input type="checkbox" ${open ? 'checked' : ''}>
-  <span class="slider round"></span>
-</label>
+const SWITCHER = (name, value, kls) => `
+    <label class="opt-switcher ${kls}">
+        ${name}
+        <input type="checkbox" ${value ? 'checked' : ''} />
+        <span class="slider"></span>
+    </label>
 `
-const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path }) => `
+const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, shareId, path }) => `
     <div class="footer">
         ${isEdit ? `
             <div class="opt">
-                <button class="opt-button opt-pw" data-type="edit">${pw ? SUPPORTED_LANG[lang].changePW : SUPPORTED_LANG[lang].setPW}</button>
+                <button class="opt-button opt-pw" data-type="edit">${pw ? SUPPORTED_LANG[lang].changePW : 'Edit Password'}</button>
                 <button class="opt-button opt-pw-view" data-type="view">${vpw ? 'Change View PW' : 'View Password'}</button>
                 ${SWITCHER('Markdown', mode === 'md', 'opt-mode')}
                 <div class="opt-share-link" style="display:flex;align-items:center;gap:5px;background:#eee;padding:2px 8px;border-radius:4px;">
                     <span style="font-size:12px;color:#666;">Share:</span>
-                    <input class="share-url-input" readonly value="/share/${shareId || ''}" onclick="this.select()" style="border:none;background:transparent;width:200px;font-size:12px;color:#0366d6;">
-                    <button id="copy-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.6;padding:2px 6px;" title="Copy">📋</button>
+                    <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" style="border:none;background:transparent;width:180px;font-size:12px;color:#0366d6;">
+                    <button id="copy-share-btn" data-share-id="${shareId}" style="border:none;background:none;cursor:pointer;opacity:0.6;" title="Copy">📋</button>
                 </div>
             </div>
             ` : (path ? `<a href="/${path}" class="opt-button" style="text-decoration:none;">EDIT</a>` : '')
@@ -51,7 +51,7 @@ const HTML = ({ lang, title, content, ext = {}, tips, isEdit, showPwPrompt, path
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - ${isEdit ? 'Edit' : 'View'}</title>
+    <title>${title} - ${isEdit ? 'Edit' : 'View'} - ${APP_NAME}</title>
     <style>
 /* Reset & Base */
 body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; overflow: hidden; }
@@ -278,11 +278,9 @@ textarea#contents {
 
     const getI18n = key => {
         const lang = navigator.language || navigator.userLanguage || DEFAULT_LANG
-        // First try exact match (e.g., zh-TW)
         if (SUPPORTED_LANG[lang]) {
             return SUPPORTED_LANG[lang][key]
         }
-        // Then try base language (e.g., zh from zh-TW)
         const userLang = lang.split('-')[0]
         const targetLang = Object.keys(SUPPORTED_LANG).find(l => l === userLang) || DEFAULT_LANG
         return SUPPORTED_LANG[targetLang][key]
@@ -342,264 +340,252 @@ textarea#contents {
 
     const renderMarkdown = (node, text) => {
         if (node) {
-            const parseText = marked.parse(text)
-            node.innerHTML = DOMPurify.sanitize(parseText)
+            if (typeof marked === 'undefined') {
+                console.error('marked is not defined; skipping preview');
+                node.innerText = 'Preview unavailable (library not loaded)';
+                return;
+            }
+            try {
+                const parseText = marked.parse(text)
+                node.innerHTML = DOMPurify.sanitize(parseText)
+            } catch (e) {
+                console.error('Render error:', e)
+                node.innerText = 'Preview error';
+            }
         }
     }
 
     window.addEventListener('DOMContentLoaded', function () {
-        const $textarea = document.querySelector('#contents')
-        const $loading = document.querySelector('#loading')
-        const $pwBtn = document.querySelector('.opt-pw')
-        const $modeBtn = document.querySelector('.opt-mode > input')
-        const $shareBtn = document.querySelector('.opt-share > input')
-        const $previewPlain = document.querySelector('#preview-plain')
-        const $previewMd = document.querySelector('#preview-md')
-        const $shareModal = document.querySelector('.share-modal')
-        const $closeBtn = document.querySelector('.share-modal .close-btn')
-        const $copyBtn = document.querySelector('.share-modal .opt-button')
-        const $shareInput = document.querySelector('.share-modal input')
+        try {
+            const $textarea = document.querySelector('#contents')
+            const $loading = document.querySelector('#loading')
+            const $pwBtn = document.querySelector('.opt-pw')
+            const $modeBtn = document.querySelector('.opt-mode > input')
+            const $shareBtn = document.querySelector('.opt-share > input')
+            const $previewPlain = document.querySelector('#preview-plain')
+            const $previewMd = document.querySelector('#preview-md')
+            const $shareModal = document.querySelector('.share-modal')
+            const $closeBtn = document.querySelector('.share-modal .close-btn')
+            const $copyBtn = document.querySelector('.share-modal .opt-button')
+            const $shareInput = document.querySelector('.share-modal input')
 
-        renderPlain($previewPlain, $textarea.value)
-        renderMarkdown($previewMd, $textarea.value)
+            if ($previewPlain && $textarea) renderPlain($previewPlain, $textarea.value)
+            if ($previewMd && $textarea) renderMarkdown($previewMd, $textarea.value)
 
-        // Scroll Sync Logic
-        let syncSource = null;
-        
-        const syncScroll = (source, target) => {
-            if (!source || !target) return;
-            // Calculate percentage
-            const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
-            // Apply to target
-            target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
-        }
-
-        if ($textarea && ($previewMd || $previewPlain)) {
-            const $preview = $previewMd || $previewPlain;
+            // Scroll Sync Logic
+            let syncSource = null;
             
-            $textarea.addEventListener('mouseenter', () => { syncSource = 'edit'; });
-            $preview.addEventListener('mouseenter', () => { syncSource = 'preview'; });
-
-            $textarea.addEventListener('scroll', () => {
-                if (syncSource === 'edit') {
-                    syncScroll($textarea, $preview);
-                }
-            });
-
-            $preview.addEventListener('scroll', () => {
-                if (syncSource === 'preview') {
-                    syncScroll($preview, $textarea);
-                }
-            });
-        }
-
-        if ($textarea) {
-            // Paste Image Handler
-            if (window.ENABLE_R2) {
-                $textarea.addEventListener('paste', function (e) {
-                    const items = (e.clipboardData || e.originalEvent.clipboardData).items
-                    for (let index in items) {
-                        const item = items[index]
-                        if (item.kind === 'file' && item.type.startsWith('image/')) {
-                            e.preventDefault()
-                            const blob = item.getAsFile()
-                            
-                            // Insert loading text
-                            const start = $textarea.selectionStart
-                            const loadingText = '![Uploading...]()'
-                            $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
-                            $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
-
-                            const formData = new FormData()
-                            formData.append('image', blob)
-
-                            window.fetch('/upload', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(res => res.json())
-                            .then(res => {
-                                if (res.err === 0) {
-                                    const url = res.data
-                                    const imageText = '![image](' + url + ')'
-                                    $textarea.value = $textarea.value.replace(loadingText, imageText)
-                                    renderMarkdown($previewMd, $textarea.value)
-                                } else {
-                                    $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']')
-                                    alert('Upload Failed: ' + res.msg)
-                                }
-                            })
-                            .catch(err => {
-                                 $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed]')
-                                 alert('Upload Error: ' + err)
-                            })
-                            return;
-                        }
-                    }
-                })
+            const syncScroll = (source, target) => {
+                if (!source || !target) return;
+                // Calculate percentage
+                const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
+                // Apply to target
+                target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
             }
 
-            $textarea.oninput = throttle(function () {
-                renderMarkdown($previewMd, $textarea.value)
+            if ($textarea && ($previewMd || $previewPlain)) {
+                const $preview = $previewMd || $previewPlain;
+                
+                $textarea.addEventListener('mouseenter', () => { syncSource = 'edit'; });
+                $preview.addEventListener('mouseenter', () => { syncSource = 'preview'; });
 
-                $loading.style.display = 'inline-block'
-                const data = {
-                    t: $textarea.value,
-                }
+                $textarea.addEventListener('scroll', () => {
+                    if (syncSource === 'edit') {
+                        syncScroll($textarea, $preview);
+                    }
+                });
 
-                window.fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams(data),
-                })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            errHandle(res.msg)
+                $preview.addEventListener('scroll', () => {
+                    if (syncSource === 'preview') {
+                        syncScroll($preview, $textarea);
+                    }
+                });
+            }
+
+            if ($textarea) {
+                // Paste Image Handler
+                if (window.ENABLE_R2) {
+                    $textarea.addEventListener('paste', function (e) {
+                        const items = (e.clipboardData || e.originalEvent.clipboardData).items
+                        for (let index in items) {
+                            const item = items[index]
+                            if (item.kind === 'file' && item.type.startsWith('image/')) {
+                                e.preventDefault()
+                                const blob = item.getAsFile()
+                                
+                                // Insert loading text
+                                const start = $textarea.selectionStart
+                                const loadingText = '![Uploading...]()'
+                                $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
+                                $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
+
+                                const formData = new FormData()
+                                formData.append('image', blob)
+
+                                window.fetch('/upload', {
+                                    method: 'POST',
+                                    body: formData
+                                })
+                                .then(res => res.json())
+                                .then(res => {
+                                    if (res.err === 0) {
+                                        const url = res.data
+                                        const imageText = '![image](' + url + ')'
+                                        $textarea.value = $textarea.value.replace(loadingText, imageText)
+                                        renderMarkdown($previewMd, $textarea.value)
+                                    } else {
+                                        $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']')
+                                        alert('Upload Failed: ' + res.msg)
+                                    }
+                                })
+                                .catch(err => {
+                                     $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed]')
+                                     alert('Upload Error: ' + err)
+                                })
+                                return;
+                            }
                         }
                     })
-                    .catch(err => errHandle(err))
-                    .finally(() => {
-                        $loading.style.display = 'none'
-                    })
-            }, 1000)
-        }
+                }
 
-        // Password button handlers
-        const bindPwHandler = (btnSelector, type) => {
-            const btn = document.querySelector(btnSelector);
-            if (btn) {
-                btn.onclick = function () {
+                $textarea.oninput = throttle(function () {
+                    renderMarkdown($previewMd, $textarea.value)
+
+                    $loading.style.display = 'inline-block'
+                    const data = {
+                        t: $textarea.value,
+                    }
+
+                    window.fetch('', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/x-www-form-urlencoded',
+                        },
+                        body: new URLSearchParams(data),
+                    })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.err !== 0) {
+                                errHandle(res.msg)
+                            }
+                        })
+                        .catch(err => errHandle(err))
+                        .finally(() => {
+                            $loading.style.display = 'none'
+                        })
+                }, 1000)
+            }
+
+            if ($pwBtn) {
+                $pwBtn.onclick = function () {
                     const passwd = window.prompt(getI18n('enpw'))
                     if (passwd == null) return;
 
                     const path = window.location.pathname
                     window.fetch(path + '/pw', {
                         method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
                         body: JSON.stringify({
                             passwd: passwd.trim(),
-                            type: type,
                         }),
                     })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-                        alert(passwd ? getI18n('pwss') : getI18n('pwrs'))
-                        location.reload()
-                    })
-                    .catch(err => errHandle(err))
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.err !== 0) {
+                                return errHandle(res.msg)
+                            }
+                            alert(passwd ? getI18n('pwss') : getI18n('pwrs'))
+                        })
+                        .catch(err => errHandle(err))
                 }
             }
-        }
-        
-        bindPwHandler('.opt-pw', 'edit');
-        bindPwHandler('.opt-pw-view', 'view');
 
-        if ($modeBtn) {
-            $modeBtn.onclick = function (e) {
-                const isMd = e.target.checked
-                const path = window.location.pathname
-                window.fetch(path + '/setting', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        mode: isMd ? 'md' : 'plain',
-                    }),
-                })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-
-                        window.location.reload()
+            if ($modeBtn) {
+                $modeBtn.onclick = function (e) {
+                    const isMd = e.target.checked
+                    const path = window.location.pathname
+                    window.fetch(path + '/setting', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            mode: isMd ? 'md' : 'plain',
+                        }),
                     })
-                    .catch(err => errHandle(err))
-            }
-        }
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.err !== 0) {
+                                return errHandle(res.msg)
+                            }
 
-        // Share URL update and copy handler
-        const $shareUrlInput = document.querySelector('.share-url-input');
-        const $shareCopyBtn = document.querySelector('#copy-share-btn');
-        if ($shareUrlInput && $shareCopyBtn) {
-            // Update input with full URL
-            try {
-                const currentValue = $shareUrlInput.getAttribute('value') || $shareUrlInput.value;
-                $shareUrlInput.value = window.location.origin + currentValue;
-            } catch(e) {
-                console.error('Failed to update share URL:', e);
-            }
-            
-            // Copy button handler
-            $shareCopyBtn.addEventListener('click', async () => {
-                try {
-                    await clipboardCopy($shareUrlInput.value);
-                    const originalText = $shareCopyBtn.innerText;
-                    $shareCopyBtn.innerText = '✅';
-                    setTimeout(() => $shareCopyBtn.innerText = originalText, 2000);
-                } catch (e) {
-                    alert('Copy failed');
+                            window.location.reload()
+                        })
+                        .catch(err => errHandle(err))
                 }
-            });
-        }
-
-        if ($shareBtn) {
-            $shareBtn.onclick = function (e) {
-                const isShare = e.target.checked
-                const path = window.location.pathname
-                window.fetch(path + '/setting', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        share: isShare,
-                    }),
-                })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-
-                        if (isShare) {
-                            const origin = window.location.origin
-                            const url = origin + '/share/' + res.data
-                            // show modal
-                            $shareInput.value = url
-                            $shareModal.style.display = 'block'
-                        }
-                    })
-                    .catch(err => errHandle(err))
             }
-        }
 
-        if ($shareModal) {
-            $closeBtn.onclick = function () {
-                $shareModal.style.display = 'none'
-
+            const $shareInput = document.querySelector('.share-url-input');
+            const $shareCopyBtn = document.querySelector('#copy-share-btn');
+            if ($shareInput && $shareCopyBtn) {
+                // Update input with full URL
+                $shareInput.value = window.location.origin + $shareInput.getAttribute('value');
+                
+                // Handle Copy
+                $shareCopyBtn.addEventListener('click', async () => {
+                     try {
+                         await clipboardCopy($shareInput.value);
+                         const originalText = $shareCopyBtn.innerText;
+                         $shareCopyBtn.innerText = '✅';
+                         setTimeout(() => $shareCopyBtn.innerText = originalText, 2000);
+                     } catch (e) {
+                         alert('Copy failed');
+                     }
+                });
             }
-            $copyBtn.onclick = function () {
-                clipboardCopy($shareInput.value)
-                const originText = $copyBtn.innerHTML
-                const originColor = $copyBtn.style.background
-                $copyBtn.innerHTML = getI18n('cpys')
-                $copyBtn.style.background = 'orange'
-                window.setTimeout(() => {
-                    $shareModal.style.display = 'none'
-                    $copyBtn.innerHTML = originText
-                    $copyBtn.style.background = originColor
-                }, 1500)
-            }
-        }
 
+            const bindPwHandler = (btnSelector, type) => {
+                const btn = document.querySelector(btnSelector);
+                if (btn) {
+                    btn.onclick = function () {
+                        const passwd = window.prompt(getI18n('enpw'))
+                        if (passwd == null) return;
+
+                        const path = window.location.pathname
+                        window.fetch(path + '/pw', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                passwd: passwd.trim(),
+                                type: type, // 'edit' or 'view'
+                            }),
+                        })
+                            .then(res => res.json())
+                            .then(res => {
+                                if (res.err !== 0) {
+                                    alert(res.msg)
+                                } else {
+                                    if (passwd === '') {
+                                        alert(getI18n('pwrs'))
+                                    } else {
+                                        alert(getI18n('pwss'))
+                                    }
+                                    location.reload()
+                                }
+                            })
+                            .catch(err => errHandle(err))
+                    }
+                }
+            }
+
+            bindPwHandler('.opt-pw', 'edit');
+            bindPwHandler('.opt-pw-view', 'view');
+        } catch (err) {
+            console.error('Script Error:', err);
+            alert('Script Error: ' + err.message);
+        }
     })
     </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
@@ -653,17 +639,22 @@ export const Admin = ({ lang, notes, error }) => `
             <tr>
                 <th onclick="sortTable(0)">Title / URL</th>
                 <th onclick="sortTable(1)">Views</th>
-                <th onclick="sortTable(2)">Password</th>
-                <th onclick="sortTable(3)">Last Modified</th>
+                <th onclick="sortTable(2)">Edit PW</th>
+                <th onclick="sortTable(3)">View PW</th>
+                <th onclick="sortTable(4)">Last Modified</th>
                 <th>Action</th>
             </tr>
         </thead>
         <tbody>
             ${notes.map(n => `
             <tr>
-                <td data-val="${decodeURIComponent(n.name)}"><a href="/${n.name}" target="_blank">${decodeURIComponent(n.name)}</a></td>
+                <td data-val="${n.metadata?.title || decodeURIComponent(n.name)}">
+                    <a href="/${n.name}" target="_blank" style="font-weight:500;">${n.metadata?.title || decodeURIComponent(n.name)}</a>
+                    ${n.metadata?.title ? `<br><small style="color:#888;">/${decodeURIComponent(n.name)}</small>` : ''}
+                </td>
                 <td data-val="${n.metadata?.views || 0}">${n.metadata?.views || 0}</td>
                 <td data-val="${n.metadata?.pw ? 1 : 0}">${n.metadata?.pw ? '🔒 Yes' : '—'}</td>
+                <td data-val="${n.metadata?.vpw ? 1 : 0}">${n.metadata?.vpw ? '👁 Yes' : '—'}</td>
                 <td data-val="${n.metadata?.updateAt || 0}">${n.metadata?.updateAt ? dayjs.unix(n.metadata.updateAt).fromNow() : '-'}</td>
                 <td>
                     <form method="POST" onsubmit="return confirm('Delete this note?');" style="display:inline;">
