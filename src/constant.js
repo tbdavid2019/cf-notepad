@@ -18,9 +18,11 @@ export const APP_NAME = (typeof SCN_APP_NAME !== 'undefined') ? SCN_APP_NAME : '
 // supported language
 export const SUPPORTED_LANG = {
     'en': {
-        setPW: 'Set Password',
+        setPW: 'Edit Password',
         changePW: 'Change Password',
-        share: 'Share',
+        setViewPW: 'View Password',
+        changeViewPW: 'Change View PW',
+        share: 'Share URL',
         lastModified: 'Last Modified',
         copy: 'Copy',
         emptyPH: 'There are many like it, but this one is mine...',
@@ -28,9 +30,11 @@ export const SUPPORTED_LANG = {
         tip404: '404, Nothing here',
     },
     'zh-CN': {
-        setPW: '设置密码',
-        changePW: '修改密码',
-        share: '分享',
+        setPW: '设置编辑密码',
+        changePW: '修改编辑密码',
+        setViewPW: '设置查看密码',
+        changeViewPW: '修改查看密码',
+        share: '發布分享',
         lastModified: '上次保存',
         copy: '复制',
         emptyPH: '看来你是第一个到这儿的人，写点什么吧...',
@@ -38,9 +42,11 @@ export const SUPPORTED_LANG = {
         tip404: '404，你要找的东西并不存在',
     },
     'zh-TW': {
-        setPW: '設置密碼',
-        changePW: '修改密碼',
-        share: '分享',
+        setPW: '設定編輯密碼',
+        changePW: '修改編輯密碼',
+        setViewPW: '設定查看密碼',
+        changeViewPW: '修改查看密碼',
+        share: '發布分享',
         lastModified: '上次保存',
         copy: '複製',
         emptyPH: '看來你是第一個到這裡的人，寫點什麼吧...',

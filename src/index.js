@@ -128,20 +128,19 @@ router.get('/:path', async (request) => {
 
     const { value, metadata } = await queryNote(path)
 
-    // Calculate shareId
-    const shareId = await MD5(path)
+    // Calculate shareId only if sharing is enabled
+    const shareId = metadata.share ? await MD5(path) : null
 
-    // View Tracking & Auto-Share
+    // View Tracking only
     if (request.event) {
-        request.event.waitUntil(Promise.all([
+        request.event.waitUntil(
             NOTES.put(path, value, {
                 metadata: {
                     ...metadata,
                     views: (metadata.views || 0) + 1
                 }
-            }),
-            SHARE.put(shareId, path)
-        ]))
+            })
+        )
     }
 
     if (!metadata.pw) {

@@ -16,13 +16,9 @@ const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path })
         ${isEdit ? `
             <div class="opt">
                 <button class="opt-button opt-pw" data-type="edit">${pw ? SUPPORTED_LANG[lang].changePW : SUPPORTED_LANG[lang].setPW}</button>
-                <button class="opt-button opt-pw-view" data-type="view">${vpw ? 'Change View PW' : 'View Password'}</button>
+                <button class="opt-button opt-pw-view" data-type="view">${vpw ? SUPPORTED_LANG[lang].changeViewPW : SUPPORTED_LANG[lang].setViewPW}</button>
                 ${SWITCHER('Markdown', mode === 'md', 'opt-mode')}
-                <div class="opt-share-link" style="display:flex;align-items:center;gap:5px;background:#eee;padding:2px 8px;border-radius:4px;">
-                    <span style="font-size:12px;color:#666;">Share:</span>
-                    <input class="share-url-input" readonly value="/share/${shareId || ''}" onclick="this.select()" style="border:none;background:transparent;width:200px;font-size:12px;color:#0366d6;">
-                    <button id="copy-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.6;padding:2px 6px;" title="Copy">📋</button>
-                </div>
+                ${SWITCHER(SUPPORTED_LANG[lang].share, share, 'opt-share')}
             </div>
             ` : (path ? `<a href="/${path}" class="opt-button" style="text-decoration:none;">EDIT</a>` : '')
     }
@@ -525,30 +521,7 @@ textarea#contents {
             }
         }
 
-        // Share URL update and copy handler
-        const $shareUrlInput = document.querySelector('.share-url-input');
-        const $shareCopyBtn = document.querySelector('#copy-share-btn');
-        if ($shareUrlInput && $shareCopyBtn) {
-            // Update input with full URL
-            try {
-                const currentValue = $shareUrlInput.getAttribute('value') || $shareUrlInput.value;
-                $shareUrlInput.value = window.location.origin + currentValue;
-            } catch(e) {
-                console.error('Failed to update share URL:', e);
-            }
-            
-            // Copy button handler
-            $shareCopyBtn.addEventListener('click', async () => {
-                try {
-                    await clipboardCopy($shareUrlInput.value);
-                    const originalText = $shareCopyBtn.innerText;
-                    $shareCopyBtn.innerText = '✅';
-                    setTimeout(() => $shareCopyBtn.innerText = originalText, 2000);
-                } catch (e) {
-                    alert('Copy failed');
-                }
-            });
-        }
+
 
         if ($shareBtn) {
             $shareBtn.onclick = function (e) {
