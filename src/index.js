@@ -169,6 +169,7 @@ router.get('/share/:md5', async (request) => {
             title,
             content: value,
             ext: metadata,
+            path,
         })
     }
 
