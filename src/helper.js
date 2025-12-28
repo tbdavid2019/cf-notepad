@@ -42,7 +42,7 @@ export function returnJSON(code, data, headers = {}) {
 
 export async function MD5(str) {
     const msgUint8 = new TextEncoder().encode(str)
-    const hashBuffer = await crypto.subtle.digest('MD5', msgUint8) 
+    const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
     const hashArray = Array.from(new Uint8Array(hashBuffer))
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
 }
@@ -74,7 +74,7 @@ export async function queryNote(key) {
 }
 
 export function getI18n(request) {
-    const DEFAULT_LANG = 'en'
+    const DEFAULT_LANG = 'zh-TW'
     const al = request.headers.get('Accept-Language') || DEFAULT_LANG
     const acceptList = al.split(',').map(lang => lang.split(';')[0].trim())
     return acceptList.find(lang => Object.keys(SUPPORTED_LANG).includes(lang)) || DEFAULT_LANG

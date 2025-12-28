@@ -1,5 +1,5 @@
 
-const DEFAULT_LANG = 'en'
+const DEFAULT_LANG = 'zh-TW'
 const SUPPORTED_LANG = {
     'en': {
         err: 'Error',
@@ -112,6 +112,51 @@ window.addEventListener('DOMContentLoaded', function () {
     renderMarkdown($previewMd, $textarea.value)
 
     if ($textarea) {
+        // Paste Image Handler
+        if (window.ENABLE_R2) {
+            $textarea.addEventListener('paste', function (e) {
+                const items = (e.clipboardData || e.originalEvent.clipboardData).items
+                for (let index in items) {
+                    const item = items[index]
+                    if (item.kind === 'file' && item.type.startsWith('image/')) {
+                        e.preventDefault()
+                        const blob = item.getAsFile()
+
+                        // Insert loading text
+                        const start = $textarea.selectionStart
+                        const loadingText = '![Uploading...]()'
+                        $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
+                        $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
+
+                        const formData = new FormData()
+                        formData.append('image', blob)
+
+                        window.fetch('/upload', {
+                            method: 'POST',
+                            body: formData
+                        })
+                            .then(res => res.json())
+                            .then(res => {
+                                if (res.err === 0) {
+                                    const url = res.data
+                                    const imageText = `![image](${url})`
+                                    $textarea.value = $textarea.value.replace(loadingText, imageText)
+                                    renderMarkdown($previewMd, $textarea.value)
+                                } else {
+                                    $textarea.value = $textarea.value.replace(loadingText, `[Upload Failed: ${res.msg}]`)
+                                    alert(`Upload Failed: ${res.msg}`)
+                                }
+                            })
+                            .catch(err => {
+                                $textarea.value = $textarea.value.replace(loadingText, `[Upload Failed]`)
+                                alert(`Upload Error: ${err}`)
+                            })
+                        return;
+                    }
+                }
+            })
+        }
+
         $textarea.oninput = throttle(function () {
             renderMarkdown($previewMd, $textarea.value)
 

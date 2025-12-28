@@ -3,15 +3,100 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n } from './helper'
-import { SECRET } from './constant'
+
+import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, ENABLE_R2, R2_DOMAIN } from './constant'
 
 // init
 const router = Router()
 
 router.get('/', ({ url }) => {
-    const newHash = genRandomStr(3)
+    const newHash = genRandomStr(SLUG_LENGTH)
     // redirect to new page
     return Response.redirect(`${url}${newHash}`, 302)
+})
+
+router.get(ADMIN_PATH, async (request) => {
+    const lang = getI18n(request)
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+
+    // Check if logged in
+    if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+        // Logged in, list notes
+        try {
+            const list = await NOTES.list()
+            return returnPage('Admin', { lang, notes: list.keys })
+        } catch (e) {
+            return returnPage('Admin', { lang, error: 'Failed to retrieve notes: ' + e.message })
+        }
+    }
+
+    return returnPage('Admin', { lang })
+})
+
+router.post(ADMIN_PATH, async (request) => {
+    const lang = getI18n(request)
+    try {
+        const formData = await request.formData()
+        const password = formData.get('password')
+        const action = formData.get('action')
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+
+        // Login Logic
+        if (password === ADMIN_PW && ADMIN_PW) {
+            return new Response(null, {
+                status: 302,
+                headers: {
+                    'Location': ADMIN_PATH,
+                    'Set-Cookie': Cookies.serialize('admin_session', ADMIN_PW, {
+                        path: ADMIN_PATH,
+                        expires: dayjs().add(1, 'day').toDate(),
+                        httpOnly: true,
+                        sameSite: 'Strict'
+                    })
+                }
+            })
+        }
+
+        // Action Logic (Delete)
+        // Check session for actions
+        if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+            if (action === 'delete') {
+                const path = formData.get('path')
+                if (path) {
+                    await NOTES.delete(path)
+                    const md5 = await MD5(path)
+                    await SHARE.delete(md5)
+                }
+                return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
+            }
+        }
+
+    } catch (e) {
+        console.error('Admin Error:', e)
+        return returnPage('Admin', { lang, error: `Exception: ${e.message}` })
+    }
+
+    const debugInfo = `Auth Failed. Cookie: ${cookie.admin_session ? 'Present' : 'Missing'}, Match: ${cookie.admin_session === ADMIN_PW}, Action: ${action || 'None'}`
+    return returnPage('Admin', { lang, error: `Operation Failed: ${debugInfo}` })
+})
+
+router.post('/upload', async (request) => {
+    if (!ENABLE_R2) return returnJSON(403, 'R2 Upload Disabled')
+    try {
+        const formData = await request.formData()
+        const image = formData.get('image')
+        if (!image) return returnJSON(400, 'No image found')
+
+        const type = image.type.split('/')[1] || 'png'
+        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
+
+        await IMAGES.put(filename, image)
+        const url = R2_DOMAIN ? `${R2_DOMAIN}/${filename}` : `/img/${filename}`
+
+        return returnJSON(0, url)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
 })
 
 router.get('/share/:md5', async (request) => {
@@ -43,12 +128,23 @@ router.get('/:path', async (request) => {
 
     const { value, metadata } = await queryNote(path)
 
+    // View Tracking
+    if (request.event) {
+        request.event.waitUntil(NOTES.put(path, value, {
+            metadata: {
+                ...metadata,
+                views: (metadata.views || 0) + 1
+            }
+        }))
+    }
+
     if (!metadata.pw) {
         return returnPage('Edit', {
             lang,
             title,
             content: value,
             ext: metadata,
+            enableR2: ENABLE_R2,
         })
     }
 
@@ -59,6 +155,7 @@ router.get('/:path', async (request) => {
             title,
             content: value,
             ext: metadata,
+            enableR2: ENABLE_R2,
         })
     }
 
@@ -101,7 +198,7 @@ router.post('/:path/pw', async request => {
 
         const { value, metadata } = await queryNote(path)
         const valid = await checkAuth(cookie, path)
-        
+
         if (!metadata.pw || valid) {
             const pw = passwd ? await saltPw(passwd) : undefined
             try {
@@ -111,7 +208,7 @@ router.post('/:path/pw', async request => {
                         pw,
                     },
                 })
-    
+
                 return returnJSON(0, null, {
                     'Set-Cookie': Cookies.serialize('auth', '', {
                         path: `/${path}`,
@@ -136,7 +233,7 @@ router.post('/:path/setting', async request => {
 
         const { value, metadata } = await queryNote(path)
         const valid = await checkAuth(cookie, path)
-        
+
         if (!metadata.pw || valid) {
             try {
                 await NOTES.put(path, value, {
@@ -207,5 +304,6 @@ router.all('*', (request) => {
 })
 
 addEventListener('fetch', event => {
-    event.respondWith(router.handle(event.request))
+    event.request.event = event
+    event.respondWith(router.handle(event.request, event))
 })

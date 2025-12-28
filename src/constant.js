@@ -1,10 +1,18 @@
 // static CDN
-export const CDN_PREFIX = '//gcore.jsdelivr.net/gh/s0urcelab/serverless-cloud-notepad@master/static'
+// static CDN
+export const CDN_PREFIX = 'https://cdn.jsdelivr.net/npm'
 
 // server side salt
 export const SALT = SCN_SALT
 // server side secret
 export const SECRET = SCN_SECRET
+
+// admin
+export const ADMIN_PATH = SCN_ADMIN_PATH || '/admin'
+export const ADMIN_PW = SCN_ADMIN_PW
+export const SLUG_LENGTH = parseInt(SCN_SLUG_LENGTH || '3')
+export const ENABLE_R2 = SCN_ENABLE_R2 === '1'
+export const R2_DOMAIN = SCN_R2_DOMAIN
 
 // supported language
 export const SUPPORTED_LANG = {
