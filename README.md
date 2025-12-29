@@ -15,6 +15,15 @@
   - 查看筆記的瀏覽次數 (View Tracking)。
   - 檢查是否設定了密碼。
   - **直接刪除**違規或過期的筆記。
+- 現在用戶可以：
+  - 在任何地方複製圖片（截圖、文件等）
+  - 在筆記編輯器中按 Cmd+V (Mac) 或 Ctrl+V (Windows)
+  - 預覽窗格立即顯示上傳的圖片
+```
+  - 看到 ![Uploading...]() 臨時文本
+  - 圖片上傳完成後，自動替換為 ![image](R2_URL)
+```
+
 
 ## 部署教學
 
@@ -102,7 +111,12 @@ wrangler secret put SCN_R2_DOMAIN
 3. 設定 `SCN_R2_DOMAIN` 為該 Bucket 的公開網址。
 
 ### 4. 部署
+DEV
+```
+npx wrangler dev --local 2>&1 | head -n 50
+```
 
+正式區
 ```bash
 npm install
 wrangler deploy
@@ -234,3 +248,12 @@ Visit your configured `SCN_ADMIN_PATH` (e.g., `https://your-worker.workers.dev/s
 
 ---
 本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)，
+
+---
+
+20251229 開發日誌
+
+修復的關鍵問題：
+
+環境變數在模塊加載時無法訪問 → 改用 getter 函數在運行時訪問
+enableR2 數據結構不匹配 → 將其合併到 ext 對象中

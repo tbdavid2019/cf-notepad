@@ -11,9 +11,11 @@ export const SECRET = SCN_SECRET
 export const ADMIN_PATH = SCN_ADMIN_PATH || '/admin'
 export const ADMIN_PW = SCN_ADMIN_PW
 export const SLUG_LENGTH = parseInt(SCN_SLUG_LENGTH || '3')
-export const ENABLE_R2 = SCN_ENABLE_R2 === '1'
-export const R2_DOMAIN = SCN_R2_DOMAIN
+// Access R2 config at runtime instead of module load time
+export const getEnableR2 = () => (typeof SCN_ENABLE_R2 !== 'undefined' && SCN_ENABLE_R2 === '1')
+export const getR2Domain = () => (typeof SCN_R2_DOMAIN !== 'undefined' ? SCN_R2_DOMAIN : '')
 export const APP_NAME = (typeof SCN_APP_NAME !== 'undefined') ? SCN_APP_NAME : 'david888 wiki'
+
 
 // supported language
 export const SUPPORTED_LANG = {
@@ -37,7 +39,7 @@ export const SUPPORTED_LANG = {
         share: '發布分享',
         lastModified: '上次保存',
         copy: '复制',
-        emptyPH: '看来你是第一个到这儿的人，写点什么吧...',
+        emptyPH: '看来你是第一个到这儿的人，写点什么吧...寫完後，記得按下發布分享按鈕取得URL',
         tipEncrypt: '这是一篇加密笔记，你必须先输入密码',
         tip404: '404，你要找的东西并不存在',
     },
@@ -49,7 +51,7 @@ export const SUPPORTED_LANG = {
         share: '發布分享',
         lastModified: '上次保存',
         copy: '複製',
-        emptyPH: '看來你是第一個到這裡的人，寫點什麼吧...',
+        emptyPH: '看來你是第一個到這裡的人，寫點什麼吧...寫完後，記得按下發布分享按鈕取得URL',
         tipEncrypt: '這是一篇加密筆記，你必須先輸入密碼',
         tip404: '404，你要找的東西並不存在',
     }

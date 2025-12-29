@@ -4,7 +4,7 @@ import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n } from './helper'
 
-import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, ENABLE_R2, R2_DOMAIN } from './constant'
+import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain } from './constant'
 
 // init
 const router = Router()
@@ -134,7 +134,7 @@ router.post(ADMIN_PATH, async (request) => {
 })
 
 router.post('/upload', async (request) => {
-    if (!ENABLE_R2) return returnJSON(403, 'R2 Upload Disabled')
+    if (!getEnableR2()) return returnJSON(403, 'R2 Upload Disabled')
     try {
         const formData = await request.formData()
         const image = formData.get('image')
@@ -144,7 +144,7 @@ router.post('/upload', async (request) => {
         const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
 
         await IMAGES.put(filename, image)
-        const url = R2_DOMAIN ? `${R2_DOMAIN}/${filename}` : `/img/${filename}`
+        const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
 
         return returnJSON(0, url)
     } catch (e) {
@@ -209,8 +209,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: metadata,
-            enableR2: ENABLE_R2,
+            ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
@@ -222,8 +221,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: metadata,
-            enableR2: ENABLE_R2,
+            ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
