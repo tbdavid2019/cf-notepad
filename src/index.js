@@ -217,16 +217,52 @@ router.get('/:path', async (request) => {
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null
 
-    // View Tracking only
+    // View Tracking with visitor deduplication
     if (request.event) {
         request.event.waitUntil(
-            NOTES.put(path, value, {
-                metadata: {
-                    ...metadata,
-                    views: (metadata.views || 0) + 1
+            (async () => {
+                try {
+                    // Get or create visitor ID from cookie
+                    let visitorId = cookie.visitor_id
+                    if (!visitorId) {
+                        visitorId = genRandomStr(16)
+                    }
+
+                    // Get list of visitors who have viewed this page
+                    const viewedBy = metadata.viewedBy || []
+
+                    // Only increment view count if this is a new visitor
+                    if (!viewedBy.includes(visitorId)) {
+                        viewedBy.push(visitorId)
+
+                        await NOTES.put(path, value, {
+                            metadata: {
+                                ...metadata,
+                                views: (metadata.views || 0) + 1,
+                                viewedBy: viewedBy
+                            }
+                        })
+                    }
+                } catch (e) {
+                    console.error('View tracking error:', e)
                 }
-            })
+            })()
         )
+    }
+
+    // Generate visitor ID if not exists
+    let visitorId = cookie.visitor_id
+    let visitorCookie = {}
+    if (!visitorId) {
+        visitorId = genRandomStr(16)
+        visitorCookie = {
+            'Set-Cookie': Cookies.serialize('visitor_id', visitorId, {
+                path: '/',
+                expires: dayjs().add(365, 'day').toDate(),
+                httpOnly: true,
+                sameSite: 'Lax'
+            })
+        }
     }
 
     if (!metadata.pw) {
@@ -237,7 +273,7 @@ router.get('/:path', async (request) => {
             ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
-        })
+        }, visitorCookie)
     }
 
     const valid = await checkAuth(cookie, path)
@@ -249,10 +285,10 @@ router.get('/:path', async (request) => {
             ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
-        })
+        }, visitorCookie)
     }
 
-    return returnPage('NeedPasswd', { lang, title })
+    return returnPage('NeedPasswd', { lang, title }, visitorCookie)
 })
 
 router.post('/:path/auth', async request => {

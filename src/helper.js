@@ -13,10 +13,11 @@ export const genRandomStr = n => {
         .join('')
 }
 
-export function returnPage(type, data) {
+export function returnPage(type, data, headers = {}) {
     return new Response(TEMPL[type](data), {
         headers: {
             'content-type': 'text/html;charset=UTF-8',
+            ...headers,
         },
     });
 }

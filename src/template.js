@@ -243,8 +243,8 @@ textarea#contents {
     </div>
     <div id="loading"></div>
     ${MODAL(lang)}
-    ${((ext.mode || 'md') === 'md' || ext.share) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
-    ${(ext.mode || 'md') === 'md' ? `<script src="${CDN_PREFIX}/marked@11.1.1/marked.min.js"></script>` : ''}
+    ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
+    ${((ext.mode || 'md') === 'md' || !isEdit) ? `<script src="${CDN_PREFIX}/marked@11.1.1/marked.min.js"></script>` : ''}
     <script>
     function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r=window.document.execCommand("copy")}finally{t.removeAllRanges(),window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
     
