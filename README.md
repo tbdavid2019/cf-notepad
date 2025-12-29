@@ -279,3 +279,4 @@ enableR2 數據結構不匹配 → 將其合併到 ext 對象中
 
 4. **瀏覽計數優化 (View Tracking)** 👁️
    - 此版本導入 `visitor_id` Cookie，針對獨立訪客計數，不再重複計算同一用戶的刷新。
+ - ![alt text](image-2.png)

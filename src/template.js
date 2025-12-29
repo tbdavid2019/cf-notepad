@@ -344,6 +344,8 @@ textarea#contents {
         }
     }
 
+
+
     const renderMarkdown = (node, text) => {
         if (node) {
             const parseText = marked.parse(text)
