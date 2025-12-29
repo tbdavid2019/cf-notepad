@@ -58,12 +58,14 @@ export async function checkAuth(cookie, path) {
         const valid = await jwt.verify(cookie.auth, SECRET)
         if (valid) {
             const payload = jwt.decode(cookie.auth)
+            // Backward compatibility: if no role, assume 'edit' (old tokens)
+            const role = payload.role || 'edit'
             if (payload.path === path) {
-                return true
+                return { valid: true, role }
             }
         }
     }
-    return false
+    return { valid: false, role: null }
 }
 
 export async function queryNote(key) {

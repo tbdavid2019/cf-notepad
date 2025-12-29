@@ -177,13 +177,99 @@ router.post('/upload', async (request) => {
     }
 })
 
+
+
+router.post('/share/:md5/auth', async request => {
+    const { md5 } = request.params
+    const path = await SHARE.get(md5)
+
+    if (!!path) {
+        if (request.headers.get('Content-Type') === 'application/json') {
+            const { passwd } = await request.json()
+            const { metadata } = await queryNote(path)
+
+            if (metadata.vpw) {
+                const storePw = await saltPw(passwd)
+
+                // Check View Password
+                if (metadata.vpw === storePw) {
+                    const token = await jwt.sign({ path, role: 'view' }, SECRET)
+                    return returnJSON(0, {
+                        refresh: true,
+                    }, {
+                        'Set-Cookie': Cookies.serialize('auth', token, {
+                            path: `/share/${md5}`,
+                            expires: dayjs().add(7, 'day').toDate(),
+                            httpOnly: true,
+                        })
+                    })
+                }
+
+                // Check Edit Password (allow admin to view share page too)
+                if (metadata.pw === storePw) {
+                    // Even if using edit password, on share page we give view role (or edit role?)
+                    // Let's give view role to keep it safe/simple for share page context, 
+                    // or edit role if we want to track who is who.
+                    // Since router.get('/share/:md5') doesn't check specific role (just valid token), either works.
+                    // Giving 'view' role is safer for the cookie on share path.
+                    const token = await jwt.sign({ path, role: 'view' }, SECRET)
+                    return returnJSON(0, {
+                        refresh: true,
+                    }, {
+                        'Set-Cookie': Cookies.serialize('auth', token, {
+                            path: `/share/${md5}`,
+                            expires: dayjs().add(7, 'day').toDate(),
+                            httpOnly: true,
+                        })
+                    })
+                }
+            }
+        }
+        return returnJSON(10002, 'Password auth failed!')
+    }
+    return returnJSON(404, 'Share not found')
+})
+
 router.get('/share/:md5', async (request) => {
     const lang = getI18n(request)
     const { md5 } = request.params
     const path = await SHARE.get(md5)
 
     if (!!path) {
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
         const { value, metadata } = await queryNote(path)
+
+        // Check if View Password is set
+        if (metadata.vpw) {
+            const { valid } = await checkAuth(cookie, path)
+            // If valid token exists (edit or view role), allow access
+            // If not valid, show password prompt
+            // Note: We use 'NeedPasswd' template but need to ensure it posts to /:path/auth
+            // Since we are at /share/:md5, we need to pass 'path' for the frontend to construct the correct URL?
+            // Actually, the current template uses window.location.pathname.
+            // On share page, pathname is /share/xxx. We need it to POST to /note_path/auth.
+            // But we don't want to expose the real note path in the HTML if possible (though it's in the auth token).
+            // Let's modify the template logic later if needed, but for now passing 'path' to template
+            // allows us to potentially adjust the fetch URL in frontend if we change template.
+
+            if (!valid) {
+                // For Share page, we need a way to tell frontend where to auth
+                // Currently 'NeedPasswd' template uses current pathname. 
+                // We will need to update template.js or handle /share/xxx/auth route?
+                // Simpler: Allow frontend to know the real path for auth, 
+                // OR implement /share/:md5/auth route.
+                // Let's stick to using the real path for auth for now as it's simpler.
+                // We pass 'path' to the template so we can use it.
+                // Wait, exposing 'path' (real URL) might be okay if it's protected by password?
+                // If vpw is set, we just need to auth.
+
+                // If we strictly follow "don't expose path", we need a /share/:md5/auth route.
+                // But let's assume exposing path for auth purpose is acceptable for now 
+                // as the user just wants to view content.
+
+                return returnPage('NeedPasswd', { lang, title: 'Password Protected', path })
+            }
+        }
 
         // Extract title from first line of content, remove markdown # symbols
         const firstLine = value.split('\n')[0] || ''
@@ -290,8 +376,9 @@ router.get('/:path', async (request) => {
         }, visitorCookie)
     }
 
-    const valid = await checkAuth(cookie, path)
-    if (valid) {
+    // Strict Mode: Edit Page only allows Edit Role
+    const { valid, role } = await checkAuth(cookie, path)
+    if (valid && role === 'edit') {
         return returnPage('Edit', {
             lang,
             title,
@@ -315,8 +402,23 @@ router.post('/:path/auth', async request => {
         if (metadata.pw) {
             const storePw = await saltPw(passwd)
 
+            // Check Edit Password
             if (metadata.pw === storePw) {
-                const token = await jwt.sign({ path }, SECRET)
+                const token = await jwt.sign({ path, role: 'edit' }, SECRET)
+                return returnJSON(0, {
+                    refresh: true,
+                }, {
+                    'Set-Cookie': Cookies.serialize('auth', token, {
+                        path: `/${path}`,
+                        expires: dayjs().add(7, 'day').toDate(),
+                        httpOnly: true,
+                    })
+                })
+            }
+
+            // Check View Password
+            if (metadata.vpw && metadata.vpw === storePw) {
+                const token = await jwt.sign({ path, role: 'view' }, SECRET)
                 return returnJSON(0, {
                     refresh: true,
                 }, {
