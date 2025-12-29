@@ -261,3 +261,21 @@ Visit your configured `SCN_ADMIN_PATH` (e.g., `https://your-worker.workers.dev/s
 
 環境變數在模塊加載時無法訪問 → 改用 getter 函數在運行時訪問
 enableR2 數據結構不匹配 → 將其合併到 ext 對象中
+
+### 核心穩定性修復 (v2.0)
+1. **資料丟失修復 (Data Loss Prevention)** 🛡️
+   - **問題**: 舊邏輯在讀取頁面 (GET) 時會同時寫回 View Count，導致若與保存動作 (POST) 並發，舊內容會覆蓋新內容。
+   - **解決**: 實作 **讀寫分離 (Read-Write Separation)**。瀏覽計數移至獨立的 `SHARE` KV (Key: `views::{path}`)，讀取頁面時只更新計數，**絕不**寫入筆記內容。
+
+2. **密碼驗證優化 (Auth Separation)** 🔒
+   - **問題**: 舊邏輯無法區分管理者與訪客，導致輸入查看密碼 (VPW) 無法登入。
+   - **解決**: 實作 **角色基礎驗證**。
+     - **編輯頁面 (`/:path`)**: 嚴格只認 **編輯密碼 (PW)**，取得 `edit` 權限。
+     - **分享頁面 (`/share/:...`)**: 接受 **查看密碼 (VPW)** 或 **編輯密碼**，取得 `view` 權限。
+
+3. **顯示修復 (Rendering Fix)** 🖼️
+   - **問題**: Share 頁面因腳本載入順序問題導致一片空白。
+   - **解決**: 強制在 Share 模式下正確載入 `marked.js` 與 `DOMPurify`。
+
+4. **瀏覽計數優化 (View Tracking)** 👁️
+   - 此版本導入 `visitor_id` Cookie，針對獨立訪客計數，不再重複計算同一用戶的刷新。
