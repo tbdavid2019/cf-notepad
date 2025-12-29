@@ -24,6 +24,10 @@
   - 圖片上傳完成後，自動替換為 ![image](R2_URL)
 ```
 
+demo 
+https://wiki.david888.com/share/d50f8d1c1f297069770369e9cc26b828
+
+![alt text](image-1.png)
 
 ## 部署教學
 
