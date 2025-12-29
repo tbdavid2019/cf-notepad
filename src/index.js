@@ -208,7 +208,15 @@ router.get('/:path', async (request) => {
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
-    const { value, metadata } = await queryNote(path)
+    // Parallel fetch: Note content and View stats
+    // Use SHARE KV for view tracking to avoid race condition with content updates
+    const viewKey = `views::${path}`
+    const [noteResult, viewDataRaw] = await Promise.all([
+        queryNote(path),
+        SHARE.get(viewKey, { type: 'json' })
+    ])
+
+    const { value, metadata } = noteResult
 
     // Extract title from first line of content, remove markdown # symbols
     const firstLine = value.split('\n')[0] || ''
@@ -216,6 +224,16 @@ router.get('/:path', async (request) => {
 
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null
+
+    // Prepare view data (migrate from metadata if separate store is empty)
+    let currentViews = viewDataRaw?.views || metadata.views || 0
+    let currentViewedBy = viewDataRaw?.viewedBy || metadata.viewedBy || []
+
+    // Update metadata object with correct views for display (without persisting to NOTES)
+    const displayMetadata = {
+        ...metadata,
+        views: currentViews
+    }
 
     // View Tracking with visitor deduplication
     if (request.event) {
@@ -228,20 +246,16 @@ router.get('/:path', async (request) => {
                         visitorId = genRandomStr(16)
                     }
 
-                    // Get list of visitors who have viewed this page
-                    const viewedBy = metadata.viewedBy || []
-
                     // Only increment view count if this is a new visitor
-                    if (!viewedBy.includes(visitorId)) {
-                        viewedBy.push(visitorId)
+                    if (!currentViewedBy.includes(visitorId)) {
+                        currentViewedBy.push(visitorId)
+                        currentViews += 1
 
-                        await NOTES.put(path, value, {
-                            metadata: {
-                                ...metadata,
-                                views: (metadata.views || 0) + 1,
-                                viewedBy: viewedBy
-                            }
-                        })
+                        // Save to SHARE KV instead of NOTES KV
+                        await SHARE.put(viewKey, JSON.stringify({
+                            views: currentViews,
+                            viewedBy: currentViewedBy
+                        }))
                     }
                 } catch (e) {
                     console.error('View tracking error:', e)
@@ -270,7 +284,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...displayMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         }, visitorCookie)
@@ -282,7 +296,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...displayMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         }, visitorCookie)
