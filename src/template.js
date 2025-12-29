@@ -676,11 +676,17 @@ export const Admin = ({ lang, notes, error }) => `
                 <h1>Cloud Notepad Admin</h1>
                 ${error ? `<div class="error">${error}</div>` : ''}
                 ${notes ? `
-    <div style="margin-bottom: 15px;">
-        <button id="batch-delete-btn" onclick="batchDelete()" style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; display: none;">
+    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
+        <button id="batch-delete-btn" onclick="batchDelete()" disabled style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; opacity: 0.5;">
             🗑 刪除選中項
         </button>
-        <span id="selected-count" style="margin-left: 10px; color: #666; font-size: 14px;"></span>
+        <form method="POST" style="display: inline; margin: 0;">
+            <input type="hidden" name="action" value="delete-empty">
+            <button type="submit" style="padding: 8px 16px; background-color: #ff9800; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                🧹 刪除所有空白頁面
+            </button>
+        </form>
+        <span id="selected-count" style="color: #666; font-size: 14px;"></span>
     </div>
     <table id="notesTable">
         <thead>
@@ -738,10 +744,14 @@ export const Admin = ({ lang, notes, error }) => `
         const selectedCountSpan = document.getElementById('selected-count');
         
         if (selectedCheckboxes.length > 0) {
-            batchDeleteBtn.style.display = 'inline-block';
-            selectedCountSpan.textContent = \`已選中 \${selectedCheckboxes.length} 項\`;
+            batchDeleteBtn.disabled = false;
+            batchDeleteBtn.style.opacity = '1';
+            batchDeleteBtn.style.cursor = 'pointer';
+            selectedCountSpan.textContent = '已選中 ' + selectedCheckboxes.length + ' 項';
         } else {
-            batchDeleteBtn.style.display = 'none';
+            batchDeleteBtn.disabled = true;
+            batchDeleteBtn.style.opacity = '0.5';
+            batchDeleteBtn.style.cursor = 'not-allowed';
             selectedCountSpan.textContent = '';
         }
 
@@ -761,7 +771,7 @@ export const Admin = ({ lang, notes, error }) => `
             return;
         }
 
-        if (!confirm(\`確定要刪除這 \${selectedCheckboxes.length} 個筆記嗎？\`)) {
+        if (!confirm('確定要刪除這 ' + selectedCheckboxes.length + ' 個筆記嗎？')) {
             return;
         }
 
@@ -790,6 +800,43 @@ export const Admin = ({ lang, notes, error }) => `
         } catch (error) {
             console.error('Error during batch delete:', error);
             alert('刪除過程中發生錯誤。');
+        }
+    }
+
+    async function deleteEmptyPages() {
+        if (!confirm('確定要刪除所有空白頁面嗎？此操作無法撤銷！\n\n空白頁面定義：內容長度 ≤ 10 個字符')) {
+            return;
+        }
+
+        const btn = document.getElementById('delete-empty-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '⏳ 清理中...';
+        btn.disabled = true;
+
+        try {
+            const response = await fetch(window.location.pathname, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'delete-empty' }),
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                alert('成功刪除 ' + result.deleted + ' 個空白頁面！');
+                if (result.errors.length > 0) {
+                    console.warn('部分頁面刪除失敗:', result.errors);
+                }
+                location.reload();
+            } else {
+                alert('刪除失敗: ' + (result.message || '未知錯誤'));
+            }
+        } catch (error) {
+            console.error('Error during empty page deletion:', error);
+            alert('刪除過程中發生錯誤。');
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
     }
 

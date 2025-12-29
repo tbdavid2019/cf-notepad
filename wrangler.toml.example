@@ -20,3 +20,7 @@ SCN_R2_DOMAIN = "https://your-r2-domain.com"
 # [[r2_buckets]]
 # binding = "IMAGES"
 # bucket_name = "<YOUR_BUCKET_NAME>"
+
+# Cron trigger: Daily cleanup at 9 AM Taiwan time (1 AM UTC)
+[triggers]
+crons = ["0 1 * * *"]

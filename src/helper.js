@@ -79,3 +79,39 @@ export function getI18n(request) {
     const acceptList = al.split(',').map(lang => lang.split(';')[0].trim())
     return acceptList.find(lang => Object.keys(SUPPORTED_LANG).includes(lang)) || DEFAULT_LANG
 }
+
+/**
+ * Delete all empty pages (content length <= 10 characters)
+ * @returns {Promise<{deleted: number, errors: string[]}>}
+ */
+export async function deleteEmptyPages() {
+    const deleted = []
+    const errors = []
+
+    try {
+        const list = await NOTES.list()
+
+        for (const note of list.keys) {
+            try {
+                const value = await NOTES.get(note.name)
+
+                // Check if page is empty (no content or very short content)
+                if (!value || value.trim().length <= 10) {
+                    await NOTES.delete(note.name)
+
+                    // Also delete share link if exists
+                    const md5 = await MD5(note.name)
+                    await SHARE.delete(md5)
+
+                    deleted.push(note.name)
+                }
+            } catch (e) {
+                errors.push(`Failed to process ${note.name}: ${e.message}`)
+            }
+        }
+    } catch (e) {
+        errors.push(`Failed to list notes: ${e.message}`)
+    }
+
+    return { deleted: deleted.length, errors }
+}

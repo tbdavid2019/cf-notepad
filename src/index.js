@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n } from './helper'
+import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n, deleteEmptyPages } from './helper'
 
 import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain } from './constant'
 
@@ -83,6 +83,24 @@ router.post(ADMIN_PATH, async (request) => {
                         })
                     }
                 }
+
+                // Delete all empty pages
+                if (action === 'delete-empty') {
+                    try {
+                        const result = await deleteEmptyPages()
+                        return new Response(JSON.stringify({
+                            success: true,
+                            deleted: result.deleted,
+                            errors: result.errors
+                        }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                    } catch (e) {
+                        return new Response(JSON.stringify({ success: false, message: e.message }), {
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                    }
+                }
             }
             return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), {
                 headers: { 'Content-Type': 'application/json' }
@@ -120,6 +138,13 @@ router.post(ADMIN_PATH, async (request) => {
                     const md5 = await MD5(path)
                     await SHARE.delete(md5)
                 }
+                return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
+            }
+
+            // Handle delete-empty action
+            if (action === 'delete-empty') {
+                const result = await deleteEmptyPages()
+                // Redirect back to admin page (the page will reload and show updated list)
                 return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
             }
         }
@@ -375,4 +400,20 @@ router.all('*', (request) => {
 addEventListener('fetch', event => {
     event.request.event = event
     event.respondWith(router.handle(event.request, event))
+})
+
+// Cron job: Delete empty pages daily at 9 AM Taiwan time (1 AM UTC)
+addEventListener('scheduled', async (event) => {
+    console.log('Cron triggered at:', new Date().toISOString())
+
+    try {
+        const result = await deleteEmptyPages()
+        console.log(`Cron cleanup completed: ${result.deleted} pages deleted`)
+
+        if (result.errors.length > 0) {
+            console.error('Cron cleanup errors:', result.errors)
+        }
+    } catch (e) {
+        console.error('Cron cleanup failed:', e)
+    }
 })
