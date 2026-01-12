@@ -316,3 +316,7 @@ e=>end: End
 op1=>operation: My Operation
 st->op1->e
 \`\`\`
+
+### 6. 其他增強功能 (Other Enhancements) 🛠️
+- **可調整分割欄 (Resizable Split Pane)**: 編輯器與預覽視窗中間的分隔線現在支援拖曳調整寬度。
+- **排程清理 (Scheduled Cleanup)**: 每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
