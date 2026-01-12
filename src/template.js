@@ -187,7 +187,17 @@ textarea#contents {
 
 /* Utilities */
 .hide { display: none !important; }
-.divide-line { width: 1px; background-color: #e1e4e8; z-index: 10; }
+.divide-line { 
+    width: 8px; 
+    background-color: #f6f8fa; 
+    border-left: 1px solid #e1e4e8; 
+    border-right: 1px solid #e1e4e8; 
+    cursor: col-resize; 
+    z-index: 10; 
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+.divide-line:hover { background-color: #e1e4e8; }
 
 /* Loading */
 #loading { position: fixed; top: 10px; right: 10px; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; display: none; z-index: 9999; }
@@ -653,8 +663,56 @@ textarea#contents {
         });
     }
 
+    // Resizable Split Pane Logic
+    const $resizer = document.querySelector('.divide-line');
+    if ($resizer && $textarea && ($previewMd || $previewPlain)) {
+        const $preview = $previewMd || $previewPlain;
+        
+        let x = 0;
+        let leftWidth = 0;
+        let parentWidth = 0;
 
+        const mouseDownHandler = function(e) {
+            x = e.clientX;
+            const leftRect = $textarea.getBoundingClientRect();
+            leftWidth = leftRect.width;
+            parentWidth = $resizer.parentNode.getBoundingClientRect().width;
 
+            document.addEventListener('mousemove', mouseMoveHandler);
+            document.addEventListener('mouseup', mouseUpHandler);
+            
+            $resizer.style.borderLeft = '1px solid #0366d6';
+            $resizer.style.borderRight = '1px solid #0366d6';
+            document.body.style.cursor = 'col-resize';
+            $textarea.style.pointerEvents = 'none';
+            $preview.style.pointerEvents = 'none';
+        };
+
+        const mouseMoveHandler = function(e) {
+            const dx = e.clientX - x;
+            const newLeftPercent = ((leftWidth + dx) * 100) / parentWidth;
+            
+            // Constrain
+            if (newLeftPercent < 10) return;
+            if (newLeftPercent > 90) return;
+
+            $textarea.style.flex = \`0 0 \${newLeftPercent}%\`;
+            $preview.style.flex = \`0 0 calc(\${100 - newLeftPercent}% - 8px)\`;
+        };
+
+        const mouseUpHandler = function() {
+            document.removeEventListener('mousemove', mouseMoveHandler);
+            document.removeEventListener('mouseup', mouseUpHandler);
+            
+            $resizer.style.borderLeft = null;
+            $resizer.style.borderRight = null;
+            document.body.style.cursor = null;
+            $textarea.style.removeProperty('pointer-events');
+            $preview.style.removeProperty('pointer-events');
+        };
+
+        $resizer.addEventListener('mousedown', mouseDownHandler);
+    }
 
     if ($textarea) {
             // Paste Image Handler
