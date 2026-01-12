@@ -58,7 +58,7 @@ const HTML = ({ lang, title, content, ext = {}, tips, isEdit, showPwPrompt, path
     <title>${title} - ${APP_NAME}</title>
     <style>
 /* Reset & Base */
-body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; overflow: hidden; }
+body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; height: 100dvh; overflow: hidden; }
 * { box-sizing: border-box; }
 
 /* Scrollbar */
@@ -68,7 +68,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 ::-webkit-scrollbar-thumb:hover { background: #999; }
 
 /* Layout */
-.note-container { height: 100vh; display: flex; flex-direction: column; }
+.note-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
 .stack { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 /* Flattening the layers structure visually, assuming they were for shadows/borders which we might simplify for full-screen feel or keep */
 .layer_1, .layer_2, .layer_3 { height: 100%; display: flex; flex-direction: column; } /* Ensure height propagation */
@@ -222,6 +222,27 @@ textarea#contents {
 .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
 .modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
+
+/* GitHub Alerts */
+.markdown-alert { padding: 8px 16px; margin-bottom: 16px; border-left: 0.25em solid; border-radius: 6px; }
+.markdown-alert > :first-child { margin-top: 0; }
+.markdown-alert > :last-child { margin-bottom: 0; }
+
+.markdown-alert-note { border-color: #0969da; background-color: #f1f8ff; color: #0d1117;} /* Light theme defaults */
+.markdown-alert-note::before { content: "ℹ️ Note"; font-weight: 600; display: block; margin-bottom: 4px; color: #0969da; }
+
+.markdown-alert-tip { border-color: #1a7f37; background-color: #f0fdf4; color: #0d1117;}
+.markdown-alert-tip::before { content: "💡 Tip"; font-weight: 600; display: block; margin-bottom: 4px; color: #1a7f37; }
+
+.markdown-alert-important { border-color: #8250df; background-color: #f6f0ff; color: #0d1117;}
+.markdown-alert-important::before { content: "💬 Important"; font-weight: 600; display: block; margin-bottom: 4px; color: #8250df; }
+
+.markdown-alert-warning { border-color: #9a6700; background-color: #fff8c5; color: #0d1117;}
+.markdown-alert-warning::before { content: "⚠️ Warning"; font-weight: 600; display: block; margin-bottom: 4px; color: #9a6700; }
+
+.markdown-alert-caution { border-color: #cf222e; background-color: #ffebe9; color: #0d1117;}
+.markdown-alert-caution::before { content: "🛑 Caution"; font-weight: 600; display: block; margin-bottom: 4px; color: #cf222e; }
+
     </style>
     <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
 </head>
@@ -244,7 +265,90 @@ textarea#contents {
     <div id="loading"></div>
     ${MODAL(lang)}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
-    ${((ext.mode || 'md') === 'md' || !isEdit) ? `<script src="${CDN_PREFIX}/marked@11.1.1/marked.min.js"></script>` : ''}
+    
+    <!-- KaTeX CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    
+    <!-- Remark / Unified Ecosystem -->
+    ${((ext.mode || 'md') === 'md' || !isEdit) ? `
+    <script type="module">
+        import { unified } from 'https://esm.sh/unified@11.0.4?bundle';
+        import remarkParse from 'https://esm.sh/remark-parse@11.0.0?bundle';
+        import remarkGfm from 'https://esm.sh/remark-gfm@4.0.0?bundle';
+        import remarkMath from 'https://esm.sh/remark-math@6.0.0?bundle';
+        import remarkRehype from 'https://esm.sh/remark-rehype@11.1.0?bundle';
+        import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
+        import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
+        import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
+        import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
+
+        // GitHub Alerts Plugin
+        function remarkGithubAlerts() {
+            return (tree) => {
+                visit(tree, 'blockquote', (node) => {
+                    const paragraph = node.children[0];
+                    if (paragraph && paragraph.type === 'paragraph' && paragraph.children[0] && paragraph.children[0].type === 'text') {
+                        const text = paragraph.children[0].value;
+                        const match = text.match(new RegExp('^\\\\x5B!([A-Z]+)\\\\x5D'));
+                        if (match) {
+                            const alertType = match[1];
+                            const typeLower = alertType.toLowerCase();
+                            
+                            node.data = node.data || {};
+                            node.data.hProperties = node.data.hProperties || {};
+                            node.data.hProperties.className = ['markdown-alert', 'markdown-alert-' + typeLower];
+                            
+                            const markerLength = match[0].length;
+                            let newText = text.slice(markerLength);
+                            
+                            if (!newText.trim()) {
+                                paragraph.children.shift();
+                            } else {
+                                paragraph.children[0].value = newText;
+                            }
+                        }
+                    }
+                });
+            };
+        }
+
+        const processor = unified()
+            .use(remarkParse)
+            .use(remarkGithubAlerts)
+            .use(remarkGfm)
+            .use(remarkMath)
+            .use(remarkBreaks)
+            .use(remarkRehype)
+            .use(rehypeKatex)
+            .use(rehypeStringify);
+
+        window.renderMarkdown = async (node, text) => {
+            console.log('Markdown render requested for node:', node);
+            if (!node) return;
+            try {
+                console.time('remark-process');
+                const file = await processor.process(text);
+                console.timeEnd('remark-process');
+                
+                const clean = DOMPurify.sanitize(String(file), {
+                    ADD_TAGS: ['math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input'],
+                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled'] 
+                });
+                
+                node.innerHTML = clean;
+                console.log('Markdown render completed successfully');
+            } catch (e) {
+                console.error('Markdown rendering error:', e);
+                node.innerHTML = '<p style="color:red">Rendering Error: ' + e.message + '</p>';
+            }
+        };
+
+        // Trigger initial render if needed (content already loaded)
+         window.dispatchEvent(new Event('markdown-ready'));
+
+    </script>
+    ` : ''}
+    
     <script>
     function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r=window.document.execCommand("copy")}finally{t.removeAllRanges(),window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
     
@@ -344,12 +448,15 @@ textarea#contents {
         }
     }
 
-
-
-    const renderMarkdown = (node, text) => {
-        if (node) {
-            const parseText = marked.parse(text)
-            node.innerHTML = DOMPurify.sanitize(parseText)
+    // Wrapper to handle async module loading
+    const triggerRender = (node, text) => {
+        if (window.renderMarkdown) {
+            window.renderMarkdown(node, text)
+        } else {
+            // Queue it or wait
+            window.addEventListener('markdown-ready', () => {
+                window.renderMarkdown(node, text)
+            }, { once: true })
         }
     }
 
@@ -367,7 +474,7 @@ textarea#contents {
         const $shareInput = document.querySelector('.share-modal input')
 
         renderPlain($previewPlain, $textarea.value)
-        renderMarkdown($previewMd, $textarea.value)
+        triggerRender($previewMd, $textarea.value)
 
         // Scroll Sync Logic
         let syncSource = null;
@@ -429,7 +536,7 @@ textarea#contents {
                                     const url = res.data
                                     const imageText = '![image](' + url + ')'
                                     $textarea.value = $textarea.value.replace(loadingText, imageText)
-                                    renderMarkdown($previewMd, $textarea.value)
+                                    triggerRender($previewMd, $textarea.value)
                                 } else {
                                     $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']')
                                     alert('Upload Failed: ' + res.msg)
@@ -446,7 +553,7 @@ textarea#contents {
             }
 
             $textarea.oninput = throttle(function () {
-                renderMarkdown($previewMd, $textarea.value)
+                triggerRender($previewMd, $textarea.value)
 
                 $loading.style.display = 'inline-block'
                 const data = {
