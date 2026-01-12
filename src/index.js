@@ -475,7 +475,7 @@ router.post('/:path/setting', async request => {
     const { path } = request.params
     if (request.headers.get('Content-Type') === 'application/json') {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const { mode, share } = await request.json()
+        const { mode, share, theme } = await request.json()
 
         const { value, metadata } = await queryNote(path)
         const valid = await checkAuth(cookie, path)
@@ -487,6 +487,7 @@ router.post('/:path/setting', async request => {
                         ...metadata,
                         ...mode !== undefined && { mode },
                         ...share !== undefined && { share },
+                        ...theme !== undefined && { theme },
                     },
                 })
 
