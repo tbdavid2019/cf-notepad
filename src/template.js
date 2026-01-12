@@ -243,6 +243,10 @@ textarea#contents {
 .markdown-alert-caution { border-color: #cf222e; background-color: #ffebe9; color: #0d1117;}
 .markdown-alert-caution::before { content: "🛑 Caution"; font-weight: 600; display: block; margin-bottom: 4px; color: #cf222e; }
 
+
+/* Diagram Source - Hidden */
+.diagram-source { display: none !important; }
+
     </style>
     <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
 </head>
@@ -312,15 +316,151 @@ textarea#contents {
             };
         }
 
+        // Diagram Detection Plugin
+        function remarkDiagramPlugin() {
+            return (tree) => {
+                visit(tree, 'code', (node, index, parent) => {
+                    const lang = node.lang;
+                    if (!lang) return;
+                    
+                    // Support aliases
+                    let type = null;
+                    if (lang === 'mermaid') type = 'mermaid';
+                    else if (lang === 'sequence') type = 'sequence';
+                    else if (lang === 'flow') type = 'flow';
+                    else if (lang === 'graphviz') type = 'graphviz';
+                    else if (lang === 'abc') type = 'abc';
+                    
+                    if (type) {
+                        // Transform to HTML node
+                        // We use a div with the raw code inside, which we will extract later
+                        // escaping: simplistic escaping for extraction safety
+                        const safeValue = node.value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        parent.children[index] = {
+                            type: 'html',
+                            value: \`<div class="diagram-\${type}-container diagram-source" style="display:none">\${safeValue}</div><div class="diagram-\${type}-render"></div>\`
+                        };
+                    }
+                });
+            };
+        }
+
         const processor = unified()
             .use(remarkParse)
             .use(remarkGithubAlerts)
+            .use(remarkDiagramPlugin) // Add diagram plugin
             .use(remarkGfm)
             .use(remarkMath)
             .use(remarkBreaks)
-            .use(remarkRehype)
+            .use(remarkRehype, { allowDangerousHtml: true }) // Allow our div containers
             .use(rehypeKatex)
-            .use(rehypeStringify);
+            .use(rehypeStringify, { allowDangerousHtml: true });
+
+        // Helper to load scripts
+        const loadScript = (src) => new Promise((resolve, reject) => {
+            if (document.querySelector(\`script[src = "\${src}"]\`)) return resolve();
+            const s = document.createElement('script');
+            s.src = src;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+
+        // Initialize Diagrams (Lazy Load)
+        const initDiagrams = async () => {
+            // 1. Mermaid
+            const mermaidNodes = document.querySelectorAll('.diagram-mermaid-render');
+            console.log('Mermaid nodes found:', mermaidNodes.length);
+            
+            if (mermaidNodes.length > 0) {
+                 const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+                 mermaid.initialize({ startOnLoad: false });
+
+                 for (let i = 0; i < mermaidNodes.length; i++) {
+                     const renderNode = mermaidNodes[i];
+                     const container = renderNode.previousElementSibling;
+                     if (container && !renderNode.hasAttribute('data-processed')) {
+                         try {
+                              const code = container.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                              const id = \`mermaid-svg-\${Date.now()}-\${i}\`;
+                              console.log('Rendering mermaid:', id);
+                              
+                              const { svg } = await mermaid.render(id, code);
+                              renderNode.innerHTML = svg;
+                              renderNode.setAttribute('data-processed', 'true');
+                         } catch (e) {
+                              console.error('Mermaid render error', e);
+                              renderNode.innerHTML = \`<pre style="color:red; background:#fee; padding:10px; border:1px solid red;">Mermaid Render Error: \${e.message}</pre>\`;
+                         }
+                     }
+                 }
+            }
+            
+            // 2. Flowchart.js (Needs Raphael)
+            if (document.querySelectorAll('.diagram-flow-render').length > 0) {
+                 try {
+                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js');
+                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.17.1/flowchart.min.js');
+                     
+                     document.querySelectorAll('.diagram-flow-render').forEach(el => {
+                         if (el.hasAttribute('data-processed')) return;
+                         const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                         el.innerHTML = ''; // clear
+                         const chart = flowchart.parse(code);
+                         chart.drawSVG(el);
+                         el.setAttribute('data-processed', 'true');
+                     });
+                 } catch(e) { console.error('Flowchart load failed', e); }
+            }
+            
+            // 3. Sequence (js-sequence-diagrams) (Needs Raphael, Underscore)
+           if (document.querySelectorAll('.diagram-sequence-render').length > 0) {
+                 try {
+                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/raphael/2.3.0/raphael.min.js');
+                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.13.6/underscore-min.js');
+                     await loadScript('https://cdnjs.cloudflare.com/ajax/libs/js-sequence-diagrams/1.0.6/sequence-diagram-min.js');
+                     
+                     document.querySelectorAll('.diagram-sequence-render').forEach(el => {
+                         if (el.hasAttribute('data-processed')) return;
+                         const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                         el.innerHTML = ''; 
+                         const diagram = Diagram.parse(code);
+                         diagram.drawSVG(el, {theme: 'simple'});
+                         el.setAttribute('data-processed', 'true');
+                     });
+                 } catch(e) { console.error('Sequence load failed', e); }
+            }
+            
+            // 4. Graphviz (Viz.js)
+            if (document.querySelectorAll('.diagram-graphviz-render').length > 0) {
+                 try {
+                     // Using @hpcc-js/wasm via unpkg or CDN
+                     const { Graphviz } = await import('https://cdn.jsdelivr.net/npm/@hpcc-js/wasm/dist/index.js');
+                     const graphviz = await Graphviz.load();
+                     
+                     document.querySelectorAll('.diagram-graphviz-render').forEach(el => {
+                         if (el.hasAttribute('data-processed')) return;
+                         const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                         el.innerHTML = graphviz.layout(code, "svg", "dot");
+                         el.setAttribute('data-processed', 'true');
+                     });
+                 } catch(e) { console.error('Graphviz load failed', e); }
+            }
+             
+            // 5. ABC.js
+             if (document.querySelectorAll('.diagram-abc-render').length > 0) {
+                 try {
+                     await loadScript('https://cdn.jsdelivr.net/npm/abcjs@6.2.2/dist/abcjs-basic-min.js');
+                     
+                     document.querySelectorAll('.diagram-abc-render').forEach(el => {
+                         if (el.hasAttribute('data-processed')) return;
+                         const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                         ABCJS.renderAbc(el, code);
+                         el.setAttribute('data-processed', 'true');
+                     });
+                 } catch(e) { console.error('ABC load failed', e); }
+            }
+        }
 
         window.renderMarkdown = async (node, text) => {
             console.log('Markdown render requested for node:', node);
@@ -331,12 +471,19 @@ textarea#contents {
                 console.timeEnd('remark-process');
                 
                 const clean = DOMPurify.sanitize(String(file), {
-                    ADD_TAGS: ['math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input'],
-                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled'] 
+                    ADD_TAGS: ['math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
+                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed'],
+                    WHOLE_DOCUMENT: false,
+                    FORCE_BODY: true // Ensure it treats it as fragment
                 });
                 
                 node.innerHTML = clean;
+                console.log('Sanitized HTML:', clean);
                 console.log('Markdown render completed successfully');
+                
+                // Init Lazy Loaded Diagrams
+                initDiagrams();
+                
             } catch (e) {
                 console.error('Markdown rendering error:', e);
                 node.innerHTML = '<p style="color:red">Rendering Error: ' + e.message + '</p>';
@@ -348,52 +495,52 @@ textarea#contents {
 
     </script>
     ` : ''}
-    
-    <script>
-    function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r=window.document.execCommand("copy")}finally{t.removeAllRanges(),window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
-    
+
+<script>
+    function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r = window.document.execCommand("copy")}finally{t.removeAllRanges(), window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
+
     // Inlined app.js to avoid static file issues
     const DEFAULT_LANG = 'zh-TW'
     const SUPPORTED_LANG = {
         'en': {
-            err: 'Error',
-            pepw: 'Please enter password.',
-            pwcnbe: 'Password is empty!',
-            enpw: 'Enter a new password (Keeping it empty will remove the current password)',
-            pwss: 'Password set successfully.',
-            pwrs: 'Password removed successfully.',
-            cpys: 'Copied!',
+        err: 'Error',
+    pepw: 'Please enter password.',
+    pwcnbe: 'Password is empty!',
+    enpw: 'Enter a new password (Keeping it empty will remove the current password)',
+    pwss: 'Password set successfully.',
+    pwrs: 'Password removed successfully.',
+    cpys: 'Copied!',
         },
-        'zh': {
-            err: '出错了',
-            pepw: '请输入密码',
-            pwcnbe: '密码不能为空！',
-            enpw: '输入新密码（留空可清除当前密码）',
-            pwss: '密码设置成功！',
-            pwrs: '密码清除成功！',
-            cpys: '已复制',
+    'zh': {
+        err: '出错了',
+    pepw: '请输入密码',
+    pwcnbe: '密码不能为空！',
+    enpw: '输入新密码（留空可清除当前密码）',
+    pwss: '密码设置成功！',
+    pwrs: '密码清除成功！',
+    cpys: '已复制',
         },
-        'zh-TW': {
-            err: '出錯了',
-            pepw: '請輸入密碼',
-            pwcnbe: '密碼不能為空！',
-            enpw: '輸入新密碼（留空可清除當前密碼）',
-            pwss: '密碼設置成功！',
-            pwrs: '密碼清除成功！',
-            cpys: '已複製',
+    'zh-TW': {
+        err: '出錯了',
+    pepw: '請輸入密碼',
+    pwcnbe: '密碼不能為空！',
+    enpw: '輸入新密碼（留空可清除當前密碼）',
+    pwss: '密碼設置成功！',
+    pwrs: '密碼清除成功！',
+    cpys: '已複製',
         }
     }
 
     const getI18n = key => {
         const lang = navigator.language || navigator.userLanguage || DEFAULT_LANG
-        // First try exact match (e.g., zh-TW)
-        if (SUPPORTED_LANG[lang]) {
+    // First try exact match (e.g., zh-TW)
+    if (SUPPORTED_LANG[lang]) {
             return SUPPORTED_LANG[lang][key]
         }
-        // Then try base language (e.g., zh from zh-TW)
-        const userLang = lang.split('-')[0]
+    // Then try base language (e.g., zh from zh-TW)
+    const userLang = lang.split('-')[0]
         const targetLang = Object.keys(SUPPORTED_LANG).find(l => l === userLang) || DEFAULT_LANG
-        return SUPPORTED_LANG[targetLang][key]
+    return SUPPORTED_LANG[targetLang][key]
     }
 
     const errHandle = (err) => {
@@ -407,7 +554,7 @@ textarea#contents {
             if (tid) return;
 
             tid = setTimeout(() => {
-                func(...arg)
+        func(...arg)
                 tid = null
             }, delay)
         }
@@ -415,19 +562,19 @@ textarea#contents {
 
     const passwdPrompt = () => {
         const passwd = window.prompt(getI18n('pepw'))
-        if (passwd == null) return;
+    if (passwd == null) return;
 
-        if (!passwd.trim()) {
-            alert(getI18n('pwcnbe'))
-        }
-        const path = location.pathname
-        window.fetch(path + '/auth', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
+    if (!passwd.trim()) {
+        alert(getI18n('pwcnbe'))
+    }
+    const path = location.pathname
+    window.fetch(path + '/auth', {
+        method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                passwd,
+    body: JSON.stringify({
+        passwd,
             }),
         })
             .then(res => res.json())
@@ -435,247 +582,250 @@ textarea#contents {
                 if (res.err !== 0) {
                     return errHandle(res.msg)
                 }
-                if (res.data.refresh) {
-                    window.location.reload()
-                }
+    if (res.data.refresh) {
+        window.location.reload()
+    }
             })
             .catch(err => errHandle(err))
     }
 
     const renderPlain = (node, text) => {
         if (node) {
-            node.innerHTML = DOMPurify.sanitize(text)
-        }
+        node.innerHTML = DOMPurify.sanitize(text)
+    }
     }
 
     // Wrapper to handle async module loading
     const triggerRender = (node, text) => {
         if (window.renderMarkdown) {
+        window.renderMarkdown(node, text)
+    } else {
+        // Queue it or wait
+        window.addEventListener('markdown-ready', () => {
             window.renderMarkdown(node, text)
-        } else {
-            // Queue it or wait
-            window.addEventListener('markdown-ready', () => {
-                window.renderMarkdown(node, text)
-            }, { once: true })
-        }
+        }, { once: true })
+    }
     }
 
     window.addEventListener('DOMContentLoaded', function () {
         const $textarea = document.querySelector('#contents')
-        const $loading = document.querySelector('#loading')
-        const $pwBtn = document.querySelector('.opt-pw')
+    const $loading = document.querySelector('#loading')
+    const $pwBtn = document.querySelector('.opt-pw')
         const $modeBtn = document.querySelector('.opt-mode > input')
         const $shareBtn = document.querySelector('.opt-share > input')
-        const $previewPlain = document.querySelector('#preview-plain')
-        const $previewMd = document.querySelector('#preview-md')
-        const $shareModal = document.querySelector('.share-modal')
-        const $closeBtn = document.querySelector('.share-modal .close-btn')
-        const $copyBtn = document.querySelector('.share-modal .opt-button')
-        const $shareInput = document.querySelector('.share-modal input')
+    const $previewPlain = document.querySelector('#preview-plain')
+    const $previewMd = document.querySelector('#preview-md')
+    const $shareModal = document.querySelector('.share-modal')
+    const $closeBtn = document.querySelector('.share-modal .close-btn')
+    const $copyBtn = document.querySelector('.share-modal .opt-button')
+    const $shareInput = document.querySelector('.share-modal input')
 
-        renderPlain($previewPlain, $textarea.value)
-        triggerRender($previewMd, $textarea.value)
+    renderPlain($previewPlain, $textarea.value)
+    triggerRender($previewMd, $textarea.value)
 
-        // Scroll Sync Logic
-        let syncSource = null;
-        
-        const syncScroll = (source, target) => {
-            if (!source || !target) return;
-            // Calculate percentage
-            const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
-            // Apply to target
-            target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
-        }
+    // Scroll Sync Logic
+    let isSyncingLeft = false;
+    let isSyncingRight = false;
+    let syncTimeout = null;
 
-        if ($textarea && ($previewMd || $previewPlain)) {
-            const $preview = $previewMd || $previewPlain;
-            
-            $textarea.addEventListener('mouseenter', () => { syncSource = 'edit'; });
-            $preview.addEventListener('mouseenter', () => { syncSource = 'preview'; });
+    const syncScroll = (source, target) => {
+        const percentage = source.scrollTop / (source.scrollHeight - source.clientHeight);
+    target.scrollTop = percentage * (target.scrollHeight - target.clientHeight);
+    }
 
-            $textarea.addEventListener('scroll', () => {
-                if (syncSource === 'edit') {
-                    syncScroll($textarea, $preview);
-                }
-            });
+    if ($textarea && ($previewMd || $previewPlain)) {
+        const $preview = $previewMd || $previewPlain;
 
-            $preview.addEventListener('scroll', () => {
-                if (syncSource === 'preview') {
-                    syncScroll($preview, $textarea);
-                }
-            });
-        }
+        $textarea.addEventListener('scroll', () => {
+            if (isSyncingLeft) return;
+    isSyncingRight = true;
+    syncScroll($textarea, $preview);
+    clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => isSyncingRight = false, 50);
+        });
 
-        if ($textarea) {
+        $preview.addEventListener('scroll', () => {
+            if (isSyncingRight) return;
+    isSyncingLeft = true;
+    syncScroll($preview, $textarea);
+    clearTimeout(syncTimeout);
+            syncTimeout = setTimeout(() => isSyncingLeft = false, 50);
+        });
+    }
+
+
+
+
+    if ($textarea) {
             // Paste Image Handler
             if (window.ENABLE_R2) {
-                $textarea.addEventListener('paste', function (e) {
-                    const items = (e.clipboardData || e.originalEvent.clipboardData).items
-                    for (let index in items) {
-                        const item = items[index]
-                        if (item.kind === 'file' && item.type.startsWith('image/')) {
-                            e.preventDefault()
-                            const blob = item.getAsFile()
-                            
-                            // Insert loading text
-                            const start = $textarea.selectionStart
-                            const loadingText = '![Uploading...]()'
-                            $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
-                            $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
+        $textarea.addEventListener('paste', function (e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items
+            for (let index in items) {
+                const item = items[index]
+                if (item.kind === 'file' && item.type.startsWith('image/')) {
+                    e.preventDefault()
+                    const blob = item.getAsFile()
 
-                            const formData = new FormData()
-                            formData.append('image', blob)
+                    // Insert loading text
+                    const start = $textarea.selectionStart
+                    const loadingText = '![Uploading...]()'
+                    $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
+                    $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
 
-                            window.fetch('/upload', {
-                                method: 'POST',
-                                body: formData
-                            })
-                            .then(res => res.json())
-                            .then(res => {
-                                if (res.err === 0) {
-                                    const url = res.data
-                                    const imageText = '![image](' + url + ')'
-                                    $textarea.value = $textarea.value.replace(loadingText, imageText)
-                                    triggerRender($previewMd, $textarea.value)
-                                } else {
-                                    $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']')
-                                    alert('Upload Failed: ' + res.msg)
-                                }
-                            })
-                            .catch(err => {
-                                 $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed]')
-                                 alert('Upload Error: ' + err)
-                            })
-                            return;
-                        }
-                    }
-                })
+                    const formData = new FormData()
+                    formData.append('image', blob)
+
+                    window.fetch('/upload', {
+                        method: 'POST',
+                        body: formData
+                    })
+                        .then(res => res.json())
+                        .then(res => {
+                            if (res.err === 0) {
+                                const url = res.data
+                                const imageText = '![image](' + url + ')'
+                                $textarea.value = $textarea.value.replace(loadingText, imageText)
+                                triggerRender($previewMd, $textarea.value)
+                            } else {
+                                $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']')
+                                alert('Upload Failed: ' + res.msg)
+                            }
+                        })
+                        .catch(err => {
+                            $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed]')
+                            alert('Upload Error: ' + err)
+                        })
+                    return;
+                }
             }
+        })
+    }
 
-            $textarea.oninput = throttle(function () {
-                triggerRender($previewMd, $textarea.value)
+    $textarea.oninput = throttle(function () {
+        triggerRender($previewMd, $textarea.value)
 
                 $loading.style.display = 'inline-block'
-                const data = {
-                    t: $textarea.value,
+    const data = {
+        t: $textarea.value,
                 }
 
-                window.fetch('', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
+    window.fetch('', {
+        method: 'POST',
+    headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
                     },
-                    body: new URLSearchParams(data),
+    body: new URLSearchParams(data),
                 })
                     .then(res => res.json())
                     .then(res => {
                         if (res.err !== 0) {
-                            errHandle(res.msg)
-                        }
+        errHandle(res.msg)
+    }
                     })
                     .catch(err => errHandle(err))
                     .finally(() => {
-                        $loading.style.display = 'none'
-                    })
+        $loading.style.display = 'none'
+    })
             }, 1000)
         }
 
         // Password button handlers
         const bindPwHandler = (btnSelector, type) => {
             const btn = document.querySelector(btnSelector);
-            if (btn) {
-                btn.onclick = function () {
-                    const passwd = window.prompt(getI18n('enpw'))
-                    if (passwd == null) return;
+    if (btn) {
+        btn.onclick = function () {
+            const passwd = window.prompt(getI18n('enpw'))
+            if (passwd == null) return;
 
-                    const path = window.location.pathname
-                    window.fetch(path + '/pw', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            passwd: passwd.trim(),
-                            type: type,
-                        }),
-                    })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-                        alert(passwd ? getI18n('pwss') : getI18n('pwrs'))
-                        location.reload()
-                    })
-                    .catch(err => errHandle(err))
-                }
-            }
-        }
-        
-        bindPwHandler('.opt-pw', 'edit');
-        bindPwHandler('.opt-pw-view', 'view');
-
-        if ($modeBtn) {
-            $modeBtn.onclick = function (e) {
-                const isMd = e.target.checked
-                const path = window.location.pathname
-                window.fetch(path + '/setting', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        mode: isMd ? 'md' : 'plain',
-                    }),
+            const path = window.location.pathname
+            window.fetch(path + '/pw', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    passwd: passwd.trim(),
+                    type: type,
+                }),
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.err !== 0) {
+                        return errHandle(res.msg)
+                    }
+                    alert(passwd ? getI18n('pwss') : getI18n('pwrs'))
+                    location.reload()
                 })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-
-                        window.location.reload()
-                    })
-                    .catch(err => errHandle(err))
-            }
+                .catch(err => errHandle(err))
         }
+    }
+        }
+
+    bindPwHandler('.opt-pw', 'edit');
+    bindPwHandler('.opt-pw-view', 'view');
+
+    if ($modeBtn) {
+        $modeBtn.onclick = function (e) {
+            const isMd = e.target.checked
+            const path = window.location.pathname
+            window.fetch(path + '/setting', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    mode: isMd ? 'md' : 'plain',
+                }),
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.err !== 0) {
+                        return errHandle(res.msg)
+                    }
+
+                    window.location.reload()
+                })
+                .catch(err => errHandle(err))
+        }
+    }
 
         // Handle published share URL
-        const $shareUrlInput = document.querySelector('.share-url-input');
-        const $shareCopyBtn = document.querySelector('#copy-share-btn');
-        const $unpublishBtn = document.querySelector('.unpublish-btn');
-        
-        if ($shareUrlInput && $shareCopyBtn) {
+    const $shareUrlInput = document.querySelector('.share-url-input');
+    const $shareCopyBtn = document.querySelector('#copy-share-btn');
+    const $unpublishBtn = document.querySelector('.unpublish-btn');
+
+    if ($shareUrlInput && $shareCopyBtn) {
             // Update input with full URL
             try {
                 const currentValue = $shareUrlInput.getAttribute('value') || $shareUrlInput.value;
-                $shareUrlInput.value = window.location.origin + currentValue;
+    $shareUrlInput.value = window.location.origin + currentValue;
             } catch(e) {
-                console.error('Failed to update share URL:', e);
+        console.error('Failed to update share URL:', e);
             }
-            
+
             // Copy button handler
             $shareCopyBtn.addEventListener('click', async () => {
                 try {
-                    await clipboardCopy($shareUrlInput.value);
-                    const originalText = $shareCopyBtn.innerText;
-                    $shareCopyBtn.innerText = '✅';
+        await clipboardCopy($shareUrlInput.value);
+    const originalText = $shareCopyBtn.innerText;
+    $shareCopyBtn.innerText = '✅';
                     setTimeout(() => $shareCopyBtn.innerText = originalText, 2000);
                 } catch (e) {
-                    alert('Copy failed');
+        alert('Copy failed');
                 }
             });
         }
-        
-        // Unpublish button handler
-        if ($unpublishBtn) {
-            $unpublishBtn.addEventListener('click', () => {
-                if (!confirm('確定要取消發布此分享連結嗎？')) return;
-                
-                const path = window.location.pathname;
-                window.fetch(path + '/setting', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ share: false }),
-                })
+
+    // Unpublish button handler
+    if ($unpublishBtn) {
+        $unpublishBtn.addEventListener('click', () => {
+            if (!confirm('確定要取消發布此分享連結嗎？')) return;
+
+            const path = window.location.pathname;
+            window.fetch(path + '/setting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ share: false }),
+            })
                 .then(res => res.json())
                 .then(res => {
                     if (res.err !== 0) {
@@ -684,61 +834,61 @@ textarea#contents {
                     window.location.reload();
                 })
                 .catch(err => errHandle(err));
-            });
+        });
         }
 
-        if ($shareBtn) {
-            $shareBtn.onclick = function (e) {
-                const isShare = e.target.checked
-                const path = window.location.pathname
-                window.fetch(path + '/setting', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        share: isShare,
-                    }),
+    if ($shareBtn) {
+        $shareBtn.onclick = function (e) {
+            const isShare = e.target.checked
+            const path = window.location.pathname
+            window.fetch(path + '/setting', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    share: isShare,
+                }),
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.err !== 0) {
+                        return errHandle(res.msg)
+                    }
+
+                    if (isShare) {
+                        const origin = window.location.origin
+                        const url = origin + '/share/' + res.data
+                        // show modal
+                        $shareInput.value = url
+                        $shareModal.style.display = 'block'
+                    }
                 })
-                    .then(res => res.json())
-                    .then(res => {
-                        if (res.err !== 0) {
-                            return errHandle(res.msg)
-                        }
-
-                        if (isShare) {
-                            const origin = window.location.origin
-                            const url = origin + '/share/' + res.data
-                            // show modal
-                            $shareInput.value = url
-                            $shareModal.style.display = 'block'
-                        }
-                    })
-                    .catch(err => errHandle(err))
-            }
+                .catch(err => errHandle(err))
         }
+    }
 
-        if ($shareModal) {
-            $closeBtn.onclick = function () {
-                $shareModal.style.display = 'none'
+    if ($shareModal) {
+        $closeBtn.onclick = function () {
+            $shareModal.style.display = 'none'
 
-            }
+        }
             $copyBtn.onclick = function () {
-                clipboardCopy($shareInput.value)
+        clipboardCopy($shareInput.value)
                 const originText = $copyBtn.innerHTML
-                const originColor = $copyBtn.style.background
-                $copyBtn.innerHTML = getI18n('cpys')
-                $copyBtn.style.background = 'orange'
+    const originColor = $copyBtn.style.background
+    $copyBtn.innerHTML = getI18n('cpys')
+    $copyBtn.style.background = 'orange'
                 window.setTimeout(() => {
-                    $shareModal.style.display = 'none'
+        $shareModal.style.display = 'none'
                     $copyBtn.innerHTML = originText
-                    $copyBtn.style.background = originColor
+    $copyBtn.style.background = originColor
                 }, 1500)
             }
         }
 
     })
-    </script>
+</script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
 </body >
@@ -751,40 +901,40 @@ export const NeedPasswd = data => HTML({ tips: SUPPORTED_LANG[data.lang].tipEncr
 export const Page404 = data => HTML({ tips: SUPPORTED_LANG[data.lang].tip404, ...data })
 
 export const Admin = ({ lang, notes, error }) => `
-    <!DOCTYPE html>
-    <html>
-        <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <title>Admin — Cloud Notepad</title>
-            <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
-            <link href="${CDN_PREFIX}/css/app.min.css" rel="stylesheet" media="screen" />
-            <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; padding: 20px; }
-                .admin-container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-                h1 { margin-top: 0; color: #333; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-                th { background-color: #f8f9fa; font-weight: 600; color: #555; cursor: pointer; user-select: none; position: relative; }
-                th:hover { background-color: #e9ecef; }
-                th::after { content: '↕'; position: absolute; right: 8px; opacity: 0.3; font-size: 12px; }
-                th.asc::after { content: '↑'; opacity: 1; }
-                th.desc::after { content: '↓'; opacity: 1; }
-                tr:hover { background-color: #f5f5f5; }
-                a { color: #007bff; text-decoration: none; }
-                a:hover { text-decoration: underline; }
-                .login-form { text-align: center; margin-top: 40px; }
-                .login-form input { padding: 12px; margin: 10px 0; width: 100%; max-width: 300px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-                .login-form button { padding: 12px 40px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
-                .login-form button:hover { background-color: #0056b3; }
-                .error { background-color: #ffebee; color: #c62828; padding: 12px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffcdd2; }
-            </style>
-        </head>
-        <body>
-            <div class="admin-container">
-                <h1>Cloud Notepad Admin</h1>
-                ${error ? `<div class="error">${error}</div>` : ''}
-                ${notes ? `
+    < !DOCTYPE html >
+        <html>
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <title>Admin — Cloud Notepad</title>
+                <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
+                <link href="${CDN_PREFIX}/css/app.min.css" rel="stylesheet" media="screen" />
+                <style>
+                    body {font - family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; padding: 20px; }
+                    .admin-container {max - width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+                    h1 {margin - top: 0; color: #333; }
+                    table {width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td {padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+                    th {background - color: #f8f9fa; font-weight: 600; color: #555; cursor: pointer; user-select: none; position: relative; }
+                    th:hover {background - color: #e9ecef; }
+                    th::after {content: '↕'; position: absolute; right: 8px; opacity: 0.3; font-size: 12px; }
+                    th.asc::after {content: '↑'; opacity: 1; }
+                    th.desc::after {content: '↓'; opacity: 1; }
+                    tr:hover {background - color: #f5f5f5; }
+                    a {color: #007bff; text-decoration: none; }
+                    a:hover {text - decoration: underline; }
+                    .login-form {text - align: center; margin-top: 40px; }
+                    .login-form input {padding: 12px; margin: 10px 0; width: 100%; max-width: 300px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+                    .login-form button {padding: 12px 40px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+                    .login-form button:hover {background - color: #0056b3; }
+                    .error {background - color: #ffebee; color: #c62828; padding: 12px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffcdd2; }
+                </style>
+            </head>
+            <body>
+                <div class="admin-container">
+                    <h1>Cloud Notepad Admin</h1>
+                    ${error ? `<div class="error">${error}</div>` : ''}
+                    ${notes ? `
     <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
         <button id="batch-delete-btn" onclick="batchDelete()" disabled style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; opacity: 0.5;">
             🗑 刪除選中項
@@ -1006,7 +1156,7 @@ export const Admin = ({ lang, notes, error }) => `
         <button type="submit">Login</button>
     </form>
     `}
-            </div>
-        </body>
-    </html>
+                </div>
+            </body>
+        </html>
 `

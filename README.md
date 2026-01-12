@@ -118,6 +118,8 @@ wrangler secret put SCN_R2_DOMAIN
 DEV
 ```
 npx wrangler dev --local 2>&1 | head -n 50
+
+npm start
 ```
 
 正式區
@@ -280,3 +282,37 @@ enableR2 數據結構不匹配 → 將其合併到 ext 對象中
 4. **瀏覽計數優化 (View Tracking)** 👁️
    - 此版本導入 `visitor_id` Cookie，針對獨立訪客計數，不再重複計算同一用戶的刷新。
  - ![alt text](image-2.png)
+
+### 5. 高級圖表支援 (Advanced Diagrams) 📊
+本專案現已支援多種程式碼區塊圖表渲染，採用 **智慧懶加載 (Smart Lazy Loading)** 機制，僅在需要時才載入外部函式庫，保持頁面輕量。
+
+#### 支援類型
+1. **Mermaid** (` ```mermaid `)
+   - 流程圖, 時序圖, 甘特圖, 類別圖, 狀態圖...
+2. **Flowchart.js** (` ```flow `)
+   - 簡單的文本流程圖
+3. **JS Sequence Diagrams** (` ```sequence `)
+   - 手繪風格時序圖
+4. **Graphviz (Viz.js)** (` ```graphviz `)
+   - 複雜的 DOT 語言圖形
+5. **ABC.js** (` ```abc `)
+   - 五線譜音樂符號
+
+#### 使用範例
+
+**Mermaid:**
+\`\`\`mermaid
+graph TD;
+    A-->B;
+    A-->C;
+    B-->D;
+    C-->D;
+\`\`\`
+
+**Flowchart:**
+\`\`\`flow
+st=>start: Start
+e=>end: End
+op1=>operation: My Operation
+st->op1->e
+\`\`\`
