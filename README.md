@@ -12,26 +12,35 @@
 - **分享功能**：可產生唯讀的分享連結。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
-  - 查看筆記的瀏覽次數 (View Tracking)。
   - 檢查是否設定了密碼。
   - **直接刪除**違規或過期的筆記。
 - **[NEW] LLM & AI Agent API (無頭 CMS)**：
   - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
   - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
-  - 詳細請參閱：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
-- 現在用戶可以：
-  - 在任何地方複製圖片（截圖、文件等）
-  - 在筆記編輯器中按 Cmd+V (Mac) 或 Ctrl+V (Windows)
-  - 預覽窗格立即顯示上傳的圖片
-```
-  - 看到 ![Uploading...]() 臨時文本
-  - 圖片上傳完成後，自動替換為 ![image](R2_URL)
-```
+  - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
+- **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
+  - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
+  - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/david888-wiki-publisher/SKILL.md`。
+## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
-demo 
-https://wiki.david888.com/share/d50f8d1c1f297069770369e9cc26b828
+Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
 
-![alt text](image-1.png)
+### 1. 啟動 MCP Server (免安裝)
+我們提供了一個零安裝 (Zero-Install) 的 MCP 伺服器，直接透過 Python `uv` 遠端執行，無須下載任何程式碼：
+
+*   **對於 Cursor 或 Claude Desktop 用戶**，請在 MCP Server 設定中新增：
+    *   **Type**: `command`
+    *   **指令**: `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
+    *   *(詳細的環境變數與自架說明請見 [mcp/README.md](./mcp/README.md))*
+
+### 2. Antigravity AI Skills
+如果你使用的是 Google DeepMind 提供的工作流引擎或類 Antigravity 代理，我們也在開源專案內建了專用的 Prompt Skills。
+*   **如何安裝**：只需將 `skills/david888-wiki-publisher` 資料夾複製到你的 `~/.gemini/antigravity/skills/` 目錄下即可。
+*   這能讓 Agent 直接學習透過 cURL 呼叫 API，原生執行上傳圖片與產生文章回你的 Wiki 站點。
+
+詳細的 API 規格表可參考：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
+
+---
 
 ## 部署教學
 
