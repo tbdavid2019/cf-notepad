@@ -38,6 +38,19 @@ Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, 
 *   **如何安裝**：只需將 `skills/david888-wiki-publisher` 資料夾複製到你的 `~/.gemini/antigravity/skills/` 目錄下即可。
 *   這能讓 Agent 直接學習透過 cURL 呼叫 API，原生執行上傳圖片與產生文章回你的 Wiki 站點。
 
+### 3. 一鍵詠唱 (給其他 LLM 的 Prompt)
+如果你想請 ChatGPT、Claude 網頁版等 AI 幫你寫文章並**自動發布**，請直接複製以下整段文字（Prompt）貼給你的 AI：
+
+```text
+這是一台架設好的 Wiki 平台，具備無頭 CMS 的發文 API：`https://wiki.david888.com/api` 。
+請你擔任我的寫作助理，根據我的需求撰寫文章並發布。
+
+操作指南請閱讀以下文件內容（請運用你的上網 / 執行工具讀取）：
+👉 https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/LLM_API_DOCS.md
+
+請你使用上述文件的 cURL/HTTP 請求工具，完成寫作後將內容存檔，並把最後發布的文章網址給我。
+```
+
 詳細的 API 規格表可參考：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
 
 ---
@@ -264,6 +277,36 @@ wrangler deploy
 
 Visit your configured `SCN_ADMIN_PATH` (e.g., `https://your-worker.workers.dev/secret-admin`), enter your `SCN_ADMIN_PW` to manage and delete notes.
 
+## Extensions: MCP & AI Skills (Headless CMS)
+
+Cloud Notepad now fully supports being used by AI Agents (like Claude, Cursor, Antigravity, OpenClaw) as an "external brain" or "publishing platform"!
+
+### 1. Launching the MCP Server (Zero-Install)
+We provide a zero-install MCP Server that executes remotely via Python `uv` without downloading any code:
+
+*   **For Cursor or Claude Desktop users**, add this command to your MCP Server settings:
+    *   **Type**: `command`
+    *   **Command**: `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
+    *   *(For detailed env vars and self-hosting, see [mcp/README.md](./mcp/README.md))*
+
+### 2. Antigravity AI Skills
+If you use Google DeepMind's workflow engine or Antigravity-like agents, we have built-in Prompt Skills.
+*   **Install**: Just copy the `skills/david888-wiki-publisher` folder to your `~/.gemini/antigravity/skills/` directory.
+
+### 3. One-Click Prompt (For other LLMs)
+If you want ChatGPT, Claude Web, or other AI assistants to write articles and **auto-publish** them for you, just copy and paste the following prompt to your AI:
+
+```text
+This is a deployed Wiki platform functioning as a Headless CMS publishing API: `https://wiki.david888.com/api`.
+Please act as my writing assistant to draft and publish articles based on my requests.
+
+For operational guidelines, please read the following document (use your web-browsing/execution tools to fetch it):
+👉 https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/LLM_API_DOCS.md
+
+Use the cURL/HTTP request tools detailed in that document to save the content once you finish writing, and give me the URL of the published article.
+```
+
+For the detailed API specification, please refer to: [LLM_API_DOCS.md](./LLM_API_DOCS.md).
 
 ---
 本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)，
