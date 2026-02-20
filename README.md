@@ -15,6 +15,10 @@
   - 查看筆記的瀏覽次數 (View Tracking)。
   - 檢查是否設定了密碼。
   - **直接刪除**違規或過期的筆記。
+- **[NEW] LLM & AI Agent API (無頭 CMS)**：
+  - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
+  - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
+  - 詳細請參閱：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
 - 現在用戶可以：
   - 在任何地方複製圖片（截圖、文件等）
   - 在筆記編輯器中按 Cmd+V (Mac) 或 Ctrl+V (Windows)

@@ -287,6 +287,128 @@ router.get('/share/:md5', async (request) => {
     return returnPage('Page404', { lang, title: '404' })
 })
 
+router.get('/api/:path', async (request) => {
+    const { path } = request.params
+    const { value, metadata } = await queryNote(path)
+    const url = new URL(request.url)
+
+    if (metadata.pw || metadata.vpw) {
+        const queryPw = url.searchParams.get('pw')
+        const authHeader = request.headers.get('Authorization')
+        const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+
+        const providedPw = queryPw || headerPw;
+        if (!providedPw) return returnJSON(401, 'Unauthorized: Password required')
+
+        const storePw = await saltPw(providedPw)
+        const hasViewAccess = (metadata.vpw && metadata.vpw === storePw) ||
+            (metadata.pw && metadata.pw === storePw)
+
+        if (!hasViewAccess) return returnJSON(403, 'Forbidden: Incorrect password')
+    }
+
+    if (url.searchParams.get('format') === 'json') {
+        const displayMetadata = { ...metadata }
+        delete displayMetadata.pw
+        delete displayMetadata.vpw
+        return returnJSON(0, { content: value, metadata: displayMetadata })
+    }
+
+    return new Response(value || '', {
+        headers: {
+            'Content-Type': 'text/markdown;charset=UTF-8',
+            'Access-Control-Allow-Origin': '*'
+        }
+    })
+})
+
+router.post('/api/upload', async (request) => {
+    if (!getEnableR2()) return returnJSON(403, 'R2 Upload Disabled')
+    try {
+        const formData = await request.formData()
+        const image = formData.get('image') || formData.get('file')
+        if (!image) return returnJSON(400, 'No image/file found in form data')
+
+        const type = image.type.split('/')[1] || 'png'
+        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
+
+        await IMAGES.put(filename, image)
+        const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
+
+        return returnJSON(0, url)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.post('/api/:path', async (request) => {
+    const { path } = request.params
+    const { value, metadata } = await queryNote(path)
+    const url = new URL(request.url)
+
+    let reqBody = {}
+    const contentType = request.headers.get('Content-Type') || ''
+    if (contentType.includes('application/json')) {
+        try {
+            reqBody = await request.json()
+        } catch (e) {
+            return returnJSON(400, 'Invalid JSON body')
+        }
+    } else {
+        return returnJSON(400, 'Content-Type must be application/json')
+    }
+
+    if (metadata.pw) {
+        const queryPw = url.searchParams.get('pw')
+        const authHeader = request.headers.get('Authorization')
+        const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+
+        const bodyPw = reqBody.pw || null
+        const providedPw = queryPw || headerPw || bodyPw
+
+        if (!providedPw) return returnJSON(401, 'Unauthorized: Password required to edit')
+
+        const storePw = await saltPw(providedPw)
+        if (metadata.pw !== storePw) return returnJSON(403, 'Forbidden: Incorrect edit password')
+    }
+
+    const text = reqBody.text || ''
+    const append = reqBody.append === true
+
+    const newContent = append ? (value ? value + '\n\n' + text : text) : text
+
+    const updateMetadata = {
+        ...metadata,
+        updateAt: dayjs().unix(),
+    }
+
+    if (reqBody.pw !== undefined) updateMetadata.pw = reqBody.pw ? await saltPw(reqBody.pw) : undefined
+    if (reqBody.vpw !== undefined) updateMetadata.vpw = reqBody.vpw ? await saltPw(reqBody.vpw) : undefined
+    if (reqBody.share !== undefined) updateMetadata.share = reqBody.share === true
+
+    try {
+        await NOTES.put(path, newContent, {
+            metadata: updateMetadata,
+        })
+
+        const md5 = await MD5(path)
+        if (updateMetadata.share) {
+            await SHARE.put(md5, path)
+        } else if (updateMetadata.share === false) {
+            await SHARE.delete(md5)
+        }
+
+        const fullUrl = new URL(request.url)
+        return returnJSON(0, {
+            msg: 'Saved successfully',
+            url: `${fullUrl.protocol}//${fullUrl.host}/${path}`
+        })
+    } catch (error) {
+        console.error(error)
+        return returnJSON(500, 'KV insert fail!')
+    }
+})
+
 router.get('/:path', async (request) => {
     const lang = getI18n(request)
 
