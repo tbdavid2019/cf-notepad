@@ -443,8 +443,12 @@ router.get('/:path', async (request) => {
         views: currentViews
     }
 
+    // Check if the note actually exists in KV 
+    // (Bots testing random paths like .env will return empty value/metadata)
+    const noteExists = value !== '' || Object.keys(metadata).length > 0
+
     // View Tracking with visitor deduplication
-    if (request.event) {
+    if (request.event && noteExists) {
         request.event.waitUntil(
             (async () => {
                 try {
