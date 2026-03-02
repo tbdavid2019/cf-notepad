@@ -25,10 +25,12 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "# Your Markdown Title\n\nContent here.",
+    "share": true,
     "pw": "optional_admin_password",
     "vpw": "optional_view_password"
   }'
 ```
+*Note: You can use `"content"` instead of `"text"` as the payload key. By default, API-created notes are published automatically (`"share": true`), but you can pass `"share": false` to keep it private.*
 
 ### 3. Append to an Existing Wiki Page (POST)
 To add a new section to an existing page without reading and overwriting it (great for long context or updates):

@@ -372,7 +372,8 @@ router.post('/api/:path', async (request) => {
         if (metadata.pw !== storePw) return returnJSON(403, 'Forbidden: Incorrect edit password')
     }
 
-    const text = reqBody.text || ''
+    // Support "content" as a fallback in case LLM sends the wrong json key
+    const text = reqBody.text || reqBody.content || ''
     const append = reqBody.append === true
 
     const newContent = append ? (value ? value + '\n\n' + text : text) : text
