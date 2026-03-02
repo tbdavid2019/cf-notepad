@@ -384,7 +384,13 @@ router.post('/api/:path', async (request) => {
 
     if (reqBody.pw !== undefined) updateMetadata.pw = reqBody.pw ? await saltPw(reqBody.pw) : undefined
     if (reqBody.vpw !== undefined) updateMetadata.vpw = reqBody.vpw ? await saltPw(reqBody.vpw) : undefined
-    if (reqBody.share !== undefined) updateMetadata.share = reqBody.share === true
+
+    if (reqBody.share !== undefined) {
+        updateMetadata.share = reqBody.share === true
+    } else if (updateMetadata.share === undefined) {
+        // Default to sharing for notes created via API, unless explicitly disabled
+        updateMetadata.share = true
+    }
 
     try {
         await NOTES.put(path, newContent, {
