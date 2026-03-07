@@ -4,6 +4,8 @@
 
 它支援 Markdown 預覽、密碼保護、分享功能，以及一個隱藏的超級管理員介面。
 
+👉 **⚠️ 給 AI 與開發生態：若需使用 API 寫入/讀取文章，請務必先閱讀完整規格表：[LLM_API_DOCS.md](./LLM_API_DOCS.md) ⚠️**
+
 ## 功能特色
 
 - **輕量快速**：基於 Cloudflare Edge Network，全球存取速度極快。
@@ -167,6 +169,8 @@ wrangler deploy
 This project is a fork of [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad), a lightweight cloud notepad running on Cloudflare Workers.
 
 It supports Markdown preview, password protection, sharing, and a hidden Super Admin interface.
+
+👉 **⚠️ For AI Agents and Developers: If you need to read/write articles via API, you MUST read the full specification here: [LLM_API_DOCS.md](./LLM_API_DOCS.md) ⚠️**
 
 ## Features
 
@@ -376,3 +380,15 @@ st->op1->e
 ### 6. 其他增強功能 (Other Enhancements) 🛠️
 - **可調整分割欄 (Resizable Split Pane)**: 編輯器與預覽視窗中間的分隔線現在支援拖曳調整寬度。
 - **排程清理 (Scheduled Cleanup)**: 每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
+
+
+### DEMO
+
+```
+curl -X POST "https://wiki.david888.com/api/api_test_demo_2" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "content": "## 錯誤欄位防呆測試\n雖然我傳送的是 content，但因為剛才在 index.js "
+  }'
+```
+

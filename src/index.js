@@ -388,8 +388,11 @@ router.post('/api/:path', async (request) => {
 
     if (reqBody.share !== undefined) {
         updateMetadata.share = reqBody.share === true
+    } else if (reqBody.public !== undefined) {
+        // Alias public to share
+        updateMetadata.share = reqBody.public === true
     } else if (updateMetadata.share === undefined) {
-        // Default to sharing for notes created via API, unless explicitly disabled
+        // Unconditionally default to sharing for notes created via API
         updateMetadata.share = true
     }
 
@@ -406,10 +409,17 @@ router.post('/api/:path', async (request) => {
         }
 
         const fullUrl = new URL(request.url)
-        return returnJSON(0, {
+        const responseData = {
             msg: 'Saved successfully',
             url: `${fullUrl.protocol}//${fullUrl.host}/${path}`
-        })
+        }
+        
+        // Always provide the share URL if it's shared, so the LLM can give a safe link to the human
+        if (updateMetadata.share) {
+            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${md5}`
+        }
+
+        return returnJSON(0, responseData)
     } catch (error) {
         console.error(error)
         return returnJSON(500, 'KV insert fail!')

@@ -29,7 +29,10 @@ Create a new post, overwrite an existing post, or append text to the bottom.
 
 *   **URL Endpoint:** `POST /api/<path>`
 *   **Headers:** `Content-Type: application/json`
-*   **Returns:** `{"err": 0, "msg": "Saved successfully", "data": {"url": "https://wiki.david888.com/..."}}`
+*   **Returns:** `{"err": 0, "msg": "Saved successfully", "data": {"url": "https://wiki.david888.com/...", "shareUrl": "https://wiki.david888.com/share/..."}}`
+
+**CRITICAL INSTRUCTION FOR LLMS:**
+When you successfully write or create a post via this API, it will return both `url` (the edit link) and `shareUrl` (the public read-only link). **You MUST provide the `shareUrl`** to the human user so they can safely view the content without needing edit permissions. Do not give them `url`.
 
 **JSON Body Specifications:**
 
@@ -39,14 +42,14 @@ Create a new post, overwrite an existing post, or append text to the bottom.
 | `append` | boolean | (Optional) Defaults to `false`. If `true`, the `text` is appended to the bottom of the existing post content instead of erasing the whole file. |
 | `pw` | string | (Optional) Sets or verifies the **edit password**. Required if the existing post has an edit password. |
 | `vpw` | string | (Optional) Sets the **view password**. Only people (or LLMs) with this password can GET the page. |
-| `share` | boolean | (Optional) Set to `true` to enable public sharing format options. |
+| `public` | boolean | (Optional) Defaults to `true` unconditionally for API creations. Set to `false` to keep it private. (`share` is an accepted alias). |
 
 **Important Note for Appending Context:**
 If you only need to add an update section, DO NOT read the whole page and overwrite. Simply send `{"text": "\n\n## Update\n...", "append": true}` to automatically stick it at the bottom.
 
 ### 3. Uploading Images (`POST /api/upload`)
 
-If you generate or possess an image file that needs to be hosted alongside your report, use this native R2 upload endpoint.
+If you generate an image, download an image, or **if the user gives you local file paths to images** (e.g., `/home/user/images/chart.png`), you **MUST** use this native R2 upload endpoint to host the image online before embedding it.
 
 *   **URL Endpoint:** `POST /api/upload`
 *   **Headers:** `Content-Type: multipart/form-data`
@@ -57,7 +60,7 @@ If you generate or possess an image file that needs to be hosted alongside your 
     *   `{"err": 0, "data": "https://s3.wiki.david888.com/2026/02/xxxx.png"}`
 
 **Workflow for Document Generation with Images:**
-1. Post your image binary to `/api/upload`.
-2. Extract the `data` URL string from the response.
-3. Embed that URL in your text: `![Generated Image](https://s3.wiki.david888.com/.../xxxx.png)`.
-4. Call `POST /api/:path` with the text.
+1. For EVERY local image path you are given, POST the image binary to `/api/upload`.
+2. Extract the `data` URL string (`https://s3...`) from the response.
+3. Replace the local file path in your text with the public URL: `![Generated Image](https://s3.wiki.david888.com/.../xxxx.png)`.
+4. ONLY after uploading all local images and replacing their paths with the public URLs, call `POST /api/:path` with the final markdown text.

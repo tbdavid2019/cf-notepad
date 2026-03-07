@@ -86,12 +86,53 @@ async def write_wiki(
             if response.status_code == 200:
                 res_data = response.json()
                 if res_data.get("err") == 0:
-                    return f"Successfully wrote to wiki! View it at: {res_data.get('data', {}).get('url', f'{BASE_URL}/{path}')}"
+                    data = res_data.get('data', {})
+                    share_url = data.get('shareUrl')
+                    url = data.get('url', f'{BASE_URL}/{path}')
+                    if share_url:
+                        return f"Successfully wrote to wiki! Give this Public Share URL to the user: {share_url}"
+                    return f"Successfully wrote to wiki! View it at: {url}"
                 return f"Wiki API Error: {res_data.get('msg')}"
             else:
                 return f"Error: HTTP {response.status_code}. Response: {response.text}"
         except httpx.RequestError as exc:
             return f"An error occurred while communicating with the wiki: {exc}"
+
+
+@mcp.tool()
+async def upload_image(filepath: str) -> str:
+    """
+    Upload a local image file to the wiki's R2 storage.
+    
+    Use this when you generate an image or need to include an existing local image 
+    in your markdown document. You MUST upload the image first, wait for the URL, 
+    and then embed that URL in your markdown before calling write_wiki.
+
+    Args:
+        filepath: The absolute path to the local image file on your machine.
+    """
+    url = f"{BASE_URL}/api/upload"
+    
+    if not os.path.exists(filepath):
+        return f"Error: File not found at {filepath}"
+        
+    try:
+        with open(filepath, "rb") as f:
+            files = {"image": (os.path.basename(filepath), f, "application/octet-stream")}
+            
+            async with httpx.AsyncClient() as client:
+                response = await client.post(url, files=files, timeout=30.0)
+                
+                if response.status_code == 200:
+                    res_data = response.json()
+                    if res_data.get("err") == 0:
+                        img_url = res_data.get('data')
+                        return f"Success! Image uploaded. Embed it using this URL: {img_url}"
+                    return f"Wiki API Error: {res_data.get('msg')}"
+                else:
+                    return f"Error: HTTP {response.status_code}. Response: {response.text}"
+    except Exception as exc:
+        return f"An error occurred while uploading the image: {exc}"
 
 
 @mcp.tool()
@@ -124,7 +165,12 @@ async def append_wiki(path: str, text: str, password: Optional[str] = None) -> s
             if response.status_code == 200:
                 res_data = response.json()
                 if res_data.get("err") == 0:
-                    return f"Successfully appended to wiki! View it at: {res_data.get('data', {}).get('url', f'{BASE_URL}/{path}')}"
+                    data = res_data.get('data', {})
+                    share_url = data.get('shareUrl')
+                    url = data.get('url', f'{BASE_URL}/{path}')
+                    if share_url:
+                        return f"Successfully appended to wiki! Give this Public Share URL to the user: {share_url}"
+                    return f"Successfully appended to wiki! View it at: {url}"
                 return f"Wiki API Error: {res_data.get('msg')}"
             else:
                 return f"Error: HTTP {response.status_code}. Response: {response.text}"
