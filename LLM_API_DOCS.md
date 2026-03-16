@@ -43,6 +43,7 @@ When you successfully write or create a post via this API, it will return both `
 | `pw` | string | (Optional) Sets or verifies the **edit password**. Required if the existing post has an edit password. |
 | `vpw` | string | (Optional) Sets the **view password**. Only people (or LLMs) with this password can GET the page. |
 | `public` | boolean | (Optional) Defaults to `true` unconditionally for API creations. Set to `false` to keep it private. (`share` is an accepted alias). |
+| `theme` | string | (Optional) Choose a visual theme: `ayu-light`, `retro`, `bauhaus`, `botanical`, `green-simple`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`. |
 
 **Important Note for Appending Context:**
 If you only need to add an update section, DO NOT read the whole page and overwrite. Simply send `{"text": "\n\n## Update\n...", "append": true}` to automatically stick it at the bottom.

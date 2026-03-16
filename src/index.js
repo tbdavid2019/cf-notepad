@@ -396,6 +396,10 @@ router.post('/api/:path', async (request) => {
         updateMetadata.share = true
     }
 
+    if (reqBody.theme !== undefined) {
+        updateMetadata.theme = reqBody.theme
+    }
+
     try {
         await NOTES.put(path, newContent, {
             metadata: updateMetadata,

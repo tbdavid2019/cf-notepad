@@ -23,9 +23,12 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
   -H "Content-Type: application/json" \
   -d '{
     "text": "# Title\nContent",
-    "public": true
+    "public": true,
+    "theme": "retro"
   }'
 ```
+### 2.1 Available Themes
+Choose a theme to wow the user: `ayu-light`, `retro`, `bauhaus`, `botanical`, `green-simple`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`.
 > [!IMPORTANT]
 > **CRITICAL: READ THE RESPONSE CAREFULLY!**
 > The response contains TWO URLs:
