@@ -42,10 +42,19 @@ export function returnJSON(code, data, headers = {}) {
 }
 
 export async function MD5(str) {
-    const msgUint8 = new TextEncoder().encode(str)
-    const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    if (typeof str !== 'string') {
+        console.warn('MD5: Input is not a string, converting', str)
+        str = String(str || '')
+    }
+    try {
+        const msgUint8 = new TextEncoder().encode(str)
+        const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
+        const hashArray = Array.from(new Uint8Array(hashBuffer))
+        return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    } catch (e) {
+        console.error('MD5 Error:', e)
+        throw new Error(`MD5 Hashing failed: ${e.message}`)
+    }
 }
 
 export async function saltPw(password) {

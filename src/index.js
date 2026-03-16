@@ -421,8 +421,8 @@ router.post('/api/:path', async (request) => {
 
         return returnJSON(0, responseData)
     } catch (error) {
-        console.error(error)
-        return returnJSON(500, 'KV insert fail!')
+        console.error('API Error:', error)
+        return returnJSON(500, `API Internal Error: ${error.message}${error.stack ? '\n' + error.stack : ''}`)
     }
 })
 
@@ -580,77 +580,89 @@ router.post('/:path/auth', async request => {
 
 router.post('/:path/pw', async request => {
     const { path } = request.params
-    if (request.headers.get('Content-Type') === 'application/json') {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const { passwd, type } = await request.json()
+    try {
+        if (request.headers.get('Content-Type') === 'application/json') {
+            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+            const { passwd, type } = await request.json()
 
-        const { value, metadata } = await queryNote(path)
-        const valid = await checkAuth(cookie, path)
+            const { value, metadata } = await queryNote(path)
+            const valid = await checkAuth(cookie, path)
 
-        if (!metadata.pw || valid) {
-            const pwField = type === 'view' ? 'vpw' : 'pw'
-            const pw = passwd ? await saltPw(passwd) : undefined
-            try {
-                await NOTES.put(path, value, {
-                    metadata: {
-                        ...metadata,
-                        [pwField]: pw,
-                    },
-                })
-
-                return returnJSON(0, null, {
-                    'Set-Cookie': Cookies.serialize('auth', '', {
-                        path: `/${path}`,
-                        expires: dayjs().subtract(100, 'day').toDate(),
-                        httpOnly: true,
+            if (!metadata.pw || valid) {
+                const pwField = type === 'view' ? 'vpw' : 'pw'
+                const pw = passwd ? await saltPw(passwd) : undefined
+                try {
+                    await NOTES.put(path, value, {
+                        metadata: {
+                            ...metadata,
+                            [pwField]: pw,
+                        },
                     })
-                })
-            } catch (error) {
-                console.error(error)
-            }
-        }
 
-        return returnJSON(10003, 'Password setting failed!')
+                    return returnJSON(0, null, {
+                        'Set-Cookie': Cookies.serialize('auth', '', {
+                            path: `/${path}`,
+                            expires: dayjs().subtract(100, 'day').toDate(),
+                            httpOnly: true,
+                        })
+                    })
+                } catch (error) {
+                    console.error(error)
+                    throw error
+                }
+            }
+
+            return returnJSON(10003, 'Password setting failed!')
+        }
+    } catch (error) {
+        console.error('PW Error:', error)
+        return returnJSON(500, `PW Internal Error: ${error.message}`)
     }
 })
 
 router.post('/:path/setting', async request => {
     const { path } = request.params
-    if (request.headers.get('Content-Type') === 'application/json') {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const { mode, share, theme } = await request.json()
+    try {
+        if (request.headers.get('Content-Type') === 'application/json') {
+            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+            const { mode, share, theme } = await request.json()
 
-        const { value, metadata } = await queryNote(path)
-        const valid = await checkAuth(cookie, path)
+            const { value, metadata } = await queryNote(path)
+            const valid = await checkAuth(cookie, path)
 
-        if (!metadata.pw || valid) {
-            try {
-                await NOTES.put(path, value, {
-                    metadata: {
-                        ...metadata,
-                        ...mode !== undefined && { mode },
-                        ...share !== undefined && { share },
-                        ...theme !== undefined && { theme },
-                    },
-                })
+            if (!metadata.pw || valid) {
+                try {
+                    await NOTES.put(path, value, {
+                        metadata: {
+                            ...metadata,
+                            ...mode !== undefined && { mode },
+                            ...share !== undefined && { share },
+                            ...theme !== undefined && { theme },
+                        },
+                    })
 
-                const md5 = await MD5(path)
-                if (share) {
-                    await SHARE.put(md5, path)
-                    return returnJSON(0, md5)
+                    const md5 = await MD5(path)
+                    if (share) {
+                        await SHARE.put(md5, path)
+                        return returnJSON(0, md5)
+                    }
+                    if (share === false) {
+                        await SHARE.delete(md5)
+                    }
+
+
+                    return returnJSON(0)
+                } catch (error) {
+                    console.error(error)
+                    throw error
                 }
-                if (share === false) {
-                    await SHARE.delete(md5)
-                }
-
-
-                return returnJSON(0)
-            } catch (error) {
-                console.error(error)
             }
-        }
 
-        return returnJSON(10004, 'Update Setting failed!')
+            return returnJSON(10004, 'Update Setting failed!')
+        }
+    } catch (error) {
+        console.error('Setting Error:', error)
+        return returnJSON(500, `Setting Internal Error: ${error.message}`)
     }
 })
 
@@ -682,10 +694,9 @@ router.post('/:path', async request => {
 
         return returnJSON(0)
     } catch (error) {
-        console.error(error)
+        console.error('Save Error:', error)
+        return returnJSON(10001, `KV insert fail: ${error.message}`)
     }
-
-    return returnJSON(10001, 'KV insert fail!')
 })
 
 router.all('*', (request) => {

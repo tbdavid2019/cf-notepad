@@ -22,7 +22,7 @@
   - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
 - **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
   - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
-  - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/david888-wiki-publisher/SKILL.md`。
+  - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -37,7 +37,7 @@ Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, 
 
 ### 2. Antigravity AI Skills
 如果你使用的是 Google DeepMind 提供的工作流引擎或類 Antigravity 代理，我們也在開源專案內建了專用的 Prompt Skills。
-*   **如何安裝**：只需將 `skills/david888-wiki-publisher` 資料夾複製到你的 `~/.gemini/antigravity/skills/` 目錄下即可。
+*   **如何安裝**：只需將 `skills/` 資料夾下的內容複製到你的 `~/.gemini/antigravity/skills/` 目錄下即可。
 *   這能讓 Agent 直接學習透過 cURL 呼叫 API，原生執行上傳圖片與產生文章回你的 Wiki 站點。
 
 ### 3. 一鍵詠唱 (給其他 LLM 的 Prompt)
@@ -164,9 +164,26 @@ wrangler deploy
 
 ---
 
-# Cloud Notepad - Serverless Deployment with Cloudflare Workers
+# CF-Notepad (david888 wiki)
 
-This project is a fork of [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad), a lightweight cloud notepad running on Cloudflare Workers.
+A lightweight, powerful, and AI-friendly markdown notepad/wiki hosted on Cloudflare Workers.
+
+## 🤖 AI Agent & LLM Integration
+
+This project is designed to be natively used by AI agents (like Antigravity, OpenClaw, or ChatGPT).
+
+### 1. Agent Skills
+We provide a structured Skill for agents to natively interact with the wiki.
+- **Skill Location**: [skills/SKILL.md](./skills/SKILL.md)
+- **What it does**: Teaches LLMs how to read, write, and append to the wiki using simple `curl` commands.
+
+### 2. MCP Server (Model Context Protocol)
+For more advanced integrations, use our MCP server:
+- **Server File**: [mcp/server.py](./mcp/server.py)
+- **Usage**: `uv run mcp/server.py`
+- **Capabilities**: Read, Write, Append, and Image Upload tools with built-in AI guidance.
+
+---
 
 It supports Markdown preview, password protection, sharing, and a hidden Super Admin interface.
 
@@ -295,7 +312,7 @@ We provide a zero-install MCP Server that executes remotely via Python `uv` with
 
 ### 2. Antigravity AI Skills
 If you use Google DeepMind's workflow engine or Antigravity-like agents, we have built-in Prompt Skills.
-*   **Install**: Just copy the `skills/david888-wiki-publisher` folder to your `~/.gemini/antigravity/skills/` directory.
+*   **Install**: Just copy the `skills/` folder contents to your `~/.gemini/antigravity/skills/` directory.
 
 ### 3. One-Click Prompt (For other LLMs)
 If you want ChatGPT, Claude Web, or other AI assistants to write articles and **auto-publish** them for you, just copy and paste the following prompt to your AI:
