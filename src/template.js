@@ -268,6 +268,16 @@ textarea#contents {
 /* Diagram Source - Hidden */
 .diagram-source { display: none !important; }
 
+/* Mermaid Renderer Specific Fixes */
+.diagram-mermaid-render {
+    line-height: normal; /* Prevent markdown-body line-height from messing up svg text bounding boxes */
+    font-size: 14px;
+}
+.diagram-mermaid-render svg {
+    max-width: 100%;
+    height: auto;
+}
+
     </style>
     <style id="theme-style">${THEMES[ext.theme || 'github-light'] || ''}</style>
     <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
@@ -396,7 +406,11 @@ textarea#contents {
             
             if (mermaidNodes.length > 0) {
                  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
-                 mermaid.initialize({ startOnLoad: false });
+                 mermaid.initialize({ 
+                     startOnLoad: false,
+                     securityLevel: 'loose', /* Required for some interactive / complex text features */
+                     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif'
+                 });
 
                  for (let i = 0; i < mermaidNodes.length; i++) {
                      const renderNode = mermaidNodes[i];
@@ -987,7 +1001,7 @@ export const NeedPasswd = data => HTML({ tips: SUPPORTED_LANG[data.lang].tipEncr
 export const Page404 = data => HTML({ tips: SUPPORTED_LANG[data.lang].tip404, ...data })
 
 export const Admin = ({ lang, notes, error }) => `
-    < !DOCTYPE html >
+    <!DOCTYPE html>
         <html>
             <head>
                 <meta charset="utf-8" />
@@ -996,24 +1010,24 @@ export const Admin = ({ lang, notes, error }) => `
                 <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
                 <link href="${CDN_PREFIX}/css/app.min.css" rel="stylesheet" media="screen" />
                 <style>
-                    body {font - family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; padding: 20px; }
-                    .admin-container {max - width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
-                    h1 {margin - top: 0; color: #333; }
-                    table {width: 100%; border-collapse: collapse; margin-top: 20px; }
-                    th, td {padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
-                    th {background - color: #f8f9fa; font-weight: 600; color: #555; cursor: pointer; user-select: none; position: relative; }
-                    th:hover {background - color: #e9ecef; }
-                    th::after {content: '↕'; position: absolute; right: 8px; opacity: 0.3; font-size: 12px; }
-                    th.asc::after {content: '↑'; opacity: 1; }
-                    th.desc::after {content: '↓'; opacity: 1; }
-                    tr:hover {background - color: #f5f5f5; }
-                    a {color: #007bff; text-decoration: none; }
-                    a:hover {text - decoration: underline; }
-                    .login-form {text - align: center; margin-top: 40px; }
-                    .login-form input {padding: 12px; margin: 10px 0; width: 100%; max-width: 300px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
-                    .login-form button {padding: 12px 40px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
-                    .login-form button:hover {background - color: #0056b3; }
-                    .error {background - color: #ffebee; color: #c62828; padding: 12px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffcdd2; }
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f2f5; padding: 20px; }
+                    .admin-container { max-width: 900px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 8px; box-shadow: 0 2px 12px rgba(0,0,0,0.1); }
+                    h1 { margin-top: 0; color: #333; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                    th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #eee; }
+                    th { background-color: #f8f9fa; font-weight: 600; color: #555; cursor: pointer; user-select: none; position: relative; }
+                    th:hover { background-color: #e9ecef; }
+                    th::after { content: '↕'; position: absolute; right: 8px; opacity: 0.3; font-size: 12px; }
+                    th.asc::after { content: '↑'; opacity: 1; }
+                    th.desc::after { content: '↓'; opacity: 1; }
+                    tr:hover { background-color: #f5f5f5; }
+                    a { color: #007bff; text-decoration: none; }
+                    a:hover { text-decoration: underline; }
+                    .login-form { text-align: center; margin-top: 40px; }
+                    .login-form input { padding: 12px; margin: 10px 0; width: 100%; max-width: 300px; border: 1px solid #ddd; border-radius: 4px; box-sizing: border-box; }
+                    .login-form button { padding: 12px 40px; background-color: #007bff; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; transition: background 0.2s; }
+                    .login-form button:hover { background-color: #0056b3; }
+                    .error { background-color: #ffebee; color: #c62828; padding: 12px; border-radius: 4px; margin-bottom: 20px; border: 1px solid #ffcdd2; }
                 </style>
             </head>
             <body>
@@ -1022,7 +1036,7 @@ export const Admin = ({ lang, notes, error }) => `
                     ${error ? `<div class="error">${error}</div>` : ''}
                     ${notes ? `
     <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center;">
-        <button id="batch-delete-btn" onclick="batchDelete()" disabled style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; opacity: 0.5;">
+        <button id="batch-delete-btn" disabled style="padding: 8px 16px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; opacity: 0.5;">
             🗑 刪除選中項
         </button>
         <form method="POST" style="display: inline; margin: 0;">
@@ -1037,12 +1051,12 @@ export const Admin = ({ lang, notes, error }) => `
         <thead>
             <tr>
                 <th style="width: 40px; cursor: default;">
-                    <input type="checkbox" id="select-all" onchange="toggleSelectAll(this)" style="cursor: pointer;">
+                    <input type="checkbox" id="select-all" style="cursor: pointer;">
                 </th>
-                <th onclick="sortTable(1)">Title / URL</th>
-                <th onclick="sortTable(2)">Views</th>
-                <th onclick="sortTable(3)">Password</th>
-                <th onclick="sortTable(4)">Last Modified</th>
+                <th class="sortable" data-col="1">Title / URL</th>
+                <th class="sortable" data-col="2">Views</th>
+                <th class="sortable" data-col="3">Password</th>
+                <th class="sortable" data-col="4">Last Modified</th>
                 <th style="cursor: default;">Action</th>
             </tr>
         </thead>
@@ -1050,7 +1064,7 @@ export const Admin = ({ lang, notes, error }) => `
             ${notes.map(n => `
             <tr>
                 <td>
-                    <input type="checkbox" class="note-checkbox" value="${n.name}" onchange="updateBatchDeleteButton()" style="cursor: pointer;">
+                    <input type="checkbox" class="note-checkbox" value="${n.name}" style="cursor: pointer;">
                 </td>
                 <td data-val="${n.extractedTitle || decodeURIComponent(n.name)}">
                     ${n.extractedTitle ? `
@@ -1075,164 +1089,182 @@ export const Admin = ({ lang, notes, error }) => `
         </tbody>
     </table>
     <script>
-    function toggleSelectAll(source) {
-        checkboxes = document.querySelectorAll('.note-checkbox');
-        for(var i=0, n=checkboxes.length;i<n;i++) {
-            checkboxes[i].checked = source.checked;
+    (function() {
+        // Event Delegation for performance and stability
+        window.onerror = function(msg, url, lineNo, columnNo, error) {
+            alert('JS Error: ' + msg + ' at line ' + lineNo);
+            return false;
+        };
+
+        window.onunhandledrejection = function(event) {
+            alert('Unhandled Rejection: ' + event.reason);
+        };
+
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'select-all') {
+                const checkboxes = document.querySelectorAll('.note-checkbox');
+                checkboxes.forEach(cb => cb.checked = e.target.checked);
+                updateBatchDeleteButton();
+            } else if (e.target.classList.contains('note-checkbox')) {
+                updateBatchDeleteButton();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const th = e.target.closest('th.sortable');
+            if (th) {
+                const colIndex = parseInt(th.getAttribute('data-col'));
+                sortTable(colIndex);
+                return;
+            }
+            
+            const batchBtn = e.target.closest('#batch-delete-btn');
+            if (batchBtn && !batchBtn.disabled) {
+                batchDelete();
+            }
+        });
+
+        function updateBatchDeleteButton() {
+            const selected = document.querySelectorAll('.note-checkbox:checked');
+            const total = document.querySelectorAll('.note-checkbox');
+            const btn = document.getElementById('batch-delete-btn');
+            const count = document.getElementById('selected-count');
+            const selectAll = document.getElementById('select-all');
+
+            if (selected.length > 0) {
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.style.cursor = 'pointer';
+                count.textContent = '已選中 ' + selected.length + ' 項';
+            } else {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+                count.textContent = '';
+            }
+            
+            if (selectAll) {
+                selectAll.checked = total.length > 0 && selected.length === total.length;
+            }
         }
+
+        async function batchDelete() {
+            const selected = document.querySelectorAll('.note-checkbox:checked');
+            if (selected.length === 0) return;
+
+            if (!confirm('確定要刪除這 ' + selected.length + ' 個筆記嗎？')) return;
+
+            const paths = Array.from(selected).map(cb => cb.value);
+            const btn = document.getElementById('batch-delete-btn');
+            const originalText = btn.innerHTML;
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '⏳ 刪除中...';
+                
+                const response = await fetch(window.location.pathname, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'batch-delete', paths: paths })
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('刪除成功');
+                    location.reload();
+                } else {
+                    alert('刪除失敗: ' + (result.message || '未知錯誤'));
+                }
+            } catch (e) {
+                console.error(e);
+                alert('請求錯誤: ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        async function deleteEmptyPages() {
+            if (!confirm('確定要刪除所有空白頁面嗎？此操作無法撤銷！\n\n空白頁面定義：內容長度 ≤ 10 個字符')) {
+                return;
+            }
+
+            const btn = document.getElementById('delete-empty-btn'); // Assuming an ID for the button
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ 清理中...';
+            btn.disabled = true;
+
+            try {
+                const response = await fetch(window.location.pathname, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-empty' }),
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('成功刪除 ' + result.deleted + ' 個空白頁面！');
+                    if (result.errors.length > 0) {
+                        console.warn('部分頁面刪除失敗:', result.errors);
+                    }
+                    location.reload();
+                } else {
+                    alert('刪除失敗: ' + (result.message || '未知錯誤'));
+                }
+            } catch (error) {
+                console.error('Error during empty page deletion:', error);
+                alert('刪除過程中發生錯誤。');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        }
+
+        function sortTable(n) {
+            const table = document.getElementById("notesTable");
+            const tbody = table.querySelector("tbody");
+            const rows = Array.from(tbody.querySelectorAll("tr"));
+            const ths = table.querySelectorAll("th.sortable");
+            const targetTh = Array.from(ths).find(th => th.getAttribute('data-col') == n);
+            
+            if (!targetTh) return;
+
+            const isAsc = !targetTh.classList.contains("asc");
+            ths.forEach(th => th.classList.remove("asc", "desc"));
+            targetTh.classList.add(isAsc ? "asc" : "desc");
+
+            rows.sort((rowA, rowB) => {
+                const cellA = rowA.cells[n];
+                const cellB = rowB.cells[n];
+                if (!cellA || !cellB) return 0;
+                
+                const valA = cellA.getAttribute('data-val') !== null ? cellA.getAttribute('data-val') : cellA.innerText.trim().toLowerCase();
+                const valB = cellB.getAttribute('data-val') !== null ? cellB.getAttribute('data-val') : cellB.innerText.trim().toLowerCase();
+
+                const numA = parseFloat(valA);
+                const numB = parseFloat(valB);
+
+                if (!isNaN(numA) && !isNaN(numB) && valA !== '' && valB !== '') {
+                    return isAsc ? numA - numB : numB - numA;
+                }
+                return isAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            });
+
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Initial setup
         updateBatchDeleteButton();
-    }
 
-    function updateBatchDeleteButton() {
-        const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
-        const batchDeleteBtn = document.getElementById('batch-delete-btn');
-        const selectedCountSpan = document.getElementById('selected-count');
-        
-        if (selectedCheckboxes.length > 0) {
-            batchDeleteBtn.disabled = false;
-            batchDeleteBtn.style.opacity = '1';
-            batchDeleteBtn.style.cursor = 'pointer';
-            selectedCountSpan.textContent = '已選中 ' + selectedCheckboxes.length + ' 項';
-        } else {
-            batchDeleteBtn.disabled = true;
-            batchDeleteBtn.style.opacity = '0.5';
-            batchDeleteBtn.style.cursor = 'not-allowed';
-            selectedCountSpan.textContent = '';
-        }
+            // Fallback to string comparison
+            if (valA < valB) return isAsc ? -1 : 1;
+            if (valA > valB) return isAsc ? 1 : -1;
+            return 0;
+        });
 
-        const allCheckboxes = document.querySelectorAll('.note-checkbox');
-        const selectAllCheckbox = document.getElementById('select-all');
-        if (allCheckboxes.length > 0 && selectedCheckboxes.length === allCheckboxes.length) {
-            selectAllCheckbox.checked = true;
-        } else {
-            selectAllCheckbox.checked = false;
-        }
-    }
-
-    async function batchDelete() {
-        const selectedCheckboxes = document.querySelectorAll('.note-checkbox:checked');
-        if (selectedCheckboxes.length === 0) {
-            alert('請選擇要刪除的筆記。');
-            return;
-        }
-
-        if (!confirm('確定要刪除這 ' + selectedCheckboxes.length + ' 個筆記嗎？')) {
-            return;
-        }
-
-        const pathsToDelete = Array.from(selectedCheckboxes).map(cb => cb.value);
-
-        try {
-            const response = await fetch(window.location.pathname, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'batch-delete',
-                    paths: pathsToDelete,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('選中的筆記已成功刪除！');
-                location.reload();
-            } else {
-                alert('刪除失敗: ' + (result.message || '未知錯誤'));
-            }
-        } catch (error) {
-            console.error('Error during batch delete:', error);
-            alert('刪除過程中發生錯誤。');
-        }
-    }
-
-    async function deleteEmptyPages() {
-        if (!confirm('確定要刪除所有空白頁面嗎？此操作無法撤銷！\n\n空白頁面定義：內容長度 ≤ 10 個字符')) {
-            return;
-        }
-
-        const btn = document.getElementById('delete-empty-btn');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '⏳ 清理中...';
-        btn.disabled = true;
-
-        try {
-            const response = await fetch(window.location.pathname, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'delete-empty' }),
-            });
-
-            const result = await response.json();
-
-            if (result.success) {
-                alert('成功刪除 ' + result.deleted + ' 個空白頁面！');
-                if (result.errors.length > 0) {
-                    console.warn('部分頁面刪除失敗:', result.errors);
-                }
-                location.reload();
-            } else {
-                alert('刪除失敗: ' + (result.message || '未知錯誤'));
-            }
-        } catch (error) {
-            console.error('Error during empty page deletion:', error);
-            alert('刪除過程中發生錯誤。');
-        } finally {
-            btn.innerHTML = originalText;
-            btn.disabled = false;
-        }
-    }
-
-    function sortTable(n) {
-        var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
-        table = document.getElementById("notesTable");
-        switching = true;
-        dir = "asc";
-        
-        // Reset headers
-        var headers = table.getElementsByTagName("th");
-        for (var h = 0; h < headers.length; h++) {
-            headers[h].classList.remove("asc", "desc");
-        }
-
-        while (switching) {
-            switching = false;
-            rows = table.rows;
-            for (i = 1; i < (rows.length - 1); i++) {
-                shouldSwitch = false;
-                x = rows[i].getElementsByTagName("TD")[n];
-                y = rows[i + 1].getElementsByTagName("TD")[n];
-                
-                var xVal = x.getAttribute('data-val') || x.innerHTML.toLowerCase();
-                var yVal = y.getAttribute('data-val') || y.innerHTML.toLowerCase();
-                
-                // Try number 
-                if (!isNaN(xVal) && !isNaN(yVal)) {
-                    xVal = parseFloat(xVal);
-                    yVal = parseFloat(yVal);
-                }
-
-                if (dir == "asc") {
-                    if (xVal > yVal) { shouldSwitch = true; break; }
-                } else if (dir == "desc") {
-                    if (xVal < yVal) { shouldSwitch = true; break; }
-                }
-            }
-            if (shouldSwitch) {
-                rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
-                switching = true;
-                switchcount ++;
-            } else {
-                if (switchcount == 0 && dir == "asc") {
-                    dir = "desc";
-                    switching = true;
-                }
-            }
-        }
-        // Set header class
-        headers[n].classList.add(dir);
+        // Re-append rows in sorted order
+        rows.forEach(row => tbody.appendChild(row));
     }
     </script>
     ` : `

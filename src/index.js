@@ -61,9 +61,11 @@ router.post(ADMIN_PATH, async (request) => {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
         // Check if it's JSON request (batch delete)
-        if (request.headers.get('Content-Type') === 'application/json') {
+        const contentType = request.headers.get('Content-Type') || '';
+        if (contentType.includes('application/json')) {
             if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
-                const { action, paths } = await request.json()
+                const body = await request.json();
+                const { action, paths } = body;
 
                 if (action === 'batch-delete' && Array.isArray(paths)) {
                     try {
