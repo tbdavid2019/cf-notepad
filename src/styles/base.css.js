@@ -1,0 +1,77 @@
+/**
+ * src/styles/base.css.js
+ * Base CSS styles: reset, layout, loading, footer, utilities
+ * Returns CSS as a string for inlining in templates
+ */
+export const getBaseCss = () => `
+/* Reset & Base */
+body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; height: 100dvh; overflow: hidden; }
+* { box-sizing: border-box; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #bcc0c4; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #999; }
+
+/* Layout */
+.note-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
+.stack { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.layer_1, .layer_2, .layer_3 { height: 100%; display: flex; flex-direction: column; }
+.layer_3 { flex-direction: row; background: #fff; }
+
+/* Utilities */
+.hide { display: none !important; }
+.divide-line {
+    width: 8px;
+    background-color: #f6f8fa;
+    border-left: 1px solid #e1e4e8;
+    border-right: 1px solid #e1e4e8;
+    cursor: col-resize;
+    z-index: 10;
+    flex-shrink: 0;
+    transition: background-color 0.2s;
+}
+.divide-line:hover { background-color: #e1e4e8; }
+
+/* Loading spinner */
+#loading { position: fixed; top: 10px; right: 10px; width: 20px; height: 20px; border: 2px solid #f3f3f3; border-top: 2px solid #3498db; border-radius: 50%; animation: spin 1s linear infinite; display: none; z-index: 9999; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Tips / overlays */
+.tips { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ccc; font-size: 32px; pointer-events: none; }
+.modal { display: none; }
+.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
+.modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
+
+/* Footer */
+.footer {
+    height: 40px;
+    background: #fafbfc;
+    border-top: 1px solid #e1e4e8;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    font-size: 13px;
+    color: #586069;
+}
+.opt { display: flex; align-items: center; gap: 15px; }
+.opt-button { cursor: pointer; padding: 4px 12px; border-radius: 6px; background: #0366d6; color: white; border: none; font-size: 12px; transition: background 0.2s; }
+.opt-button:hover { background: #005cc5; }
+.opt-switcher { display: flex; align-items: center; cursor: pointer; }
+.opt-switcher input { display: none; }
+.opt-switcher .slider { width: 32px; height: 16px; background: #ccc; border-radius: 16px; position: relative; transition: .4s; margin-left: 8px; }
+.opt-switcher .slider:before { content: ""; position: absolute; height: 12px; width: 12px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: .4s; }
+.opt-switcher input:checked + .slider { background: #2ea44f; }
+.opt-switcher input:checked + .slider:before { transform: translateX(16px); }
+
+/* Diagram Source - Hidden */
+.diagram-source { display: none !important; }
+
+/* Mermaid Renderer Specific Fixes */
+.diagram-mermaid-render { line-height: normal; font-size: 14px; }
+.diagram-mermaid-render svg { max-width: 100%; height: auto; }
+`
