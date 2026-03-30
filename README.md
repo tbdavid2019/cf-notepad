@@ -23,6 +23,8 @@
 - **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
   - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
   - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
+- **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
+  - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -200,6 +202,9 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Track view counts.
   - Check password status.
   - **Delete** notes directly from the dashboard.
+- **LLM / Web Crawler Support**:
+  - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
+  - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
 
 ## Deployment Guide
 

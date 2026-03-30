@@ -712,7 +712,21 @@ router.all('*', (request) => {
 
 addEventListener('fetch', event => {
     event.request.event = event
-    event.respondWith(router.handle(event.request, event))
+    event.respondWith(
+        router.handle(event.request, event).then(response => {
+            if (event.request.method === 'HEAD') {
+                return new Response(null, {
+                    headers: response.headers,
+                    status: response.status,
+                    statusText: response.statusText
+                })
+            }
+            return response
+        }).catch(err => {
+            console.error('Fetch Event Error:', err)
+            return new Response(`Worker Error: ${err.message}`, { status: 500 })
+        })
+    )
 })
 
 // Cron job: Delete empty pages daily at 9 AM Taiwan time (1 AM UTC)

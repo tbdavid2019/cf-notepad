@@ -32,6 +32,7 @@ ${getMarkdownCss()}
                 <div class="layer_2">
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
+                         <article style="display:none;" id="bot-accessible-content">${content}</article>
                         <textarea id="contents" class="contents ${isEdit ? '' : 'hide'}" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>`}
