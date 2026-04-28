@@ -36,6 +36,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             ` : (path ? `<a href="/${path}" class="opt-button" style="text-decoration:none;background:#2196f3;color:white;padding:6px 16px;border-radius:4px;font-weight:500;">✏️ 返回編輯</a>` : '')
     }
         <div style="flex:1"></div>
+        <button id="present-btn" class="opt-button" style="background:#673ab7;color:white;margin-right:10px;padding:4px 10px;border-radius:4px;font-weight:500;display:flex;align-items:center;gap:4px;" title="進入全螢幕簡報模式">📽️ Present</button>
         <select id="theme-selector" style="margin-right:10px;padding:4px;border-radius:4px;border:1px solid #e1e4e8;font-size:12px;background:#fff;">
             ${Object.keys(THEMES).map(t => `<option value="${t}" ${t === (theme || 'github-light') ? 'selected' : ''}>${t}</option>`).join('')}
         </select>

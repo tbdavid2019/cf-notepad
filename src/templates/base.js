@@ -460,6 +460,120 @@ ${getMarkdownCss()}
             });
         }
     </script>
-</body>
-</html >
-    `
+    <div id="presentation-container"></div>
+    \u003cscript\u003e
+    // --- Presentation Mode Engine (Final Robust Version) ---
+    (function() {
+        console.log('Presentation Engine Loading...');
+        var _loaded = false;
+        var _reveal = null;
+
+        function loadAssets() {
+            return new Promise(function(resolve, reject) {
+                if (_loaded) return resolve();
+                ['reveal.css', 'theme/black.css'].forEach(function(p) {
+                    var l = document.createElement('link');
+                    l.rel = 'stylesheet';
+                    l.href = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/' + p;
+                    document.head.appendChild(l);
+                });
+                var s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js';
+                s.onload = function() {
+                    var m = document.createElement('script');
+                    m.src = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js';
+                    m.onload = function() { _loaded = true; resolve(); };
+                    m.onerror = reject;
+                    document.head.appendChild(m);
+                };
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        window.initPresentation = async function() {
+            console.log('initPresentation triggered');
+            var content = '';
+            var edit = document.getElementById('contents');
+            var share = document.getElementById('bot-accessible-content');
+            
+            if (edit && !edit.classList.contains('hide')) {
+                content = edit.value;
+            } else if (share) {
+                content = share.innerText || share.textContent || '';
+            }
+
+            if (!content || !content.trim()) { alert('無內容可演示'); return; }
+
+            var container = document.getElementById('presentation-container');
+            container.innerHTML = '\u003cbutton id="presentation-close-btn"\u003e✕ 結束演示\u003c/button\u003e' +
+                                 '\u003cdiv class="reveal"\u003e\u003cdiv class="slides"\u003e\u003c/div\u003e\u003c/div\u003e';
+            
+            document.getElementById('presentation-close-btn').onclick = window.exitPresentation;
+            
+            var slidesDiv = container.querySelector('.slides');
+            // Split by standalone '---' - Use 4 backslashes for double escaping in template literal
+            var chunks = content.split(/\\r?\\n\\s*---\\s*\\r?\\n/);
+            console.log('Slides split into ' + chunks.length + ' chunks');
+
+            chunks.forEach(function(c) {
+                var sec = document.createElement('section');
+                sec.setAttribute('data-markdown', '');
+                var script = document.createElement('script');
+                script.type = 'text/template';
+                script.textContent = c.trim();
+                sec.appendChild(script);
+                slidesDiv.appendChild(sec);
+            });
+
+            container.classList.add('active');
+            document.body.style.overflow = 'hidden';
+
+            try {
+                await loadAssets();
+                if (_reveal) { try { _reveal.destroy(); } catch(e) {} }
+                _reveal = new Reveal(container.querySelector('.reveal'), {
+                    plugins: [RevealMarkdown],
+                    center: true, transition: 'slide',
+                    width: '100%', height: '100%', margin: 0.1
+                });
+                await _reveal.initialize();
+                console.log('Reveal.js initialized');
+            } catch(e) {
+                console.error('Presentation error:', e);
+                alert('啟動失敗: ' + e);
+                window.exitPresentation();
+            }
+        };
+
+        window.exitPresentation = function() {
+            var c = document.getElementById('presentation-container');
+            c.classList.remove('active');
+            if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
+            c.innerHTML = '';
+            document.body.style.overflow = '';
+        };
+
+        // Ensure binding even if DOM is still hydrating
+        function bind() {
+            var btn = document.getElementById('present-btn');
+            if (btn) {
+                btn.onclick = window.initPresentation;
+                console.log('Present button bound successfully');
+            } else {
+                console.warn('Present button not found, retrying in 500ms...');
+                setTimeout(bind, 500);
+            }
+        }
+        bind();
+
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('presentation-container').classList.contains('active')) {
+                window.exitPresentation();
+            }
+        });
+    })();
+    \u003c/script\u003e
+\u003c/body\u003e
+\u003c/html\u003e
+`

@@ -25,6 +25,9 @@
   - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
 - **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
+- **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
+  - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
+  - 內建 Reveal.js 懶加載引擎，一鍵進入沉浸式演示體驗。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -205,6 +208,9 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **LLM / Web Crawler Support**:
   - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
   - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
+- **[NEW] Slidev-style Presentation Mode** 📽️:
+  - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
+  - Powered by Reveal.js with smart on-demand asset loading.
 
 ## Deployment Guide
 

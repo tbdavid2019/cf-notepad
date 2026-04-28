@@ -74,4 +74,42 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 /* Mermaid Renderer Specific Fixes */
 .diagram-mermaid-render { line-height: normal; font-size: 14px; }
 .diagram-mermaid-render svg { max-width: 100%; height: auto; }
+
+/* Presentation Mode Overlay */
+#presentation-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    background: #1a1a2e;
+    display: none;
+}
+#presentation-container.active {
+    display: block;
+}
+#presentation-close-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10001;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 14px;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s;
+}
+#presentation-close-btn:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.05);
+}
+#presentation-container .reveal {
+    width: 100%;
+    height: 100%;
+}
 `
