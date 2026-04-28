@@ -112,4 +112,74 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     width: 100%;
     height: 100%;
 }
+
+/* Slidev-Lite Theme Extensions */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap');
+
+#presentation-container.active {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+}
+
+.reveal .slides section {
+    text-align: left;
+    font-family: 'Inter', sans-serif;
+    color: #e2e8f0;
+}
+
+/* Custom Scrollbar for Code Blocks */
+.reveal pre::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+.reveal pre::-webkit-scrollbar-track {
+    background: #0f172a;
+}
+.reveal pre::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 4px;
+}
+.reveal pre::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+.reveal h1, .reveal h2, .reveal h3 {
+    color: #fff;
+    text-transform: none;
+    font-weight: 700;
+}
+
+.reveal pre {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    padding: 1em;
+}
+
+.reveal code {
+    font-family: 'Roboto Mono', monospace;
+    font-size: 0.85em;
+    color: #94a3b8;
+}
+
+/* Layouts */
+.slidev-layout-two-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2em;
+    align-items: start;
+    width: 100%;
+}
+
+.col-left, .col-right {
+    width: 100%;
+}
+
+.reveal .fragment.v-click {
+    visibility: hidden;
+}
+.reveal .fragment.v-click.visible {
+    visibility: visible;
+}
 `

@@ -1,0 +1,5 @@
+- [x] 1.1 Add Slidev-Lite theme CSS to `src/styles/base.css.js` (Inter font, dark background, code styles).
+- [x] 1.2 Update `initPresentation` in `src/templates/base.js` to include a pre-processing parser.
+- [x] 1.3 Implement `::left::` and `::right::` layout conversion.
+- [x] 1.4 Implement `v-click` to `.fragment` conversion.
+- [x] 1.5 Verify "Slidev-Lite" mode with a complex sample slide.

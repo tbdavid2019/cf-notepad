@@ -517,11 +517,28 @@ ${getMarkdownCss()}
             console.log('Slides split into ' + chunks.length + ' chunks');
 
             chunks.forEach(function(c) {
+                var processed = c.trim();
+                
+                // 1. Layouts: ::left:: / ::right::
+                if (processed.includes('::left::') && processed.includes('::right::')) {
+                    var parts = processed.split(/::left::|::right::/);
+                    if (parts.length >= 3) {
+                        var before = parts[0].trim();
+                        var left = parts[1].trim();
+                        var right = parts[2].trim();
+                        processed = (before ? before + '\\n\\n' : '') + 
+                            '\\u003cdiv class="slidev-layout-two-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right + '\\n\\n\\u003c/div\\u003e\\n\\u003c/div\\u003e';
+                    }
+                }
+
+                // 2. Click Animations: {v-click} -> Reveal fragments
+                processed = processed.replace(/\{v-click\}/g, '\\u003c!-- .element: class="fragment" --\\u003e');
+
                 var sec = document.createElement('section');
                 sec.setAttribute('data-markdown', '');
                 var script = document.createElement('script');
                 script.type = 'text/template';
-                script.textContent = c.trim();
+                script.textContent = processed;
                 sec.appendChild(script);
                 slidesDiv.appendChild(sec);
             });
@@ -534,11 +551,12 @@ ${getMarkdownCss()}
                 if (_reveal) { try { _reveal.destroy(); } catch(e) {} }
                 _reveal = new Reveal(container.querySelector('.reveal'), {
                     plugins: [RevealMarkdown],
-                    center: true, transition: 'slide',
-                    width: '100%', height: '100%', margin: 0.1
+                    center: false, hash: true, transition: 'fade',
+                    width: 1000, height: 700, margin: 0.1,
+                    controls: true, progress: true, slideNumber: true
                 });
                 await _reveal.initialize();
-                console.log('Reveal.js initialized');
+                console.log('Reveal.js initialized (Slidev-Lite mode)');
             } catch(e) {
                 console.error('Presentation error:', e);
                 alert('啟動失敗: ' + e);

@@ -11,3 +11,9 @@
   - Supports Markdown slide splitting using the standard `---` separator (Slidev/Marp style).
   - Powered by Reveal.js with smart lazy loading (loads assets only on demand).
   - Seamlessly works in both Edit mode and Share mode.
+
+- **Slidev-Lite Enhancement (Version 2.0)** 🚀
+  - **Layouts**: Added support for `::left::` and `::right::` split-screen layouts.
+  - **Click Animations**: Support for `{v-click}` syntax for interactive slide elements.
+  - **Premium Aesthetics**: Integrated Inter font, dark theme optimization, and enhanced code block styling.
+  - **UX Polish**: Switched to fade transitions and top-left alignment for a more professional feel.

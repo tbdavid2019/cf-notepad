@@ -27,6 +27,10 @@
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
+  - **Slidev-Lite 增強版**：
+    - 支援 **雙欄佈局**：使用 `::left::` 與 `::right::` 即可分屏。
+    - 支援 **點擊動畫**：在內容後加上 `{v-click}` 實現逐條顯示。
+    - **高級視覺**：內建 Inter 精緻字體與深色主題優化。
   - 內建 Reveal.js 懶加載引擎，一鍵進入沉浸式演示體驗。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
