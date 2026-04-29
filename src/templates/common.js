@@ -29,6 +29,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <span style="font-size:12px;color:#2e7d32;font-weight:500;">✓ 已發布:</span>
                         <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" style="border:none;background:transparent;width:200px;font-size:12px;color:#1976d2;font-weight:500;">
                         <button id="copy-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.8;padding:2px 6px;font-size:16px;" title="Copy">📋</button>
+                        <button id="copy-present-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.8;padding:2px 6px;font-size:16px;" title="Copy presentation link">📽️</button>
                         <button class="unpublish-btn" style="border:none;background:#ff5722;color:white;cursor:pointer;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:4px;" title="取消發布">✕</button>
                     </div>
                 ` : SWITCHER(SUPPORTED_LANG[lang].share, share, 'opt-share')}

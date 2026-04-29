@@ -232,10 +232,13 @@ router.post('/share/:md5/auth', async request => {
     return returnJSON(404, 'Share not found')
 })
 
-router.get('/share/:md5', async (request) => {
+async function renderSharePage(request, presentationMode = false) {
     const lang = getI18n(request)
     const { md5 } = request.params
     const path = await SHARE.get(md5)
+    const sharePath = `/share/${md5}`
+    const presentationPath = `${sharePath}/present`
+    const authPath = `${sharePath}/auth`
 
     if (!!path) {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
@@ -244,32 +247,20 @@ router.get('/share/:md5', async (request) => {
         // Check if View Password is set
         if (metadata.vpw) {
             const { valid } = await checkAuth(cookie, path)
-            // If valid token exists (edit or view role), allow access
-            // If not valid, show password prompt
-            // Note: We use 'NeedPasswd' template but need to ensure it posts to /:path/auth
-            // Since we are at /share/:md5, we need to pass 'path' for the frontend to construct the correct URL?
-            // Actually, the current template uses window.location.pathname.
-            // On share page, pathname is /share/xxx. We need it to POST to /note_path/auth.
-            // But we don't want to expose the real note path in the HTML if possible (though it's in the auth token).
-            // Let's modify the template logic later if needed, but for now passing 'path' to template
-            // allows us to potentially adjust the fetch URL in frontend if we change template.
 
             if (!valid) {
-                // For Share page, we need a way to tell frontend where to auth
-                // Currently 'NeedPasswd' template uses current pathname. 
-                // We will need to update template.js or handle /share/xxx/auth route?
-                // Simpler: Allow frontend to know the real path for auth, 
-                // OR implement /share/:md5/auth route.
-                // Let's stick to using the real path for auth for now as it's simpler.
-                // We pass 'path' to the template so we can use it.
-                // Wait, exposing 'path' (real URL) might be okay if it's protected by password?
-                // If vpw is set, we just need to auth.
-
-                // If we strictly follow "don't expose path", we need a /share/:md5/auth route.
-                // But let's assume exposing path for auth purpose is acceptable for now 
-                // as the user just wants to view content.
-
-                return returnPage('NeedPasswd', { lang, title: 'Password Protected', path })
+                return returnPage('NeedPasswd', {
+                    lang,
+                    title: 'Password Protected',
+                    path,
+                    ext: {
+                        authPath,
+                        sharePath,
+                        presentationPath,
+                        presentationEntry: presentationMode,
+                        autoPresent: false,
+                    },
+                })
             }
         }
 
@@ -281,12 +272,27 @@ router.get('/share/:md5', async (request) => {
             lang,
             title,
             content: value,
-            ext: metadata,
+            ext: {
+                ...metadata,
+                authPath,
+                sharePath,
+                presentationPath,
+                presentationEntry: presentationMode,
+                autoPresent: presentationMode,
+            },
             path,
         })
     }
 
     return returnPage('Page404', { lang, title: '404' })
+}
+
+router.get('/share/:md5', async (request) => {
+    return renderSharePage(request, false)
+})
+
+router.get('/share/:md5/present', async (request) => {
+    return renderSharePage(request, true)
 })
 
 router.get('/api/:path', async (request) => {

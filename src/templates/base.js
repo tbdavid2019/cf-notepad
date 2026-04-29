@@ -9,7 +9,7 @@ import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
 
-export const HTML = ({ lang, title, content, ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => `
+export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => `
 <!DOCTYPE html>
 <html>
 <head>
@@ -243,6 +243,15 @@ ${getMarkdownCss()}
 <script>
     function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r = window.document.execCommand("copy")}finally{t.removeAllRanges(), window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
 
+    const APP_STATE = ${JSON.stringify({
+        authPath: ext.authPath || '',
+        sharePath: ext.sharePath || '',
+        presentationPath: ext.presentationPath || '',
+        presentationEntry: ext.presentationEntry === true,
+        autoPresent: ext.autoPresent === true,
+    })}
+    const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
+
     const DEFAULT_LANG = 'zh-TW'
     const SUPPORTED_LANG = {
         'en': { err: 'Error', pepw: 'Please enter password.', pwcnbe: 'Password is empty!', enpw: 'Enter a new password (Keeping it empty will remove the current password)', pwss: 'Password set successfully.', pwrs: 'Password removed successfully.', cpys: 'Copied!' },
@@ -260,6 +269,25 @@ ${getMarkdownCss()}
 
     const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
 
+    const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
+
+    const rememberPresentationDestination = () => {
+        if (!APP_STATE.presentationEntry) return ''
+        const destination = location.pathname + location.hash
+        try { sessionStorage.setItem(PENDING_PRESENTATION_KEY, destination) } catch (e) {}
+        return destination
+    }
+
+    const consumePresentationDestination = () => {
+        try {
+            const destination = sessionStorage.getItem(PENDING_PRESENTATION_KEY)
+            sessionStorage.removeItem(PENDING_PRESENTATION_KEY)
+            return destination
+        } catch (e) {
+            return ''
+        }
+    }
+
     const throttle = (func, delay) => {
         let tid = null
         return (...arg) => {
@@ -271,11 +299,22 @@ ${getMarkdownCss()}
     const passwdPrompt = () => {
         const passwd = window.prompt(getI18n('pepw'))
         if (passwd == null) return;
-        if (!passwd.trim()) { alert(getI18n('pwcnbe')) }
-        const path = location.pathname
-        window.fetch(path + '/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd }) })
+        const normalizedPasswd = passwd.trim()
+        if (!normalizedPasswd) { alert(getI18n('pwcnbe')); return; }
+        const destination = rememberPresentationDestination() || (location.pathname + location.hash)
+        window.fetch(getAuthPath(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: normalizedPasswd }) })
             .then(res => res.json())
-            .then(res => { if (res.err !== 0) { return errHandle(res.msg) } if (res.data.refresh) { window.location.reload() } })
+            .then(res => {
+                if (res.err !== 0) { return errHandle(res.msg) }
+                if (res.data.refresh) {
+                    if (APP_STATE.presentationEntry) {
+                        consumePresentationDestination()
+                        window.location.reload()
+                        return;
+                    }
+                    window.location.reload()
+                }
+            })
             .catch(err => errHandle(err))
     }
 
@@ -410,11 +449,18 @@ ${getMarkdownCss()}
         // Published share URL
         const $shareUrlInput = document.querySelector('.share-url-input');
         const $shareCopyBtn = document.querySelector('#copy-share-btn');
+        const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         if ($shareUrlInput && $shareCopyBtn) {
             try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
             $shareCopyBtn.addEventListener('click', async () => {
                 try { await clipboardCopy($shareUrlInput.value); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert('Copy failed'); }
+            });
+        }
+        if ($shareUrlInput && $copyPresentShareBtn) {
+            $copyPresentShareBtn.addEventListener('click', async () => {
+                const presentationUrl = ($shareUrlInput.value || '') + '/present';
+                try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert('Copy failed'); }
             });
         }
         if ($unpublishBtn) {
@@ -467,6 +513,7 @@ ${getMarkdownCss()}
         console.log('Presentation Engine Loading...');
         var _loaded = false;
         var _reveal = null;
+        var _autoStarted = false;
 
         function loadAssets() {
             return new Promise(function(resolve, reject) {
@@ -566,11 +613,21 @@ ${getMarkdownCss()}
 
         window.exitPresentation = function() {
             var c = document.getElementById('presentation-container');
+            var shouldReturnToShare = APP_STATE.autoPresent && APP_STATE.sharePath && window.location.pathname === APP_STATE.presentationPath;
             c.classList.remove('active');
             if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
             c.innerHTML = '';
             document.body.style.overflow = '';
+            if (shouldReturnToShare) {
+                window.location.replace(APP_STATE.sharePath);
+            }
         };
+
+        function maybeAutoStart() {
+            if (!APP_STATE.autoPresent || _autoStarted) return;
+            _autoStarted = true;
+            window.initPresentation();
+        }
 
         // Ensure binding even if DOM is still hydrating
         function bind() {
@@ -584,6 +641,7 @@ ${getMarkdownCss()}
             }
         }
         bind();
+        maybeAutoStart();
 
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape' && document.getElementById('presentation-container').classList.contains('active')) {

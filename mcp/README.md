@@ -60,4 +60,6 @@ Once connected, the AI automatically gains the following powers on `wiki.david88
 2. **`write_wiki(path, text, password, new_view_password)`**: It can generate full markdown articles, including images uploaded to R2, and publish them to a specific URL path.
 3. **`append_wiki(path, text, password)`**: It can continuously stream/append updates to the bottom of long, running research pages without pulling down the whole text.
 
+If a published page is structured as slides, clients can derive a presentation entry by appending `/present` to the returned share URL, and optionally add a Reveal hash such as `#/2` for a specific slide.
+
 *Note: If developers wish to fork this and point the MCP to a different Cloudflare Notepad backend, they can pass the `WIKI_BASE_URL` environment variable to the `uv` command.*

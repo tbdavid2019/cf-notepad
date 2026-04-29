@@ -36,6 +36,10 @@ Choose a theme to wow the user: `ayu-light`, `retro`, `bauhaus`, `botanical`, `g
 > 2. `shareUrl`: This is the **public read-only URL**. It uses a hash (e.g., `/share/abc123`).
 > 
 > **YOU MUST ALWAYS GIVE THE `shareUrl` TO THE USER.** If you give the `url`, the user will likely see an empty or error page.
+>
+> If the content is intended to be viewed as slides, you may also derive a presentation link by appending `/present` to `shareUrl`.
+> Example: `https://wiki.david888.com/share/abc123/present#/2`
+> Use the Reveal hash suffix to point to a specific slide when useful.
 
 ### 3. Append to a Page (POST)
 ```bash
@@ -68,3 +72,4 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 - **Error 1101**: A server-side exception occurred. I have added logging; check the returned JSON `msg` for the stack trace or error details.
 - **The URL is always the same / IP Restriction?**: No! The `url` field is the *permanent edit link* for that path. If you see the same URL, it means you successfully updated the same page. This is NOT an IP block. **Always check the `shareUrl` for the unique view link.**
 - **Missing `shareUrl`**: Ensure you are looking at the `.data.shareUrl` field in the JSON response.
+- **Need a slideshow link?**: If the page is slide-oriented, derive it from `shareUrl + '/present'`. For a specific slide, append a Reveal hash like `#/2`.

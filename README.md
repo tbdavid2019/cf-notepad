@@ -27,6 +27,8 @@
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
+  - 已發布的分享頁支援專用簡報入口 `/share/<id>/present`，可直接以投影片模式開啟。
+  - 支援分享指定投影片頁碼，例如 `/share/<id>/present#/24`；若分享頁有閱讀密碼，驗證成功後仍會回到指定頁。
   - **Slidev-Lite 增強版**：
     - 支援 **雙欄佈局**：使用 `::left::` 與 `::right::` 即可分屏。
     - 支援 **點擊動畫**：在內容後加上 `{v-click}` 實現逐條顯示。

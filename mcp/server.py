@@ -101,6 +101,7 @@ async def write_wiki(
                     result = "Successfully saved to Wiki!\n"
                     if share_url:
                         result += f"Public Share URL: {share_url} (Give THIS to the user)\n"
+                        result += f"Presentation URL: {share_url}/present (Use for slide-style pages; add #/2, #/3, etc. for a specific slide)\n"
                     result += f"Edit URL: {edit_url}\n"
                     return result
                 
@@ -145,7 +146,9 @@ async def append_wiki(path: str, text: str, password: Optional[str] = None) -> s
                 if res_data.get("err") == 0:
                     data = res_data.get('data', {})
                     share_url = data.get('shareUrl')
-                    return f"Successfully appended. Share link: {share_url}"
+                    if share_url:
+                        return f"Successfully appended. Share link: {share_url}\nPresentation URL: {share_url}/present"
+                    return "Successfully appended."
                 return f"Wiki API Error: {res_data.get('msg')}"
             else:
                 return f"Server Error: HTTP {response.status_code}."
