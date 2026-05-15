@@ -10,8 +10,10 @@
 
 - **輕量快速**：基於 Cloudflare Edge Network，全球存取速度極快。
 - **Markdown 支援**：內建 Markdown 渲染 (marked.js) 與 DOMPurify 安全過濾。
+- **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
+- **多款預覽主題**：內建 `tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `tokyo-night`。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
@@ -217,6 +219,10 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **[NEW] Slidev-style Presentation Mode** 📽️:
   - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
   - Powered by Reveal.js with smart on-demand asset loading.
+- **[NEW] Curated Dark Preview Themes**:
+  - Added `tokyo-night` as the new default Markdown preview theme.
+  - Added `kanagawa` as an additional built-in dark theme option.
+  - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
 
 ## Deployment Guide
 
@@ -425,4 +431,3 @@ curl -X POST "https://wiki.david888.com/api/api_test_demo_2" \
     "content": "## 錯誤欄位防呆測試\n雖然我傳送的是 content，但因為剛才在 index.js "
   }'
 ```
-

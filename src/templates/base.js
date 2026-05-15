@@ -22,7 +22,18 @@ ${getBaseCss()}
 ${getEditorCss()}
 ${getMarkdownCss()}
     </style>
-    <style id="theme-style">${THEMES[ext.theme || 'github-light'] || ''}</style>
+    <style id="theme-style">${THEMES[ext.theme || 'tokyo-night'] || ''}</style>
+    <style>
+        #contents,
+        #preview-md,
+        #preview-plain,
+        #preview-md.markdown-body,
+        #preview-plain.markdown-body,
+        #preview-md.markdown-body code,
+        #preview-plain.markdown-body code {
+            font-family: var(--editor-font-family);
+        }
+    </style>
     <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
 </head>
 <body>

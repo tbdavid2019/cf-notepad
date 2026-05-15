@@ -7,6 +7,7 @@ import ayuLightCss from './ayu-light.css?raw'
 import bauhausCss from './bauhaus.css?raw'
 import botanicalCss from './botanical.css?raw'
 import greenSimpleCss from './green-simple.css?raw'
+import kanagawaCss from './kanagawa.css?raw'
 import maximalismCss from './maximalism.css?raw'
 import neoBrutalismCss from './neo-brutalism.css?raw'
 import newsprintCss from './newsprint.css?raw'
@@ -17,6 +18,7 @@ import resetCss from './reset.css?raw'
 import retroCss from './retro.css?raw'
 import sketchCss from './sketch.css?raw'
 import terminalCss from './terminal.css?raw'
+import tokyoNightCss from './tokyo-night.css?raw'
 
 export interface MarkdownStyle {
   id: string
@@ -49,6 +51,11 @@ export const markdownStyles: MarkdownStyle[] = [
     css: resetCss + greenSimpleCss,
   },
   {
+    id: 'kanagawa',
+    name: 'Kanagawa',
+    css: resetCss + kanagawaCss,
+  },
+  {
     id: 'sketch',
     name: 'Sketch',
     css: resetCss + sketchCss,
@@ -62,6 +69,11 @@ export const markdownStyles: MarkdownStyle[] = [
     id: 'terminal',
     name: 'Terminal',
     css: resetCss + terminalCss,
+  },
+  {
+    id: 'tokyo-night',
+    name: 'Tokyo Night',
+    css: resetCss + tokyoNightCss,
   },
   {
     id: 'neo-brutalism',

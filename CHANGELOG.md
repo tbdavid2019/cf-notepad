@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 ### Added
+- **Editor Font + Dark Preview Themes**
+  - Added bundled `Maple Mono` as the default font for both the editor pane and preview pane.
+  - Added two new preview themes inspired by popular Neovim colorschemes: `tokyo-night` and `kanagawa`.
+  - Switched the default preview theme fallback from `github-light` to `tokyo-night` for newly created or unthemed notes.
+
 - **Dedicated Presentation Share Entry**
   - Added a dedicated presentation route at `/share/:md5/present` so shared notes can open directly in slideshow mode.
   - Presentation links now preserve Reveal slide hash deep-links, allowing links such as `/share/<id>/present#/24` to open a targeted slide.

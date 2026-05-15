@@ -4,6 +4,18 @@
  * Returns CSS as a string for inlining in templates
  */
 export const getBaseCss = () => `
+@font-face {
+    font-family: "Maple Mono";
+    src: url("/static/fonts/MapleMonoNormal-Medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+:root {
+    --editor-font-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
+}
+
 /* Reset & Base */
 body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; height: 100dvh; overflow: hidden; }
 * { box-sizing: border-box; }

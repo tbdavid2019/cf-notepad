@@ -14,13 +14,13 @@ export const getEditorCss = () => `
     overflow-y: auto;
     font-size: 16px;
     line-height: 1.8;
+    font-family: var(--editor-font-family);
 }
 
 /* Editor Specific (Dark Mode) */
 textarea#contents {
     background-color: #282a36;
     color: #f8f8f2;
-    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
     resize: none;
     line-height: 1.6;
 }
