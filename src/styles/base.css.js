@@ -14,6 +14,7 @@ export const getBaseCss = () => `
 
 :root {
     --editor-font-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
+    --preview-max-width: 100%;
 }
 
 /* Reset & Base */
@@ -60,7 +61,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 
 /* Footer */
 .footer {
-    height: 40px;
+    min-height: 40px;
     background: #fafbfc;
     border-top: 1px solid #e1e4e8;
     display: flex;
@@ -69,8 +70,24 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     padding: 0 20px;
     font-size: 13px;
     color: #586069;
+    gap: 10px;
+    flex-wrap: wrap;
 }
 .opt { display: flex; align-items: center; gap: 15px; }
+.footer-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+.footer-select {
+    padding: 4px 8px;
+    border-radius: 4px;
+    border: 1px solid #e1e4e8;
+    font-size: 12px;
+    background: #fff;
+    color: #24292f;
+}
+.footer-label {
+    font-size: 12px;
+    color: #586069;
+    white-space: nowrap;
+}
 .opt-button { cursor: pointer; padding: 4px 12px; border-radius: 6px; background: #0366d6; color: white; border: none; font-size: 12px; transition: background 0.2s; }
 .opt-button:hover { background: #005cc5; }
 .opt-switcher { display: flex; align-items: center; cursor: pointer; }
@@ -193,5 +210,16 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 }
 .reveal .fragment.v-click.visible {
     visibility: visible;
+}
+
+@media (max-width: 960px) {
+    .footer {
+        padding: 8px 12px;
+    }
+
+    .footer-controls {
+        width: 100%;
+        justify-content: flex-start;
+    }
 }
 `

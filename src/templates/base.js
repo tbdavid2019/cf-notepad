@@ -33,6 +33,14 @@ ${getMarkdownCss()}
         #preview-plain.markdown-body code {
             font-family: var(--editor-font-family);
         }
+
+        #preview-md.markdown-body,
+        #preview-plain.markdown-body {
+            max-width: var(--preview-max-width);
+            margin-left: auto;
+            margin-right: auto;
+            width: 100%;
+        }
     </style>
     <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
 </head>
@@ -508,11 +516,35 @@ ${getMarkdownCss()}
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};
+        const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
+        const themeStyleNode = document.getElementById('theme-style');
         const themeSelector = document.getElementById('theme-selector');
+        const previewWidthSelector = document.getElementById('preview-width-selector');
+        const previewWidthRoot = document.documentElement;
+
+        function applyPreviewWidth(value) {
+            const width = value || '100%';
+            previewWidthRoot.style.setProperty('--preview-max-width', width);
+            if (previewWidthSelector && previewWidthSelector.value !== width) {
+                previewWidthSelector.value = width;
+            }
+        }
+
+        const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
+        applyPreviewWidth(savedPreviewWidth || '100%');
+
+        if (previewWidthSelector) {
+            previewWidthSelector.addEventListener('change', function() {
+                const width = this.value;
+                applyPreviewWidth(width);
+                window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
+            });
+        }
+
         if (themeSelector) {
             themeSelector.addEventListener('change', function() {
                 const theme = this.value;
-                document.getElementById('theme-style').textContent = THEMES[theme];
+                themeStyleNode.textContent = THEMES[theme];
                 fetch(location.pathname + '/setting', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ theme }) });
             });
         }

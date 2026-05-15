@@ -14,6 +14,7 @@
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
 - **多款預覽主題**：內建 `tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `tokyo-night`。
+- **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
@@ -223,6 +224,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Added `tokyo-night` as the new default Markdown preview theme.
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
+  - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
 
 ## Deployment Guide
 

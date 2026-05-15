@@ -6,6 +6,8 @@
   - Added bundled `Maple Mono` as the default font for both the editor pane and preview pane.
   - Added two new preview themes inspired by popular Neovim colorschemes: `tokyo-night` and `kanagawa`.
   - Switched the default preview theme fallback from `github-light` to `tokyo-night` for newly created or unthemed notes.
+  - Removed fixed preview content widths from bundled themes so split-view previews can fully use available space.
+  - Added a footer `Width` selector with persistent browser-side preference (`Full`, `960`, `1200`, `1440`) for quick preview width control.
 
 - **Dedicated Presentation Share Entry**
   - Added a dedicated presentation route at `/share/:md5/present` so shared notes can open directly in slideshow mode.
