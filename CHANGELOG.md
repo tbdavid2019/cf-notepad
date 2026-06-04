@@ -4,7 +4,7 @@
 ### Added
 - **Share Metadata + Site Icon Polish**
   - Added server-rendered Open Graph and Twitter card metadata for shared notes so Slack and other unfurlers can read stable titles and descriptions without relying on client-side rendering.
-  - Added a dedicated `/icon.svg` site icon route and switched page head metadata to use the repo-provided notepad icon for favicon and social previews.
+  - Switched page head metadata to use the repo-provided notepad icon as the favicon and social preview image for shared notes.
   - Added note-title and note-description extraction helpers so shared-note metadata is generated consistently from note content on the server side.
 
 - **Share Theme Consistency + Font Toggle**
