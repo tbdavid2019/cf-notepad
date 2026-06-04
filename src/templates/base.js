@@ -2,7 +2,7 @@
  * src/templates/base.js
  * HTML wrapper function (base page structure for editor/share pages)
  */
-import { SUPPORTED_LANG, APP_NAME } from '../constant'
+import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant'
 import { THEMES } from '../theme_data'
 import { FOOTER, MODAL } from './common'
 import { getBaseCss } from '../styles/base.css.js'
