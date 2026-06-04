@@ -6,6 +6,8 @@
 import ayuLightCss from './ayu-light.css?raw'
 import bauhausCss from './bauhaus.css?raw'
 import botanicalCss from './botanical.css?raw'
+import catppuccinLatteCss from './catppuccin-latte.css?raw'
+import catppuccinMacchiatoCss from './catppuccin-macchiato.css?raw'
 import greenSimpleCss from './green-simple.css?raw'
 import kanagawaCss from './kanagawa.css?raw'
 import maximalismCss from './maximalism.css?raw'
@@ -44,6 +46,16 @@ export const markdownStyles: MarkdownStyle[] = [
     id: 'botanical',
     name: 'Botanical',
     css: resetCss + botanicalCss,
+  },
+  {
+    id: 'catppuccin-latte',
+    name: 'Catppuccin Latte',
+    css: resetCss + catppuccinLatteCss,
+  },
+  {
+    id: 'catppuccin-macchiato',
+    name: 'Catppuccin Macchiato',
+    css: resetCss + catppuccinMacchiatoCss,
   },
   {
     id: 'green-simple',

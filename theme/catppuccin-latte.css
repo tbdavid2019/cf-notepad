@@ -1,23 +1,21 @@
 /* ============================================
-   Terminal - Catppuccin Mocha inspired
-   Replaces the old high-glare CRT treatment with
-   a readable dark terminal/editor surface.
-   Reference palette: catppuccin/nvim (Mocha)
+   Catppuccin Latte inspired
+   Reference palette: catppuccin/nvim (Latte)
    ============================================ */
 
 #bm-md {
-  color: #cdd6f4;
+  color: #4c4f69;
   background:
-    radial-gradient(circle at top right, rgba(137, 180, 250, 0.12), transparent 26%),
-    radial-gradient(circle at bottom left, rgba(203, 166, 247, 0.1), transparent 24%),
-    linear-gradient(180deg, #1e1e2e 0%, #181825 100%);
+    radial-gradient(circle at top right, rgba(30, 102, 245, 0.08), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(136, 57, 239, 0.08), transparent 22%),
+    linear-gradient(180deg, #eff1f5 0%, #e6e9ef 100%);
   font-family:
     "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono", "Roboto Mono", "Consolas", "Menlo", monospace;
   font-size: 16px;
   line-height: 1.8;
   padding: 1.6em 1.15em 2.2em;
   letter-spacing: 0.01em;
-  box-shadow: inset 0 1px 0 rgba(205, 214, 244, 0.04);
+  box-shadow: inset 0 1px 0 rgba(76, 79, 105, 0.04);
 }
 
 #bm-md h1,
@@ -36,49 +34,31 @@
 #bm-md h1 {
   margin-top: 0;
   font-size: 2em;
-  color: #89b4fa;
-  border-bottom: 1px solid #45475a;
+  color: #1e66f5;
+  border-bottom: 1px solid #bcc0cc;
   padding-bottom: 0.35em;
-}
-
-#bm-md h1::before {
-  content: "$ ";
-  color: #fab387;
 }
 
 #bm-md h2 {
   font-size: 1.55em;
-  color: #cba6f7;
-}
-
-#bm-md h2::before {
-  content: "> ";
-  color: #89dceb;
+  color: #8839ef;
 }
 
 #bm-md h3 {
   font-size: 1.28em;
-  color: #94e2d5;
-}
-
-#bm-md h3::before {
-  content: "# ";
-  color: #f9e2af;
+  color: #179299;
 }
 
 #bm-md h4,
 #bm-md h5,
 #bm-md h6 {
-  color: #a6e3a1;
+  color: #40a02b;
 }
 
-#bm-md h4 {
-  font-size: 1em;
-}
-
+#bm-md h4,
 #bm-md h5,
 #bm-md h6 {
-  font-size: 0.95em;
+  font-size: 1em;
 }
 
 #bm-md > h1:first-child,
@@ -106,37 +86,37 @@
 #bm-md li,
 #bm-md dd,
 #bm-md td {
-  color: #cdd6f4;
+  color: #4c4f69;
 }
 
 #bm-md strong,
 #bm-md b {
-  color: #fab387;
+  color: #fe640b;
   font-weight: 700;
 }
 
 #bm-md em,
 #bm-md i {
-  color: #89dceb;
+  color: #209fb5;
 }
 
 #bm-md del,
 #bm-md s,
 #bm-md strike {
-  color: #7f849c;
-  text-decoration-color: #f38ba8;
+  color: #8c8fa1;
+  text-decoration-color: #d20f39;
 }
 
 #bm-md mark {
-  color: #1e1e2e;
-  background: #f9e2af;
+  color: #4c4f69;
+  background: #df8e1d;
   padding: 0.1em 0.3em;
   border-radius: 4px;
 }
 
 #bm-md small {
   font-size: 0.875em;
-  color: #a6adc8;
+  color: #6c6f85;
 }
 
 #bm-md sup,
@@ -154,21 +134,21 @@
 }
 
 #bm-md ins {
-  background: rgba(166, 227, 161, 0.14);
-  border-bottom: 1px solid rgba(166, 227, 161, 0.5);
+  background: rgba(64, 160, 43, 0.12);
+  border-bottom: 1px solid rgba(64, 160, 43, 0.45);
   text-decoration: none;
   padding: 0.1em 0.25em;
 }
 
 #bm-md a {
-  color: #89b4fa;
+  color: #1e66f5;
   text-decoration: none;
-  border-bottom: 1px solid rgba(137, 180, 250, 0.4);
+  border-bottom: 1px solid rgba(30, 102, 245, 0.35);
 }
 
 #bm-md a:hover {
-  color: #b4befe;
-  border-bottom-color: #b4befe;
+  color: #7287fd;
+  border-bottom-color: #7287fd;
 }
 
 #bm-md ul,
@@ -177,7 +157,7 @@
 }
 
 #bm-md li::marker {
-  color: #cba6f7;
+  color: #8839ef;
 }
 
 #bm-md ul.contains-task-list {
@@ -186,14 +166,14 @@
 }
 
 #bm-md input[type='checkbox'] {
-  accent-color: #89b4fa;
+  accent-color: #1e66f5;
 }
 
 #bm-md blockquote {
   padding: 0.9em 1.1em;
-  border-left: 3px solid #89dceb;
-  background: rgba(49, 50, 68, 0.72);
-  color: #bac2de;
+  border-left: 3px solid #209fb5;
+  background: rgba(204, 208, 218, 0.55);
+  color: #5c5f77;
   border-radius: 0 10px 10px 0;
 }
 
@@ -210,9 +190,9 @@
 }
 
 #bm-md code {
-  color: #f9e2af;
-  background: rgba(49, 50, 68, 0.92);
-  border: 1px solid #45475a;
+  color: #df8e1d;
+  background: rgba(204, 208, 218, 0.7);
+  border: 1px solid #bcc0cc;
   border-radius: 6px;
   padding: 0.16em 0.42em;
   font-size: 0.92em;
@@ -221,17 +201,17 @@
 #bm-md pre {
   overflow: auto;
   padding: 18px 20px;
-  background: #11111b;
-  border: 1px solid #313244;
+  background: #dce0e8;
+  border: 1px solid #bcc0cc;
   border-radius: 12px;
-  box-shadow: inset 0 1px 0 rgba(205, 214, 244, 0.03);
+  box-shadow: inset 0 1px 0 rgba(76, 79, 105, 0.03);
 }
 
 #bm-md pre code {
   padding: 0;
   border: 0;
   background: transparent;
-  color: #cdd6f4;
+  color: #4c4f69;
   font-size: 0.92em;
 }
 
@@ -239,56 +219,55 @@
   border: 0;
   height: 1px;
   margin: 2em 0;
-  background: linear-gradient(90deg, transparent, #45475a, transparent);
+  background: linear-gradient(90deg, transparent, #bcc0cc, transparent);
 }
 
 #bm-md table {
   width: 100%;
   border-collapse: collapse;
   border-spacing: 0;
-  border: 1px solid #45475a;
+  border: 1px solid #bcc0cc;
   border-radius: 10px;
   overflow: hidden;
-  background: rgba(24, 24, 37, 0.92);
+  background: rgba(230, 233, 239, 0.9);
 }
 
 #bm-md thead {
-  background: linear-gradient(180deg, #313244 0%, #1e1e2e 100%);
+  background: linear-gradient(180deg, #ccd0da 0%, #bcc0cc 100%);
 }
 
 #bm-md thead th {
-  background: linear-gradient(180deg, #313244 0%, #1e1e2e 100%);
-  color: #f5e0dc;
+  background: linear-gradient(180deg, #ccd0da 0%, #bcc0cc 100%);
+  color: #4c4f69;
 }
 
 #bm-md th,
 #bm-md td {
   padding: 12px 14px;
-  border-bottom: 1px solid #45475a;
+  border-bottom: 1px solid #bcc0cc;
   text-align: left;
 }
 
 #bm-md th {
   font-weight: 800;
   letter-spacing: 0.035em;
-  text-shadow: 0 1px 0 rgba(17, 17, 27, 0.5);
-  box-shadow: inset 0 -1px 0 rgba(245, 224, 220, 0.15);
+  box-shadow: inset 0 -1px 0 rgba(76, 79, 105, 0.08);
 }
 
 #bm-md tbody tr {
-  background: rgba(30, 30, 46, 0.86);
+  background: rgba(239, 241, 245, 0.92);
 }
 
 #bm-md tbody tr:nth-child(even) {
-  background: rgba(49, 50, 68, 0.62);
+  background: rgba(220, 224, 232, 0.82);
 }
 
 #bm-md tbody tr:hover {
-  background: rgba(137, 180, 250, 0.08);
+  background: rgba(30, 102, 245, 0.06);
 }
 
 #bm-md tbody td {
-  color: #cdd6f4;
+  color: #4c4f69;
   background: transparent;
 }
 
@@ -309,7 +288,7 @@
 
 #bm-md .frontmatter-key {
   font-weight: 700;
-  color: #89dceb;
+  color: #209fb5;
   white-space: nowrap;
 }
 
@@ -318,7 +297,7 @@
 }
 
 #bm-md .frontmatter-value {
-  color: #bac2de;
+  color: #5c5f77;
 }
 
 #bm-md img,
@@ -326,57 +305,43 @@
 #bm-md iframe {
   max-width: 100%;
   border-radius: 10px;
-  border: 1px solid #45475a;
+  border: 1px solid #bcc0cc;
 }
 
 #bm-md .markdown-alert {
   padding: 14px 16px;
   border-radius: 12px;
-  border: 1px solid #45475a;
-  background: rgba(49, 50, 68, 0.8);
+  border: 1px solid #bcc0cc;
+  background: rgba(204, 208, 218, 0.48);
 }
 
-#bm-md .markdown-alert-note {
-  border-left: 4px solid #89dceb;
-}
-
-#bm-md .markdown-alert-tip {
-  border-left: 4px solid #a6e3a1;
-}
-
-#bm-md .markdown-alert-important {
-  border-left: 4px solid #cba6f7;
-}
-
-#bm-md .markdown-alert-warning {
-  border-left: 4px solid #f9e2af;
-}
-
-#bm-md .markdown-alert-caution {
-  border-left: 4px solid #f38ba8;
-}
+#bm-md .markdown-alert-note { border-left: 4px solid #209fb5; }
+#bm-md .markdown-alert-tip { border-left: 4px solid #40a02b; }
+#bm-md .markdown-alert-important { border-left: 4px solid #8839ef; }
+#bm-md .markdown-alert-warning { border-left: 4px solid #df8e1d; }
+#bm-md .markdown-alert-caution { border-left: 4px solid #d20f39; }
 
 #bm-md .footnotes {
-  border-top: 1px solid #45475a;
+  border-top: 1px solid #bcc0cc;
   padding-top: 1.25em;
 }
 
 #bm-md .footnote-ref,
 #bm-md .footnote-backref,
 #bm-md .data-footnote-backref {
-  color: #89dceb;
+  color: #209fb5;
 }
 
 #bm-md details {
-  border: 1px solid #45475a;
+  border: 1px solid #bcc0cc;
   border-radius: 10px;
-  background: rgba(49, 50, 68, 0.7);
+  background: rgba(204, 208, 218, 0.46);
 }
 
 #bm-md summary {
   cursor: pointer;
   padding: 12px 14px;
-  color: #89b4fa;
+  color: #1e66f5;
   font-weight: 600;
 }
 
@@ -392,8 +357,8 @@
 #bm-md .math-display {
   overflow-x: auto;
   padding: 14px;
-  background: rgba(24, 24, 37, 0.92);
-  border: 1px solid #313244;
+  background: rgba(220, 224, 232, 0.78);
+  border: 1px solid #bcc0cc;
   border-radius: 12px;
 }
 

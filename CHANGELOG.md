@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 ### Added
+- **Default Theme Refresh + Documentation Cleanup**
+  - Switched the default preview theme fallback from `tokyo-night` to `catppuccin-macchiato` for newly created or unthemed notes.
+  - Added `catppuccin-macchiato` and `catppuccin-latte` to the TypeScript theme registry so the theme selector and bundled preview metadata stay aligned.
+  - Moved the legacy `20251229 開發日誌` section out of `README.md` into this changelog and left a direct changelog link in the README.
+
 - **Share Metadata + Site Icon Polish**
   - Added server-rendered Open Graph and Twitter card metadata for shared notes so Slack and other unfurlers can read stable titles and descriptions without relying on client-side rendering.
   - Switched page head metadata to use the repo-provided notepad icon as the favicon and social preview image for shared notes.
@@ -52,3 +57,21 @@
   - **Click Animations**: Support for `{v-click}` syntax for interactive slide elements.
   - **Premium Aesthetics**: Integrated Inter font, dark theme optimization, and enhanced code block styling.
   - **UX Polish**: Switched to fade transitions and top-left alignment for a more professional feel.
+
+## [2025-12-29]
+### Changed
+- **核心穩定性修復 (v2.0)**
+  - 環境變數在模組載入時無法訪問，改用 getter 函數在運行時讀取。
+  - `enableR2` 資料結構不匹配，已合併回 `ext` 物件以統一頁面渲染上下文。
+  - 修復資料覆寫風險：將瀏覽計數自筆記正文讀寫流程中拆離，改存於 `SHARE` KV 的 `views::{path}` 鍵，避免 GET 與 POST 並發時舊內容覆蓋新內容。
+  - 修復權限判斷：編輯頁面只接受編輯密碼，分享頁則接受查看密碼或編輯密碼，區分 `edit` / `view` 權限。
+  - 修復分享頁渲染：確保 Share 模式下正確載入 `marked.js` 與 `DOMPurify`，避免頁面空白。
+  - 導入 `visitor_id` Cookie 做獨立訪客計數，避免重複刷新灌水。
+
+### Added
+- **高級圖表支援 (Advanced Diagrams)**
+  - 新增 Mermaid (` ```mermaid `)、Flowchart.js (` ```flow `)、JS Sequence Diagrams (` ```sequence `)、Graphviz / Viz.js (` ```graphviz `) 與 ABC.js (` ```abc `) 支援。
+  - 圖表引擎採用智慧懶加載，只在頁面偵測到對應程式碼區塊時才載入外部函式庫。
+
+- **其他增強**
+  - 新增可拖曳的編輯器 / 預覽分隔欄，支援調整左右面板寬度。

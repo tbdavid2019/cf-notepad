@@ -15,10 +15,11 @@
 - **分享功能**：可產生唯讀的分享連結。
 - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
 - **分享頁字體切換**：分享頁 footer 內建 `Maple Mono` on/off，可讓閱讀者切回各主題原生字體。
-- **分享頁字級統一**：分享模式會以 `tokyo-night` 為基準統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
-- **多款預覽主題**：內建 `tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `tokyo-night`。
+- **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
+- **多款預覽主題**：內建 `catppuccin-macchiato`、`catppuccin-latte`、`tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
 - **站內 Icon**：內建 notepad icon，會同時用於 favicon 與分享頁的社群預覽圖示（OG / Twitter image）。
+- **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
@@ -226,11 +227,11 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
   - Powered by Reveal.js with smart on-demand asset loading.
 - **[NEW] Curated Dark Preview Themes**:
-  - Added `tokyo-night` as the new default Markdown preview theme.
+  - Added `catppuccin-macchiato` as the current default Markdown preview theme.
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
   - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
-  - Share pages now provide a reader-side `Maple Mono` toggle while keeping typography normalized to the `tokyo-night` reading scale.
+  - Share pages now provide a reader-side `Maple Mono` toggle while keeping typography normalized to a consistent reading scale across themes.
   - Dark-theme table rendering was corrected for `tokyo-night`, `kanagawa`, and `terminal`, and low-contrast table headers across multiple bundled themes were refreshed.
 
 ## Deployment Guide
@@ -362,73 +363,9 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 For the detailed API specification, please refer to: [LLM_API_DOCS.md](./LLM_API_DOCS.md).
 
 ---
-本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)，
+本專案 fork 自 [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad)。
 
----
-
-20251229 開發日誌
-
-修復的關鍵問題：
-
-環境變數在模塊加載時無法訪問 → 改用 getter 函數在運行時訪問
-enableR2 數據結構不匹配 → 將其合併到 ext 對象中
-
-### 核心穩定性修復 (v2.0)
-1. **資料丟失修復 (Data Loss Prevention)** 🛡️
-   - **問題**: 舊邏輯在讀取頁面 (GET) 時會同時寫回 View Count，導致若與保存動作 (POST) 並發，舊內容會覆蓋新內容。
-   - **解決**: 實作 **讀寫分離 (Read-Write Separation)**。瀏覽計數移至獨立的 `SHARE` KV (Key: `views::{path}`)，讀取頁面時只更新計數，**絕不**寫入筆記內容。
-
-2. **密碼驗證優化 (Auth Separation)** 🔒
-   - **問題**: 舊邏輯無法區分管理者與訪客，導致輸入查看密碼 (VPW) 無法登入。
-   - **解決**: 實作 **角色基礎驗證**。
-     - **編輯頁面 (`/:path`)**: 嚴格只認 **編輯密碼 (PW)**，取得 `edit` 權限。
-     - **分享頁面 (`/share/:...`)**: 接受 **查看密碼 (VPW)** 或 **編輯密碼**，取得 `view` 權限。
-
-3. **顯示修復 (Rendering Fix)** 🖼️
-   - **問題**: Share 頁面因腳本載入順序問題導致一片空白。
-   - **解決**: 強制在 Share 模式下正確載入 `marked.js` 與 `DOMPurify`。
-
-4. **瀏覽計數優化 (View Tracking)** 👁️
-   - 此版本導入 `visitor_id` Cookie，針對獨立訪客計數，不再重複計算同一用戶的刷新。
- - ![alt text](image-2.png)
-
-### 5. 高級圖表支援 (Advanced Diagrams) 📊
-本專案現已支援多種程式碼區塊圖表渲染，採用 **智慧懶加載 (Smart Lazy Loading)** 機制，僅在需要時才載入外部函式庫，保持頁面輕量。
-
-#### 支援類型
-1. **Mermaid** (` ```mermaid `)
-   - 流程圖, 時序圖, 甘特圖, 類別圖, 狀態圖...
-2. **Flowchart.js** (` ```flow `)
-   - 簡單的文本流程圖
-3. **JS Sequence Diagrams** (` ```sequence `)
-   - 手繪風格時序圖
-4. **Graphviz (Viz.js)** (` ```graphviz `)
-   - 複雜的 DOT 語言圖形
-5. **ABC.js** (` ```abc `)
-   - 五線譜音樂符號
-
-#### 使用範例
-
-**Mermaid:**
-\`\`\`mermaid
-graph TD;
-    A-->B;
-    A-->C;
-    B-->D;
-    C-->D;
-\`\`\`
-
-**Flowchart:**
-\`\`\`flow
-st=>start: Start
-e=>end: End
-op1=>operation: My Operation
-st->op1->e
-\`\`\`
-
-### 6. 其他增強功能 (Other Enhancements) 🛠️
-- **可調整分割欄 (Resizable Split Pane)**: 編輯器與預覽視窗中間的分隔線現在支援拖曳調整寬度。
-- **排程清理 (Scheduled Cleanup)**: 每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
+開發與變更紀錄請見：[CHANGELOG.md](./CHANGELOG.md)
 
 
 ### DEMO

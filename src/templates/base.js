@@ -44,7 +44,7 @@ ${getBaseCss()}
 ${getEditorCss()}
 ${getMarkdownCss()}
     </style>
-    <style id="theme-style">${THEMES[ext.theme || 'tokyo-night'] || ''}</style>
+    <style id="theme-style">${THEMES[ext.theme || 'catppuccin-macchiato'] || ''}</style>
     <style>
         #preview-md.markdown-body,
         #preview-plain.markdown-body {
