@@ -7,6 +7,8 @@ import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain } f
 import { NOTEPAD_ICON_SVG } from './icon'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
 
+const PUBLIC_ICON_PNG_URL = 'https://s3.wiki.david888.com/2026/06/72b74yht52ytd5z5.png'
+
 // init
 const router = Router()
 
@@ -284,7 +286,7 @@ async function renderSharePage(request, presentationMode = false) {
                 meta: {
                     canonicalUrl: `${origin}${canonicalPath}`,
                     description,
-                    ogImageUrl: `${origin}/icon.svg`,
+                    ogImageUrl: PUBLIC_ICON_PNG_URL,
                     ogType: 'article',
                     robots: 'index,follow',
                     twitterCard: 'summary',

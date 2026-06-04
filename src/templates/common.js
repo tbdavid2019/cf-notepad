@@ -17,7 +17,7 @@ export const SWITCHER = (text, open, className = '') => `
 </label>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, views, theme }) => `
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, views, theme, sharePath }) => `
     <div class="footer">
         ${isEdit ? `
             <div class="opt">
@@ -34,7 +34,12 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     </div>
                 ` : SWITCHER(SUPPORTED_LANG[lang].share, share, 'opt-share')}
             </div>
-            ` : (path ? `<a href="/${path}" class="opt-button" style="text-decoration:none;background:#2196f3;color:white;padding:6px 16px;border-radius:4px;font-weight:500;">✏️ 返回編輯</a>` : '')
+            ` : (path ? `
+                <div class="share-footer-actions">
+                    <a href="/${path}" class="opt-button" style="text-decoration:none;background:#2196f3;color:white;padding:6px 16px;border-radius:4px;font-weight:500;">✏️ 返回編輯</a>
+                    ${sharePath ? SWITCHER('Maple Mono', true, 'opt-share-font') : ''}
+                </div>
+            ` : '')
     }
         <div style="flex:1"></div>
         <div class="footer-controls">

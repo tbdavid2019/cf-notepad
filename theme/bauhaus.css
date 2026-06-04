@@ -435,6 +435,11 @@
   color: #ffffff;
 }
 
+#bm-md thead th {
+  background-color: #1040c0;
+  color: #ffffff;
+}
+
 #bm-md tfoot {
   background-color: #e0e0e0;
   font-size: 0.875em;

@@ -74,6 +74,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     flex-wrap: wrap;
 }
 .opt { display: flex; align-items: center; gap: 15px; }
+.share-footer-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
 .footer-controls { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .footer-select {
     padding: 4px 8px;
@@ -96,6 +97,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .opt-switcher .slider:before { content: ""; position: absolute; height: 12px; width: 12px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: .4s; }
 .opt-switcher input:checked + .slider { background: #2ea44f; }
 .opt-switcher input:checked + .slider:before { transform: translateX(16px); }
+.opt-share-font .opt-desc { font-size: 12px; color: #374151; font-weight: 600; }
 
 /* Diagram Source - Hidden */
 .diagram-source { display: none !important; }

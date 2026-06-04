@@ -7,6 +7,18 @@
   - Added a dedicated `/icon.svg` site icon route and switched page head metadata to use the repo-provided notepad icon for favicon and social previews.
   - Added note-title and note-description extraction helpers so shared-note metadata is generated consistently from note content on the server side.
 
+- **Share Theme Consistency + Font Toggle**
+  - Added a share-page `Maple Mono` on/off toggle next to the `返回編輯` button, backed by localStorage so each browser can keep its own preference.
+  - Reused the bundled `static/fonts/MapleMonoNormal-Medium.woff2` asset as the optional share font instead of duplicating another copy.
+  - Standardized share-page body typography to the `tokyo-night` baseline (`16px` body size, `1.8` line-height) so theme switches no longer visibly shrink or enlarge paragraph text.
+  - Standardized share-page heading and inline-code sizing to the `tokyo-night` scale so themes like `newsprint` no longer render noticeably smaller than dark themes.
+
+- **Theme Table Color Fixes**
+  - Fixed dark-theme table body colors in `tokyo-night` so rows no longer fall back to white backgrounds.
+  - Fixed dark-theme table body colors in `kanagawa` so rows no longer fall back to white backgrounds.
+  - Fixed `terminal` table body rows and cells so the terminal theme keeps a dark background instead of leaking the base markdown table white fill.
+  - Fixed table header backgrounds for `playful-geometric`, `organic`, `retro`, `botanical`, `bauhaus`, `maximalism`, and `terminal`/other affected themes by explicitly styling `thead th`.
+
 - **Theme Table Header Contrast Refresh**
   - Strengthened table header contrast for the `tokyo-night` and `kanagawa` preview themes with clearer header backgrounds, brighter label color, and stronger separation from table rows.
   - Added a small shared table-header emphasis layer in the base template so low-contrast headers remain more legible across themes.

@@ -419,6 +419,7 @@
 }
 
 #bm-md thead th {
+  background-color: #a65d4c;
   color: #f5f3ef;
 }
 
@@ -437,7 +438,6 @@
 #bm-md th {
   font-weight: 600;
   color: #6d453a;
-  background-color: rgba(166, 93, 76, 0.08);
 }
 
 #bm-md tbody tr:nth-child(even) {

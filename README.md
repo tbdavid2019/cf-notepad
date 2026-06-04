@@ -14,9 +14,11 @@
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
 - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
+- **分享頁字體切換**：分享頁 footer 內建 `Maple Mono` on/off，可讓閱讀者切回各主題原生字體。
+- **分享頁字級統一**：分享模式會以 `tokyo-night` 為基準統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
 - **多款預覽主題**：內建 `tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `tokyo-night`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
-- **站內 Icon**：內建 notepad SVG icon，會同時用於 favicon 與分享頁的社群預覽圖示。
+- **站內 Icon**：內建 notepad icon，會同時用於 favicon 與分享頁的社群預覽圖示（OG / Twitter image）。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
@@ -228,7 +230,8 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
   - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
-  - `tokyo-night` and `kanagawa` table headers were refreshed to improve contrast in slides, docs, and long Markdown tables.
+  - Share pages now provide a reader-side `Maple Mono` toggle while keeping typography normalized to the `tokyo-night` reading scale.
+  - Dark-theme table rendering was corrected for `tokyo-night`, `kanagawa`, and `terminal`, and low-contrast table headers across multiple bundled themes were refreshed.
 
 ## Deployment Guide
 

@@ -9,6 +9,8 @@ import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
 
+const PUBLIC_ICON_PNG_URL = 'https://s3.wiki.david888.com/2026/06/72b74yht52ytd5z5.png'
+
 const escapeHtml = value => String(value || '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
@@ -44,22 +46,61 @@ ${getMarkdownCss()}
     </style>
     <style id="theme-style">${THEMES[ext.theme || 'tokyo-night'] || ''}</style>
     <style>
-        #contents,
-        #preview-md,
-        #preview-plain,
-        #preview-md.markdown-body,
-        #preview-plain.markdown-body,
-        #preview-md.markdown-body code,
-        #preview-plain.markdown-body code {
-            font-family: var(--editor-font-family);
-        }
-
         #preview-md.markdown-body,
         #preview-plain.markdown-body {
             max-width: var(--preview-max-width);
             margin-left: auto;
             margin-right: auto;
             width: 100%;
+        }
+
+        body.share-view #preview-md.markdown-body,
+        body.share-view #preview-plain.markdown-body {
+            font-size: 16px;
+            line-height: 1.8;
+        }
+
+        body.share-view #preview-md.markdown-body h1,
+        body.share-view #preview-plain.markdown-body h1 {
+            font-size: 2em;
+        }
+
+        body.share-view #preview-md.markdown-body h2,
+        body.share-view #preview-plain.markdown-body h2 {
+            font-size: 1.55em;
+        }
+
+        body.share-view #preview-md.markdown-body h3,
+        body.share-view #preview-plain.markdown-body h3 {
+            font-size: 1.28em;
+        }
+
+        body.share-view #preview-md.markdown-body h4,
+        body.share-view #preview-plain.markdown-body h4,
+        body.share-view #preview-md.markdown-body h5,
+        body.share-view #preview-plain.markdown-body h5,
+        body.share-view #preview-md.markdown-body h6,
+        body.share-view #preview-plain.markdown-body h6 {
+            font-size: 1em;
+        }
+
+        body.share-view #preview-md.markdown-body code,
+        body.share-view #preview-plain.markdown-body code {
+            font-size: 0.92em;
+        }
+
+        body.share-view #preview-md.markdown-body pre code,
+        body.share-view #preview-plain.markdown-body pre code {
+            font-size: 0.92em;
+        }
+
+        body.share-view.share-font-enabled #preview-md,
+        body.share-view.share-font-enabled #preview-plain,
+        body.share-view.share-font-enabled #preview-md.markdown-body,
+        body.share-view.share-font-enabled #preview-plain.markdown-body,
+        body.share-view.share-font-enabled #preview-md.markdown-body code,
+        body.share-view.share-font-enabled #preview-plain.markdown-body code {
+            font-family: var(--editor-font-family);
         }
 
         #preview-md.markdown-body thead th,
@@ -69,11 +110,11 @@ ${getMarkdownCss()}
             box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
         }
     </style>
-    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
-    <link rel="shortcut icon" href="/icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="/icon.svg" />
+    <link rel="icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
+    <link rel="shortcut icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
+    <link rel="apple-touch-icon" href="${PUBLIC_ICON_PNG_URL}" />
 </head>
-<body>
+<body class="${ext.sharePath && !isEdit ? 'share-view share-font-enabled' : ''}">
     <div class="note-container">
         <div class="stack">
             <div class="layer_1">
@@ -88,7 +129,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId })}
+        ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath })}
     </div>
     <div id="loading"></div>
     ${MODAL(lang)}
@@ -546,10 +587,13 @@ ${getMarkdownCss()}
     <script>
         const THEMES = ${JSON.stringify(THEMES)};
         const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
+        const SHARE_FONT_STORAGE_KEY = 'cf-notepad-share-font-enabled';
         const themeStyleNode = document.getElementById('theme-style');
         const themeSelector = document.getElementById('theme-selector');
         const previewWidthSelector = document.getElementById('preview-width-selector');
         const previewWidthRoot = document.documentElement;
+        const shareFontToggle = document.querySelector('.opt-share-font input');
+        const shareViewBody = document.body;
 
         function applyPreviewWidth(value) {
             const width = value || '100%';
@@ -559,14 +603,36 @@ ${getMarkdownCss()}
             }
         }
 
+        function applyShareFont(enabled) {
+            if (!shareViewBody.classList.contains('share-view')) return;
+            shareViewBody.classList.toggle('share-font-enabled', enabled);
+            shareViewBody.classList.toggle('share-font-disabled', !enabled);
+            if (shareFontToggle) {
+                shareFontToggle.checked = enabled;
+            }
+        }
+
         const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
         applyPreviewWidth(savedPreviewWidth || '100%');
+
+        if (shareViewBody.classList.contains('share-view')) {
+            const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
+            applyShareFont(savedShareFont !== 'false');
+        }
 
         if (previewWidthSelector) {
             previewWidthSelector.addEventListener('change', function() {
                 const width = this.value;
                 applyPreviewWidth(width);
                 window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
+            });
+        }
+
+        if (shareFontToggle) {
+            shareFontToggle.addEventListener('change', function() {
+                const enabled = this.checked;
+                applyShareFont(enabled);
+                window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, enabled ? 'true' : 'false');
             });
         }
 

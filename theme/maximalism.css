@@ -562,6 +562,11 @@
   background: linear-gradient(135deg, #ff3af2 0%, #7b2fff 100%);
 }
 
+#bm-md thead th {
+  background: linear-gradient(135deg, #ff3af2 0%, #7b2fff 100%);
+  color: #ffffff;
+}
+
 #bm-md tfoot {
   background: linear-gradient(135deg, #00f5d4 0%, #7b2fff 100%);
   font-size: 0.875em;

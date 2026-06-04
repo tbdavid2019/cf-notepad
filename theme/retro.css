@@ -452,6 +452,11 @@
   color: #ffffff;
 }
 
+#bm-md thead th {
+  background: linear-gradient(to right, #000080, #1084d0);
+  color: #ffffff;
+}
+
 /* 表尾 - 银灰背景 */
 #bm-md tfoot {
   background-color: #c0c0c0;
