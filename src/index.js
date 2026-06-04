@@ -3,8 +3,9 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n, deleteEmptyPages } from './helper'
-
 import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain } from './constant'
+import { NOTEPAD_ICON_SVG } from './icon'
+import { extractNoteDescription, extractNoteTitle } from './note_meta'
 
 // init
 const router = Router()
@@ -243,6 +244,7 @@ async function renderSharePage(request, presentationMode = false) {
     if (!!path) {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
         const { value, metadata } = await queryNote(path)
+        const origin = new URL(request.url).origin
 
         // Check if View Password is set
         if (metadata.vpw) {
@@ -264,9 +266,9 @@ async function renderSharePage(request, presentationMode = false) {
             }
         }
 
-        // Extract title from first line of content, remove markdown # symbols
-        const firstLine = value.split('\n')[0] || ''
-        const title = metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || decodeURIComponent(path)
+        const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+        const description = extractNoteDescription(value, title)
+        const canonicalPath = presentationMode ? presentationPath : sharePath
 
         return returnPage('Share', {
             lang,
@@ -279,6 +281,14 @@ async function renderSharePage(request, presentationMode = false) {
                 presentationPath,
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
+                meta: {
+                    canonicalUrl: `${origin}${canonicalPath}`,
+                    description,
+                    ogImageUrl: `${origin}/icon.svg`,
+                    ogType: 'article',
+                    robots: 'index,follow',
+                    twitterCard: 'summary',
+                },
             },
             path,
         })
@@ -294,6 +304,15 @@ router.get('/share/:md5', async (request) => {
 router.get('/share/:md5/present', async (request) => {
     return renderSharePage(request, true)
 })
+
+router.get('/icon.svg', () => new Response(NOTEPAD_ICON_SVG, {
+    headers: {
+        'Content-Type': 'image/svg+xml; charset=UTF-8',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+}))
+
+router.get('/favicon.ico', () => Response.redirect('/icon.svg', 302))
 
 router.get('/api/:path', async (request) => {
     const { path } = request.params
@@ -455,9 +474,7 @@ router.get('/:path', async (request) => {
 
     const { value, metadata } = noteResult
 
-    // Extract title from first line of content, remove markdown # symbols
-    const firstLine = value.split('\n')[0] || ''
-    const title = metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || decodeURIComponent(path)
+    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
 
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null

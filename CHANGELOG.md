@@ -2,6 +2,15 @@
 
 ## [Unreleased]
 ### Added
+- **Share Metadata + Site Icon Polish**
+  - Added server-rendered Open Graph and Twitter card metadata for shared notes so Slack and other unfurlers can read stable titles and descriptions without relying on client-side rendering.
+  - Added a dedicated `/icon.svg` site icon route and switched page head metadata to use the repo-provided notepad icon for favicon and social previews.
+  - Added note-title and note-description extraction helpers so shared-note metadata is generated consistently from note content on the server side.
+
+- **Theme Table Header Contrast Refresh**
+  - Strengthened table header contrast for the `tokyo-night` and `kanagawa` preview themes with clearer header backgrounds, brighter label color, and stronger separation from table rows.
+  - Added a small shared table-header emphasis layer in the base template so low-contrast headers remain more legible across themes.
+
 - **Editor Font + Dark Preview Themes**
   - Added bundled `Maple Mono` as the default font for both the editor pane and preview pane.
   - Added two new preview themes inspired by popular Neovim colorschemes: `tokyo-night` and `kanagawa`.

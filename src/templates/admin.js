@@ -4,7 +4,6 @@
  * Supports: notes table with sorting, batch delete, delete empty pages, login form
  */
 import dayjs from 'dayjs'
-import { CDN_PREFIX } from '../constant'
 import { getAdminCss } from '../styles/admin.css.js'
 import { getAdminScript } from '../scripts/admin.js'
 
@@ -15,7 +14,8 @@ export const Admin = ({ lang, notes, error }) => `
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>Admin — Cloud Notepad</title>
-                <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
+                <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+                <link rel="shortcut icon" href="/icon.svg" type="image/svg+xml" />
                 <style>
 ${getAdminCss()}
                 </style>

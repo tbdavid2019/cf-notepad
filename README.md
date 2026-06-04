@@ -13,8 +13,10 @@
 - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
+- **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
 - **多款預覽主題**：內建 `tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `tokyo-night`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
+- **站內 Icon**：內建 notepad SVG icon，會同時用於 favicon 與分享頁的社群預覽圖示。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
@@ -28,6 +30,7 @@
   - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
 - **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
+  - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
   - 已發布的分享頁支援專用簡報入口 `/share/<id>/present`，可直接以投影片模式開啟。
@@ -225,6 +228,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
   - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
+  - `tokyo-night` and `kanagawa` table headers were refreshed to improve contrast in slides, docs, and long Markdown tables.
 
 ## Deployment Guide
 

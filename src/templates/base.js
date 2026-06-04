@@ -2,12 +2,19 @@
  * src/templates/base.js
  * HTML wrapper function (base page structure for editor/share pages)
  */
-import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant'
+import { SUPPORTED_LANG, APP_NAME } from '../constant'
 import { THEMES } from '../theme_data'
 import { FOOTER, MODAL } from './common'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
+
+const escapeHtml = value => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
 
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => `
 <!DOCTYPE html>
@@ -16,7 +23,20 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>${title} - ${APP_NAME}</title>
+    <title>${escapeHtml(title)} - ${escapeHtml(APP_NAME)}</title>
+    <meta name="description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
+    <meta property="og:site_name" content="${escapeHtml(APP_NAME)}" />
+    <meta property="og:type" content="${escapeHtml(ext.meta?.ogType || 'website')}" />
+    <meta property="og:title" content="${escapeHtml(title || APP_NAME)}" />
+    <meta property="og:description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    <meta name="twitter:card" content="${escapeHtml(ext.meta?.twitterCard || 'summary')}" />
+    <meta name="twitter:title" content="${escapeHtml(title || APP_NAME)}" />
+    <meta name="twitter:description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
+    ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
+    ${ext.meta?.ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
+    ${ext.meta?.ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
     <style>
 ${getBaseCss()}
 ${getEditorCss()}
@@ -41,8 +61,17 @@ ${getMarkdownCss()}
             margin-right: auto;
             width: 100%;
         }
+
+        #preview-md.markdown-body thead th,
+        #preview-plain.markdown-body thead th {
+            font-weight: 800;
+            letter-spacing: 0.035em;
+            box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
+        }
     </style>
-    <link href="${CDN_PREFIX}/favicon.ico" rel="shortcut icon" type="image/ico" />
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="shortcut icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/icon.svg" />
 </head>
 <body>
     <div class="note-container">
