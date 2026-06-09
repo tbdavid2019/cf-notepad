@@ -13,8 +13,15 @@
 - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
+- **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
+- **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
+- **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度並記住瀏覽器偏好；`預覽` 開關可關閉右側 preview。
+- **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
+- **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
 - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
 - **分享頁字體切換**：分享頁 footer 內建 `Maple Mono` on/off，可讓閱讀者切回各主題原生字體。
+- **分享頁行動版 footer 優化**：mobile share 頁 footer 會在向下閱讀時自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
+- **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
 - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
 - **多款預覽主題**：內建 `catppuccin-macchiato`、`catppuccin-latte`、`tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
@@ -36,6 +43,9 @@
   - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
+  - 演示模式使用較緊湊的標題級距，避免長中文 `H1 / H2` 佔滿投影片。
+  - 引用區塊採用較小字級；內容超過投影片範圍時會自動縮放該頁正文與表格。
+  - 投影片底部保留控制安全區，避免內容貼住進度條、頁碼與導覽按鈕。
   - 已發布的分享頁支援專用簡報入口 `/share/<id>/present`，可直接以投影片模式開啟。
   - 支援分享指定投影片頁碼，例如 `/share/<id>/present#/24`；若分享頁有閱讀密碼，驗證成功後仍會回到指定頁。
   - **Slidev-Lite 增強版**：
@@ -165,7 +175,7 @@ wrangler secret put SCN_R2_DOMAIN
 ### 4. 部署
 DEV
 ```
-npx wrangler dev --local 2>&1 | head -n 50
+npx wrangler dev --local
 
 npm start
 ```
@@ -174,6 +184,12 @@ npm start
 ```bash
 npm install
 wrangler deploy
+```
+
+也可以使用 npm script：
+
+```bash
+npm run deploy
 ```
 
 部署完成後，你的記事本即可使用！
@@ -215,6 +231,13 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **Markdown Support**: Built-in rendering (marked.js) and sanitation (DOMPurify).
 - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
 - **Sharing**: Generate read-only share links.
+- **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.
+- **Interface Language**: UI copy is maintained for `en-US` and `zh-TW`; Chinese browser languages use Traditional Chinese, all other browser languages default to English, and the footer includes an `En / Zh` selector.
+- **Desktop / Mobile Preview Toggle**: The editor footer includes a segmented toggle for switching the right-side Markdown preview into a mobile simulation width, with the preference saved per browser; the `Preview` switch can hide the right-side preview.
+- **Preview Divider**: The split panes remain draggable; switching device modes or double-clicking the divider resets the layout to 50/50.
+- **Responsive Mobile Tables**: Mobile simulation and real mobile share pages use fixed-layout tables with wrapping cells so long parameters and inline code stay within the viewport.
+- **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses.
+- **Analytics Placeholder**: Shared-note footers include a `#share-analytics-hook` placeholder for future GA / analytics code without adding KV-backed share view writes.
 - **Super Admin Interface**:
   - List all notes.
   - Track view counts.
@@ -225,6 +248,9 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
 - **[NEW] Slidev-style Presentation Mode** 📽️:
   - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
+  - Uses a compact heading scale so long `H1 / H2` titles remain readable without dominating the slide.
+  - Uses compact blockquotes and automatically fits oversized slide content and tables to the viewport.
+  - Reserves a bottom safe area above the presentation progress and navigation controls.
   - Powered by Reveal.js with smart on-demand asset loading.
 - **[NEW] Curated Dark Preview Themes**:
   - Added `catppuccin-macchiato` as the current default Markdown preview theme.
@@ -325,6 +351,12 @@ To enable "Paste to Upload" (like HackMD):
 ```bash
 npm install
 wrangler deploy
+```
+
+You can also use the npm script:
+
+```bash
+npm run deploy
 ```
 
 ### 5. Admin Interface

@@ -1,4 +1,5 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
+import Cookies from 'cookie'
 import * as TEMPL from './template'
 import { SALT, SECRET, SUPPORTED_LANG } from './constant'
 
@@ -87,9 +88,24 @@ export async function queryNote(key) {
 
 export function getI18n(request) {
     const DEFAULT_LANG = 'zh-TW'
-    const al = request.headers.get('Accept-Language') || DEFAULT_LANG
-    const acceptList = al.split(',').map(lang => lang.split(';')[0].trim())
-    return acceptList.find(lang => Object.keys(SUPPORTED_LANG).includes(lang)) || DEFAULT_LANG
+    const FALLBACK_LANG = 'en-US'
+    const normalizeLang = (rawLang = '') => {
+        const lang = rawLang.trim().toLowerCase()
+        if (!lang) return ''
+        if (lang.startsWith('zh')) return DEFAULT_LANG
+        if (lang === 'en' || lang.startsWith('en-')) return FALLBACK_LANG
+        return FALLBACK_LANG
+    }
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const cookieLang = normalizeLang(cookie.lang || '')
+    if (cookieLang && SUPPORTED_LANG[cookieLang]) return cookieLang
+
+    const al = request.headers.get('Accept-Language') || ''
+    const acceptList = al.split(',').map(lang => lang.split(';')[0].trim()).filter(Boolean)
+    const detectedLang = acceptList.map(normalizeLang).find(lang => SUPPORTED_LANG[lang])
+
+    return detectedLang || DEFAULT_LANG
 }
 
 /**

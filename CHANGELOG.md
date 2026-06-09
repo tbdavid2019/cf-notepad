@@ -1,6 +1,81 @@
 # Changelog
 
-## [Unreleased]
+## [2026-06-09 14:36 CST]
+### Fixed
+- **Centered Editor Split**
+  - Resets the editor and preview panes to an exact 50/50 split when switching between desktop and mobile preview modes.
+  - Added double-click reset behavior to the draggable divider.
+
+## [2026-06-09 14:31 CST]
+### Fixed
+- **Responsive Mobile Tables**
+  - Added fixed-layout table fitting for the editor mobile simulator and real mobile share pages.
+  - Allows long cell text, inline code, parameters, and URLs to wrap instead of overflowing the mobile viewport.
+
+## [2026-06-09 14:25 CST]
+### Fixed
+- **Presentation Bottom Safe Area**
+  - Reserved a 56px bottom safe area above Reveal.js progress, slide number, and navigation controls.
+  - Updated slide fitting to account for the smaller usable height so long slides do not stick to the bottom edge.
+
+## [2026-06-09 14:22 CST]
+### Fixed
+- **Presentation Quote and Slide Fit**
+  - Reduced presentation body and blockquote typography so quoted metadata remains compact.
+  - Added per-slide font fitting when content exceeds the presentation viewport, followed by a second table-fit pass.
+
+## [2026-06-09 14:18 CST]
+### Fixed
+- **Presentation Heading Scale**
+  - Reduced presentation-mode `h1`, `h2`, and `h3` sizes and spacing so long Chinese headings no longer dominate the slide.
+
+## [2026-06-09 14:13 CST]
+### Fixed
+- **Editor Footer and Mobile Preview Layout**
+  - Prevented the editor footer controls from wrapping into a second row.
+  - Kept the editor/preview divider near its existing split position when mobile simulation is enabled by placing the phone frame inside a full-width preview pane.
+
+### Changed
+- **Preview Toggle Label**
+  - Renamed the `Markdown` switch to `預覽` / `Preview`.
+  - Preview-only controls are hidden when preview mode is disabled.
+
+## [2026-06-09 14:00 CST]
+### Added
+- **Desktop / Mobile Preview Toggle**
+  - Added an editor footer segmented toggle for switching the right-side Markdown preview between desktop and mobile simulation modes.
+  - Saves the selected preview device mode in localStorage.
+
+### Changed
+- **Compact Footer Lock Labels**
+  - Shortened password control labels to `編輯鎖` / `閱讀鎖` and `Edit Lock` / `Read Lock`.
+
+## [2026-06-09 13:45 CST]
+### Changed
+- **Footer Compact Controls**
+  - Shortened the last-saved footer text to compact relative time, such as `保存 5h前` and `Saved 5h ago`.
+  - Replaced the language dropdown with a front-positioned `Zh / En` segmented toggle.
+
+## [2026-06-09 13:42 CST]
+### Fixed
+- **Presentation Table Fit**
+  - Added presentation-mode table auto-fitting so wide or tall Markdown tables are scaled to remain on the same slide.
+  - Re-runs table fitting after Reveal.js initialization, slide changes, and viewport resize events.
+
+## [2026-06-09 13:38 CST]
+### Added
+- **Publish Nudge + Language / Share Footer UX**
+  - Added an editor-side publish nudge that appears after the user stays focused in the input area for 3 minutes with non-empty unpublished content.
+  - Consolidated UI localization to maintained `en-US` and `zh-TW` strings, with Chinese browser languages mapped to `zh-TW` and all other browser languages mapped to `en-US`.
+  - Added an `En / Zh` footer selector backed by a `lang` cookie so users can override automatic language detection.
+  - Added mobile share-page footer auto-hide behavior while scrolling, with the footer reappearing when scrolling up or after scrolling pauses.
+  - Added a `#share-analytics-hook` placeholder in the share footer for future GA / analytics injection without adding KV-backed share view writes.
+
+### Changed
+- **Wrangler Script Cleanup**
+  - Updated npm scripts to use `wrangler deploy` instead of the deprecated `wrangler publish` command.
+
+## [2026-05 之前]
 ### Added
 - **Default Theme Refresh + Documentation Cleanup**
   - Switched the default preview theme fallback from `tokyo-night` to `catppuccin-macchiato` for newly created or unthemed notes.

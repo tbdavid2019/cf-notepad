@@ -9,7 +9,9 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev",
-    "publish": "wrangler publish"
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "publish": "wrangler deploy"
   },
   "dependencies": {
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",

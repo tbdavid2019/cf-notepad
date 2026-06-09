@@ -18,6 +18,26 @@ const escapeHtml = value => String(value || '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
+const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
+
+const PUBLISH_NUDGE_MODAL = lang => {
+    const t = getLangText(lang)
+    return `
+    <div class="modal publish-nudge-modal" role="dialog" aria-modal="true" aria-labelledby="publish-nudge-title">
+        <div class="modal-mask"></div>
+        <div class="publish-nudge-content">
+            <button type="button" class="close-btn publish-nudge-close" aria-label="${escapeHtml(t.later)}">x</button>
+            <h2 id="publish-nudge-title">${escapeHtml(t.publishNudgeTitle)}</h2>
+            <p>${escapeHtml(t.publishNudgeText)}</p>
+            <div class="publish-nudge-actions">
+                <button type="button" class="opt-button publish-nudge-later">${escapeHtml(t.later)}</button>
+                <button type="button" class="opt-button publish-nudge-publish">${escapeHtml(t.publishNow)}</button>
+            </div>
+        </div>
+    </div>
+    `
+}
+
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => `
 <!DOCTYPE html>
 <html>
@@ -124,7 +144,11 @@ ${getMarkdownCss()}
                          <article style="display:none;" id="bot-accessible-content">${content}</article>
                         <textarea id="contents" class="contents ${isEdit ? '' : 'hide'}" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
-                        ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>`}
+                        ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
+                            isEdit
+                                ? `<div class="preview-pane"><div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div></div>`
+                                : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>`
+                        )}
                     </div>
                 </div>
             </div>
@@ -133,6 +157,7 @@ ${getMarkdownCss()}
     </div>
     <div id="loading"></div>
     ${MODAL(lang)}
+    ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
     <!-- KaTeX CSS -->
@@ -338,22 +363,21 @@ ${getMarkdownCss()}
         presentationPath: ext.presentationPath || '',
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
+        isEdit: isEdit === true,
+        isPublished: ext.share === true,
+        lang,
+        i18n: getLangText(lang),
     })}
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
-
-    const DEFAULT_LANG = 'zh-TW'
-    const SUPPORTED_LANG = {
-        'en': { err: 'Error', pepw: 'Please enter password.', pwcnbe: 'Password is empty!', enpw: 'Enter a new password (Keeping it empty will remove the current password)', pwss: 'Password set successfully.', pwrs: 'Password removed successfully.', cpys: 'Copied!' },
-        'zh': { err: '出错了', pepw: '请输入密码', pwcnbe: '密码不能为空！', enpw: '输入新密码（留空可清除当前密码）', pwss: '密码设置成功！', pwrs: '密码清除成功！', cpys: '已复制' },
-        'zh-TW': { err: '出錯了', pepw: '請輸入密碼', pwcnbe: '密碼不能為空！', enpw: '輸入新密碼（留空可清除當前密碼）', pwss: '密碼設置成功！', pwrs: '密碼清除成功！', cpys: '已複製' }
-    }
+    const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
     const getI18n = key => {
-        const lang = navigator.language || navigator.userLanguage || DEFAULT_LANG
-        if (SUPPORTED_LANG[lang]) return SUPPORTED_LANG[lang][key]
-        const userLang = lang.split('-')[0]
-        const targetLang = Object.keys(SUPPORTED_LANG).find(l => l === userLang) || DEFAULT_LANG
-        return SUPPORTED_LANG[targetLang][key]
+        return (APP_STATE.i18n && APP_STATE.i18n[key]) || key
+    }
+
+    const setLanguage = lang => {
+        document.cookie = 'lang=' + encodeURIComponent(lang) + '; path=/; max-age=' + LANG_COOKIE_MAX_AGE + '; SameSite=Lax'
+        window.location.reload()
     }
 
     const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
@@ -425,9 +449,79 @@ ${getMarkdownCss()}
         const $closeBtn = document.querySelector('.share-modal .close-btn')
         const $copyBtn = document.querySelector('.share-modal .opt-button')
         const $shareInput = document.querySelector('.share-modal input')
+        const $languageSelector = document.querySelector('#language-selector')
+        const $publishNudgeModal = document.querySelector('.publish-nudge-modal')
+        const $publishNudgePublish = document.querySelector('.publish-nudge-publish')
+        const $publishNudgeLater = document.querySelector('.publish-nudge-later')
+        const $publishNudgeClose = document.querySelector('.publish-nudge-close')
 
         renderPlain($previewPlain, $textarea ? $textarea.value : '')
         triggerRender($previewMd, $textarea ? $textarea.value : '')
+
+        const showShareModal = (shareId) => {
+            if (!$shareModal || !$shareInput || !shareId) return;
+            $shareInput.value = window.location.origin + '/share/' + shareId;
+            $shareModal.style.display = 'block';
+        }
+
+        const publishCurrentNote = () => {
+            return window.fetch(window.location.pathname + '/setting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ share: true })
+            })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.err !== 0) {
+                        if ($shareBtn) $shareBtn.checked = false;
+                        errHandle(res.msg);
+                        return false;
+                    }
+                    APP_STATE.isPublished = true;
+                    if ($shareBtn) $shareBtn.checked = true;
+                    showShareModal(res.data);
+                    return true;
+                })
+                .catch(err => {
+                    if ($shareBtn) $shareBtn.checked = false;
+                    errHandle(err);
+                    return false;
+                })
+        }
+
+        const closePublishNudge = () => {
+            if ($publishNudgeModal) $publishNudgeModal.style.display = 'none';
+        }
+
+        const showPublishNudge = () => {
+            if (!$publishNudgeModal || APP_STATE.isPublished || !APP_STATE.isEdit) return;
+            if (!$textarea || !$textarea.value.trim()) return;
+            $publishNudgeModal.style.display = 'block';
+            if ($publishNudgePublish) $publishNudgePublish.focus();
+        }
+
+        if ($languageSelector) {
+            $languageSelector.querySelectorAll('[data-lang]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const nextLang = this.getAttribute('data-lang') === 'zh-TW' ? 'zh-TW' : 'en-US';
+                    if (nextLang !== APP_STATE.lang) setLanguage(nextLang);
+                });
+            });
+        }
+
+        if ($publishNudgePublish) {
+            $publishNudgePublish.addEventListener('click', () => {
+                closePublishNudge();
+                publishCurrentNote();
+            });
+        }
+        if ($publishNudgeLater) $publishNudgeLater.addEventListener('click', closePublishNudge);
+        if ($publishNudgeClose) $publishNudgeClose.addEventListener('click', closePublishNudge);
+        if ($publishNudgeModal) {
+            $publishNudgeModal.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closePublishNudge();
+            });
+        }
 
         // Scroll Sync
         let isSyncingLeft = false, isSyncingRight = false, syncTimeout = null;
@@ -451,6 +545,12 @@ ${getMarkdownCss()}
         const $resizer = document.querySelector('.divide-line');
         if ($resizer && $textarea && ($previewMd || $previewPlain)) {
             const $preview = $previewMd || $previewPlain;
+            const $previewPane = document.querySelector('.preview-pane') || $preview;
+            const resetSplitPane = function() {
+                $textarea.style.removeProperty('flex');
+                $previewPane.style.removeProperty('flex');
+            };
+            window.resetEditorSplitPane = resetSplitPane;
             let x = 0, leftWidth = 0, parentWidth = 0;
             const mouseDownHandler = function(e) {
                 x = e.clientX; leftWidth = $textarea.getBoundingClientRect().width;
@@ -462,7 +562,7 @@ ${getMarkdownCss()}
             const mouseMoveHandler = function(e) {
                 const dx = e.clientX - x; const newLeftPercent = ((leftWidth + dx) * 100) / parentWidth;
                 if (newLeftPercent < 10 || newLeftPercent > 90) return;
-                $textarea.style.flex = \`0 0 \${newLeftPercent}%\`; $preview.style.flex = \`0 0 calc(\${100 - newLeftPercent}% - 8px)\`;
+                $textarea.style.flex = \`0 0 \${newLeftPercent}%\`; $previewPane.style.flex = \`0 0 calc(\${100 - newLeftPercent}% - 8px)\`;
             };
             const mouseUpHandler = function() {
                 document.removeEventListener('mousemove', mouseMoveHandler); document.removeEventListener('mouseup', mouseUpHandler);
@@ -470,6 +570,7 @@ ${getMarkdownCss()}
                 $textarea.style.removeProperty('pointer-events'); $preview.style.removeProperty('pointer-events');
             };
             $resizer.addEventListener('mousedown', mouseDownHandler);
+            $resizer.addEventListener('dblclick', resetSplitPane);
         }
 
         if ($textarea) {
@@ -483,7 +584,7 @@ ${getMarkdownCss()}
                             e.preventDefault()
                             const blob = item.getAsFile()
                             const start = $textarea.selectionStart
-                            const loadingText = '![Uploading...]()'
+                            const loadingText = '![' + getI18n('uploading') + ']()'
                             $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
                             $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
                             const formData = new FormData()
@@ -492,16 +593,37 @@ ${getMarkdownCss()}
                                 .then(res => res.json())
                                 .then(res => {
                                     if (res.err === 0) { $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')'); triggerRender($previewMd, $textarea.value) }
-                                    else { $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed: ' + res.msg + ']'); alert('Upload Failed: ' + res.msg) }
+                                    else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); alert(getI18n('uploadFailed') + ': ' + res.msg) }
                                 })
-                                .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[Upload Failed]'); alert('Upload Error: ' + err) })
+                                .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']'); alert(getI18n('uploadError') + err) })
                             return;
                         }
                     }
                 })
             }
 
+            let publishNudgeTimer = null;
+            let publishNudgeShown = false;
+            const clearPublishNudgeTimer = () => {
+                if (publishNudgeTimer) {
+                    clearTimeout(publishNudgeTimer);
+                    publishNudgeTimer = null;
+                }
+            }
+            const schedulePublishNudge = () => {
+                clearPublishNudgeTimer();
+                if (publishNudgeShown || APP_STATE.isPublished || !$textarea.value.trim()) return;
+                publishNudgeTimer = setTimeout(() => {
+                    if (document.activeElement !== $textarea) return;
+                    publishNudgeShown = true;
+                    showPublishNudge();
+                }, 180000);
+            }
+            $textarea.addEventListener('focus', schedulePublishNudge);
+            $textarea.addEventListener('blur', clearPublishNudgeTimer);
+
             $textarea.oninput = throttle(function () {
+                schedulePublishNudge();
                 triggerRender($previewMd, $textarea.value)
                 $loading.style.display = 'inline-block'
                 window.fetch('', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ t: $textarea.value }) })
@@ -543,18 +665,18 @@ ${getMarkdownCss()}
         if ($shareUrlInput && $shareCopyBtn) {
             try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
             $shareCopyBtn.addEventListener('click', async () => {
-                try { await clipboardCopy($shareUrlInput.value); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert('Copy failed'); }
+                try { await clipboardCopy($shareUrlInput.value); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });
         }
         if ($shareUrlInput && $copyPresentShareBtn) {
             $copyPresentShareBtn.addEventListener('click', async () => {
                 const presentationUrl = ($shareUrlInput.value || '') + '/present';
-                try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert('Copy failed'); }
+                try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });
         }
         if ($unpublishBtn) {
             $unpublishBtn.addEventListener('click', () => {
-                if (!confirm('確定要取消發布此分享連結嗎？')) return;
+                if (!confirm(getI18n('unpublishConfirm'))) return;
                 window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
                     .then(res => res.json()).then(res => { if (res.err !== 0) { return errHandle(res.msg); } window.location.reload(); }).catch(err => errHandle(err));
             });
@@ -563,9 +685,13 @@ ${getMarkdownCss()}
         if ($shareBtn) {
             $shareBtn.onclick = function (e) {
                 const isShare = e.target.checked
-                window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: isShare }) })
+                if (isShare) {
+                    publishCurrentNote();
+                    return;
+                }
+                window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
                     .then(res => res.json())
-                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } if (isShare) { $shareInput.value = window.location.origin + '/share/' + res.data; $shareModal.style.display = 'block' } })
+                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; })
                     .catch(err => errHandle(err))
             }
         }
@@ -575,10 +701,49 @@ ${getMarkdownCss()}
             $copyBtn.onclick = function () {
                 clipboardCopy($shareInput.value)
                 const originText = $copyBtn.innerHTML; const originColor = $copyBtn.style.background;
-                $copyBtn.innerHTML = getI18n('cpys'); $copyBtn.style.background = 'orange';
+                $copyBtn.innerHTML = getI18n('copied'); $copyBtn.style.background = 'orange';
                 window.setTimeout(() => { $shareModal.style.display = 'none'; $copyBtn.innerHTML = originText; $copyBtn.style.background = originColor; }, 1500)
             }
         }
+
+        const setupMobileShareFooter = () => {
+            const footer = document.querySelector('.footer');
+            const scrollTarget = $previewMd || $previewPlain;
+            if (!document.body.classList.contains('share-view') || !footer || !scrollTarget) return;
+            const media = window.matchMedia('(max-width: 960px)');
+            let lastScrollTop = scrollTarget.scrollTop;
+            let revealTimer = null;
+
+            const showFooter = () => footer.classList.remove('footer-hidden');
+            const hideFooter = () => {
+                if (media.matches) footer.classList.add('footer-hidden');
+            }
+            const handleScroll = () => {
+                if (!media.matches) {
+                    showFooter();
+                    return;
+                }
+
+                const currentScrollTop = scrollTarget.scrollTop;
+                if (currentScrollTop <= 8 || currentScrollTop < lastScrollTop) {
+                    showFooter();
+                } else {
+                    hideFooter();
+                }
+                lastScrollTop = Math.max(currentScrollTop, 0);
+
+                clearTimeout(revealTimer);
+                revealTimer = setTimeout(showFooter, 900);
+            }
+
+            scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
+            if (media.addEventListener) {
+                media.addEventListener('change', showFooter);
+            } else if (media.addListener) {
+                media.addListener(showFooter);
+            }
+        }
+        setupMobileShareFooter();
     })
 </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
@@ -587,10 +752,13 @@ ${getMarkdownCss()}
     <script>
         const THEMES = ${JSON.stringify(THEMES)};
         const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
+        const PREVIEW_DEVICE_STORAGE_KEY = 'cf-notepad-preview-device';
         const SHARE_FONT_STORAGE_KEY = 'cf-notepad-share-font-enabled';
         const themeStyleNode = document.getElementById('theme-style');
         const themeSelector = document.getElementById('theme-selector');
         const previewWidthSelector = document.getElementById('preview-width-selector');
+        const previewDeviceSelector = document.getElementById('preview-device-selector');
+        const languageSelector = document.getElementById('language-selector');
         const previewWidthRoot = document.documentElement;
         const shareFontToggle = document.querySelector('.opt-share-font input');
         const shareViewBody = document.body;
@@ -600,6 +768,28 @@ ${getMarkdownCss()}
             previewWidthRoot.style.setProperty('--preview-max-width', width);
             if (previewWidthSelector && previewWidthSelector.value !== width) {
                 previewWidthSelector.value = width;
+            }
+        }
+
+        function setSegmentedActive(selector, dataAttribute, activeValue) {
+            if (!selector) return;
+            selector.querySelectorAll('button').forEach(button => {
+                const active = button.getAttribute(dataAttribute) === activeValue;
+                button.classList.toggle('active', active);
+                button.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+        }
+
+        function applyPreviewDevice(value) {
+            const device = value === 'mobile' ? 'mobile' : 'desktop';
+            if (typeof window.resetEditorSplitPane === 'function') {
+                window.resetEditorSplitPane();
+            }
+            document.body.classList.toggle('preview-device-mobile', device === 'mobile');
+            document.body.classList.toggle('preview-device-desktop', device === 'desktop');
+            setSegmentedActive(previewDeviceSelector, 'data-preview-device', device);
+            if (previewWidthSelector) {
+                previewWidthSelector.disabled = device === 'mobile';
             }
         }
 
@@ -615,6 +805,18 @@ ${getMarkdownCss()}
         const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
         applyPreviewWidth(savedPreviewWidth || '100%');
 
+        if (previewDeviceSelector) {
+            const savedPreviewDevice = window.localStorage.getItem(PREVIEW_DEVICE_STORAGE_KEY);
+            applyPreviewDevice(savedPreviewDevice || 'desktop');
+            previewDeviceSelector.querySelectorAll('[data-preview-device]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const device = this.getAttribute('data-preview-device') === 'mobile' ? 'mobile' : 'desktop';
+                    applyPreviewDevice(device);
+                    window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
+                });
+            });
+        }
+
         if (shareViewBody.classList.contains('share-view')) {
             const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
             applyShareFont(savedShareFont !== 'false');
@@ -626,6 +828,10 @@ ${getMarkdownCss()}
                 applyPreviewWidth(width);
                 window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
             });
+        }
+
+        if (languageSelector) {
+            setSegmentedActive(languageSelector, 'data-lang', APP_STATE.lang);
         }
 
         if (shareFontToggle) {
@@ -652,6 +858,7 @@ ${getMarkdownCss()}
         var _loaded = false;
         var _reveal = null;
         var _autoStarted = false;
+        var _tableResizeHandler = null;
 
         function loadAssets() {
             return new Promise(function(resolve, reject) {
@@ -676,6 +883,90 @@ ${getMarkdownCss()}
             });
         }
 
+        function preparePresentationTables(container) {
+            container.querySelectorAll('.reveal section table').forEach(function(table) {
+                if (table.closest('.presentation-table-fit')) return;
+                var wrapper = document.createElement('div');
+                wrapper.className = 'presentation-table-fit';
+                table.parentNode.insertBefore(wrapper, table);
+                wrapper.appendChild(table);
+            });
+        }
+
+        function fitPresentationTables(container) {
+            var reveal = container.querySelector('.reveal');
+            if (!reveal) return;
+
+            preparePresentationTables(container);
+
+            reveal.querySelectorAll('.presentation-table-fit').forEach(function(wrapper) {
+                var table = wrapper.querySelector('table');
+                var section = wrapper.closest('section');
+                if (!table || !section) return;
+
+                table.style.transform = '';
+                wrapper.style.width = '';
+                wrapper.style.height = '';
+
+                var sectionWidth = section.clientWidth || 1000;
+                var sectionHeight = section.clientHeight || 700;
+                var availableWidth = Math.max(120, sectionWidth - 24);
+                var availableHeight = Math.max(90, sectionHeight - wrapper.offsetTop - 24);
+                var tableWidth = table.scrollWidth || table.offsetWidth;
+                var tableHeight = table.scrollHeight || table.offsetHeight;
+
+                if (!tableWidth || !tableHeight) return;
+
+                var scale = Math.min(1, availableWidth / tableWidth, availableHeight / tableHeight);
+                if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+                scale = Math.max(0.18, Math.min(1, scale));
+
+                table.style.transform = 'scale(' + scale + ')';
+                wrapper.style.width = (tableWidth * scale) + 'px';
+                wrapper.style.height = (tableHeight * scale) + 'px';
+                wrapper.classList.toggle('presentation-table-scaled', scale < 0.999);
+            });
+        }
+
+        function fitPresentationSlides(container) {
+            var reveal = container.querySelector('.reveal');
+            if (!reveal) return;
+
+            var availableWidth = 960;
+            var availableHeight = 600;
+            var baseFontSize = 28;
+            var minimumFontSize = 13;
+
+            reveal.querySelectorAll('.slides section').forEach(function(section) {
+                section.style.fontSize = baseFontSize + 'px';
+            });
+
+            fitPresentationTables(container);
+
+            reveal.querySelectorAll('.slides section').forEach(function(section) {
+                var contentWidth = Math.max(section.scrollWidth, section.offsetWidth);
+                var contentHeight = section.scrollHeight;
+                if (!contentWidth || !contentHeight) return;
+
+                var scale = Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
+                if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+
+                var fittedFontSize = Math.max(minimumFontSize, Math.floor(baseFontSize * scale));
+                section.style.fontSize = fittedFontSize + 'px';
+                section.classList.toggle('presentation-slide-scaled', fittedFontSize < baseFontSize);
+            });
+
+            fitPresentationTables(container);
+        }
+
+        function schedulePresentationFit(container) {
+            requestAnimationFrame(function() {
+                requestAnimationFrame(function() {
+                    fitPresentationSlides(container);
+                });
+            });
+        }
+
         window.initPresentation = async function() {
             console.log('initPresentation triggered');
             var content = '';
@@ -688,10 +979,10 @@ ${getMarkdownCss()}
                 content = share.innerText || share.textContent || '';
             }
 
-            if (!content || !content.trim()) { alert('無內容可演示'); return; }
+            if (!content || !content.trim()) { alert(getI18n('presentationUnavailable')); return; }
 
             var container = document.getElementById('presentation-container');
-            container.innerHTML = '\u003cbutton id="presentation-close-btn"\u003e✕ 結束演示\u003c/button\u003e' +
+            container.innerHTML = '\u003cbutton id="presentation-close-btn"\u003e✕ ' + getI18n('presentationClose') + '\u003c/button\u003e' +
                                  '\u003cdiv class="reveal"\u003e\u003cdiv class="slides"\u003e\u003c/div\u003e\u003c/div\u003e';
             
             document.getElementById('presentation-close-btn').onclick = window.exitPresentation;
@@ -740,11 +1031,20 @@ ${getMarkdownCss()}
                     width: 1000, height: 700, margin: 0.1,
                     controls: true, progress: true, slideNumber: true
                 });
+                if (_reveal.on) {
+                    _reveal.on('ready', function() { schedulePresentationFit(container); });
+                    _reveal.on('slidechanged', function() { schedulePresentationFit(container); });
+                    _reveal.on('resize', function() { schedulePresentationFit(container); });
+                }
                 await _reveal.initialize();
+                if (_tableResizeHandler) window.removeEventListener('resize', _tableResizeHandler);
+                _tableResizeHandler = function() { schedulePresentationFit(container); };
+                window.addEventListener('resize', _tableResizeHandler);
+                schedulePresentationFit(container);
                 console.log('Reveal.js initialized (Slidev-Lite mode)');
             } catch(e) {
                 console.error('Presentation error:', e);
-                alert('啟動失敗: ' + e);
+                alert(getI18n('presentationFailed') + e);
                 window.exitPresentation();
             }
         };
@@ -754,6 +1054,10 @@ ${getMarkdownCss()}
             var shouldReturnToShare = APP_STATE.autoPresent && APP_STATE.sharePath && window.location.pathname === APP_STATE.presentationPath;
             c.classList.remove('active');
             if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
+            if (_tableResizeHandler) {
+                window.removeEventListener('resize', _tableResizeHandler);
+                _tableResizeHandler = null;
+            }
             c.innerHTML = '';
             document.body.style.overflow = '';
             if (shouldReturnToShare) {
