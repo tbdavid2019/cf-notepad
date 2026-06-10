@@ -19,13 +19,16 @@
 - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
 - **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
 - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
-- **分享頁字體切換**：分享頁 footer 內建 `Maple Mono` on/off，可讓閱讀者切回各主題原生字體。
+- **分享頁不追蹤瀏覽數**：預設不寫入 share view 計數，避免 Cloudflare 免費方案持續消耗 KV 寫入額度。
+- **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
+- **分享頁字體切換**：分享頁 footer 內建 `J / M` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`，並記住每個瀏覽器的偏好。
 - **分享頁行動版 footer 優化**：mobile share 頁 footer 會在向下閱讀時自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
 - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
 - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
+- **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
 - **多款預覽主題**：內建 `catppuccin-macchiato`、`catppuccin-latte`、`tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
-- **站內 Icon**：內建 notepad icon，會同時用於 favicon 與分享頁的社群預覽圖示（OG / Twitter image）。
+- **站內 Icon**：內建 note SVG icon，Worker 會同時輸出 `/icon.svg`、`/icon.png`、`/favicon.ico`，並作為分享頁的社群預覽圖示（OG / Twitter image）。
 - **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
 - **超級管理員介面**：
   - 檢視所有筆記列表。
@@ -155,9 +158,29 @@ wrangler secret put SCN_ENABLE_R2
 # 7. R2 Bucket 公開網域 (若開啟功能則必須)
 # 例如: https://images.your-domain.com
 wrangler secret put SCN_R2_DOMAIN
+
+# 8. Google Analytics Measurement ID（選用，套用於編輯頁與 share 頁）
+# 例如: G-XXXXXXXXXX
+wrangler secret put SCN_GA_MEASUREMENT_ID
 ```
 
 *注意：`SCN_ADMIN_PATH` 預設為 `/admin`，但強烈建議修改以避免被掃描。*
+
+### 3.1 Google Analytics（選用）
+
+若要在站內啟用 GA4，設定 Cloudflare 變數 `SCN_GA_MEASUREMENT_ID` 即可。
+
+值範例：
+
+```text
+G-XXXXXXXXXX
+```
+
+啟用後會自動載入於：
+
+- 一般編輯頁
+- `/share/:id`
+- `/share/:id/present`
 
 ### 6. R2 圖片上傳設定 (選用)
 
@@ -237,7 +260,11 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **Preview Divider**: The split panes remain draggable; switching device modes or double-clicking the divider resets the layout to 50/50.
 - **Responsive Mobile Tables**: Mobile simulation and real mobile share pages use fixed-layout tables with wrapping cells so long parameters and inline code stay within the viewport.
 - **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses.
+- **No Share View Tracking by Default**: Shared-note views are not counted or written to Cloudflare KV by default, which avoids ongoing write usage on the free plan.
+- **GA4 Support**: Set `SCN_GA_MEASUREMENT_ID` in Cloudflare to automatically load Google Analytics on editor pages, shared-note pages, and shared-presentation pages.
 - **Analytics Placeholder**: Shared-note footers include a `#share-analytics-hook` placeholder for future GA / analytics code without adding KV-backed share view writes.
+- **Share Font Switcher**: Shared-note footers now use compact `J / M` buttons to switch between `JetBrains Mono` and `Maple Mono`, with `JetBrains Mono` as the default reader font.
+- **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta` groups so typography, language, width, and theme controls stay together.
 - **Super Admin Interface**:
   - List all notes.
   - Track view counts.
@@ -257,7 +284,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
   - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
-  - Share pages now provide a reader-side `Maple Mono` toggle while keeping typography normalized to a consistent reading scale across themes.
+  - Share pages now provide a reader-side `JetBrains Mono / Maple Mono` switcher while keeping typography normalized to a consistent reading scale across themes.
   - Dark-theme table rendering was corrected for `tokyo-night`, `kanagawa`, and `terminal`, and low-contrast table headers across multiple bundled themes were refreshed.
 
 ## Deployment Guide
@@ -328,9 +355,29 @@ wrangler secret put SCN_ENABLE_R2
 # 7. R2 Bucket Public Domain (Required if R2 enabled)
 # Example: https://images.your-domain.com
 wrangler secret put SCN_R2_DOMAIN
+
+# 8. Google Analytics Measurement ID (Optional, editor + share pages)
+# Example: G-XXXXXXXXXX
+wrangler secret put SCN_GA_MEASUREMENT_ID
 ```
 
 *Note: `SCN_ADMIN_PATH` defaults to `/admin` if not set, but changing it is highly recommended.*
+
+### 3.1 Google Analytics (Optional)
+
+To enable GA4 across the site, set `SCN_GA_MEASUREMENT_ID`.
+
+Example value:
+
+```text
+G-XXXXXXXXXX
+```
+
+When set, GA loads on:
+
+- editor pages
+- `/share/:id`
+- `/share/:id/present`
 
 ### 6. R2 Image Upload (Optional)
 

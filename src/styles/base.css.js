@@ -6,7 +6,15 @@
 export const getBaseCss = () => `
 @font-face {
     font-family: "Maple Mono";
-    src: url("/static/fonts/MapleMonoNormal-Medium.woff2") format("woff2");
+    src: url("/fonts/MapleMonoNormal-Medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: "JetBrains Mono";
+    src: url("/fonts/JetBrainsMono-Medium.woff2") format("woff2");
     font-style: normal;
     font-weight: 500;
     font-display: swap;
@@ -14,6 +22,8 @@ export const getBaseCss = () => `
 
 :root {
     --editor-font-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
+    --share-font-jetbrains-family: "JetBrains Mono", "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono NL", "Roboto Mono", "Consolas", "Menlo", monospace;
+    --share-font-maple-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
     --preview-max-width: 100%;
 }
 
@@ -108,25 +118,58 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 
 /* Footer */
 .footer {
-    min-height: 40px;
+    min-height: 56px;
     background: #fafbfc;
     border-top: 1px solid #e1e4e8;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    display: block;
     padding: 0 20px;
     font-size: 13px;
     color: #586069;
-    gap: 10px;
-    flex-wrap: nowrap;
     overflow-x: auto;
     overflow-y: hidden;
     transition: transform 0.22s ease, opacity 0.22s ease;
 }
-.opt { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; white-space: nowrap; }
-.share-footer-actions { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
-.footer-spacer { flex: 1 1 12px; min-width: 0; }
-.footer-controls { display: flex; align-items: center; gap: 8px; flex: 0 0 auto; flex-wrap: nowrap; justify-content: flex-end; white-space: nowrap; }
+.footer-sections {
+    min-height: 56px;
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    padding: 8px 0;
+}
+.footer-section {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+}
+.footer-section-actions {
+    flex: 0 0 auto;
+}
+.footer-section-appearance {
+    flex: 1 1 auto;
+    min-width: max-content;
+}
+.footer-section-meta {
+    flex: 0 0 auto;
+}
+.footer-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+.footer-section-body {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: nowrap;
+}
 .footer-select {
     padding: 4px 8px;
     border-radius: 4px;
@@ -188,7 +231,16 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .opt-switcher .slider:before { content: ""; position: absolute; height: 12px; width: 12px; left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: .4s; }
 .opt-switcher input:checked + .slider { background: #2ea44f; }
 .opt-switcher input:checked + .slider:before { transform: translateX(16px); }
-.opt-share-font .opt-desc { font-size: 12px; color: #374151; font-weight: 600; }
+.share-font-toggle .segmented-toggle-btn {
+    min-width: 28px;
+    padding: 0 7px;
+}
+.opt,
+.share-footer-actions,
+.footer-spacer,
+.footer-controls {
+    display: contents;
+}
 
 .preview-pane {
     flex: 1;
@@ -277,6 +329,21 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     white-space: normal !important;
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
+}
+
+.mobile-ascii-diagram {
+    width: 100%;
+    overflow: hidden;
+}
+
+.mobile-ascii-diagram-inner {
+    display: inline-block;
+    transform-origin: top left;
+    will-change: transform;
+}
+
+.mobile-ascii-diagram.is-scaled pre {
+    overflow: visible !important;
 }
 
 /* Diagram Source - Hidden */
@@ -467,12 +534,20 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
 
 @media (max-width: 960px) {
     .footer {
-        padding: 8px 12px;
+        padding: 0 12px;
     }
 
-    .footer-controls {
-        width: auto;
-        justify-content: flex-start;
+    .footer-sections {
+        gap: 10px;
+        padding: 8px 0 10px;
+    }
+
+    .footer-section {
+        padding: 6px 8px;
+    }
+
+    .footer-section-label {
+        font-size: 10px;
     }
 
     body.share-view #preview-md,
@@ -493,8 +568,6 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         border-radius: 8px;
         box-shadow: 0 10px 30px rgba(31, 35, 40, 0.16);
         padding: 8px;
-        gap: 8px;
-        flex-wrap: wrap;
         overflow-x: hidden;
     }
 
@@ -504,12 +577,20 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         transform: translateY(calc(100% + 12px));
     }
 
-    body.share-view .share-footer-actions,
-    body.share-view .footer-controls {
+    body.share-view .footer-sections {
+        width: 100%;
+        flex-wrap: wrap;
         gap: 8px;
+        padding: 0;
     }
 
-    body.share-view .footer-controls {
+    body.share-view .footer-section {
+        width: 100%;
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    body.share-view .footer-section-body {
         width: 100%;
         flex-wrap: wrap;
     }
@@ -546,6 +627,10 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         white-space: normal !important;
         overflow-wrap: anywhere !important;
         word-break: break-word !important;
+    }
+
+    body.share-view .mobile-ascii-diagram {
+        margin-bottom: 16px;
     }
 }
 `

@@ -1,5 +1,42 @@
 # Changelog
 
+## [2026-06-10 10:40 CST]
+### Fixed
+- **Share Font Assets on Cloudflare**
+  - Configured Wrangler static asset serving for the `static/` directory so bundled share-page fonts are delivered correctly in browsers, including Android.
+  - Switched the bundled font URLs from `/static/fonts/...` to `/fonts/...` and verified both `JetBrainsMono-Medium.woff2` and `MapleMonoNormal-Medium.woff2` return `font/woff2`.
+
+### Changed
+- **Share Footer Font Switcher**
+  - Replaced the old share-page `Maple Mono` on/off toggle with compact `J / M` buttons for `JetBrains Mono` and `Maple Mono`.
+  - Set `JetBrains Mono` as the default share-page reader font, while keeping `Maple Mono` as the alternate option saved in localStorage.
+  - Added native hover tooltips to the `J`, `M`, and edit buttons so the compact footer controls remain self-explanatory.
+- **Footer Information Architecture**
+  - Reorganized the editor and share footers into grouped `Actions`, `Appearance`, and `Meta` sections.
+  - Moved appearance-related controls such as `J / M`, `Zh / En`, width, theme, and preview device into the same visual group for faster scanning.
+
+## [2026-06-09 15:00 CST]
+### Added
+- **Share-Page Google Analytics Config**
+  - Added `SCN_GA_MEASUREMENT_ID` support for loading Google Analytics on shared-note and shared-presentation pages.
+  - Documented the Cloudflare / Wrangler setup in `README.md` and `wrangler.toml.example`.
+
+### Changed
+- **Site-Wide Google Analytics Loading**
+  - Expanded `SCN_GA_MEASUREMENT_ID` loading from share pages to editor pages as well, so `wiki.david888.com` traffic is tracked without extra footer code.
+- **Built-In Icon Routes**
+  - Replaced the old external icon URL with Worker-served `/icon.svg`, `/icon.png`, and `/favicon.ico`.
+  - Updated OG / Twitter preview images to use the built-in icon asset.
+- **Social Card Branding**
+  - Updated the social card title to `Notepad 888` and subtitle to `Markdown wiki for You`.
+  - Switched `/og-image.png` to a dedicated 1200x630 social card instead of the plain icon image.
+
+## [2026-06-09 14:47 CST]
+### Changed
+- **Share View Tracking Disabled**
+  - Removed footer view-count display from the editor/share UI.
+  - Stopped writing per-visitor share view counters into Cloudflare KV to avoid ongoing free-plan write usage.
+
 ## [2026-06-09 14:36 CST]
 ### Fixed
 - **Centered Editor Split**

@@ -7,6 +7,9 @@ kv_namespaces = [
   { binding = "SHARE", id = "創建後取回ID" }
 ]
 
+[assets]
+directory = "./static"
+
 [vars]
 SCN_APP_NAME = "david888 wiki"
 SCN_SALT = "random string for salt 例如 25A39F3A-BA6E-4ED3-9E5B-3FDC8A8B2406 "
@@ -16,6 +19,7 @@ SCN_ADMIN_PW = "admin-password"
 SCN_SLUG_LENGTH = "3"
 SCN_ENABLE_R2 = "0"
 SCN_R2_DOMAIN = "https://your-r2-domain.com"
+SCN_GA_MEASUREMENT_ID = "G-XXXXXXXXXX"
 
 # [[r2_buckets]]
 # binding = "IMAGES"

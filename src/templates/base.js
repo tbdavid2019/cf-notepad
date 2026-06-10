@@ -9,7 +9,8 @@ import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
 
-const PUBLIC_ICON_PNG_URL = 'https://s3.wiki.david888.com/2026/06/72b74yht52ytd5z5.png'
+const PUBLIC_ICON_SVG_URL = '/icon.svg'
+const PUBLIC_ICON_PNG_URL = '/icon.png'
 
 const escapeHtml = value => String(value || '')
     .replace(/&/g, '&amp;')
@@ -38,7 +39,18 @@ const PUBLISH_NUDGE_MODAL = lang => {
     `
 }
 
-export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => `
+export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
+    const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
+    const gaScript = gaMeasurementId ? `
+    <script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(gaMeasurementId)}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', ${JSON.stringify(gaMeasurementId)});
+    </script>` : ''
+
+    return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -114,13 +126,38 @@ ${getMarkdownCss()}
             font-size: 0.92em;
         }
 
-        body.share-view.share-font-enabled #preview-md,
-        body.share-view.share-font-enabled #preview-plain,
-        body.share-view.share-font-enabled #preview-md.markdown-body,
-        body.share-view.share-font-enabled #preview-plain.markdown-body,
-        body.share-view.share-font-enabled #preview-md.markdown-body code,
-        body.share-view.share-font-enabled #preview-plain.markdown-body code {
-            font-family: var(--editor-font-family);
+        body.share-view.share-font-jetbrains {
+            --share-font-family: var(--share-font-jetbrains-family);
+        }
+
+        body.share-view.share-font-maple {
+            --share-font-family: var(--share-font-maple-family);
+        }
+
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md.markdown-body,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain.markdown-body,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md.markdown-body :is(
+            p, li, dd, dt, blockquote, strong, b, em, i, del, s, strike, mark, small,
+            span, a, figcaption, summary, table, thead, tbody, tfoot, tr, th, td,
+            ul, ol, dl, h1, h2, h3, h4, h5, h6
+        ),
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md.markdown-body code,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md.markdown-body pre,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-md.markdown-body pre code,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain.markdown-body code {
+            font-family: var(--share-font-family);
+        }
+
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain.markdown-body :is(
+            p, li, dd, dt, blockquote, strong, b, em, i, del, s, strike, mark, small,
+            span, a, figcaption, summary, table, thead, tbody, tfoot, tr, th, td,
+            ul, ol, dl, h1, h2, h3, h4, h5, h6
+        ),
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain.markdown-body pre,
+        body.share-view:is(.share-font-jetbrains, .share-font-maple) #preview-plain.markdown-body pre code {
+            font-family: var(--share-font-family);
         }
 
         #preview-md.markdown-body thead th,
@@ -130,11 +167,13 @@ ${getMarkdownCss()}
             box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.12);
         }
     </style>
-    <link rel="icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
-    <link rel="shortcut icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
+    <link rel="icon" href="${PUBLIC_ICON_SVG_URL}" type="image/svg+xml" />
+    <link rel="alternate icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
     <link rel="apple-touch-icon" href="${PUBLIC_ICON_PNG_URL}" />
+    ${gaScript}
 </head>
-<body class="${ext.sharePath && !isEdit ? 'share-view share-font-enabled' : ''}">
+<body class="${ext.sharePath && !isEdit ? 'share-view share-font-jetbrains' : ''}">
     <div class="note-container">
         <div class="stack">
             <div class="layer_1">
@@ -753,14 +792,14 @@ ${getMarkdownCss()}
         const THEMES = ${JSON.stringify(THEMES)};
         const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
         const PREVIEW_DEVICE_STORAGE_KEY = 'cf-notepad-preview-device';
-        const SHARE_FONT_STORAGE_KEY = 'cf-notepad-share-font-enabled';
+        const SHARE_FONT_STORAGE_KEY = 'cf-notepad-share-font';
         const themeStyleNode = document.getElementById('theme-style');
         const themeSelector = document.getElementById('theme-selector');
         const previewWidthSelector = document.getElementById('preview-width-selector');
         const previewDeviceSelector = document.getElementById('preview-device-selector');
         const languageSelector = document.getElementById('language-selector');
         const previewWidthRoot = document.documentElement;
-        const shareFontToggle = document.querySelector('.opt-share-font input');
+        const shareFontSelector = document.getElementById('share-font-selector');
         const shareViewBody = document.body;
 
         function applyPreviewWidth(value) {
@@ -793,13 +832,12 @@ ${getMarkdownCss()}
             }
         }
 
-        function applyShareFont(enabled) {
+        function applyShareFont(value) {
             if (!shareViewBody.classList.contains('share-view')) return;
-            shareViewBody.classList.toggle('share-font-enabled', enabled);
-            shareViewBody.classList.toggle('share-font-disabled', !enabled);
-            if (shareFontToggle) {
-                shareFontToggle.checked = enabled;
-            }
+            const shareFont = value === 'maple' ? 'maple' : 'jetbrains';
+            shareViewBody.classList.toggle('share-font-jetbrains', shareFont === 'jetbrains');
+            shareViewBody.classList.toggle('share-font-maple', shareFont === 'maple');
+            setSegmentedActive(shareFontSelector, 'data-share-font', shareFont);
         }
 
         const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
@@ -819,7 +857,10 @@ ${getMarkdownCss()}
 
         if (shareViewBody.classList.contains('share-view')) {
             const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
-            applyShareFont(savedShareFont !== 'false');
+            const initialShareFont = savedShareFont === 'maple' || savedShareFont === 'true'
+                ? 'maple'
+                : 'jetbrains';
+            applyShareFont(initialShareFont);
         }
 
         if (previewWidthSelector) {
@@ -834,11 +875,13 @@ ${getMarkdownCss()}
             setSegmentedActive(languageSelector, 'data-lang', APP_STATE.lang);
         }
 
-        if (shareFontToggle) {
-            shareFontToggle.addEventListener('change', function() {
-                const enabled = this.checked;
-                applyShareFont(enabled);
-                window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, enabled ? 'true' : 'false');
+        if (shareFontSelector) {
+            shareFontSelector.querySelectorAll('[data-share-font]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const shareFont = this.getAttribute('data-share-font') === 'maple' ? 'maple' : 'jetbrains';
+                    applyShareFont(shareFont);
+                    window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
+                });
             });
         }
 
@@ -1095,3 +1138,4 @@ ${getMarkdownCss()}
 \u003c/body\u003e
 \u003c/html\u003e
 `
+}
