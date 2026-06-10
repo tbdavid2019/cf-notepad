@@ -1,7 +1,7 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import Cookies from 'cookie'
 import * as TEMPL from './template'
-import { SALT, SECRET, SUPPORTED_LANG } from './constant'
+import { SALT, SECRET, SUPPORTED_LANG, getGaMeasurementId } from './constant'
 
 // generate random string
 export const genRandomStr = n => {
@@ -15,7 +15,12 @@ export const genRandomStr = n => {
 }
 
 export function returnPage(type, data, headers = {}) {
-    return new Response(TEMPL[type](data), {
+    const ext = {
+        ...(data?.ext || {}),
+        gaMeasurementId: data?.ext?.gaMeasurementId ?? getGaMeasurementId(),
+    }
+
+    return new Response(TEMPL[type]({ ...data, ext }), {
         headers: {
             'content-type': 'text/html;charset=UTF-8',
             ...headers,

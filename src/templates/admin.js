@@ -7,8 +7,6 @@ import dayjs from 'dayjs'
 import { getAdminCss } from '../styles/admin.css.js'
 import { getAdminScript } from '../scripts/admin.js'
 
-const PUBLIC_ICON_PNG_URL = 'https://s3.wiki.david888.com/2026/06/72b74yht52ytd5z5.png'
-
 export const Admin = ({ lang, notes, error }) => `
     <!DOCTYPE html>
         <html>
@@ -16,8 +14,8 @@ export const Admin = ({ lang, notes, error }) => `
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
                 <title>Admin — Cloud Notepad</title>
-                <link rel="icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
-                <link rel="shortcut icon" href="${PUBLIC_ICON_PNG_URL}" type="image/png" />
+                <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+                <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
                 <style>
 ${getAdminCss()}
                 </style>

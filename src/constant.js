@@ -14,6 +14,7 @@ export const SLUG_LENGTH = parseInt(SCN_SLUG_LENGTH || '3')
 // Access R2 config at runtime instead of module load time
 export const getEnableR2 = () => (typeof SCN_ENABLE_R2 !== 'undefined' && SCN_ENABLE_R2 === '1')
 export const getR2Domain = () => (typeof SCN_R2_DOMAIN !== 'undefined' ? SCN_R2_DOMAIN : '')
+export const getGaMeasurementId = () => (typeof SCN_GA_MEASUREMENT_ID !== 'undefined' ? String(SCN_GA_MEASUREMENT_ID || '').trim() : '')
 export const APP_NAME = (typeof SCN_APP_NAME !== 'undefined') ? SCN_APP_NAME : 'david888 wiki'
 
 // supported language

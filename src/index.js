@@ -3,18 +3,50 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n, deleteEmptyPages } from './helper'
-import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain } from './constant'
+import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain, getGaMeasurementId } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
+import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
-
-const PUBLIC_ICON_PNG_URL = 'https://s3.wiki.david888.com/2026/06/72b74yht52ytd5z5.png'
 
 // init
 const router = Router()
 
+const iconSvgResponse = () => new Response(NOTEPAD_ICON_SVG, {
+    headers: {
+        'Content-Type': 'image/svg+xml; charset=UTF-8',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+})
+
+const iconPngResponse = () => new Response(NOTEPAD_ICON_PNG, {
+    headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+})
+
+const ogImageResponse = () => new Response(NOTEPAD_OG_IMAGE_PNG, {
+    headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+})
+
+const faviconResponse = () => new Response(NOTEPAD_FAVICON_ICO, {
+    headers: {
+        'Content-Type': 'image/x-icon',
+        'Cache-Control': 'public, max-age=31536000, immutable',
+    }
+})
+
 router.get('/', ({ url }) => {
     const newHash = genRandomStr(SLUG_LENGTH)
     // redirect to new page
+    return Response.redirect(`${url}${newHash}`, 302)
+})
+
+router.head('/', ({ url }) => {
+    const newHash = genRandomStr(SLUG_LENGTH)
     return Response.redirect(`${url}${newHash}`, 302)
 })
 
@@ -242,6 +274,7 @@ async function renderSharePage(request, presentationMode = false) {
     const sharePath = `/share/${md5}`
     const presentationPath = `${sharePath}/present`
     const authPath = `${sharePath}/auth`
+    const gaMeasurementId = getGaMeasurementId()
 
     if (!!path) {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
@@ -261,6 +294,7 @@ async function renderSharePage(request, presentationMode = false) {
                         authPath,
                         sharePath,
                         presentationPath,
+                        gaMeasurementId,
                         presentationEntry: presentationMode,
                         autoPresent: false,
                     },
@@ -281,12 +315,13 @@ async function renderSharePage(request, presentationMode = false) {
                 authPath,
                 sharePath,
                 presentationPath,
+                gaMeasurementId,
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
                 meta: {
                     canonicalUrl: `${origin}${canonicalPath}`,
                     description,
-                    ogImageUrl: PUBLIC_ICON_PNG_URL,
+                    ogImageUrl: `${origin}/og-image.png`,
                     ogType: 'article',
                     robots: 'index,follow',
                     twitterCard: 'summary',
@@ -303,18 +338,29 @@ router.get('/share/:md5', async (request) => {
     return renderSharePage(request, false)
 })
 
+router.head('/share/:md5', async (request) => {
+    return renderSharePage(request, false)
+})
+
 router.get('/share/:md5/present', async (request) => {
     return renderSharePage(request, true)
 })
 
-router.get('/icon.svg', () => new Response(NOTEPAD_ICON_SVG, {
-    headers: {
-        'Content-Type': 'image/svg+xml; charset=UTF-8',
-        'Cache-Control': 'public, max-age=31536000, immutable',
-    }
-}))
+router.head('/share/:md5/present', async (request) => {
+    return renderSharePage(request, true)
+})
 
-router.get('/favicon.ico', () => Response.redirect('/icon.svg', 302))
+router.get('/icon.svg', iconSvgResponse)
+router.head('/icon.svg', iconSvgResponse)
+
+router.get('/icon.png', iconPngResponse)
+router.head('/icon.png', iconPngResponse)
+
+router.get('/og-image.png', ogImageResponse)
+router.head('/og-image.png', ogImageResponse)
+
+router.get('/favicon.ico', faviconResponse)
+router.head('/favicon.ico', faviconResponse)
 
 router.get('/api/:path', async (request) => {
     const { path } = request.params
@@ -465,89 +511,26 @@ router.get('/:path', async (request) => {
     const { path } = request.params
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-
-    // Parallel fetch: Note content and View stats
-    // Use SHARE KV for view tracking to avoid race condition with content updates
-    const viewKey = `views::${path}`
-    const [noteResult, viewDataRaw] = await Promise.all([
-        queryNote(path),
-        SHARE.get(viewKey, { type: 'json' })
-    ])
-
-    const { value, metadata } = noteResult
+    const { value, metadata } = await queryNote(path)
 
     const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
 
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null
 
-    // Prepare view data (migrate from metadata if separate store is empty)
-    let currentViews = viewDataRaw?.views || metadata.views || 0
-    let currentViewedBy = viewDataRaw?.viewedBy || metadata.viewedBy || []
-
-    // Update metadata object with correct views for display (without persisting to NOTES)
-    const displayMetadata = {
-        ...metadata,
-        views: currentViews
-    }
-
     // Check if the note actually exists in KV 
     // (Bots testing random paths like .env will return empty value/metadata)
     const noteExists = value !== '' || Object.keys(metadata).length > 0
-
-    // View Tracking with visitor deduplication
-    if (request.event && noteExists) {
-        request.event.waitUntil(
-            (async () => {
-                try {
-                    // Get or create visitor ID from cookie
-                    let visitorId = cookie.visitor_id
-                    if (!visitorId) {
-                        visitorId = genRandomStr(16)
-                    }
-
-                    // Only increment view count if this is a new visitor
-                    if (!currentViewedBy.includes(visitorId)) {
-                        currentViewedBy.push(visitorId)
-                        currentViews += 1
-
-                        // Save to SHARE KV instead of NOTES KV
-                        await SHARE.put(viewKey, JSON.stringify({
-                            views: currentViews,
-                            viewedBy: currentViewedBy
-                        }))
-                    }
-                } catch (e) {
-                    console.error('View tracking error:', e)
-                }
-            })()
-        )
-    }
-
-    // Generate visitor ID if not exists
-    let visitorId = cookie.visitor_id
-    let visitorCookie = {}
-    if (!visitorId) {
-        visitorId = genRandomStr(16)
-        visitorCookie = {
-            'Set-Cookie': Cookies.serialize('visitor_id', visitorId, {
-                path: '/',
-                expires: dayjs().add(365, 'day').toDate(),
-                httpOnly: true,
-                sameSite: 'Lax'
-            })
-        }
-    }
 
     if (!metadata.pw) {
         return returnPage('Edit', {
             lang,
             title,
             content: value,
-            ext: { ...displayMetadata, enableR2: getEnableR2() },
+            ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
-        }, visitorCookie)
+        })
     }
 
     // Strict Mode: Edit Page only allows Edit Role
@@ -557,13 +540,56 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...displayMetadata, enableR2: getEnableR2() },
+            ext: { ...metadata, enableR2: getEnableR2() },
             shareId,
             path,
-        }, visitorCookie)
+        })
     }
 
-    return returnPage('NeedPasswd', { lang, title }, visitorCookie)
+    return returnPage('NeedPasswd', { lang, title })
+})
+
+router.head('/:path', async (request) => {
+    const { path } = request.params
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { value, metadata } = await queryNote(path)
+    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const shareId = metadata.share ? await MD5(path) : null
+    const noteExists = value !== '' || Object.keys(metadata).length > 0
+
+    if (!noteExists) {
+        const lang = getI18n(request)
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
+    if (!metadata.pw) {
+        const lang = getI18n(request)
+        return returnPage('Edit', {
+            lang,
+            title,
+            content: value,
+            ext: { ...metadata, enableR2: getEnableR2() },
+            shareId,
+            path,
+        })
+    }
+
+    const lang = getI18n(request)
+    const { valid, role } = await checkAuth(cookie, path)
+
+    if (valid && role === 'edit') {
+        return returnPage('Edit', {
+            lang,
+            title,
+            content: value,
+            ext: { ...metadata, enableR2: getEnableR2() },
+            shareId,
+            path,
+        })
+    }
+
+    return returnPage('NeedPasswd', { lang, title })
 })
 
 router.post('/:path/auth', async request => {
