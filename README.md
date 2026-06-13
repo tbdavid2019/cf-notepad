@@ -56,6 +56,7 @@
     - 支援 **點擊動畫**：在內容後加上 `{v-click}` 實現逐條顯示。
     - **高級視覺**：內建 Inter 精緻字體與深色主題優化。
   - 內建 Reveal.js 懶加載引擎，一鍵進入沉浸式演示體驗。
+- **[NEW] PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並完美保留主題的邊框與底色設計。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -279,6 +280,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Uses compact blockquotes and automatically fits oversized slide content and tables to the viewport.
   - Reserves a bottom safe area above the presentation progress and navigation controls.
   - Powered by Reveal.js with smart on-demand asset loading.
+- **[NEW] PDF & Print Optimization** 🖨️: Added print stylesheet rules that automatically hide editor textareas and toolbars during printing or when saving to PDF. It handles page-breaks gracefully for headings, code blocks, and tables, and forces background color rendering to preserve themes' premium styles.
 - **[NEW] Curated Dark Preview Themes**:
   - Added `catppuccin-macchiato` as the current default Markdown preview theme.
   - Added `kanagawa` as an additional built-in dark theme option.

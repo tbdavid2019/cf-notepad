@@ -1,5 +1,14 @@
 # Changelog
 
+## [2026-06-13 18:30 CST]
+### Fixed
+- **Print & PDF Layout Stylesheet**
+  - Added dedicated `@media print` layout styles in `base.css.js` to ensure the document paginates correctly when printed or exported using the browser's "Save as PDF" feature.
+  - Hid non-printable UI elements such as footers, split dividers, edit panels, modals, and loading icons.
+  - Removed view-port constraints (`height: 100vh`, `overflow: hidden`) on all layout levels (`html`, `body`, `.note-container`, `.stack`, `.layer_3`, and `.preview-pane`) to allow full multi-page flow.
+  - Configured `-webkit-print-color-adjust: exact` to retain themes' premium visual features like table borders, blockquote decorations, and alert block background tints.
+  - Prevented orphan headers and mid-element page-splits on code pre blocks, quotes, tables, and images.
+
 ## [2026-06-10 10:40 CST]
 ### Fixed
 - **Share Font Assets on Cloudflare**

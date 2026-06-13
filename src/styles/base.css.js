@@ -633,4 +633,87 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         margin-bottom: 16px;
     }
 }
+
+@media print {
+    /* Hide non-printable elements */
+    .footer,
+    .divide-line,
+    textarea#contents,
+    #loading,
+    .tips,
+    .modal,
+    .publish-nudge-modal,
+    .publish-nudge-content,
+    #presentation-close-btn,
+    #presentation-container {
+        display: none !important;
+    }
+
+    /* Reset layouts for page flow */
+    html, body {
+        height: auto !important;
+        min-height: 100% !important;
+        overflow: visible !important;
+        background: #fff !important;
+        color: #000 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+    }
+
+    .note-container,
+    .stack,
+    .layer_1,
+    .layer_2,
+    .layer_3,
+    .preview-pane {
+        height: auto !important;
+        min-height: 0 !important;
+        overflow: visible !important;
+        display: block !important;
+        float: none !important;
+        position: static !important;
+        border: none !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+
+    /* Print content page formatting */
+    #preview-md,
+    #preview-plain,
+    .markdown-body {
+        height: auto !important;
+        overflow: visible !important;
+        padding: 0 !important;
+        margin: 0 auto !important;
+        background: transparent !important;
+        color: #000 !important;
+        max-width: 100% !important;
+        font-size: 12pt !important;
+        line-height: 1.6 !important;
+    }
+
+    .markdown-body {
+        background-color: transparent !important;
+        color: #000 !important;
+    }
+
+    /* Keep page breaks clean */
+    h1, h2, h3, h4, h5, h6 {
+        page-break-after: avoid !important;
+        break-after: avoid !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    pre, blockquote, tr, img, figure {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+    
+    a {
+        color: #000 !important;
+        text-decoration: underline !important;
+    }
+}
 `
