@@ -350,8 +350,23 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
 .diagram-source { display: none !important; }
 
 /* Mermaid Renderer Specific Fixes */
-.diagram-mermaid-render { line-height: normal; font-size: 14px; }
-.diagram-mermaid-render svg { max-width: 100%; height: auto; }
+.diagram-mermaid-render {
+    line-height: normal;
+    font-size: 14px;
+    overflow-x: auto;
+    overflow-y: visible;
+}
+.diagram-mermaid-render svg {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    overflow: visible;
+}
+.diagram-mermaid-render text,
+.diagram-mermaid-render tspan,
+.diagram-mermaid-render .label {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "PingFang SC", "Hiragino Sans GB", "Microsoft JhengHei", "Microsoft YaHei", "Noto Sans CJK TC", "Noto Sans CJK SC", "Source Han Sans TC", "Source Han Sans SC", Helvetica, Arial, sans-serif;
+}
 
 /* Presentation Mode Overlay */
 #presentation-container {

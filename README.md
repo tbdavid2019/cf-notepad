@@ -10,6 +10,7 @@
 
 - **輕量快速**：基於 Cloudflare Edge Network，全球存取速度極快。
 - **Markdown 支援**：內建 Markdown 渲染 (marked.js) 與 DOMPurify 安全過濾。
+- **Mermaid 圖表穩定渲染**：針對 Mermaid 流程圖補強 CJK 字型量測與 SVG 邊界設定，降低中英混排節點文字被截斷或裁切的機率。
 - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
@@ -253,6 +254,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 
 - **Lightweight & Fast**: Powered by Cloudflare Edge Network.
 - **Markdown Support**: Built-in rendering (marked.js) and sanitation (DOMPurify).
+- **Mermaid Diagram Stability**: Mermaid flowcharts are rendered with stricter font and SVG overflow guards to reduce clipping on mixed Chinese/English labels.
 - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
 - **Sharing**: Generate read-only share links.
 - **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.

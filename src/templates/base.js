@@ -294,7 +294,26 @@ ${getMarkdownCss()}
             const mermaidNodes = document.querySelectorAll('.diagram-mermaid-render');
             if (mermaidNodes.length > 0) {
                  const { default: mermaid } = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
-                 mermaid.initialize({ startOnLoad: false, securityLevel: 'loose', fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif' });
+                 const mermaidFontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "PingFang SC", "Hiragino Sans GB", "Microsoft JhengHei", "Microsoft YaHei", "Noto Sans CJK TC", "Noto Sans CJK SC", "Source Han Sans TC", "Source Han Sans SC", Helvetica, Arial, sans-serif';
+                 if (document.fonts?.ready) {
+                     try {
+                         await document.fonts.ready;
+                     } catch (e) {
+                         console.warn('Font readiness check failed before Mermaid render', e);
+                     }
+                 }
+                 mermaid.initialize({
+                     startOnLoad: false,
+                     securityLevel: 'loose',
+                     fontFamily: mermaidFontFamily,
+                     themeVariables: {
+                         fontFamily: mermaidFontFamily
+                     },
+                     flowchart: {
+                         htmlLabels: false,
+                         useMaxWidth: true
+                     }
+                 });
                  for (let i = 0; i < mermaidNodes.length; i++) {
                      const renderNode = mermaidNodes[i];
                      const container = renderNode.previousElementSibling;

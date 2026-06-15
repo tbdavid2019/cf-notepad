@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-06-15 15:20 CST]
+### Fixed
+- **Mermaid CJK Text Clipping**
+  - Updated Mermaid initialization to wait for browser font readiness before rendering diagrams, reducing incorrect text measurements during first paint.
+  - Switched Mermaid flowcharts to SVG text labels instead of HTML labels, avoiding truncated mixed Chinese/English node text in shared diagrams.
+  - Added Mermaid-specific SVG overflow and font-family guards so long node titles and top-aligned labels are less likely to be clipped.
+
 ## [2026-06-13 18:30 CST]
 ### Fixed
 - **Print & PDF Layout Stylesheet**
