@@ -324,6 +324,7 @@ async function renderSharePage(request, presentationMode = false) {
                     ogImageUrl: `${origin}/og-image.png`,
                     ogType: 'article',
                     robots: 'index,follow',
+                    siteName: false,
                     twitterCard: 'summary',
                 },
             },

@@ -42,6 +42,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
     const jetbrainsTitle = lang === 'zh-TW' ? '切換為 JetBrains Mono' : 'Switch to JetBrains Mono'
     const mapleTitle = lang === 'zh-TW' ? '切換為 Maple Mono' : 'Switch to Maple Mono'
+    const shareHistoryLabel = lang === 'zh-TW' ? '最近分享' : 'Recent shares'
     return `
     <div class="footer">
         <div class="footer-sections">
@@ -66,6 +67,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <a href="/${path}" class="opt-button" style="text-decoration:none;background:#2196f3;color:white;padding:6px 12px;border-radius:4px;font-weight:500;" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</a>
                         <button id="present-btn" class="opt-button" style="background:#673ab7;color:white;padding:4px 10px;border-radius:4px;font-weight:500;display:flex;align-items:center;gap:4px;" title="${t.presentTitle}">📽️ ${t.present}</button>
                     ` : '')}
+                    <button type="button" id="share-history-btn" class="opt-button share-history-trigger" aria-haspopup="dialog" aria-expanded="false">${shareHistoryLabel}</button>
+                    <button type="button" id="mobile-footer-more-btn" class="opt-button mobile-footer-more-trigger" aria-expanded="false" aria-label="${lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'}">...</button>
                 </div>
             </div>
 
@@ -132,6 +135,18 @@ export const MODAL = lang => {
             <input type="text" readonly value="" />
             <button class="opt-button">${t.copy}</button>
         </div>
+    </div>
+</div>
+<div class="modal share-history-modal" role="dialog" aria-modal="true" aria-labelledby="share-history-title">
+    <div class="modal-mask"></div>
+    <div class="share-history-content">
+        <button type="button" class="close-btn share-history-close" aria-label="${t.later}">x</button>
+        <h2 id="share-history-title">${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent Share Links'}</h2>
+        <div class="share-history-tabs" role="tablist">
+            <button type="button" class="share-history-tab active" data-share-history-tab="created" aria-selected="true">${lang === 'zh-TW' ? '我分享的' : 'Created'}</button>
+            <button type="button" class="share-history-tab" data-share-history-tab="viewed" aria-selected="false">${lang === 'zh-TW' ? '我看過的' : 'Viewed'}</button>
+        </div>
+        <div class="share-history-list" data-share-history-list></div>
     </div>
 </div>
 `

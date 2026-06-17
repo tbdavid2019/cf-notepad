@@ -41,6 +41,9 @@ const PUBLISH_NUDGE_MODAL = lang => {
 
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
+    const ogSiteNameMeta = ext.meta?.siteName === false
+        ? ''
+        : `<meta property="og:site_name" content="${escapeHtml(ext.meta?.siteName || APP_NAME)}" />`
     const gaScript = gaMeasurementId ? `
     <script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(gaMeasurementId)}"></script>
     <script>
@@ -60,7 +63,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <title>${escapeHtml(title)} - ${escapeHtml(APP_NAME)}</title>
     <meta name="description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
-    <meta property="og:site_name" content="${escapeHtml(APP_NAME)}" />
+    ${ogSiteNameMeta}
     <meta property="og:type" content="${escapeHtml(ext.meta?.ogType || 'website')}" />
     <meta property="og:title" content="${escapeHtml(title || APP_NAME)}" />
     <meta property="og:description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
@@ -194,6 +197,7 @@ ${getMarkdownCss()}
         </div>
         ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath })}
     </div>
+    ${ext.sharePath && !isEdit ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
     <div id="loading"></div>
     ${MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
@@ -280,6 +284,81 @@ ${getMarkdownCss()}
             .use(remarkRehype, { allowDangerousHtml: true })
             .use(rehypeKatex)
             .use(rehypeStringify, { allowDangerousHtml: true });
+
+        const slugifyHeading = value => String(value || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFKD')
+            .replace(/[\\u0300-\\u036f]/g, '')
+            .replace(/['"“”‘’]/g, '')
+            .replace(/[()[\\]{}<>《》「」『』【】（）]/g, ' ')
+            .replace(/[!#$%&*+,./:;=?@\\\\^|~，。！？、：；]/g, '')
+            .replace(/\\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        const slugifyCompactHeading = value => String(value || '')
+            .trim()
+            .toLowerCase()
+            .normalize('NFKD')
+            .replace(/[\\u0300-\\u036f]/g, '')
+            .replace(/['"“”‘’]/g, '')
+            .replace(/[【】「」『』《》]/g, '')
+            .replace(/[()[\\]{}<>（）]/g, ' ')
+            .replace(/[!#$%&*+,./:;=?@\\\\^|~，。！？、：；]/g, '')
+            .replace(/\\s+/g, '-')
+            .replace(/-+/g, '-')
+            .replace(/^-|-$/g, '');
+
+        const getHeadingSlugAliases = text => {
+            const aliases = [slugifyCompactHeading(text), slugifyHeading(text)];
+            return aliases.filter((alias, index) => alias && aliases.indexOf(alias) === index);
+        };
+
+        const decorateHeadingAnchors = node => {
+            if (!node) return;
+            const seen = new Map();
+            node.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+                const aliases = getHeadingSlugAliases(heading.textContent);
+                const baseId = aliases[0];
+                if (!baseId) return;
+                const count = seen.get(baseId) || 0;
+                seen.set(baseId, count + 1);
+                const headingId = count ? baseId + '-' + count : baseId;
+                heading.id = headingId;
+                heading.style.scrollMarginTop = '18px';
+                aliases.slice(1).forEach(alias => {
+                    const aliasId = count ? alias + '-' + count : alias;
+                    if (!aliasId || aliasId === headingId || document.getElementById(aliasId)) return;
+                    const anchor = document.createElement('span');
+                    anchor.id = aliasId;
+                    anchor.className = 'heading-anchor-alias';
+                    anchor.setAttribute('aria-hidden', 'true');
+                    heading.parentNode.insertBefore(anchor, heading);
+                });
+            });
+        };
+
+        const scrollToLocationHash = () => {
+            if (!location.hash) return;
+            let targetId = '';
+            try {
+                targetId = decodeURIComponent(location.hash.slice(1));
+            } catch (e) {
+                targetId = location.hash.slice(1);
+            }
+            if (!targetId) return;
+            const escapedId = window.CSS && CSS.escape ? CSS.escape(targetId) : targetId.replace(/"/g, '\\\\"');
+            const target = document.getElementById(targetId) || document.querySelector('[name="' + escapedId + '"]');
+            if (!target) return;
+            const scrollParent = target.closest('.contents') || document.scrollingElement || document.documentElement;
+            const top = target.getBoundingClientRect().top - scrollParent.getBoundingClientRect().top + scrollParent.scrollTop - 12;
+            scrollParent.scrollTop = Math.max(0, top);
+        };
+
+        const scheduleHashScroll = () => {
+            [0, 100, 350, 900].forEach(delay => window.setTimeout(scrollToLocationHash, delay));
+        };
 
         const loadScript = (src) => new Promise((resolve, reject) => {
             if (document.querySelector(\`script[src = "\${src}"]\`)) return resolve();
@@ -400,13 +479,16 @@ ${getMarkdownCss()}
                     FORCE_BODY: true
                 });
                 node.innerHTML = clean;
+                decorateHeadingAnchors(node);
                 initDiagrams();
+                scheduleHashScroll();
             } catch (e) {
                 console.error('Markdown rendering error:', e);
                 node.innerHTML = '<p style="color:red">Rendering Error: ' + e.message + '</p>';
             }
         };
 
+        window.addEventListener('hashchange', scheduleHashScroll);
         window.dispatchEvent(new Event('markdown-ready'));
 
     </script>
@@ -424,6 +506,7 @@ ${getMarkdownCss()}
         isEdit: isEdit === true,
         isPublished: ext.share === true,
         lang,
+        title: title || '',
         i18n: getLangText(lang),
     })}
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
@@ -496,6 +579,154 @@ ${getMarkdownCss()}
         else { window.addEventListener('markdown-ready', () => { window.renderMarkdown(node, text) }, { once: true }) }
     }
 
+    const SHARE_HISTORY_LIMIT = 20
+    const SHARE_HISTORY_STORAGE_KEYS = {
+        created: 'cf-notepad:share-history:created',
+        viewed: 'cf-notepad:share-history:viewed',
+    }
+
+    const readShareHistory = type => {
+        try {
+            const key = SHARE_HISTORY_STORAGE_KEYS[type]
+            const items = JSON.parse(window.localStorage.getItem(key) || '[]')
+            return Array.isArray(items) ? items : []
+        } catch (e) {
+            return []
+        }
+    }
+
+    const writeShareHistory = (type, items) => {
+        try {
+            window.localStorage.setItem(SHARE_HISTORY_STORAGE_KEYS[type], JSON.stringify(items.slice(0, SHARE_HISTORY_LIMIT)))
+        } catch (e) {}
+    }
+
+    const recordShareHistory = (type, url, title) => {
+        if (!SHARE_HISTORY_STORAGE_KEYS[type] || !url) return;
+        const normalizedUrl = String(url).split('#')[0]
+        const items = readShareHistory(type).filter(item => String(item.url || '').split('#')[0] !== normalizedUrl)
+        items.unshift({
+            url: String(url),
+            title: String(title || APP_STATE.title || document.title || 'Share').replace(/\\s+-\\s+[^-]+$/, '').trim(),
+            savedAt: Date.now(),
+        })
+        writeShareHistory(type, items)
+    }
+
+    const formatShareHistoryTime = savedAt => {
+        const diffSeconds = Math.max(0, Math.floor((Date.now() - Number(savedAt || 0)) / 1000))
+        const zh = APP_STATE.lang === 'zh-TW'
+        if (diffSeconds < 60) return zh ? '剛剛' : 'now'
+        const minutes = Math.floor(diffSeconds / 60)
+        if (minutes < 60) return zh ? minutes + ' 分前' : minutes + 'm ago'
+        const hours = Math.floor(minutes / 60)
+        if (hours < 24) return zh ? hours + ' 小時前' : hours + 'h ago'
+        return new Date(Number(savedAt || Date.now())).toLocaleDateString(zh ? 'zh-TW' : 'en-US')
+    }
+
+    const setupShareHistory = () => {
+        const modal = document.querySelector('.share-history-modal')
+        const openBtn = document.querySelector('#share-history-btn')
+        const closeBtn = document.querySelector('.share-history-close')
+        const mask = modal ? modal.querySelector('.modal-mask') : null
+        const list = modal ? modal.querySelector('[data-share-history-list]') : null
+        const tabs = modal ? modal.querySelectorAll('[data-share-history-tab]') : []
+        if (!modal || !openBtn || !list) return;
+
+        let activeType = 'created'
+        const render = () => {
+            const items = readShareHistory(activeType)
+            if (!items.length) {
+                list.innerHTML = '<p class="share-history-empty">' + (APP_STATE.lang === 'zh-TW' ? '目前沒有紀錄。分享或開啟 share URL 後會自動出現在這裡。' : 'No links yet. Created and viewed share URLs will appear here automatically.') + '</p>'
+                return
+            }
+
+            list.innerHTML = ''
+            items.forEach(item => {
+                const row = document.createElement('div')
+                row.className = 'share-history-item'
+
+                const link = document.createElement('a')
+                link.className = 'share-history-link'
+                link.href = item.url
+                link.textContent = item.title || item.url
+                link.title = item.url
+
+                const copy = document.createElement('button')
+                copy.type = 'button'
+                copy.className = 'share-history-copy'
+                copy.textContent = getI18n('copy')
+                copy.addEventListener('click', async () => {
+                    try {
+                        await clipboardCopy(item.url)
+                        const original = copy.textContent
+                        copy.textContent = getI18n('copied')
+                        setTimeout(() => { copy.textContent = original }, 1200)
+                    } catch (e) {
+                        alert(getI18n('copyFailed'))
+                    }
+                })
+
+                const meta = document.createElement('div')
+                meta.className = 'share-history-meta'
+                meta.textContent = formatShareHistoryTime(item.savedAt) + ' · ' + item.url
+
+                row.appendChild(link)
+                row.appendChild(copy)
+                row.appendChild(meta)
+                list.appendChild(row)
+            })
+        }
+
+        const open = () => {
+            modal.style.display = 'block'
+            openBtn.setAttribute('aria-expanded', 'true')
+            render()
+        }
+        const close = () => {
+            modal.style.display = 'none'
+            openBtn.setAttribute('aria-expanded', 'false')
+        }
+
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                activeType = this.getAttribute('data-share-history-tab') === 'viewed' ? 'viewed' : 'created'
+                tabs.forEach(other => {
+                    const active = other === this
+                    other.classList.toggle('active', active)
+                    other.setAttribute('aria-selected', active ? 'true' : 'false')
+                })
+                render()
+            })
+        })
+
+        openBtn.addEventListener('click', open)
+        if (closeBtn) closeBtn.addEventListener('click', close)
+        if (mask) mask.addEventListener('click', close)
+        modal.addEventListener('keydown', e => {
+            if (e.key === 'Escape') close()
+        })
+
+        if (document.body.classList.contains('share-view') && !APP_STATE.isEdit) {
+            recordShareHistory('viewed', window.location.origin + window.location.pathname + window.location.hash, APP_STATE.title)
+        }
+    }
+
+    const setupShareBackToTop = scrollTarget => {
+        const button = document.querySelector('#share-back-to-top')
+        if (!button || !scrollTarget || !document.body.classList.contains('share-view')) return;
+
+        const updateVisibility = () => {
+            button.classList.toggle('visible', scrollTarget.scrollTop > 600)
+        }
+
+        button.addEventListener('click', () => {
+            scrollTarget.scrollTo({ top: 0, behavior: 'smooth' })
+        })
+        scrollTarget.addEventListener('scroll', updateVisibility, { passive: true })
+        updateVisibility()
+    }
+
     window.addEventListener('DOMContentLoaded', function () {
         const $textarea = document.querySelector('#contents')
         const $loading = document.querySelector('#loading')
@@ -512,9 +743,19 @@ ${getMarkdownCss()}
         const $publishNudgePublish = document.querySelector('.publish-nudge-publish')
         const $publishNudgeLater = document.querySelector('.publish-nudge-later')
         const $publishNudgeClose = document.querySelector('.publish-nudge-close')
+        const $mobileFooterMoreBtn = document.querySelector('#mobile-footer-more-btn')
 
+        setupShareHistory()
+        if ($mobileFooterMoreBtn) {
+            $mobileFooterMoreBtn.addEventListener('click', () => {
+                const expanded = !document.body.classList.contains('mobile-footer-expanded')
+                document.body.classList.toggle('mobile-footer-expanded', expanded)
+                $mobileFooterMoreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false')
+            })
+        }
         renderPlain($previewPlain, $textarea ? $textarea.value : '')
         triggerRender($previewMd, $textarea ? $textarea.value : '')
+        setupShareBackToTop($previewMd || $previewPlain)
 
         const showShareModal = (shareId) => {
             if (!$shareModal || !$shareInput || !shareId) return;
@@ -537,6 +778,7 @@ ${getMarkdownCss()}
                     }
                     APP_STATE.isPublished = true;
                     if ($shareBtn) $shareBtn.checked = true;
+                    recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
                     showShareModal(res.data);
                     return true;
                 })
@@ -722,6 +964,7 @@ ${getMarkdownCss()}
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         if ($shareUrlInput && $shareCopyBtn) {
             try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
+            recordShareHistory('created', $shareUrlInput.value, APP_STATE.title);
             $shareCopyBtn.addEventListener('click', async () => {
                 try { await clipboardCopy($shareUrlInput.value); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });

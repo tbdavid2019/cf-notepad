@@ -1,5 +1,37 @@
 # Changelog
 
+## [2026-06-17 15:10 CST]
+### Added
+- **Browser-Local Share History**
+  - Added a footer "Recent shares" entry that stores share links in browser localStorage.
+  - Tracks "Created" share URLs when a note is published or an already-published editor page is opened.
+  - Tracks "Viewed" share URLs when a browser opens a shared note, keeping the feature client-side without adding KV writes.
+  - Moved the "Recent shares" entry into the footer `Actions` group because it behaves like a navigation/action utility.
+- **Share Page Back-to-Top Control**
+  - Added a compact `＾` button on shared-note pages for long articles.
+  - Shows only after the reader scrolls down, then smoothly returns the article container to the top.
+
+### Fixed
+- **Share Page Anchor Links**
+  - Added stable heading IDs after client-side Markdown rendering so shared-note hash links can jump to headings.
+  - Re-runs hash scrolling after Markdown hydration and on `hashchange`, fixing links that previously failed because the browser handled the hash before the rendered heading existed.
+  - Uses a GitHub-style slug compatible with Chinese/English mixed headings, including links like `#主題二輸入bd-轉接之甲方需求與變更申請自動化-client-demand-to-backlog-engine`.
+  - Added compact heading aliases for existing TOC links that omit punctuation between Chinese labels and English terms.
+
+### Changed
+- **Mobile Share Footer**
+  - Mobile share pages now keep the footer compact by showing only `Actions` by default.
+  - Added a `...` control to expand appearance/meta tools only when needed.
+
+## [2026-06-16 00:00 CST]
+### Fixed
+- **Share Metadata Title Extraction**
+  - Updated shared-note title extraction to ignore weak short slug-like metadata titles such as `gkfp` when the note body contains a stronger human-readable title.
+  - Keeps explicit descriptive metadata titles as the first choice, while falling back to the first meaningful content title for Open Graph, Twitter, and browser titles.
+  - Deployed the fix with Wrangler and verified the live share page now emits the full `og:title`.
+- **Share Card Branding Weight**
+  - Stopped emitting `og:site_name` on shared-note pages so IM/social previews emphasize the note title instead of the `david888 wiki` app name.
+
 ## [2026-06-15 15:20 CST]
 ### Fixed
 - **Mermaid CJK Text Clipping**

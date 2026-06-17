@@ -14,16 +14,19 @@
 - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
+- **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
+- **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
+- **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
 - **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
 - **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
 - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度並記住瀏覽器偏好；`預覽` 開關可關閉右側 preview。
 - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
 - **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
-- **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要。
+- **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要；若 metadata title 是短 slug，會改用正文中較完整的可讀標題，且分享卡不強調站名以避免壓過文章標題。
 - **分享頁不追蹤瀏覽數**：預設不寫入 share view 計數，避免 Cloudflare 免費方案持續消耗 KV 寫入額度。
 - **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
 - **分享頁字體切換**：分享頁 footer 內建 `J / M` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`，並記住每個瀏覽器的偏好。
-- **分享頁行動版 footer 優化**：mobile share 頁 footer 會在向下閱讀時自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
+- **分享頁行動版 footer 優化**：mobile share 頁 footer 預設只顯示操作區，其他外觀/資訊工具可透過 `...` 展開；向下閱讀時仍會自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
 - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
 - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
 - **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
