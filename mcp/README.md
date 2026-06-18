@@ -57,8 +57,10 @@ uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.
 Once connected, the AI automatically gains the following powers on `wiki.david888.com`:
 
 1. **`read_wiki(path, password)`**: It can read massive context docs or fetch existing reports.
-2. **`write_wiki(path, text, password, new_view_password)`**: It can generate full markdown articles, including images uploaded to R2, and publish them to a specific URL path.
+2. **`write_wiki(path, text, password, new_view_password)`**: It can generate markdown articles, including images uploaded to R2, and publish them to a specific URL path.
 3. **`append_wiki(path, text, password)`**: It can continuously stream/append updates to the bottom of long, running research pages without pulling down the whole text.
+
+For very long source artifacts such as raw skills, specs, logs, or context dumps, prefer saving a short summary plus the original file path or URL instead of inlining the full document in one write.
 
 If a published page is structured as slides, clients can derive a presentation entry by appending `/present` to the returned share URL, and optionally add a Reveal hash such as `#/2` for a specific slide.
 

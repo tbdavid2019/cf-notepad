@@ -39,6 +39,27 @@ const faviconResponse = () => new Response(NOTEPAD_FAVICON_ICO, {
     }
 })
 
+function parseBooleanValue(value) {
+    if (typeof value === 'boolean') return value
+    if (typeof value !== 'string') return undefined
+
+    const normalized = value.trim().toLowerCase()
+    if (normalized === 'true' || normalized === '1' || normalized === 'yes' || normalized === 'on') return true
+    if (normalized === 'false' || normalized === '0' || normalized === 'no' || normalized === 'off') return false
+
+    return undefined
+}
+
+function readStringField(value) {
+    return typeof value === 'string' ? value : undefined
+}
+
+async function readMultipartTextField(value) {
+    if (typeof value === 'string') return value
+    if (value && typeof value.text === 'function') return await value.text()
+    return undefined
+}
+
 router.get('/', ({ url }) => {
     const newHash = genRandomStr(SLUG_LENGTH)
     // redirect to new page
@@ -430,8 +451,61 @@ router.post('/api/:path', async (request) => {
         } catch (e) {
             return returnJSON(400, 'Invalid JSON body')
         }
+    } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
+        reqBody = {
+            text: await request.text(),
+        }
+
+        const append = parseBooleanValue(url.searchParams.get('append'))
+        if (append !== undefined) reqBody.append = append
+
+        const share = parseBooleanValue(url.searchParams.get('share'))
+        if (share !== undefined) reqBody.share = share
+
+        const publicValue = parseBooleanValue(url.searchParams.get('public'))
+        if (publicValue !== undefined) reqBody.public = publicValue
+
+        const theme = url.searchParams.get('theme')
+        if (theme !== null) reqBody.theme = theme
+
+        const bodyPw = url.searchParams.get('pw')
+        if (bodyPw !== null) reqBody.pw = bodyPw
+
+        const vpw = url.searchParams.get('vpw')
+        if (vpw !== null) reqBody.vpw = vpw
+    } else if (contentType.includes('multipart/form-data')) {
+        const formData = await request.formData()
+        const multipartText = await readMultipartTextField(
+            formData.get('file') || formData.get('markdown') || formData.get('text')
+        )
+
+        if (multipartText === undefined) {
+            return returnJSON(400, 'No markdown file/text found in form data')
+        }
+
+        reqBody = {
+            text: multipartText,
+        }
+
+        const append = parseBooleanValue(readStringField(formData.get('append')))
+        if (append !== undefined) reqBody.append = append
+
+        const share = parseBooleanValue(readStringField(formData.get('share')))
+        if (share !== undefined) reqBody.share = share
+
+        const publicValue = parseBooleanValue(readStringField(formData.get('public')))
+        if (publicValue !== undefined) reqBody.public = publicValue
+
+        const theme = readStringField(formData.get('theme'))
+        if (theme !== undefined) reqBody.theme = theme
+
+        const pwField = readStringField(formData.get('pw'))
+        if (pwField !== undefined) reqBody.pw = pwField
+
+        const vpwField = readStringField(formData.get('vpw'))
+        if (vpwField !== undefined) reqBody.vpw = vpwField
     } else {
-        return returnJSON(400, 'Content-Type must be application/json')
+        return returnJSON(400, 'Content-Type must be application/json, text/markdown, text/plain, or multipart/form-data')
     }
 
     if (metadata.pw) {

@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-06-18 11:30 CST]
+### Added
+- **Raw Markdown API Uploads**
+  - Added `POST /api/:path` support for `Content-Type: text/markdown` and `text/plain`.
+  - Agents and shell scripts can now upload a local `.md` file with `--data-binary @file.md` instead of JSON-escaping the entire document.
+- **Multipart Markdown API Uploads**
+  - Added `POST /api/:path` support for `multipart/form-data` markdown uploads.
+  - Accepts form fields such as `file`, `markdown`, or `text`, plus `append`, `public`, `share`, `theme`, `pw`, and `vpw`.
+
+### Changed
+- **LLM / curl API Guidance**
+  - Updated `README.md`, `LLM_API_DOCS.md`, and `skills/SKILL.md` to recommend direct markdown/file upload for long documents.
+  - Kept the existing guidance to prefer a concise summary plus source path/URL for very large reference files that do not need full mirroring.
+
 ## [2026-06-17 15:10 CST]
 ### Added
 - **Browser-Local Share History**

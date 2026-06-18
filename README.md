@@ -40,6 +40,7 @@
   - **直接刪除**違規或過期的筆記。
 - **[NEW] LLM & AI Agent API (無頭 CMS)**：
   - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
+  - `/api/:path` 除了原本的 JSON body，也支援 `text/markdown` / `text/plain` 直接上傳整份 `.md`，以及 `multipart/form-data` 的檔案上傳，降低 LLM 用 `curl` 寫長文時的跳脫字元失敗率。
   - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
   - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
 - **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
@@ -444,6 +445,10 @@ For operational guidelines, please read the following document (use your web-bro
 👉 https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/LLM_API_DOCS.md
 
 Use the cURL/HTTP request tools detailed in that document to save the content once you finish writing, and give me the URL of the published article.
+
+If you need to preserve a very long reference file (for example a full `SKILL.md`, raw logs, or long API docs), do not inline the entire source text by default. Publish a concise summary plus the original file path or source URL unless I explicitly ask for the full text to be mirrored.
+
+If you already have a local markdown file, prefer uploading it directly with `Content-Type: text/markdown` and `--data-binary @file.md`, or multipart `-F "file=@file.md"`, instead of embedding the full markdown inside JSON.
 ```
 
 For the detailed API specification, please refer to: [LLM_API_DOCS.md](./LLM_API_DOCS.md).

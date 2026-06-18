@@ -27,8 +27,29 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
     "theme": "retro"
   }'
 ```
-### 2.1 Available Themes
-Choose a theme to wow the user: `ayu-light`, `retro`, `bauhaus`, `botanical`, `green-simple`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`.
+### 2.1 Upload a Full Markdown File Directly
+If you already have a local `.md` file, prefer raw markdown upload instead of embedding the whole document inside JSON.
+
+```bash
+curl -X POST "https://wiki.david888.com/api/<path>?public=true&theme=retro" \
+  -H "Content-Type: text/markdown; charset=UTF-8" \
+  --data-binary @article.md
+```
+
+This is safer for long markdown because it avoids JSON escaping problems.
+
+### 2.2 Multipart Markdown File Upload
+```bash
+curl -X POST "https://wiki.david888.com/api/<path>" \
+  -F "file=@article.md;type=text/markdown" \
+  -F "public=true" \
+  -F "theme=retro"
+```
+
+Use form fields `append`, `public`, `share`, `theme`, `pw`, and `vpw` when needed.
+
+### 2.3 Available Themes
+Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `green-simple`, `kanagawa`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`, `playful-geometric`, `professional`, `retro`, `sketch`, `terminal`, `tokyo-night`.
 > [!IMPORTANT]
 > **CRITICAL: READ THE RESPONSE CAREFULLY!**
 > The response contains TWO URLs:
@@ -48,11 +69,36 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
   -d '{ "text": "\n\n## Update\n...", "append": true }'
 ```
 
+If appending from a local markdown file, use:
+```bash
+curl -X POST "https://wiki.david888.com/api/<path>?append=true" \
+  -H "Content-Type: text/markdown; charset=UTF-8" \
+  --data-binary @update.md
+```
+
 ## Common Scenarios & Templates
 
 ### A. Saving a Research Report
 **Action**: Create a new path (e.g., `report-2024-03`) and POST the content.
 **Prompt for self**: "I will save this report to the wiki at path `report-2024-03` so the user can share it."
+
+### A.1 Large Context / Skill Files
+If the material is a long source document such as `SKILL.md`, API docs, logs, or raw context exports, do **not** paste the full file into the wiki by default.
+
+Use this pattern instead:
+- Write a concise summary of the important points.
+- Include the original repo path, local path, or canonical URL.
+- Only publish the full raw text when the human explicitly asks for a full mirror/copy.
+
+Example:
+```md
+# Skill Summary
+- Purpose: publish markdown to the wiki API
+- Key rule: return `shareUrl`, not `url`
+
+# Source
+- Repo path: `skills/SKILL.md`
+```
 
 ### B. Appending to a Task Log
 **Action**: Use `append: true` to avoid reading large history.
@@ -70,6 +116,8 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 
 ## Troubleshooting
 - **Error 1101**: A server-side exception occurred. I have added logging; check the returned JSON `msg` for the stack trace or error details.
+- **500 on a very long article/context dump**: Treat this as a payload-size or backend-runtime risk, even if auth is correct. The pragmatic fallback is to publish a concise summary plus the original file path/URL instead of embedding the entire long source document.
+- **Markdown with lots of quotes / backslashes / code fences keeps failing in curl**: Prefer `Content-Type: text/markdown` with `--data-binary @file.md`, or multipart `-F "file=@file.md"`, instead of wrapping the full markdown inside JSON.
 - **The URL is always the same / IP Restriction?**: No! The `url` field is the *permanent edit link* for that path. If you see the same URL, it means you successfully updated the same page. This is NOT an IP block. **Always check the `shareUrl` for the unique view link.**
 - **Missing `shareUrl`**: Ensure you are looking at the `.data.shareUrl` field in the JSON response.
 - **Need a slideshow link?**: If the page is slide-oriented, derive it from `shareUrl + '/present'`. For a specific slide, append a Reveal hash like `#/2`.
