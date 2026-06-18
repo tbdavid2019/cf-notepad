@@ -30,7 +30,7 @@
 - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
 - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
 - **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
-- **多款預覽主題**：內建 `catppuccin-macchiato`、`catppuccin-latte`、`tokyo-night`、`kanagawa`、`terminal`、`newsprint` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
+- **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`organic`、`playful-geometric`、`professional`、`retro`、`sketch`、`terminal`、`tokyo-night` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
 - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換，並記住目前瀏覽器偏好。
 - **站內 Icon**：內建 note SVG icon，Worker 會同時輸出 `/icon.svg`、`/icon.png`、`/favicon.ico`，並作為分享頁的社群預覽圖示（OG / Twitter image）。
 - **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
@@ -261,22 +261,33 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **Mermaid Diagram Stability**: Mermaid flowcharts are rendered with stricter font and SVG overflow guards to reduce clipping on mixed Chinese/English labels.
 - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
 - **Sharing**: Generate read-only share links.
+- **Share Anchor Links**: Shared-note headings get stable IDs so `#...` links can jump directly to sections, including mixed Chinese/English headings and compact TOC-style slugs.
+- **Recent Shares**: The footer includes a `Recent shares` entry backed by browser `localStorage` to track both created and viewed share URLs without extra KV writes.
+- **Back-to-Top for Long Shares**: Shared long-form pages show a compact `＾` control after scrolling down so readers can jump back to the top.
 - **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.
 - **Interface Language**: UI copy is maintained for `en-US` and `zh-TW`; Chinese browser languages use Traditional Chinese, all other browser languages default to English, and the footer includes an `En / Zh` selector.
 - **Desktop / Mobile Preview Toggle**: The editor footer includes a segmented toggle for switching the right-side Markdown preview into a mobile simulation width, with the preference saved per browser; the `Preview` switch can hide the right-side preview.
 - **Preview Divider**: The split panes remain draggable; switching device modes or double-clicking the divider resets the layout to 50/50.
+- **Preview Width Presets**: The footer includes a `Width` selector with `Full / 960 / 1200 / 1440` presets, saved per browser.
 - **Responsive Mobile Tables**: Mobile simulation and real mobile share pages use fixed-layout tables with wrapping cells so long parameters and inline code stay within the viewport.
-- **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses.
+- **Share Metadata & Unfurling**: Shared pages emit server-rendered Open Graph / Twitter metadata, and weak short slug-like titles are replaced with stronger human-readable note titles when available.
+- **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses; on mobile it shows `Actions` first and reveals more tools through `...`.
 - **No Share View Tracking by Default**: Shared-note views are not counted or written to Cloudflare KV by default, which avoids ongoing write usage on the free plan.
 - **GA4 Support**: Set `SCN_GA_MEASUREMENT_ID` in Cloudflare to automatically load Google Analytics on editor pages, shared-note pages, and shared-presentation pages.
 - **Analytics Placeholder**: Shared-note footers include a `#share-analytics-hook` placeholder for future GA / analytics code without adding KV-backed share view writes.
 - **Share Font Switcher**: Shared-note footers now use compact `J / M` buttons to switch between `JetBrains Mono` and `Maple Mono`, with `JetBrains Mono` as the default reader font.
-- **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta` groups so typography, language, width, and theme controls stay together.
+- **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta` groups so typography, language, width, theme, and share-history controls stay together.
+- **Built-in Theme Set**: The app ships with `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `green-simple`, `kanagawa`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`, `playful-geometric`, `professional`, `retro`, `sketch`, `terminal`, and `tokyo-night`, with `catppuccin-macchiato` as the current default.
+- **Built-in Icon Routes**: The Worker serves `/icon.svg`, `/icon.png`, `/favicon.ico`, and `/og-image.png` directly from the bundled assets.
 - **Super Admin Interface**:
   - List all notes.
-  - Track view counts.
   - Check password status.
+  - Batch-delete selected notes.
+  - Delete empty notes in one action.
   - **Delete** notes directly from the dashboard.
+- **LLM / API Publishing**:
+  - `POST /api/:path` supports JSON, raw `text/markdown` / `text/plain`, and `multipart/form-data` uploads.
+  - The API also supports native image upload at `/api/upload`.
 - **LLM / Web Crawler Support**:
   - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
   - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
@@ -285,6 +296,8 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Uses a compact heading scale so long `H1 / H2` titles remain readable without dominating the slide.
   - Uses compact blockquotes and automatically fits oversized slide content and tables to the viewport.
   - Reserves a bottom safe area above the presentation progress and navigation controls.
+  - Shared notes can open directly at `/share/<id>/present` and preserve deep links like `#/24`.
+  - Supports Slidev-lite style `::left::` / `::right::` two-column layout and `{v-click}` progressive reveals.
   - Powered by Reveal.js with smart on-demand asset loading.
 - **[NEW] PDF & Print Optimization** 🖨️: Added print stylesheet rules that automatically hide editor textareas and toolbars during printing or when saving to PDF. It handles page-breaks gracefully for headings, code blocks, and tables, and forces background color rendering to preserve themes' premium styles.
 - **[NEW] Curated Dark Preview Themes**:
