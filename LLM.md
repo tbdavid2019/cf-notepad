@@ -52,6 +52,7 @@ Advanced Markdown features (Math, Diagrams) require specific HTML/SVG attributes
 
 ## 6. Cloudflare Workers Environment ☁️
 - **KV Namespace**: Note data is stored in `NOTES`, rendering/view stats in `SHARE`.
+- **Optional D1 History**: If `SCN_ENABLE_NOTE_HISTORY=1` and `NOTE_HISTORY_DB` is bound, prior note content snapshots are stored in D1 table `note_history`. Retention defaults to `10` rows per note and snapshot writes are throttled by `SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS` (default `300`) because the editor autosaves frequently.
 - **Wrangler**: Local dev uses `wrangler dev`.
 - **Routing**: `itty-router` handles routing. Be careful with route ordering.
 

@@ -11,7 +11,8 @@
     "start": "wrangler dev",
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "publish": "wrangler deploy"
+    "publish": "wrangler deploy",
+    "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",

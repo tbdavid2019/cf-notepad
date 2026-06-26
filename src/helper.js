@@ -2,6 +2,10 @@ import jwt from '@tsndr/cloudflare-worker-jwt'
 import Cookies from 'cookie'
 import * as TEMPL from './template'
 import { SALT, SECRET, SUPPORTED_LANG, getGaMeasurementId } from './constant'
+import { getNoteHistoryConfig, deleteNoteHistoryVersions } from './note_history.mjs'
+
+const getNotesNamespace = () => globalThis.NOTES
+const getShareNamespace = () => globalThis.SHARE
 
 // generate random string
 export const genRandomStr = n => {
@@ -18,6 +22,7 @@ export function returnPage(type, data, headers = {}) {
     const ext = {
         ...(data?.ext || {}),
         gaMeasurementId: data?.ext?.gaMeasurementId ?? getGaMeasurementId(),
+        noteHistoryEnabled: data?.ext?.noteHistoryEnabled ?? getNoteHistoryConfig().enabled,
     }
 
     return new Response(TEMPL[type]({ ...data, ext }), {
@@ -84,11 +89,17 @@ export async function checkAuth(cookie, path) {
 }
 
 export async function queryNote(key) {
-    const result = await NOTES.getWithMetadata(key)
+    const result = await getNotesNamespace().getWithMetadata(key)
     return {
         value: result.value || '',
         metadata: result.metadata || {},
     }
+}
+
+export async function deleteNoteHistoryForPath(path) {
+    const { enabled, db } = getNoteHistoryConfig()
+    if (!enabled || !db || !path) return
+    await deleteNoteHistoryVersions(db, path)
 }
 
 export function getI18n(request) {
@@ -122,19 +133,20 @@ export async function deleteEmptyPages() {
     const errors = []
 
     try {
-        const list = await NOTES.list()
+        const list = await getNotesNamespace().list()
 
         for (const note of list.keys) {
             try {
-                const value = await NOTES.get(note.name)
+                const value = await getNotesNamespace().get(note.name)
 
                 // Check if page is empty (no content or very short content)
                 if (!value || value.trim().length <= 10) {
-                    await NOTES.delete(note.name)
+                    await getNotesNamespace().delete(note.name)
 
                     // Also delete share link if exists
                     const md5 = await MD5(note.name)
-                    await SHARE.delete(md5)
+                    await getShareNamespace().delete(md5)
+                    await deleteNoteHistoryForPath(note.name)
 
                     deleted.push(note.name)
                 }

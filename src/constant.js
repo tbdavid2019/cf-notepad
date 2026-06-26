@@ -2,20 +2,22 @@
 // static CDN
 export const CDN_PREFIX = 'https://cdn.jsdelivr.net/npm'
 
+const readRuntimeVar = name => globalThis?.[name]
+
 // server side salt
-export const SALT = SCN_SALT
+export const SALT = readRuntimeVar('SCN_SALT')
 // server side secret
-export const SECRET = SCN_SECRET
+export const SECRET = readRuntimeVar('SCN_SECRET')
 
 // admin
-export const ADMIN_PATH = SCN_ADMIN_PATH || '/admin'
-export const ADMIN_PW = SCN_ADMIN_PW
-export const SLUG_LENGTH = parseInt(SCN_SLUG_LENGTH || '3')
+export const ADMIN_PATH = readRuntimeVar('SCN_ADMIN_PATH') || '/admin'
+export const ADMIN_PW = readRuntimeVar('SCN_ADMIN_PW')
+export const SLUG_LENGTH = parseInt(readRuntimeVar('SCN_SLUG_LENGTH') || '3')
 // Access R2 config at runtime instead of module load time
-export const getEnableR2 = () => (typeof SCN_ENABLE_R2 !== 'undefined' && SCN_ENABLE_R2 === '1')
-export const getR2Domain = () => (typeof SCN_R2_DOMAIN !== 'undefined' ? SCN_R2_DOMAIN : '')
-export const getGaMeasurementId = () => (typeof SCN_GA_MEASUREMENT_ID !== 'undefined' ? String(SCN_GA_MEASUREMENT_ID || '').trim() : '')
-export const APP_NAME = (typeof SCN_APP_NAME !== 'undefined') ? SCN_APP_NAME : 'david888 wiki'
+export const getEnableR2 = () => readRuntimeVar('SCN_ENABLE_R2') === '1'
+export const getR2Domain = () => (typeof readRuntimeVar('SCN_R2_DOMAIN') !== 'undefined' ? readRuntimeVar('SCN_R2_DOMAIN') : '')
+export const getGaMeasurementId = () => (typeof readRuntimeVar('SCN_GA_MEASUREMENT_ID') !== 'undefined' ? String(readRuntimeVar('SCN_GA_MEASUREMENT_ID') || '').trim() : '')
+export const APP_NAME = (typeof readRuntimeVar('SCN_APP_NAME') !== 'undefined') ? readRuntimeVar('SCN_APP_NAME') : 'david888 wiki'
 
 // supported language
 export const SUPPORTED_LANG = {
@@ -61,6 +63,24 @@ export const SUPPORTED_LANG = {
         enpw: 'Enter a new password (Keeping it empty will remove the current password)',
         pwss: 'Password set successfully.',
         pwrs: 'Password removed successfully.',
+        shareAndHistory: 'Shares & history',
+        history: 'History',
+        historyPreview: 'Preview',
+        historyRaw: 'Raw',
+        historyRefresh: 'Refresh',
+        historyRestore: 'Restore',
+        historyCopyContent: 'Copy content',
+        historyCurrentVersion: 'Current',
+        historySelectedVersion: 'Selected',
+        historyNoSelection: 'Select a version to compare.',
+        historyLoading: 'Loading history...',
+        historyEmpty: 'No saved history yet. Once older versions are retained, they will appear here.',
+        historyDisabled: 'Note history is disabled for this deployment.',
+        historyUnavailableOnShare: 'Version history is only available on the edit page.',
+        historyRestoreConfirm: 'Restore this version and overwrite the current note?',
+        historyRestoreDone: 'Version restored.',
+        historyCopiedContent: 'Content copied.',
+        historyChars: 'chars',
     },
     'zh-TW': {
         setPW: '編輯鎖',
@@ -104,5 +124,23 @@ export const SUPPORTED_LANG = {
         enpw: '輸入新密碼（留空可清除當前密碼）',
         pwss: '密碼設置成功！',
         pwrs: '密碼清除成功！',
+        shareAndHistory: '分享與版本',
+        history: '版本',
+        historyPreview: '預覽',
+        historyRaw: '原文',
+        historyRefresh: '刷新',
+        historyRestore: '還原',
+        historyCopyContent: '複製內容',
+        historyCurrentVersion: '目前版本',
+        historySelectedVersion: '選取版本',
+        historyNoSelection: '請先選一個版本來比較。',
+        historyLoading: '正在讀取版本紀錄...',
+        historyEmpty: '目前還沒有可用的歷史版本。之後保留下來的舊版本會顯示在這裡。',
+        historyDisabled: '此部署尚未開啟歷史版本功能。',
+        historyUnavailableOnShare: '歷史版本只會在編輯頁提供。',
+        historyRestoreConfirm: '確定要還原這個版本並覆蓋目前內容嗎？',
+        historyRestoreDone: '已還原此版本。',
+        historyCopiedContent: '已複製內容。',
+        historyChars: '字',
     }
 }

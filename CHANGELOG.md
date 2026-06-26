@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-06-25 12:30 CST]
+### Added
+- **Optional D1 Note History**
+  - Added an opt-in D1-backed note history system controlled by `SCN_ENABLE_NOTE_HISTORY` and `NOTE_HISTORY_DB`.
+  - Added history API endpoints: `GET /api/:path/history`, `GET /api/:path/history/:versionId`, and `POST /api/:path/history/:versionId/restore`.
+  - Added `schema/note_history.sql` for initializing the D1 history table.
+
+### Changed
+- **History Retention Defaults**
+  - History retention now defaults to `10` versions per note via `SCN_NOTE_HISTORY_LIMIT`.
+  - Added `SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS` with a default of `300` seconds so editor autosave does not create a history row on every keystroke.
+- **Note Deletion Cleanup**
+  - Admin deletes and empty-note cleanup now remove matching history rows from D1 when note history is enabled.
+
+### Fixed
+- **Emergency Rollback for Editor UI Regression**
+  - Rolled back the new history-tab editor UI after it caused a client-side regression in the shared editor flow.
+  - Restored the previous `Recent shares` modal while keeping the D1 history backend and APIs in place.
+  - Fixed `checkAuth()` caller regressions where some routes still treated the returned object as a boolean.
+
 ## [2026-06-18 11:30 CST]
 ### Added
 - **Raw Markdown API Uploads**

@@ -2,14 +2,24 @@ import dayjs from 'dayjs'
 import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n, deleteEmptyPages } from './helper'
+import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
 import { SECRET, ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain, getGaMeasurementId } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
+import { summarizeHistoryContent } from './note_history_presenter'
+import {
+    getNoteHistoryConfig,
+    getNoteHistoryVersionById,
+    listNoteHistoryVersions,
+    saveNoteHistoryVersionIfNeeded,
+} from './note_history.mjs'
 
 // init
 const router = Router()
+const getNotesNamespace = () => globalThis.NOTES
+const getShareNamespace = () => globalThis.SHARE
+const getImagesBucket = () => globalThis.IMAGES
 
 const iconSvgResponse = () => new Response(NOTEPAD_ICON_SVG, {
     headers: {
@@ -60,6 +70,90 @@ async function readMultipartTextField(value) {
     return undefined
 }
 
+function readApiPassword(request, bodyPassword) {
+    const url = new URL(request.url)
+    const queryPw = url.searchParams.get('pw')
+    const authHeader = request.headers.get('Authorization')
+    const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+    return queryPw || headerPw || bodyPassword || null
+}
+
+async function requireApiEditAccess(request, metadata, bodyPassword) {
+    if (!metadata?.pw) {
+        return { ok: true }
+    }
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid, role } = await checkAuth(cookie, request.params?.path)
+    if (valid && role === 'edit') {
+        return { ok: true }
+    }
+
+    const providedPw = readApiPassword(request, bodyPassword)
+    if (!providedPw) {
+        return { ok: false, response: returnJSON(401, 'Unauthorized: Password required to edit') }
+    }
+
+    const storePw = await saltPw(providedPw)
+    if (metadata.pw !== storePw) {
+        return { ok: false, response: returnJSON(403, 'Forbidden: Incorrect edit password') }
+    }
+
+    return { ok: true }
+}
+
+async function persistNoteContent({
+    path,
+    content,
+    metadata,
+    previousContent,
+}) {
+    await getNotesNamespace().put(path, content, { metadata })
+
+    const historyConfig = getNoteHistoryConfig()
+    if (!historyConfig.enabled || !historyConfig.db) {
+        return
+    }
+
+    try {
+        await saveNoteHistoryVersionIfNeeded({
+            db: historyConfig.db,
+            enabled: historyConfig.enabled,
+            limit: historyConfig.limit,
+            minIntervalSeconds: historyConfig.minIntervalSeconds,
+            path,
+            previousContent,
+            nextContent: content,
+            nowSeconds: dayjs().unix(),
+        })
+    } catch (error) {
+        console.error(`Note history save failed for ${path}:`, error)
+    }
+}
+
+async function backupCurrentNoteBeforeRestore({
+    path,
+    currentContent,
+    restoredContent,
+}) {
+    const historyConfig = getNoteHistoryConfig()
+    if (!historyConfig.enabled || !historyConfig.db) {
+        return
+    }
+
+    await saveNoteHistoryVersionIfNeeded({
+        db: historyConfig.db,
+        enabled: historyConfig.enabled,
+        limit: historyConfig.limit,
+        minIntervalSeconds: historyConfig.minIntervalSeconds,
+        path,
+        previousContent: currentContent,
+        nextContent: restoredContent,
+        nowSeconds: dayjs().unix(),
+        force: true,
+    })
+}
+
 router.get('/', ({ url }) => {
     const newHash = genRandomStr(SLUG_LENGTH)
     // redirect to new page
@@ -79,13 +173,13 @@ router.get(ADMIN_PATH, async (request) => {
     if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
         // Logged in, list notes
         try {
-            const list = await NOTES.list()
+            const list = await getNotesNamespace().list()
 
             // Fetch content for each note to extract title
             const notesWithTitles = await Promise.all(
                 list.keys.map(async (note) => {
                     try {
-                        const value = await NOTES.get(note.name)
+                        const value = await getNotesNamespace().get(note.name)
                         const firstLine = value ? value.split('\n')[0] : ''
                         const title = note.metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || ''
 
@@ -127,9 +221,10 @@ router.post(ADMIN_PATH, async (request) => {
                     try {
                         // Delete all selected notes
                         await Promise.all(paths.map(async (path) => {
-                            await NOTES.delete(path)
+                            await getNotesNamespace().delete(path)
                             const md5 = await MD5(path)
-                            await SHARE.delete(md5)
+                            await getShareNamespace().delete(md5)
+                            await deleteNoteHistoryForPath(path)
                         }))
 
                         return new Response(JSON.stringify({ success: true }), {
@@ -192,9 +287,10 @@ router.post(ADMIN_PATH, async (request) => {
             if (action === 'delete') {
                 const path = formData.get('path')
                 if (path) {
-                    await NOTES.delete(path)
+                    await getNotesNamespace().delete(path)
                     const md5 = await MD5(path)
-                    await SHARE.delete(md5)
+                    await getShareNamespace().delete(md5)
+                    await deleteNoteHistoryForPath(path)
                 }
                 return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
             }
@@ -226,7 +322,7 @@ router.post('/upload', async (request) => {
         const type = image.type.split('/')[1] || 'png'
         const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
 
-        await IMAGES.put(filename, image)
+        await getImagesBucket().put(filename, image)
         const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
 
         return returnJSON(0, url)
@@ -239,7 +335,7 @@ router.post('/upload', async (request) => {
 
 router.post('/share/:md5/auth', async request => {
     const { md5 } = request.params
-    const path = await SHARE.get(md5)
+    const path = await getShareNamespace().get(md5)
 
     if (!!path) {
         if (request.headers.get('Content-Type') === 'application/json') {
@@ -291,7 +387,7 @@ router.post('/share/:md5/auth', async request => {
 async function renderSharePage(request, presentationMode = false) {
     const lang = getI18n(request)
     const { md5 } = request.params
-    const path = await SHARE.get(md5)
+    const path = await getShareNamespace().get(md5)
     const sharePath = `/share/${md5}`
     const presentationPath = `${sharePath}/present`
     const authPath = `${sharePath}/auth`
@@ -384,6 +480,123 @@ router.head('/og-image.png', ogImageResponse)
 router.get('/favicon.ico', faviconResponse)
 router.head('/favicon.ico', faviconResponse)
 
+router.get('/api/:path/history', async (request) => {
+    const { path } = request.params
+    const { metadata } = await queryNote(path)
+    const auth = await requireApiEditAccess(request, metadata)
+    if (!auth.ok) return auth.response
+
+    const historyConfig = getNoteHistoryConfig()
+    if (!historyConfig.enabled) {
+        return returnJSON(404, 'Note history is disabled')
+    }
+    if (!historyConfig.db) {
+        return returnJSON(500, 'Note history database is not configured')
+    }
+
+    try {
+        const versions = await listNoteHistoryVersions(historyConfig.db, path, historyConfig.limit)
+        return returnJSON(0, {
+            enabled: true,
+            limit: historyConfig.limit,
+            minIntervalSeconds: historyConfig.minIntervalSeconds,
+            versions: versions.map(version => ({
+                id: version.id,
+                createdAt: Number(version.created_at || 0),
+                contentLength: Number(version.content_length || 0),
+                ...summarizeHistoryContent(version.content || ''),
+            })),
+        })
+    } catch (error) {
+        console.error('History List Error:', error)
+        return returnJSON(500, `History List Error: ${error.message}`)
+    }
+})
+
+router.get('/api/:path/history/:versionId', async (request) => {
+    const { path, versionId } = request.params
+    const { metadata } = await queryNote(path)
+    const auth = await requireApiEditAccess(request, metadata)
+    if (!auth.ok) return auth.response
+
+    const historyConfig = getNoteHistoryConfig()
+    if (!historyConfig.enabled) {
+        return returnJSON(404, 'Note history is disabled')
+    }
+    if (!historyConfig.db) {
+        return returnJSON(500, 'Note history database is not configured')
+    }
+
+    try {
+        const version = await getNoteHistoryVersionById(historyConfig.db, path, Number(versionId))
+        if (!version) {
+            return returnJSON(404, 'History version not found')
+        }
+
+        return returnJSON(0, {
+            id: version.id,
+            createdAt: Number(version.created_at || 0),
+            content: version.content || '',
+        })
+    } catch (error) {
+        console.error('History Get Error:', error)
+        return returnJSON(500, `History Get Error: ${error.message}`)
+    }
+})
+
+router.post('/api/:path/history/:versionId/restore', async (request) => {
+    const { path, versionId } = request.params
+    const { value, metadata } = await queryNote(path)
+    const auth = await requireApiEditAccess(request, metadata)
+    if (!auth.ok) return auth.response
+
+    const historyConfig = getNoteHistoryConfig()
+    if (!historyConfig.enabled) {
+        return returnJSON(404, 'Note history is disabled')
+    }
+    if (!historyConfig.db) {
+        return returnJSON(500, 'Note history database is not configured')
+    }
+
+    try {
+        const version = await getNoteHistoryVersionById(historyConfig.db, path, Number(versionId))
+        if (!version) {
+            return returnJSON(404, 'History version not found')
+        }
+
+        const restoredContent = version.content || ''
+        await backupCurrentNoteBeforeRestore({
+            path,
+            currentContent: value,
+            restoredContent,
+        })
+
+        const nextMetadata = {
+            ...metadata,
+            updateAt: dayjs().unix(),
+        }
+
+        await getNotesNamespace().put(path, restoredContent, {
+            metadata: nextMetadata,
+        })
+
+        const fullUrl = new URL(request.url)
+        const responseData = {
+            msg: 'Restored successfully',
+            url: `${fullUrl.protocol}//${fullUrl.host}/${path}`,
+        }
+
+        if (nextMetadata.share) {
+            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${await MD5(path)}`
+        }
+
+        return returnJSON(0, responseData)
+    } catch (error) {
+        console.error('History Restore Error:', error)
+        return returnJSON(500, `History Restore Error: ${error.message}`)
+    }
+})
+
 router.get('/api/:path', async (request) => {
     const { path } = request.params
     const { value, metadata } = await queryNote(path)
@@ -429,7 +642,7 @@ router.post('/api/upload', async (request) => {
         const type = image.type.split('/')[1] || 'png'
         const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
 
-        await IMAGES.put(filename, image)
+        await getImagesBucket().put(filename, image)
         const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
 
         return returnJSON(0, url)
@@ -508,19 +721,8 @@ router.post('/api/:path', async (request) => {
         return returnJSON(400, 'Content-Type must be application/json, text/markdown, text/plain, or multipart/form-data')
     }
 
-    if (metadata.pw) {
-        const queryPw = url.searchParams.get('pw')
-        const authHeader = request.headers.get('Authorization')
-        const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
-
-        const bodyPw = reqBody.pw || null
-        const providedPw = queryPw || headerPw || bodyPw
-
-        if (!providedPw) return returnJSON(401, 'Unauthorized: Password required to edit')
-
-        const storePw = await saltPw(providedPw)
-        if (metadata.pw !== storePw) return returnJSON(403, 'Forbidden: Incorrect edit password')
-    }
+    const auth = await requireApiEditAccess(request, metadata, reqBody.pw || null)
+    if (!auth.ok) return auth.response
 
     // Support "content" as a fallback in case LLM sends the wrong json key
     const text = reqBody.text || reqBody.content || ''
@@ -551,15 +753,18 @@ router.post('/api/:path', async (request) => {
     }
 
     try {
-        await NOTES.put(path, newContent, {
+        await persistNoteContent({
+            path,
+            content: newContent,
             metadata: updateMetadata,
+            previousContent: value,
         })
 
         const md5 = await MD5(path)
         if (updateMetadata.share) {
-            await SHARE.put(md5, path)
+            await getShareNamespace().put(md5, path)
         } else if (updateMetadata.share === false) {
-            await SHARE.delete(md5)
+            await getShareNamespace().delete(md5)
         }
 
         const fullUrl = new URL(request.url)
@@ -718,13 +923,13 @@ router.post('/:path/pw', async request => {
             const { passwd, type } = await request.json()
 
             const { value, metadata } = await queryNote(path)
-            const valid = await checkAuth(cookie, path)
+            const { valid } = await checkAuth(cookie, path)
 
             if (!metadata.pw || valid) {
                 const pwField = type === 'view' ? 'vpw' : 'pw'
                 const pw = passwd ? await saltPw(passwd) : undefined
                 try {
-                    await NOTES.put(path, value, {
+                    await getNotesNamespace().put(path, value, {
                         metadata: {
                             ...metadata,
                             [pwField]: pw,
@@ -760,11 +965,11 @@ router.post('/:path/setting', async request => {
             const { mode, share, theme } = await request.json()
 
             const { value, metadata } = await queryNote(path)
-            const valid = await checkAuth(cookie, path)
+            const { valid } = await checkAuth(cookie, path)
 
             if (!metadata.pw || valid) {
                 try {
-                    await NOTES.put(path, value, {
+                    await getNotesNamespace().put(path, value, {
                         metadata: {
                             ...metadata,
                             ...mode !== undefined && { mode },
@@ -775,11 +980,11 @@ router.post('/:path/setting', async request => {
 
                     const md5 = await MD5(path)
                     if (share) {
-                        await SHARE.put(md5, path)
+                        await getShareNamespace().put(md5, path)
                         return returnJSON(0, md5)
                     }
                     if (share === false) {
-                        await SHARE.delete(md5)
+                        await getShareNamespace().delete(md5)
                     }
 
 
@@ -803,7 +1008,7 @@ router.post('/:path', async request => {
     const { value, metadata } = await queryNote(path)
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-    const valid = await checkAuth(cookie, path)
+    const { valid } = await checkAuth(cookie, path)
 
     if (!metadata.pw || valid) {
         // OK
@@ -817,11 +1022,14 @@ router.post('/:path', async request => {
     // const { metadata } = await queryNote(path)
 
     try {
-        await NOTES.put(path, content, {
+        await persistNoteContent({
+            path,
+            content,
             metadata: {
                 ...metadata,
                 updateAt: dayjs().unix(),
             },
+            previousContent: value,
         })
 
         return returnJSON(0)
@@ -833,40 +1041,53 @@ router.post('/:path', async request => {
 
 router.all('*', (request) => {
     const lang = getI18n(request)
-    returnPage('Page404', { lang, title: '404' })
+    return returnPage('Page404', { lang, title: '404' })
 })
 
-addEventListener('fetch', event => {
-    event.request.event = event
-    event.respondWith(
-        router.handle(event.request, event).then(response => {
-            if (event.request.method === 'HEAD') {
+function bindRuntimeEnv(env = {}) {
+    Object.assign(globalThis, env)
+}
+
+export default {
+    async fetch(request, env, ctx) {
+        bindRuntimeEnv(env)
+
+        try {
+            const response = await router.handle(request, {
+                request,
+                env,
+                waitUntil: promise => ctx.waitUntil(promise),
+            })
+
+            if (request.method === 'HEAD') {
                 return new Response(null, {
                     headers: response.headers,
                     status: response.status,
-                    statusText: response.statusText
+                    statusText: response.statusText,
                 })
             }
+
             return response
-        }).catch(err => {
+        } catch (err) {
             console.error('Fetch Event Error:', err)
             return new Response(`Worker Error: ${err.message}`, { status: 500 })
-        })
-    )
-})
-
-// Cron job: Delete empty pages daily at 9 AM Taiwan time (1 AM UTC)
-addEventListener('scheduled', async (event) => {
-    console.log('Cron triggered at:', new Date().toISOString())
-
-    try {
-        const result = await deleteEmptyPages()
-        console.log(`Cron cleanup completed: ${result.deleted} pages deleted`)
-
-        if (result.errors.length > 0) {
-            console.error('Cron cleanup errors:', result.errors)
         }
-    } catch (e) {
-        console.error('Cron cleanup failed:', e)
-    }
-})
+    },
+
+    // Cron job: Delete empty pages daily at 9 AM Taiwan time (1 AM UTC)
+    async scheduled(event, env) {
+        bindRuntimeEnv(env)
+        console.log('Cron triggered at:', new Date().toISOString())
+
+        try {
+            const result = await deleteEmptyPages()
+            console.log(`Cron cleanup completed: ${result.deleted} pages deleted`)
+
+            if (result.errors.length > 0) {
+                console.error('Cron cleanup errors:', result.errors)
+            }
+        } catch (e) {
+            console.error('Cron cleanup failed:', e)
+        }
+    },
+}

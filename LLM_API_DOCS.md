@@ -3,7 +3,7 @@
 This document explains how AI agents (like OpenClaw, n8n, ChatGPT) or external scripts can programmatically interact directly with the CF-Notepad (david888 wiki) server.
 
 ## Overview
-The wiki supports **reading**, **writing**, **appending**, and **image uploading** via simple HTTP requests.
+The wiki supports **reading**, **writing**, **appending**, **optional note-history access**, and **image uploading** via simple HTTP requests.
 
 The underlying page storage can hold very large markdown pages, but that is **not** a guarantee that every very large API write will succeed end-to-end. In practice, extremely long single-request payloads may still fail due to runtime, platform, or backend constraints before the note is saved.
 
@@ -117,3 +117,24 @@ If you generate an image, download an image, or **if the user gives you local fi
 2. Extract the `data` URL string (`https://s3...`) from the response.
 3. Replace the local file path in your text with the public URL: `![Generated Image](https://s3.wiki.david888.com/.../xxxx.png)`.
 4. ONLY after uploading all local images and replacing their paths with the public URLs, call `POST /api/:path` with the final markdown text.
+
+### 4. Note History (`/api/:path/history...`)
+
+If the server operator has enabled note history, the following endpoints are available for edit-authorized users:
+
+- `GET /api/<path>/history`
+  - Returns the retained version list for that note.
+- `GET /api/<path>/history/<versionId>`
+  - Returns one historical content snapshot.
+- `POST /api/<path>/history/<versionId>/restore`
+  - Restores that snapshot back into the live note.
+
+**Authentication:**
+- If the note has an edit password, provide it with either:
+  - `Authorization: Bearer <password>`
+  - `?pw=<password>`
+
+**Important behavior:**
+- History is **optional** and may be disabled on a given deployment.
+- The current implementation stores prior saved content snapshots, not every keystroke.
+- Operators can cap retained versions; this repo defaults to `10`.

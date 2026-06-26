@@ -505,6 +505,7 @@ ${getMarkdownCss()}
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
         isPublished: ext.share === true,
+        noteHistoryEnabled: ext.noteHistoryEnabled === true,
         lang,
         title: title || '',
         i18n: getLangText(lang),

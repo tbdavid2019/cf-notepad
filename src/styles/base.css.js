@@ -310,6 +310,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     display: flex;
     flex-direction: column;
     gap: 8px;
+    flex: 1;
 }
 .share-history-empty {
     margin: 8px 0 4px;
@@ -359,6 +360,16 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 }
 .share-history-copy:hover {
     background: #eef1f4;
+}
+@media (max-width: 640px) {
+    .share-history-content {
+        right: 12px;
+        left: 12px;
+        bottom: 68px;
+        width: auto;
+        max-height: calc(100dvh - 92px);
+        padding: 14px;
+    }
 }
 .share-back-to-top {
     position: fixed;

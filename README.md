@@ -14,6 +14,7 @@
 - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
 - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
 - **分享功能**：可產生唯讀的分享連結。
+- **可選 D1 歷史版本**：可透過 D1 為筆記保留歷史快照；功能預設關閉，開啟後預設每篇保留最近 `10` 份版本，並且預設以 5 分鐘節流，避免 editor 自動儲存時把資料量衝高。
 - **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
 - **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
 - **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
@@ -42,6 +43,7 @@
   - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
   - `/api/:path` 除了原本的 JSON body，也支援 `text/markdown` / `text/plain` 直接上傳整份 `.md`，以及 `multipart/form-data` 的檔案上傳，降低 LLM 用 `curl` 寫長文時的跳脫字元失敗率。
   - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
+  - 啟用歷史版本後，可使用 `GET /api/:path/history`、`GET /api/:path/history/:versionId`、`POST /api/:path/history/:versionId/restore` 管理歷史快照。
   - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
 - **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
   - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
@@ -133,6 +135,24 @@ kv_namespaces = [
 ]
 ```
 
+### 2.1 歷史版本 D1（選用）
+
+若要啟用歷史版本，請另外建立一個 D1 資料庫：
+
+```bash
+wrangler d1 create cloud-notepad-history
+wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
+```
+
+然後把輸出的 `database_id` 填入 `wrangler.toml`：
+
+```toml
+[[d1_databases]]
+binding = "NOTE_HISTORY_DB"
+database_name = "cloud-notepad-history"
+database_id = "你的_D1_DATABASE_ID"
+```
+
 ### 3. 設定環境變數與密鑰
 
 為了安全性與管理功能，請在 Cloudflare Dashboard 設定以下環境變數 (Environment Variables)，或使用 `wrangler secret put`：
@@ -168,6 +188,17 @@ wrangler secret put SCN_R2_DOMAIN
 # 8. Google Analytics Measurement ID（選用，套用於編輯頁與 share 頁）
 # 例如: G-XXXXXXXXXX
 wrangler secret put SCN_GA_MEASUREMENT_ID
+
+# 9. 是否啟用歷史版本（選用，預設關閉）
+# 設為 "1" 開啟，設為 "0" 關閉
+wrangler secret put SCN_ENABLE_NOTE_HISTORY
+
+# 10. 每篇最多保留幾份歷史版本（選用，預設 10）
+wrangler secret put SCN_NOTE_HISTORY_LIMIT
+
+# 11. 歷史版本最小保存間隔秒數（選用，預設 300 秒）
+# 用來避免 editor 自動儲存每秒都寫一份歷史
+wrangler secret put SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS
 ```
 
 *注意：`SCN_ADMIN_PATH` 預設為 `/admin`，但強烈建議修改以避免被掃描。*
@@ -187,6 +218,20 @@ G-XXXXXXXXXX
 - 一般編輯頁
 - `/share/:id`
 - `/share/:id/present`
+
+### 3.2 歷史版本（選用）
+
+歷史版本功能預設關閉。要啟用時，請同時滿足：
+
+1. `wrangler.toml` 有綁定 `NOTE_HISTORY_DB`
+2. `SCN_ENABLE_NOTE_HISTORY` 設為 `1`
+
+相關參數：
+
+- `SCN_NOTE_HISTORY_LIMIT`：每篇最多保留幾份歷史版本，預設 `10`
+- `SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS`：兩份歷史快照最小間隔秒數，預設 `300`
+
+目前策略是保留「前一個內容版本」到 D1，並在超過上限時自動刪除舊版本。
 
 ### 6. R2 圖片上傳設定 (選用)
 
@@ -261,6 +306,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **Mermaid Diagram Stability**: Mermaid flowcharts are rendered with stricter font and SVG overflow guards to reduce clipping on mixed Chinese/English labels.
 - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
 - **Sharing**: Generate read-only share links.
+- **Optional D1 Note History**: Notes can keep historical snapshots in D1. The feature is off by default; when enabled it keeps the latest `10` versions per note by default and uses a 5-minute save interval to avoid excessive writes from editor autosave.
 - **Share Anchor Links**: Shared-note headings get stable IDs so `#...` links can jump directly to sections, including mixed Chinese/English headings and compact TOC-style slugs.
 - **Recent Shares**: The footer includes a `Recent shares` entry backed by browser `localStorage` to track both created and viewed share URLs without extra KV writes.
 - **Back-to-Top for Long Shares**: Shared long-form pages show a compact `＾` control after scrolling down so readers can jump back to the top.
@@ -288,6 +334,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **LLM / API Publishing**:
   - `POST /api/:path` supports JSON, raw `text/markdown` / `text/plain`, and `multipart/form-data` uploads.
   - The API also supports native image upload at `/api/upload`.
+  - When note history is enabled, `GET /api/:path/history`, `GET /api/:path/history/:versionId`, and `POST /api/:path/history/:versionId/restore` are available for history access and restore.
 - **LLM / Web Crawler Support**:
   - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
   - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
@@ -345,6 +392,24 @@ kv_namespaces = [
 ]
 ```
 
+### 2.1 Optional D1 Database for Note History
+
+If you want note history, create a D1 database and apply the schema:
+
+```bash
+wrangler d1 create cloud-notepad-history
+wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
+```
+
+Then add the binding to `wrangler.toml`:
+
+```toml
+[[d1_databases]]
+binding = "NOTE_HISTORY_DB"
+database_name = "cloud-notepad-history"
+database_id = "YOUR_D1_DATABASE_ID"
+```
+
 ### 3. Set Environment Secrets
 
 Set the following secrets using `wrangler secret put` or via the Cloudflare Dashboard:
@@ -380,6 +445,15 @@ wrangler secret put SCN_R2_DOMAIN
 # 8. Google Analytics Measurement ID (Optional, editor + share pages)
 # Example: G-XXXXXXXXXX
 wrangler secret put SCN_GA_MEASUREMENT_ID
+
+# 9. Enable note history (Optional, default: 0)
+wrangler secret put SCN_ENABLE_NOTE_HISTORY
+
+# 10. Max retained history versions per note (Optional, default: 10)
+wrangler secret put SCN_NOTE_HISTORY_LIMIT
+
+# 11. Minimum seconds between history snapshots (Optional, default: 300)
+wrangler secret put SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS
 ```
 
 *Note: `SCN_ADMIN_PATH` defaults to `/admin` if not set, but changing it is highly recommended.*
@@ -399,6 +473,20 @@ When set, GA loads on:
 - editor pages
 - `/share/:id`
 - `/share/:id/present`
+
+### 3.2 Note History (Optional)
+
+Note history stays disabled unless both of the following are true:
+
+1. `NOTE_HISTORY_DB` is bound in `wrangler.toml`
+2. `SCN_ENABLE_NOTE_HISTORY` is set to `1`
+
+Related knobs:
+
+- `SCN_NOTE_HISTORY_LIMIT`: max retained versions per note, default `10`
+- `SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS`: minimum seconds between snapshots, default `300`
+
+The current implementation stores the previous saved content into D1 and prunes older rows automatically once the retention limit is exceeded.
 
 ### 6. R2 Image Upload (Optional)
 

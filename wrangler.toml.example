@@ -20,10 +20,18 @@ SCN_SLUG_LENGTH = "3"
 SCN_ENABLE_R2 = "0"
 SCN_R2_DOMAIN = "https://your-r2-domain.com"
 SCN_GA_MEASUREMENT_ID = "G-XXXXXXXXXX"
+SCN_ENABLE_NOTE_HISTORY = "0"
+SCN_NOTE_HISTORY_LIMIT = "10"
+SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS = "300"
 
 # [[r2_buckets]]
 # binding = "IMAGES"
 # bucket_name = "<YOUR_BUCKET_NAME>"
+
+# [[d1_databases]]
+# binding = "NOTE_HISTORY_DB"
+# database_name = "cloud-notepad-history"
+# database_id = "<YOUR_D1_DATABASE_ID>"
 
 # Cron trigger: Daily cleanup at 9 AM Taiwan time (1 AM UTC)
 [triggers]
