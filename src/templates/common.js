@@ -44,6 +44,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const jetbrainsTitle = lang === 'zh-TW' ? '切換為 JetBrains Mono' : 'Switch to JetBrains Mono'
     const mapleTitle = lang === 'zh-TW' ? '切換為 Maple Mono' : 'Switch to Maple Mono'
     const shareHistoryLabel = lang === 'zh-TW' ? '最近分享' : 'Recent shares'
+    const copyShareTitle = lang === 'zh-TW' ? '複製分享連結' : 'Copy share link'
+    const copyPresentTitle = lang === 'zh-TW' ? '複製簡報連結' : 'Copy presentation link'
+    const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     return `
     <div class="footer">
         <div class="footer-sections">
@@ -55,22 +58,22 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button class="opt-button opt-pw-view" data-type="view">${vpw ? t.changeViewPW : t.setViewPW}</button>
                         ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
                         ${share && shareId ? `
-                            <div class="opt-share-link" style="display:flex;align-items:center;gap:5px;background:#e8f5e9;padding:2px 8px;border-radius:4px;border:1px solid #4caf50;">
-                                <span style="font-size:12px;color:#2e7d32;font-weight:500;">✓ ${t.published}</span>
-                                <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" style="border:none;background:transparent;width:200px;font-size:12px;color:#1976d2;font-weight:500;">
-                                <button id="copy-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.8;padding:2px 6px;font-size:16px;" title="Copy">📋</button>
-                                <button id="copy-present-share-btn" style="border:none;background:none;cursor:pointer;opacity:0.8;padding:2px 6px;font-size:16px;" title="Copy presentation link">📽️</button>
-                                <button class="unpublish-btn" style="border:none;background:#ff5722;color:white;cursor:pointer;padding:2px 8px;border-radius:3px;font-size:11px;margin-left:4px;" title="取消發布">✕</button>
+                            <div class="opt-share-link">
+                                <span class="publish-status">✓ ${t.published}</span>
+                                <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" aria-label="${t.published}">
+                                <button id="copy-share-btn" class="toolbar-icon-button" title="${copyShareTitle}" aria-label="${copyShareTitle}">⧉</button>
+                                <button id="copy-present-share-btn" class="toolbar-icon-button" title="${copyPresentTitle}" aria-label="${copyPresentTitle}">▶</button>
+                                <button class="toolbar-icon-button toolbar-danger-button unpublish-btn" title="${unpublishTitle}" aria-label="${unpublishTitle}">×</button>
                             </div>
                         ` : SWITCHER(t.share, share, 'opt-share')}
-                        ${mode === 'md' ? `<button id="present-btn" class="opt-button" style="background:#673ab7;color:white;padding:4px 10px;border-radius:4px;font-weight:500;display:flex;align-items:center;gap:4px;" title="${t.presentTitle}">📽️ ${t.present}</button>` : ''}
+                        ${mode === 'md' ? `<button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}"><span aria-hidden="true">▶</span><span>${t.present}</span></button>` : ''}
                     ` : (path ? `
-                        <a href="/${path}" class="opt-button" style="text-decoration:none;background:#2196f3;color:white;padding:6px 12px;border-radius:4px;font-weight:500;" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</a>
-                        <button id="present-btn" class="opt-button" style="background:#673ab7;color:white;padding:4px 10px;border-radius:4px;font-weight:500;display:flex;align-items:center;gap:4px;" title="${t.presentTitle}">📽️ ${t.present}</button>
+                        <a href="/${path}" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</a>
+                        <button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}"><span aria-hidden="true">▶</span><span>${t.present}</span></button>
                     ` : '')}
                     <button type="button" id="share-history-btn" class="opt-button share-history-trigger" aria-haspopup="dialog" aria-expanded="false">${shareHistoryLabel}</button>
                     ${showNoteHistory ? `<button type="button" id="note-history-btn" class="opt-button note-history-trigger" aria-haspopup="dialog" aria-expanded="false">${t.history}</button>` : ''}
-                    <button type="button" id="mobile-footer-more-btn" class="opt-button mobile-footer-more-trigger" aria-expanded="false" aria-label="${lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'}">...</button>
+                    <button type="button" id="mobile-footer-more-btn" class="opt-button opt-button-icon mobile-footer-more-trigger" aria-expanded="false" aria-label="${lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'}">⋯</button>
                 </div>
             </div>
 
@@ -115,8 +118,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     <a class="github-link" title="Github" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
                     <svg viewBox="64 64 896 896" focusable="false" data-icon="github" width="1em" height="1em" fill="currentColor" aria-hidden="true"><path d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9a127.5 127.5 0 0138.1 91v112.5c.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.3z"></path></svg>
                     </a>
-                    <a class="skill-link" title="AI Skill Doc" target="_blank" href="https://github.com/tbdavid2019/cf-notepad/blob/main/skills/SKILL.md" style="text-decoration:none;font-size:18px;display:flex;align-items:center;" rel="noreferrer">
-                    <span style="font-size:14px;margin-right:4px;">🤖 ${t.skill}</span>
+                    <a class="skill-link" title="AI Skill Doc" target="_blank" href="https://github.com/tbdavid2019/cf-notepad/blob/main/skills/SKILL.md" rel="noreferrer">
+                    <span aria-hidden="true">◇</span><span>${t.skill}</span>
                     </a>
                     ${updateAt ? `<span class="last-modified">${t.lastModified} ${getCompactRelativeTime(updateAt, lang)}</span>` : ''}
                 </div>

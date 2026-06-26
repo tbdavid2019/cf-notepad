@@ -7,6 +7,12 @@
   - Added a dedicated history modal for listing saved versions, viewing preview/raw content, copying an old version, and restoring it into the current editor.
   - Kept the existing "最近分享 / Recent shares" modal independent so share-link history remains unchanged.
 
+### Changed
+- **Footer Toolbar Refresh**
+  - Reworked footer controls into a flatter, more consistent toolbar style with unified button height, radius, border, hover, and focus states.
+  - Removed legacy inline footer styles from publish, copy, presentation, edit-back, and skill controls.
+  - Normalized icon-like actions with stable Unicode glyphs so toolbar controls no longer vary heavily by emoji sizing.
+
 ## [2026-06-25 12:30 CST]
 ### Added
 - **Optional D1 Note History**
