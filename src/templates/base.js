@@ -199,7 +199,7 @@ ${getMarkdownCss()}
     </div>
     ${ext.sharePath && !isEdit ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
     <div id="loading"></div>
-    ${MODAL(lang)}
+    ${MODAL(lang, { noteHistoryEnabled: ext.noteHistoryEnabled === true && isEdit })}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
@@ -713,6 +713,258 @@ ${getMarkdownCss()}
         }
     }
 
+    const setupNoteHistory = ({ textarea = null, previewMarkdownNode = null, previewPlainNode = null } = {}) => {
+        if (!APP_STATE.noteHistoryEnabled || !APP_STATE.isEdit) return;
+
+        const modal = document.querySelector('.note-history-modal')
+        const openBtn = document.querySelector('#note-history-btn')
+        const closeBtn = modal ? modal.querySelector('.note-history-close') : null
+        const mask = modal ? modal.querySelector('.modal-mask') : null
+        const list = modal ? modal.querySelector('[data-note-history-list]') : null
+        const titleNode = modal ? modal.querySelector('[data-note-history-title]') : null
+        const metaNode = modal ? modal.querySelector('[data-note-history-meta]') : null
+        const bodyNode = modal ? modal.querySelector('[data-note-history-body]') : null
+        const refreshBtn = modal ? modal.querySelector('[data-note-history-refresh]') : null
+        const copyBtn = modal ? modal.querySelector('[data-note-history-copy]') : null
+        const restoreBtn = modal ? modal.querySelector('[data-note-history-restore]') : null
+        const renderModeButtons = modal ? modal.querySelectorAll('[data-note-history-render-mode]') : []
+        if (!modal || !openBtn || !list || !bodyNode) return;
+
+        let versions = []
+        let selectedVersion = null
+        let selectedVersionId = null
+        let renderMode = 'preview'
+        let loaded = false
+        let loading = false
+
+        const apiBase = () => '/api' + window.location.pathname + '/history'
+        const getCurrentContent = () => textarea ? textarea.value || '' : ''
+        const setActionsDisabled = () => {
+            const disabled = !selectedVersion
+            if (copyBtn) copyBtn.disabled = disabled
+            if (restoreBtn) restoreBtn.disabled = disabled
+        }
+        const formatHistoryTime = value => formatShareHistoryTime(Number(value || 0) * 1000)
+        const formatHistorySize = value => String(Number(value || 0)) + ' ' + getI18n('historyChars')
+
+        const renderStatus = (message, error = false) => {
+            if (titleNode) titleNode.textContent = message
+            if (metaNode) metaNode.textContent = ''
+            bodyNode.className = 'note-history-body note-history-status' + (error ? ' error' : '')
+            bodyNode.textContent = message
+            setActionsDisabled()
+        }
+
+        const renderVersionBody = () => {
+            if (!selectedVersion) {
+                renderStatus(getI18n('historyNoSelection'))
+                return
+            }
+
+            bodyNode.className = renderMode === 'preview'
+                ? 'note-history-body markdown-body'
+                : 'note-history-body'
+
+            const content = selectedVersion.content || ''
+            if (renderMode === 'preview' && window.renderMarkdown) {
+                triggerRender(bodyNode, content)
+            } else {
+                bodyNode.textContent = content
+            }
+        }
+
+        const renderSelectedVersion = () => {
+            if (!selectedVersion) {
+                renderStatus(getI18n('historyNoSelection'))
+                return
+            }
+            if (titleNode) titleNode.textContent = selectedVersion.title || getI18n('historySelectedVersion')
+            if (metaNode) {
+                metaNode.textContent = formatHistoryTime(selectedVersion.createdAt) + ' · ' + formatHistorySize(selectedVersion.contentLength || selectedVersion.content?.length)
+            }
+            renderVersionBody()
+            setActionsDisabled()
+        }
+
+        const renderList = () => {
+            if (loading) {
+                list.innerHTML = '<p class="share-history-empty">' + getI18n('historyLoading') + '</p>'
+                return
+            }
+            if (!versions.length) {
+                list.innerHTML = '<p class="share-history-empty">' + getI18n('historyEmpty') + '</p>'
+                renderSelectedVersion()
+                return
+            }
+
+            list.innerHTML = ''
+            versions.forEach(version => {
+                const button = document.createElement('button')
+                button.type = 'button'
+                button.className = 'note-history-entry' + (selectedVersionId === version.id ? ' active' : '')
+                button.setAttribute('data-note-history-version-id', String(version.id))
+
+                const title = document.createElement('div')
+                title.className = 'note-history-entry-title'
+                title.textContent = version.title || getI18n('history')
+
+                const preview = document.createElement('div')
+                preview.className = 'note-history-entry-preview'
+                preview.textContent = version.preview || ''
+
+                const meta = document.createElement('div')
+                meta.className = 'note-history-entry-meta'
+                meta.textContent = formatHistoryTime(version.createdAt) + ' · ' + formatHistorySize(version.contentLength)
+
+                button.appendChild(title)
+                if (version.preview) button.appendChild(preview)
+                button.appendChild(meta)
+                button.addEventListener('click', () => selectVersion(version.id))
+                list.appendChild(button)
+            })
+        }
+
+        const fetchVersion = async versionId => {
+            const response = await window.fetch(apiBase() + '/' + encodeURIComponent(versionId))
+            const payload = await response.json()
+            if (payload.err !== 0) throw new Error(payload.msg || 'history fetch failed')
+            return payload.data
+        }
+
+        const selectVersion = async versionId => {
+            selectedVersionId = versionId
+            selectedVersion = null
+            renderList()
+            renderStatus(getI18n('historyLoading'))
+
+            try {
+                const details = await fetchVersion(versionId)
+                const summary = versions.find(item => item.id === versionId) || {}
+                selectedVersion = { ...summary, ...details }
+                renderList()
+                renderSelectedVersion()
+            } catch (error) {
+                selectedVersion = null
+                renderStatus(String(error.message || error), true)
+            }
+        }
+
+        const refreshHistory = async ({ force = false } = {}) => {
+            if (loading) return
+            if (loaded && !force) {
+                renderList()
+                renderSelectedVersion()
+                return
+            }
+
+            let refreshError = null
+            loading = true
+            renderList()
+            renderStatus(getI18n('historyLoading'))
+
+            try {
+                const response = await window.fetch(apiBase())
+                const payload = await response.json()
+                if (payload.err !== 0) throw new Error(payload.msg || 'history list failed')
+
+                versions = Array.isArray(payload.data?.versions) ? payload.data.versions : []
+                loaded = true
+                if (!versions.some(item => item.id === selectedVersionId)) {
+                    selectedVersionId = versions[0]?.id || null
+                    selectedVersion = null
+                }
+            } catch (error) {
+                versions = []
+                loaded = false
+                selectedVersionId = null
+                selectedVersion = null
+                refreshError = error
+            } finally {
+                loading = false
+                renderList()
+                if (refreshError) {
+                    renderStatus(String(refreshError.message || refreshError), true)
+                } else if (selectedVersionId && !selectedVersion) {
+                    selectVersion(selectedVersionId)
+                } else {
+                    renderSelectedVersion()
+                }
+            }
+        }
+
+        const open = () => {
+            modal.style.display = 'block'
+            openBtn.setAttribute('aria-expanded', 'true')
+            refreshHistory()
+        }
+        const close = () => {
+            modal.style.display = 'none'
+            openBtn.setAttribute('aria-expanded', 'false')
+        }
+
+        renderModeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                renderMode = this.getAttribute('data-note-history-render-mode') === 'raw' ? 'raw' : 'preview'
+                renderModeButtons.forEach(other => {
+                    const active = other === this
+                    other.classList.toggle('active', active)
+                    other.setAttribute('aria-pressed', active ? 'true' : 'false')
+                })
+                renderVersionBody()
+            })
+        })
+
+        if (refreshBtn) refreshBtn.addEventListener('click', () => refreshHistory({ force: true }))
+        if (copyBtn) {
+            copyBtn.addEventListener('click', async () => {
+                if (!selectedVersion) return
+                try {
+                    await clipboardCopy(selectedVersion.content || '')
+                    alert(getI18n('historyCopiedContent'))
+                } catch (e) {
+                    alert(getI18n('copyFailed'))
+                }
+            })
+        }
+        if (restoreBtn) {
+            restoreBtn.addEventListener('click', async () => {
+                if (!selectedVersion) return
+                if (!confirm(getI18n('historyRestoreConfirm'))) return
+                try {
+                    const response = await window.fetch(apiBase() + '/' + encodeURIComponent(selectedVersion.id) + '/restore', { method: 'POST' })
+                    const payload = await response.json()
+                    if (payload.err !== 0) throw new Error(payload.msg || 'history restore failed')
+                    if (textarea) {
+                        textarea.value = selectedVersion.content || ''
+                        if (previewMarkdownNode) triggerRender(previewMarkdownNode, textarea.value)
+                        if (previewPlainNode) {
+                            if (window.DOMPurify) {
+                                renderPlain(previewPlainNode, textarea.value)
+                            } else {
+                                previewPlainNode.textContent = textarea.value
+                            }
+                        }
+                    }
+                    loaded = false
+                    selectedVersion = null
+                    await refreshHistory({ force: true })
+                    alert(getI18n('historyRestoreDone'))
+                } catch (error) {
+                    errHandle(error.message || error)
+                }
+            })
+        }
+
+        openBtn.addEventListener('click', open)
+        if (closeBtn) closeBtn.addEventListener('click', close)
+        if (mask) mask.addEventListener('click', close)
+        modal.addEventListener('keydown', e => {
+            if (e.key === 'Escape') close()
+        })
+
+        renderStatus(getI18n('historyNoSelection'))
+    }
+
     const setupShareBackToTop = scrollTarget => {
         const button = document.querySelector('#share-back-to-top')
         if (!button || !scrollTarget || !document.body.classList.contains('share-view')) return;
@@ -747,6 +999,11 @@ ${getMarkdownCss()}
         const $mobileFooterMoreBtn = document.querySelector('#mobile-footer-more-btn')
 
         setupShareHistory()
+        setupNoteHistory({
+            textarea: $textarea,
+            previewMarkdownNode: $previewMd,
+            previewPlainNode: $previewPlain,
+        })
         if ($mobileFooterMoreBtn) {
             $mobileFooterMoreBtn.addEventListener('click', () => {
                 const expanded = !document.body.classList.contains('mobile-footer-expanded')

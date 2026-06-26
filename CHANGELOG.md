@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-06-26 00:00 CST]
+### Added
+- **Independent Note History UI**
+  - Added a separate editor footer "版本 / History" entry when D1 note history is enabled.
+  - Added a dedicated history modal for listing saved versions, viewing preview/raw content, copying an old version, and restoring it into the current editor.
+  - Kept the existing "最近分享 / Recent shares" modal independent so share-link history remains unchanged.
+
 ## [2026-06-25 12:30 CST]
 ### Added
 - **Optional D1 Note History**

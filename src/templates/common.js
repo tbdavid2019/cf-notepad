@@ -34,8 +34,9 @@ export const SWITCHER = (text, open, className = '') => `
 </label>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled }) => {
     const t = getLangText(lang)
+    const showNoteHistory = noteHistoryEnabled === true && isEdit
     const sectionActions = lang === 'zh-TW' ? '操作' : 'Actions'
     const sectionAppearance = lang === 'zh-TW' ? '外觀' : 'Appearance'
     const sectionMeta = lang === 'zh-TW' ? '資訊' : 'Meta'
@@ -68,6 +69,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button id="present-btn" class="opt-button" style="background:#673ab7;color:white;padding:4px 10px;border-radius:4px;font-weight:500;display:flex;align-items:center;gap:4px;" title="${t.presentTitle}">📽️ ${t.present}</button>
                     ` : '')}
                     <button type="button" id="share-history-btn" class="opt-button share-history-trigger" aria-haspopup="dialog" aria-expanded="false">${shareHistoryLabel}</button>
+                    ${showNoteHistory ? `<button type="button" id="note-history-btn" class="opt-button note-history-trigger" aria-haspopup="dialog" aria-expanded="false">${t.history}</button>` : ''}
                     <button type="button" id="mobile-footer-more-btn" class="opt-button mobile-footer-more-trigger" aria-expanded="false" aria-label="${lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'}">...</button>
                 </div>
             </div>
@@ -124,8 +126,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 `
 }
 
-export const MODAL = lang => {
+export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     const t = getLangText(lang)
+    const showNoteHistory = noteHistoryEnabled === true
     return `
 <div class="modal share-modal">
     <div class="modal-mask"></div>
@@ -149,5 +152,33 @@ export const MODAL = lang => {
         <div class="share-history-list" data-share-history-list></div>
     </div>
 </div>
+${showNoteHistory ? `
+<div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title">
+    <div class="modal-mask"></div>
+    <div class="note-history-content">
+        <button type="button" class="close-btn note-history-close" aria-label="${t.later}">x</button>
+        <h2 id="note-history-title">${t.history}</h2>
+        <div class="note-history-toolbar">
+            <div class="segmented-toggle note-history-render-toggle" role="group" aria-label="${t.history}">
+                <button type="button" class="segmented-toggle-btn active" data-note-history-render-mode="preview" aria-pressed="true">${t.historyPreview}</button>
+                <button type="button" class="segmented-toggle-btn" data-note-history-render-mode="raw" aria-pressed="false">${t.historyRaw}</button>
+            </div>
+            <button type="button" class="share-history-copy" data-note-history-refresh>${t.historyRefresh}</button>
+            <button type="button" class="share-history-copy" data-note-history-copy disabled>${t.historyCopyContent}</button>
+            <button type="button" class="opt-button" data-note-history-restore disabled>${t.historyRestore}</button>
+        </div>
+        <div class="note-history-layout">
+            <div class="note-history-list" data-note-history-list></div>
+            <section class="note-history-viewer">
+                <header class="note-history-viewer-header">
+                    <strong data-note-history-title>${t.historyNoSelection}</strong>
+                    <span data-note-history-meta></span>
+                </header>
+                <div class="note-history-body" data-note-history-body>${t.historyNoSelection}</div>
+            </section>
+        </div>
+    </div>
+</div>
+` : ''}
 `
 }
