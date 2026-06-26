@@ -171,12 +171,6 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .footer-section-meta {
     flex: 0 0 auto;
 }
-.footer-section-label {
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0;
-    color: #6b7280;
-}
 .footer-section-body {
     display: flex;
     align-items: center;
@@ -1044,11 +1038,7 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     }
 
     .footer-section {
-        padding: 6px 8px;
-    }
-
-    .footer-section-label {
-        font-size: 10px;
+        padding: 4px 8px 4px 0;
     }
 
     body.share-view #preview-md,
@@ -1089,6 +1079,14 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         width: 100%;
         flex-wrap: wrap;
         align-items: flex-start;
+        border-right: 0;
+        border-bottom: 1px solid #d8dee4;
+        padding: 5px 0 8px;
+    }
+
+    body.share-view .footer-section:last-child {
+        border-bottom: 0;
+        padding-bottom: 0;
     }
 
     body.share-view:not(.mobile-footer-expanded) .footer-section-appearance,
@@ -1097,11 +1095,7 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     }
 
     body.share-view .footer-section-actions {
-        padding: 5px 7px;
-    }
-
-    body.share-view .footer-section-actions .footer-section-label {
-        display: none;
+        padding: 0 0 5px;
     }
 
     body.share-view .footer-section-body {
