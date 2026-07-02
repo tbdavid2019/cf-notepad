@@ -962,7 +962,7 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-            const { mode, share, theme } = await request.json()
+            const { mode, share, theme, width, shareFont, previewDevice } = await request.json()
 
             const { value, metadata } = await queryNote(path)
             const { valid } = await checkAuth(cookie, path)
@@ -975,6 +975,9 @@ router.post('/:path/setting', async request => {
                             ...mode !== undefined && { mode },
                             ...share !== undefined && { share },
                             ...theme !== undefined && { theme },
+                            ...width !== undefined && { width },
+                            ...shareFont !== undefined && { shareFont },
+                            ...previewDevice !== undefined && { previewDevice },
                         },
                     })
 

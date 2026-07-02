@@ -41,6 +41,7 @@ const PUBLISH_NUDGE_MODAL = lang => {
 
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
+    const initialShareFont = ext.shareFont === 'maple' ? 'maple' : 'jetbrains'
     const ogSiteNameMeta = ext.meta?.siteName === false
         ? ''
         : `<meta property="og:site_name" content="${escapeHtml(ext.meta?.siteName || APP_NAME)}" />`
@@ -176,7 +177,7 @@ ${getMarkdownCss()}
     <link rel="apple-touch-icon" href="${PUBLIC_ICON_PNG_URL}" />
     ${gaScript}
 </head>
-<body class="${ext.sharePath && !isEdit ? 'share-view share-font-jetbrains' : ''}">
+<body class="${ext.sharePath && !isEdit ? `share-view share-font-${initialShareFont}` : ''}">
     <div class="note-container">
         <div class="stack">
             <div class="layer_1">
@@ -501,11 +502,17 @@ ${getMarkdownCss()}
         authPath: ext.authPath || '',
         sharePath: ext.sharePath || '',
         presentationPath: ext.presentationPath || '',
+        settingPath: ext.settingPath || (path ? '/' + path + '/setting' : ''),
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
         isPublished: ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
+        noteSettings: {
+            width: ext.width || '',
+            shareFont: ext.shareFont || '',
+            previewDevice: ext.previewDevice || '',
+        },
         lang,
         title: title || '',
         i18n: getLangText(lang),
@@ -524,7 +531,19 @@ ${getMarkdownCss()}
 
     const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
 
-    const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
+        const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
+        const getSettingPath = () => APP_STATE.settingPath || (location.pathname + '/setting')
+        const persistSetting = async nextSettings => {
+            const response = await window.fetch(getSettingPath(), {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(nextSettings),
+            })
+            const payload = await response.json()
+            if (payload.err !== 0) throw new Error(payload.msg || 'setting update failed')
+            APP_STATE.noteSettings = { ...APP_STATE.noteSettings, ...nextSettings }
+            return payload
+        }
 
     const rememberPresentationDestination = () => {
         if (!APP_STATE.presentationEntry) return ''
@@ -1353,33 +1372,38 @@ ${getMarkdownCss()}
         }
 
         function applyShareFont(value) {
-            if (!shareViewBody.classList.contains('share-view')) return;
             const shareFont = value === 'maple' ? 'maple' : 'jetbrains';
-            shareViewBody.classList.toggle('share-font-jetbrains', shareFont === 'jetbrains');
-            shareViewBody.classList.toggle('share-font-maple', shareFont === 'maple');
+            if (shareViewBody.classList.contains('share-view')) {
+                shareViewBody.classList.toggle('share-font-jetbrains', shareFont === 'jetbrains');
+                shareViewBody.classList.toggle('share-font-maple', shareFont === 'maple');
+            }
             setSegmentedActive(shareFontSelector, 'data-share-font', shareFont);
         }
 
         const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
-        applyPreviewWidth(savedPreviewWidth || '100%');
+        const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || '100%';
+        applyPreviewWidth(initialPreviewWidth);
 
         if (previewDeviceSelector) {
             const savedPreviewDevice = window.localStorage.getItem(PREVIEW_DEVICE_STORAGE_KEY);
-            applyPreviewDevice(savedPreviewDevice || 'desktop');
+            const initialPreviewDevice = APP_STATE.noteSettings.previewDevice || savedPreviewDevice || 'desktop';
+            applyPreviewDevice(initialPreviewDevice);
             previewDeviceSelector.querySelectorAll('[data-preview-device]').forEach(button => {
                 button.addEventListener('click', function() {
                     const device = this.getAttribute('data-preview-device') === 'mobile' ? 'mobile' : 'desktop';
                     applyPreviewDevice(device);
                     window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
+                    persistSetting({ previewDevice: device }).catch(err => errHandle(err.message || err));
                 });
             });
         }
 
-        if (shareViewBody.classList.contains('share-view')) {
+        if (shareViewBody.classList.contains('share-view') || shareFontSelector) {
             const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
-            const initialShareFont = savedShareFont === 'maple' || savedShareFont === 'true'
+            const initialShareFont = APP_STATE.noteSettings.shareFont
+                || (savedShareFont === 'maple' || savedShareFont === 'true'
                 ? 'maple'
-                : 'jetbrains';
+                : 'jetbrains');
             applyShareFont(initialShareFont);
         }
 
@@ -1388,6 +1412,7 @@ ${getMarkdownCss()}
                 const width = this.value;
                 applyPreviewWidth(width);
                 window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
+                persistSetting({ width }).catch(err => errHandle(err.message || err));
             });
         }
 
@@ -1401,6 +1426,7 @@ ${getMarkdownCss()}
                     const shareFont = this.getAttribute('data-share-font') === 'maple' ? 'maple' : 'jetbrains';
                     applyShareFont(shareFont);
                     window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
+                    persistSetting({ shareFont }).catch(err => errHandle(err.message || err));
                 });
             });
         }
@@ -1409,7 +1435,7 @@ ${getMarkdownCss()}
             themeSelector.addEventListener('change', function() {
                 const theme = this.value;
                 themeStyleNode.textContent = THEMES[theme];
-                fetch(location.pathname + '/setting', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ theme }) });
+                persistSetting({ theme }).catch(err => errHandle(err.message || err));
             });
         }
     </script>

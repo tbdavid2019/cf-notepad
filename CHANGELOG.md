@@ -1,5 +1,17 @@
 # Changelog
 
+## [2026-07-02 00:00 CST]
+### Fixed
+- **Share Appearance Settings Now Persist Per Note**
+  - Persisted `Width`, `J / M` share font, and editor `Desktop / Mobile` preview device into note metadata instead of leaving them only in browser localStorage.
+  - Shared notes now initialize width and font from the note's saved metadata, so other viewers see the same appearance choices.
+  - Added metadata-aware fallback logic so older notes can still fall back to existing browser localStorage values until they are re-saved.
+
+### Changed
+- **Appearance Controls Save Through Canonical Note Settings**
+  - Share/footer appearance controls now save through the note's canonical `/:path/setting` route when a backing note path is available.
+  - Exposed the `J / M` share-font selector in the editor footer as well, so editors can set the shared reader font before distributing the share URL.
+
 ## [2026-06-26 00:00 CST]
 ### Added
 - **Independent Note History UI**

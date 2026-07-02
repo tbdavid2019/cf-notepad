@@ -75,7 +75,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 
             <div class="footer-section footer-section-appearance">
                 <div class="footer-section-body">
-                    ${sharePath ? `
+                    ${(sharePath || isEdit) ? `
                         <div id="share-font-selector" class="segmented-toggle share-font-toggle" role="group" aria-label="${shareFontAriaLabel}" title="${shareFontAriaLabel}">
                             <button type="button" class="segmented-toggle-btn active" data-share-font="jetbrains" aria-pressed="true" title="${jetbrainsTitle}" aria-label="${jetbrainsTitle}">J</button>
                             <button type="button" class="segmented-toggle-btn" data-share-font="maple" aria-pressed="false" title="${mapleTitle}" aria-label="${mapleTitle}">M</button>
