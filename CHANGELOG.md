@@ -12,10 +12,15 @@
   - Added `/auth.md` as a markdown agent-auth guidance document.
   - Added markdown content negotiation for note/share pages that already have raw markdown sources, returning `text/markdown` when `Accept: text/markdown` is sent.
   - Added guarded browser-side WebMCP tool registration for reading the current markdown, copying share links, and opening presentation mode.
+  - Added a note-level `publicIndex` metadata flag for future sitemap inclusion decisions.
 
 ### Changed
 - **Homepage Discovery Headers**
   - Added `Link` response headers on `/` advertising `api-catalog`, `service-doc`, and `service-desc` resources for automated agent discovery.
+- **Share Publishing UI**
+  - Removed the redundant `Published:` prefix from the published share URL area.
+  - Reused the published-toolbar space for a sitemap opt-in control that toggles whether a shared note should join the future public index.
+  - Added a post-publish prompt asking whether the new share link should be added to the public index, with a default private state and an explicit approval action.
 
 ### Fixed
 - **robots.txt Coverage**

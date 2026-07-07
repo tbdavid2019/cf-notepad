@@ -19,6 +19,7 @@
 - **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
 - **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
 - **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
+- **公開索引 Opt-In**：分享連結建立後，系統會額外詢問是否加入公開索引；預設不加入，只有明確同意的分享才會標記為可進入未來的 `sitemap.xml`。
 - **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
 - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
 - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
@@ -53,6 +54,7 @@
   - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
   - 對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown` 內容協商，agent 可直接拿到 `text/markdown` 而不是 HTML。
   - 站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler（如 `GPTBot`、`OAI-SearchBot`、`Claude-Web`、`Google-Extended`）的明確 `Allow` / `Disallow` 規則，並加入 `Content-Signal` 偏好宣告。
+  - 只有使用者在分享後明確同意加入公開索引的頁面，才會被標記為後續可納入 `sitemap.xml` 的候選；未分享或未同意的筆記不會因 sitemap 設計被額外曝光。
   - 首頁 `/` 會輸出 `Link` response headers，指向 `/.well-known/api-catalog`、`/docs/api`、`/openapi.json` 以利 agent discovery。
   - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`，支援 API、Auth 與 Agent Skills 的標準化發現流程。
   - 在支援的瀏覽器中會保守註冊 WebMCP tools，讓 agent 可讀取當前 markdown、複製 share link、或切到簡報模式。
