@@ -510,6 +510,7 @@ ${getMarkdownCss()}
         isEdit: isEdit === true,
         isPublished: ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
+        publicIndex: ext.publicIndex === true,
         noteSettings: {
             width: ext.width || '',
             shareFont: ext.shareFont || '',
@@ -1079,8 +1080,11 @@ ${getMarkdownCss()}
         const $previewMd = document.querySelector('#preview-md')
         const $shareModal = document.querySelector('.share-modal')
         const $closeBtn = document.querySelector('.share-modal .close-btn')
-        const $copyBtn = document.querySelector('.share-modal .opt-button')
+        const $copyBtn = document.querySelector('.share-modal-copy-btn')
         const $shareInput = document.querySelector('.share-modal input')
+        const $shareIndexPrompt = document.querySelector('.share-index-prompt')
+        const $shareIndexApprove = document.querySelector('.share-index-approve')
+        const $shareIndexDecline = document.querySelector('.share-index-decline')
         const $languageSelector = document.querySelector('#language-selector')
         const $publishNudgeModal = document.querySelector('.publish-nudge-modal')
         const $publishNudgePublish = document.querySelector('.publish-nudge-publish')
@@ -1108,7 +1112,34 @@ ${getMarkdownCss()}
         const showShareModal = (shareId) => {
             if (!$shareModal || !$shareInput || !shareId) return;
             $shareInput.value = window.location.origin + '/share/' + shareId;
+            if ($shareIndexPrompt) {
+                $shareIndexPrompt.style.display = APP_STATE.publicIndex ? 'none' : 'flex';
+            }
             $shareModal.style.display = 'block';
+        }
+
+        const setPublicIndex = async enabled => {
+            const response = await window.fetch(window.location.pathname + '/setting', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ publicIndex: enabled })
+            })
+            const payload = await response.json()
+            if (payload.err !== 0) throw new Error(payload.msg || 'public index update failed')
+            APP_STATE.publicIndex = enabled === true
+            return payload
+        }
+
+        const syncPublicIndexButton = () => {
+            const button = document.querySelector('#public-index-btn')
+            if (!button) return
+            const enabled = APP_STATE.publicIndex === true
+            button.dataset.publicIndex = enabled ? 'true' : 'false'
+            button.textContent = enabled ? getI18n('publicIndexOn') : getI18n('publicIndexOff')
+            button.classList.toggle('opt-button-accent', enabled)
+            const label = enabled ? getI18n('publicIndexDisable') : getI18n('publicIndexEnable')
+            button.title = label
+            button.setAttribute('aria-label', label)
         }
 
         const publishCurrentNote = () => {
@@ -1127,6 +1158,7 @@ ${getMarkdownCss()}
                     APP_STATE.isPublished = true;
                     if ($shareBtn) $shareBtn.checked = true;
                     recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
+                    syncPublicIndexButton();
                     showShareModal(res.data);
                     return true;
                 })
@@ -1309,6 +1341,7 @@ ${getMarkdownCss()}
         const $shareUrlInput = document.querySelector('.share-url-input');
         const $shareCopyBtn = document.querySelector('#copy-share-btn');
         const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
+        const $publicIndexBtn = document.querySelector('#public-index-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         if ($shareUrlInput && $shareCopyBtn) {
             try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
@@ -1322,6 +1355,19 @@ ${getMarkdownCss()}
                 const presentationUrl = ($shareUrlInput.value || '') + '/present';
                 try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });
+        }
+        if ($publicIndexBtn) {
+            syncPublicIndexButton();
+            $publicIndexBtn.addEventListener('click', async () => {
+                const nextValue = APP_STATE.publicIndex !== true
+                try {
+                    await setPublicIndex(nextValue)
+                    syncPublicIndexButton()
+                    alert(getI18n(nextValue ? 'publicIndexUpdatedOn' : 'publicIndexUpdatedOff'))
+                } catch (error) {
+                    errHandle(error.message || error)
+                }
+            })
         }
         if ($unpublishBtn) {
             $unpublishBtn.addEventListener('click', () => {
@@ -1352,6 +1398,22 @@ ${getMarkdownCss()}
                 const originText = $copyBtn.innerHTML; const originColor = $copyBtn.style.background;
                 $copyBtn.innerHTML = getI18n('copied'); $copyBtn.style.background = 'orange';
                 window.setTimeout(() => { $shareModal.style.display = 'none'; $copyBtn.innerHTML = originText; $copyBtn.style.background = originColor; }, 1500)
+            }
+            if ($shareIndexApprove) {
+                $shareIndexApprove.onclick = async function () {
+                    try {
+                        await setPublicIndex(true)
+                        syncPublicIndexButton()
+                        if ($shareIndexPrompt) $shareIndexPrompt.style.display = 'none'
+                    } catch (error) {
+                        errHandle(error.message || error)
+                    }
+                }
+            }
+            if ($shareIndexDecline) {
+                $shareIndexDecline.onclick = function () {
+                    if ($shareIndexPrompt) $shareIndexPrompt.style.display = 'none'
+                }
             }
         }
 

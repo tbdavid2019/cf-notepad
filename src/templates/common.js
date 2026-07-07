@@ -34,7 +34,7 @@ export const SWITCHER = (text, open, className = '') => `
 </label>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex }) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true && isEdit
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
@@ -44,6 +44,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const copyShareTitle = lang === 'zh-TW' ? '複製分享連結' : 'Copy share link'
     const copyPresentTitle = lang === 'zh-TW' ? '複製簡報連結' : 'Copy presentation link'
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
+    const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
     return `
     <div class="footer">
         <div class="footer-sections">
@@ -55,8 +56,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
                         ${share && shareId ? `
                             <div class="opt-share-link">
-                                <span class="publish-status">✓ ${t.published}</span>
                                 <input class="share-url-input" readonly value="/share/${shareId}" onclick="this.select()" aria-label="${t.published}">
+                                <button id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" title="${publicIndexTitle}" aria-label="${publicIndexTitle}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
                                 <button id="copy-share-btn" class="toolbar-icon-button" title="${copyShareTitle}" aria-label="${copyShareTitle}">⧉</button>
                                 <button id="copy-present-share-btn" class="toolbar-icon-button" title="${copyPresentTitle}" aria-label="${copyPresentTitle}">▶</button>
                                 <button class="toolbar-icon-button toolbar-danger-button unpublish-btn" title="${unpublishTitle}" aria-label="${unpublishTitle}">×</button>
@@ -133,7 +134,15 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <span class="close-btn">x</span>
         <div class="modal-body">
             <input type="text" readonly value="" />
-            <button class="opt-button">${t.copy}</button>
+            <button class="opt-button share-modal-copy-btn">${t.copy}</button>
+            <div class="share-index-prompt">
+                <strong>${t.publicIndexPromptTitle}</strong>
+                <p>${t.publicIndexPromptText}</p>
+                <div class="share-index-actions">
+                    <button type="button" class="opt-button opt-button-accent share-index-approve">${t.publicIndexPromptApprove}</button>
+                    <button type="button" class="opt-button share-index-decline">${t.publicIndexPromptDecline}</button>
+                </div>
+            </div>
         </div>
     </div>
 </div>

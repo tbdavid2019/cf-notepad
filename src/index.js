@@ -861,6 +861,9 @@ router.post('/api/:path', async (request) => {
         const publicValue = parseBooleanValue(url.searchParams.get('public'))
         if (publicValue !== undefined) reqBody.public = publicValue
 
+        const publicIndex = parseBooleanValue(url.searchParams.get('publicIndex'))
+        if (publicIndex !== undefined) reqBody.publicIndex = publicIndex
+
         const theme = url.searchParams.get('theme')
         if (theme !== null) reqBody.theme = theme
 
@@ -891,6 +894,9 @@ router.post('/api/:path', async (request) => {
 
         const publicValue = parseBooleanValue(readStringField(formData.get('public')))
         if (publicValue !== undefined) reqBody.public = publicValue
+
+        const publicIndex = parseBooleanValue(readStringField(formData.get('publicIndex')))
+        if (publicIndex !== undefined) reqBody.publicIndex = publicIndex
 
         const theme = readStringField(formData.get('theme'))
         if (theme !== undefined) reqBody.theme = theme
@@ -933,6 +939,14 @@ router.post('/api/:path', async (request) => {
 
     if (reqBody.theme !== undefined) {
         updateMetadata.theme = reqBody.theme
+    }
+
+    if (reqBody.publicIndex !== undefined) {
+        updateMetadata.publicIndex = reqBody.publicIndex === true
+    }
+
+    if (updateMetadata.share === false) {
+        updateMetadata.publicIndex = false
     }
 
     try {
@@ -1189,23 +1203,30 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-            const { mode, share, theme, width, shareFont, previewDevice } = await request.json()
+            const { mode, share, theme, width, shareFont, previewDevice, publicIndex } = await request.json()
 
             const { value, metadata } = await queryNote(path)
             const { valid } = await checkAuth(cookie, path)
 
             if (!metadata.pw || valid) {
                 try {
+                    const nextMetadata = {
+                        ...metadata,
+                        ...mode !== undefined && { mode },
+                        ...share !== undefined && { share },
+                        ...theme !== undefined && { theme },
+                        ...width !== undefined && { width },
+                        ...shareFont !== undefined && { shareFont },
+                        ...previewDevice !== undefined && { previewDevice },
+                        ...publicIndex !== undefined && { publicIndex: publicIndex === true },
+                    }
+
+                    if (share === false) {
+                        nextMetadata.publicIndex = false
+                    }
+
                     await getNotesNamespace().put(path, value, {
-                        metadata: {
-                            ...metadata,
-                            ...mode !== undefined && { mode },
-                            ...share !== undefined && { share },
-                            ...theme !== undefined && { theme },
-                            ...width !== undefined && { width },
-                            ...shareFont !== undefined && { shareFont },
-                            ...previewDevice !== undefined && { previewDevice },
-                        },
+                        metadata: nextMetadata,
                     })
 
                     const md5 = await MD5(path)

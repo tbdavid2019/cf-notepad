@@ -79,6 +79,28 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
 .modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
+.share-index-prompt {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 6px;
+}
+.share-index-prompt strong {
+    color: #24292f;
+    font-size: 14px;
+    line-height: 1.45;
+}
+.share-index-prompt p {
+    margin: 0;
+    color: #57606a;
+    font-size: 12px;
+    line-height: 1.55;
+}
+.share-index-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+}
 .publish-nudge-content {
     position: fixed;
     top: 50%;
@@ -355,8 +377,8 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     line-height: 1;
 }
 .share-url-input {
-    width: 210px;
-    min-width: 150px;
+    width: 186px;
+    min-width: 132px;
     height: calc(var(--toolbar-height) - 2px);
     border: 0;
     background: transparent;
@@ -365,6 +387,11 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-size: 12px;
     font-weight: 650;
     outline: none;
+}
+.public-index-btn {
+    min-width: 68px;
+    padding: 0 8px;
+    font-size: 11px;
 }
 .share-font-toggle .segmented-toggle-btn {
     min-width: 28px;
