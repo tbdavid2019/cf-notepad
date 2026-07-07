@@ -2,6 +2,7 @@ const AGENT_SKILL_NAME = 'david888-wiki-publisher'
 const AGENT_SKILL_PATH = `/.well-known/agent-skills/${AGENT_SKILL_NAME}/SKILL.md`
 const API_CATALOG_PATH = '/.well-known/api-catalog'
 const API_DOCS_PATH = '/docs/api'
+const AUTH_MD_PATH = '/auth.md'
 const OPENAPI_PATH = '/openapi.json'
 const API_HEALTH_PATH = '/api/health'
 const AGENT_SKILLS_INDEX_PATH = '/.well-known/agent-skills/index.json'
@@ -166,6 +167,36 @@ Successful writes return both:
 Agents should return \`shareUrl\` to humans when public viewing is intended.
 `
 
+export const AUTH_MD_MARKDOWN = `# Auth
+
+This service exposes note publishing and reading APIs for agents.
+
+## Supported Access Modes
+
+- Public note APIs can be used without OAuth when the target note is not password-protected.
+- Protected note reads support \`Authorization: Bearer <password>\` or \`?pw=<password>\`.
+- Protected note edits use the same note-level password model.
+
+## Current Limitations
+
+- This domain does not currently offer OAuth client registration for agents.
+- This domain does not currently publish OpenID Connect or OAuth authorization server metadata for agent login flows.
+- Access control is note-scoped and password-based rather than tenant-wide OAuth.
+
+## Discovery Links
+
+- API catalog: \`/.well-known/api-catalog\`
+- API docs: \`/docs/api\`
+- OpenAPI description: \`/openapi.json\`
+- Agent skill: \`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md\`
+
+## Practical Guidance
+
+- Use public share URLs for human-facing read-only access.
+- Use the REST API for agent writes and reads.
+- If a protected note returns \`401\` or \`403\`, request the note password from the user.
+`
+
 export function getDiscoveryLinks() {
     return [
         { href: API_CATALOG_PATH, rel: 'api-catalog' },
@@ -186,8 +217,10 @@ export function applyDiscoveryHeaders(headers) {
 export function buildRobotsTxt() {
     return [
         'User-agent: *',
+        'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
         'Allow: /api/health',
@@ -196,9 +229,11 @@ export function buildRobotsTxt() {
         'Disallow: /upload',
         '',
         'User-agent: GPTBot',
+        'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
         'Allow: /api/health',
@@ -206,8 +241,10 @@ export function buildRobotsTxt() {
         'Disallow: /',
         '',
         'User-agent: OAI-SearchBot',
+        'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
+        'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
         'Allow: /api/health',
@@ -215,9 +252,11 @@ export function buildRobotsTxt() {
         'Disallow: /',
         '',
         'User-agent: Claude-Web',
+        'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
         'Allow: /api/health',
@@ -225,8 +264,10 @@ export function buildRobotsTxt() {
         'Disallow: /',
         '',
         'User-agent: Google-Extended',
+        'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
+        'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
         'Allow: /api/health',
@@ -372,6 +413,34 @@ export function buildOpenApiDocument(origin) {
     }
 }
 
+export function requestAcceptsMarkdown(request) {
+    const accept = String(request.headers.get('Accept') || '').toLowerCase()
+    return accept.includes('text/markdown')
+}
+
+function yamlScalar(value) {
+    return JSON.stringify(String(value || ''))
+}
+
+export function buildMarkdownDocument(markdown, metadata = {}) {
+    const fields = Object.entries(metadata).filter(([, value]) => value !== undefined && value !== null && value !== '')
+    if (fields.length === 0) return String(markdown || '')
+
+    const frontmatter = fields
+        .map(([key, value]) => `${key}: ${yamlScalar(value)}`)
+        .join('\n')
+
+    return `---\n${frontmatter}\n---\n\n${String(markdown || '')}`
+}
+
+export function createMarkdownResponse(markdown, extraHeaders = {}) {
+    return createDiscoveryResponse(
+        markdown,
+        'text/markdown; charset=UTF-8',
+        extraHeaders,
+    )
+}
+
 export function buildApiCatalog(origin) {
     return {
         linkset: [
@@ -443,6 +512,7 @@ export function getDiscoveryConstants() {
         API_CATALOG_PATH,
         API_CATALOG_PROFILE,
         API_DOCS_PATH,
+        AUTH_MD_PATH,
         API_HEALTH_PATH,
         OPENAPI_PATH,
     }

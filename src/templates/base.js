@@ -503,6 +503,8 @@ ${getMarkdownCss()}
         sharePath: ext.sharePath || '',
         presentationPath: ext.presentationPath || '',
         settingPath: ext.settingPath || (path ? '/' + path + '/setting' : ''),
+        path: path || '',
+        shareId: shareId || '',
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
@@ -530,6 +532,75 @@ ${getMarkdownCss()}
     }
 
     const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
+
+    const initWebMcp = () => {
+        const provideContext = navigator.modelContext && navigator.modelContext.provideContext
+        if (typeof provideContext !== 'function') return
+
+        const getCurrentMarkdown = () => {
+            const textarea = document.getElementById('contents')
+            if (textarea && !textarea.classList.contains('hide')) return textarea.value || ''
+
+            const article = document.getElementById('bot-accessible-content')
+            return article ? (article.textContent || '') : ''
+        }
+
+        const tools = [
+            {
+                name: 'read-current-markdown',
+                description: 'Return the current note or share page markdown content.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {},
+                    additionalProperties: false,
+                },
+                execute: async () => ({
+                    markdown: getCurrentMarkdown(),
+                    title: APP_STATE.title || document.title || '',
+                    path: APP_STATE.path || '',
+                    sharePath: APP_STATE.sharePath || '',
+                }),
+            },
+        ]
+
+        if (APP_STATE.sharePath) {
+            tools.push({
+                name: 'copy-share-link',
+                description: 'Copy the current note share URL to the clipboard and return it.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {},
+                    additionalProperties: false,
+                },
+                execute: async () => {
+                    const shareUrl = window.location.origin + APP_STATE.sharePath
+                    await clipboardCopy(shareUrl)
+                    return { shareUrl }
+                },
+            })
+        }
+
+        if (APP_STATE.presentationPath) {
+            tools.push({
+                name: 'open-presentation',
+                description: 'Open the current shared note in presentation mode.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {},
+                    additionalProperties: false,
+                },
+                execute: async () => {
+                    const presentationUrl = window.location.origin + APP_STATE.presentationPath
+                    window.location.href = presentationUrl
+                    return { presentationUrl }
+                },
+            })
+        }
+
+        Promise.resolve(provideContext.call(navigator.modelContext, { tools })).catch(error => {
+            console.warn('WebMCP context registration failed:', error)
+        })
+    }
 
         const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
         const getSettingPath = () => APP_STATE.settingPath || (location.pathname + '/setting')
@@ -1438,6 +1509,8 @@ ${getMarkdownCss()}
                 persistSetting({ theme }).catch(err => errHandle(err.message || err));
             });
         }
+
+        initWebMcp()
     </script>
     <div id="presentation-container"></div>
     \u003cscript\u003e

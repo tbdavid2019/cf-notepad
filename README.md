@@ -51,9 +51,11 @@
 - **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
   - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
-  - 站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler（如 `GPTBot`、`OAI-SearchBot`、`Claude-Web`、`Google-Extended`）的明確 `Allow` / `Disallow` 規則。
+  - 對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown` 內容協商，agent 可直接拿到 `text/markdown` 而不是 HTML。
+  - 站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler（如 `GPTBot`、`OAI-SearchBot`、`Claude-Web`、`Google-Extended`）的明確 `Allow` / `Disallow` 規則，並加入 `Content-Signal` 偏好宣告。
   - 首頁 `/` 會輸出 `Link` response headers，指向 `/.well-known/api-catalog`、`/docs/api`、`/openapi.json` 以利 agent discovery。
-  - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json` 與 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，支援 API 與 Agent Skills 的標準化發現流程。
+  - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`，支援 API、Auth 與 Agent Skills 的標準化發現流程。
+  - 在支援的瀏覽器中會保守註冊 WebMCP tools，讓 agent 可讀取當前 markdown、複製 share link、或切到簡報模式。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
   - 演示模式使用較緊湊的標題級距，避免長中文 `H1 / H2` 佔滿投影片。
@@ -112,10 +114,14 @@ Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, 
   - 回傳 Agent Skills Discovery v0.2.0 index。
 - `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`
   - 回傳可直接被 agent 載入的技能說明。
+- `GET /auth.md`
+  - 回傳目前站點支援的 agent / API 存取方式說明。
 - `GET /robots.txt`
-  - 回傳明確的搜尋引擎與 AI crawler 規則。
+  - 回傳明確的搜尋引擎與 AI crawler 規則，以及 `Content-Signal` 偏好。
 - `HEAD /`
   - 會帶出 `Link` headers，指向 API catalog 與 API docs / OpenAPI 描述。
+- `GET /share/...` 或 `GET /:path` 搭配 `Accept: text/markdown`
+  - 若該頁本身具備原始 markdown，則直接回傳 `text/markdown` 給 agent。
 
 ---
 

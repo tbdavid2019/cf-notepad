@@ -8,6 +8,10 @@
 - **Agent Skills Discovery Index**
   - Added `/.well-known/agent-skills/index.json` using the Agent Skills Discovery v0.2.0 schema.
   - Added a published skill artifact at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
+- **Agent-Oriented Markdown Discovery**
+  - Added `/auth.md` as a markdown agent-auth guidance document.
+  - Added markdown content negotiation for note/share pages that already have raw markdown sources, returning `text/markdown` when `Accept: text/markdown` is sent.
+  - Added guarded browser-side WebMCP tool registration for reading the current markdown, copying share links, and opening presentation mode.
 
 ### Changed
 - **Homepage Discovery Headers**
@@ -17,6 +21,7 @@
 - **robots.txt Coverage**
   - Added a plain-text `/robots.txt` route served by the Worker.
   - Published explicit `User-agent` rules for `GPTBot`, `OAI-SearchBot`, `Claude-Web`, and `Google-Extended`, alongside default crawler rules for key public and private paths.
+  - Added `Content-Signal: ai-train=no, search=yes, ai-input=no` directives to declare AI content preferences.
 
 ## [2026-07-02 00:00 CST]
 ### Fixed

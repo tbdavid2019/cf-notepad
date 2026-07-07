@@ -10,14 +10,18 @@ import { extractNoteDescription, extractNoteTitle } from './note_meta'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
+    AUTH_MD_MARKDOWN,
     API_DOCS_MARKDOWN,
     applyDiscoveryHeaders,
+    buildMarkdownDocument,
     buildAgentSkillsIndex,
     buildApiCatalog,
     buildOpenApiDocument,
     buildRobotsTxt,
+    createMarkdownResponse,
     createDiscoveryResponse,
     getDiscoveryConstants,
+    requestAcceptsMarkdown,
 } from './discovery.mjs'
 import {
     getNoteHistoryConfig,
@@ -37,6 +41,7 @@ const {
     API_CATALOG_PATH,
     API_CATALOG_PROFILE,
     API_DOCS_PATH,
+    AUTH_MD_PATH,
     API_HEALTH_PATH,
     OPENAPI_PATH,
 } = getDiscoveryConstants()
@@ -442,6 +447,20 @@ async function renderSharePage(request, presentationMode = false) {
         const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
         const description = extractNoteDescription(value, title)
         const canonicalPath = presentationMode ? presentationPath : sharePath
+        const canonicalUrl = `${origin}${canonicalPath}`
+
+        if (requestAcceptsMarkdown(request)) {
+            return createMarkdownResponse(
+                buildMarkdownDocument(value, {
+                    title,
+                    description,
+                    canonical_url: canonicalUrl,
+                    share_url: `${origin}${sharePath}`,
+                    presentation_url: presentationMode ? canonicalUrl : `${origin}${presentationPath}`,
+                    note_path: path,
+                }),
+            )
+        }
 
         return returnPage('Share', {
             lang,
@@ -456,7 +475,7 @@ async function renderSharePage(request, presentationMode = false) {
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
                 meta: {
-                    canonicalUrl: `${origin}${canonicalPath}`,
+                    canonicalUrl,
                     description,
                     ogImageUrl: `${origin}/og-image.png`,
                     ogType: 'article',
@@ -533,6 +552,16 @@ router.get(API_DOCS_PATH, () => createDiscoveryResponse(
 
 router.head(API_DOCS_PATH, () => createDiscoveryResponse(
     API_DOCS_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.get(AUTH_MD_PATH, () => createDiscoveryResponse(
+    AUTH_MD_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.head(AUTH_MD_PATH, () => createDiscoveryResponse(
+    AUTH_MD_MARKDOWN,
     'text/markdown; charset=UTF-8',
 ))
 
@@ -957,6 +986,17 @@ router.get('/:path', async (request) => {
     const noteExists = value !== '' || Object.keys(metadata).length > 0
 
     if (!metadata.pw) {
+        if (requestAcceptsMarkdown(request)) {
+            return createMarkdownResponse(
+                buildMarkdownDocument(value, {
+                    title,
+                    note_path: path,
+                    edit_url: `${new URL(request.url).origin}/${path}`,
+                    share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
+                }),
+            )
+        }
+
         return returnPage('Edit', {
             lang,
             title,
@@ -970,6 +1010,17 @@ router.get('/:path', async (request) => {
     // Strict Mode: Edit Page only allows Edit Role
     const { valid, role } = await checkAuth(cookie, path)
     if (valid && role === 'edit') {
+        if (requestAcceptsMarkdown(request)) {
+            return createMarkdownResponse(
+                buildMarkdownDocument(value, {
+                    title,
+                    note_path: path,
+                    edit_url: `${new URL(request.url).origin}/${path}`,
+                    share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
+                }),
+            )
+        }
+
         return returnPage('Edit', {
             lang,
             title,
@@ -998,6 +1049,17 @@ router.head('/:path', async (request) => {
     }
 
     if (!metadata.pw) {
+        if (requestAcceptsMarkdown(request)) {
+            return createMarkdownResponse(
+                buildMarkdownDocument(value, {
+                    title,
+                    note_path: path,
+                    edit_url: `${new URL(request.url).origin}/${path}`,
+                    share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
+                }),
+            )
+        }
+
         const lang = getI18n(request)
         return returnPage('Edit', {
             lang,
@@ -1013,6 +1075,17 @@ router.head('/:path', async (request) => {
     const { valid, role } = await checkAuth(cookie, path)
 
     if (valid && role === 'edit') {
+        if (requestAcceptsMarkdown(request)) {
+            return createMarkdownResponse(
+                buildMarkdownDocument(value, {
+                    title,
+                    note_path: path,
+                    edit_url: `${new URL(request.url).origin}/${path}`,
+                    share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
+                }),
+            )
+        }
+
         return returnPage('Edit', {
             lang,
             title,
