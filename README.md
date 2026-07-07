@@ -8,69 +8,61 @@
 
 ## 功能特色
 
-- **輕量快速**：基於 Cloudflare Edge Network，全球存取速度極快。
-- **Markdown 支援**：內建 Markdown 渲染 (marked.js) 與 DOMPurify 安全過濾。
-- **Mermaid 圖表穩定渲染**：針對 Mermaid 流程圖補強 CJK 字型量測與 SVG 邊界設定，降低中英混排節點文字被截斷或裁切的機率。
-- **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
-- **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
-- **分享功能**：可產生唯讀的分享連結。
-- **可選 D1 歷史版本**：可透過 D1 為筆記保留歷史快照；功能預設關閉，開啟後預設每篇保留最近 `10` 份版本，並且預設以 5 分鐘節流，避免 editor 自動儲存時把資料量衝高。啟用後，編輯頁 footer 會顯示獨立「版本」入口，可檢視舊版、切換預覽/原文、複製內容或還原。
-- **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
-- **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
-- **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
-- **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
-- **公開索引 Opt-In**：分享連結建立後，系統會額外詢問是否加入公開索引；預設不加入，只有明確同意的分享才會標記為可進入未來的 `sitemap.xml`。
-- **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
-- **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
-- **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
-- **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
-- **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要；若 metadata title 是短 slug，會改用正文中較完整的可讀標題，且分享卡不強調站名以避免壓過文章標題。
-- **分享頁不追蹤瀏覽數**：預設不寫入 share view 計數，避免 Cloudflare 免費方案持續消耗 KV 寫入額度。
-- **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
-- **分享頁字體切換**：editor / share footer 內建 `J / M` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
-- **分享頁行動版 footer 優化**：mobile share 頁 footer 預設只顯示操作區，其他外觀/資訊工具可透過 `...` 展開；向下閱讀時仍會自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
-- **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
-- **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
-- **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
-- **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`organic`、`playful-geometric`、`professional`、`retro`、`sketch`、`terminal`、`tokyo-night` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
-- **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換；設定會寫入該篇筆記 metadata，share 頁會沿用相同寬度，而不是只存在單一瀏覽器。
-- **站內 Icon**：內建 note SVG icon，Worker 會同時輸出 `/icon.svg`、`/icon.png`、`/favicon.ico`，並作為分享頁的社群預覽圖示（OG / Twitter image）。
-- **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
-- **超級管理員介面**：
-  - 檢視所有筆記列表。
-  - 檢查是否設定了密碼。
-  - **直接刪除**違規或過期的筆記。
-- **2026-06-18 · LLM & AI Agent API (無頭 CMS)**：
-  - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
-  - `/api/:path` 除了原本的 JSON body，也支援 `text/markdown` / `text/plain` 直接上傳整份 `.md`，以及 `multipart/form-data` 的檔案上傳，降低 LLM 用 `curl` 寫長文時的跳脫字元失敗率。
-  - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
-  - 啟用歷史版本後，可使用 `GET /api/:path/history`、`GET /api/:path/history/:versionId`、`POST /api/:path/history/:versionId/restore` 管理歷史快照。
-  - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
-- **2026-06-18 · 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
-  - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
-  - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
-- **2026-07-07 · 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
-  - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
-  - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
-  - 對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown` 內容協商，agent 可直接拿到 `text/markdown` 而不是 HTML。
-  - 站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler（如 `GPTBot`、`OAI-SearchBot`、`Claude-Web`、`Google-Extended`）的明確 `Allow` / `Disallow` 規則，並加入 `Content-Signal` 偏好宣告。
-  - 只有使用者在分享後明確同意加入公開索引的頁面，才會被標記為後續可納入 `sitemap.xml` 的候選；未分享或未同意的筆記不會因 sitemap 設計被額外曝光。
-  - 首頁 `/` 會輸出 `Link` response headers，指向 `/.well-known/api-catalog`、`/docs/api`、`/openapi.json` 以利 agent discovery。
-  - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`，支援 API、Auth 與 Agent Skills 的標準化發現流程。
-  - 在支援的瀏覽器中會保守註冊 WebMCP tools，讓 agent 可讀取當前 markdown、複製 share link、或切到簡報模式。
-- **2026-06-09 · Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
-  - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
-  - 演示模式使用較緊湊的標題級距，避免長中文 `H1 / H2` 佔滿投影片。
-  - 引用區塊採用較小字級；內容超過投影片範圍時會自動縮放該頁正文與表格。
-  - 投影片底部保留控制安全區，避免內容貼住進度條、頁碼與導覽按鈕。
-  - 已發布的分享頁支援專用簡報入口 `/share/<id>/present`，可直接以投影片模式開啟。
-  - 支援分享指定投影片頁碼，例如 `/share/<id>/present#/24`；若分享頁有閱讀密碼，驗證成功後仍會回到指定頁。
-  - **Slidev-Lite 增強版**：
-    - 支援 **雙欄佈局**：使用 `::left::` 與 `::right::` 即可分屏。
-    - 支援 **點擊動畫**：在內容後加上 `{v-click}` 實現逐條顯示。
-    - **高級視覺**：內建 Inter 精緻字體與深色主題優化。
-  - 內建 Reveal.js 懶加載引擎，一鍵進入沉浸式演示體驗。
-- **2026-06-13 · PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並完美保留主題的邊框與底色設計。
+- **核心能力**
+  - **輕量快速**：基於 Cloudflare Edge Network，全球存取速度極快。
+  - **Markdown 支援**：內建 Markdown 渲染 (marked.js) 與 DOMPurify 安全過濾。
+  - **Mermaid 圖表穩定渲染**：針對 Mermaid 流程圖補強 CJK 字型量測與 SVG 邊界設定，降低中英混排節點文字被截斷或裁切的機率。
+  - **站內 Icon**：內建 note SVG icon，Worker 會同時輸出 `/icon.svg`、`/icon.png`、`/favicon.ico`，並作為分享頁的社群預覽圖示（OG / Twitter image）。
+
+- **編輯與閱讀體驗**
+  - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
+  - **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
+  - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
+  - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
+  - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換；設定會寫入該篇筆記 metadata，share 頁會沿用相同寬度，而不是只存在單一瀏覽器。
+  - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`organic`、`playful-geometric`、`professional`、`retro`、`sketch`、`terminal`、`tokyo-night` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
+  - **分享頁字體切換**：editor / share footer 內建 `J / M` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
+  - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
+  - **分享頁行動版 footer 優化**：mobile share 頁 footer 預設只顯示操作區，其他外觀/資訊工具可透過 `...` 展開；向下閱讀時仍會自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
+  - **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
+  - **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
+  - **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
+  - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要；若 metadata title 是短 slug，會改用正文中較完整的可讀標題，且分享卡不強調站名以避免壓過文章標題。
+  - **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
+
+- **分享、隱私與內容生命週期**
+  - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
+  - **分享功能**：可產生唯讀的分享連結。
+  - **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
+  - **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
+  - **公開索引 Opt-In**：分享連結建立後，系統會額外詢問是否加入公開索引；預設不加入，只有明確同意的分享才會標記為可進入未來的 `sitemap.xml`。
+  - **分享頁不追蹤瀏覽數**：預設不寫入 share view 計數，避免 Cloudflare 免費方案持續消耗 KV 寫入額度。
+  - **可選 D1 歷史版本**：可透過 D1 為筆記保留歷史快照；功能預設關閉，開啟後預設每篇保留最近 `10` 份版本，並且預設以 5 分鐘節流，避免 editor 自動儲存時把資料量衝高。啟用後，編輯頁 footer 會顯示獨立「版本」入口，可檢視舊版、切換預覽/原文、複製內容或還原。
+  - **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
+
+- **AI / API / Agent 生態**
+  - **LLM & AI Agent API (無頭 CMS)**：支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 讀寫與接續撰寫 (Append)。
+  - **多種 API 寫入格式**：`/api/:path` 支援 JSON、`text/markdown`、`text/plain` 與 `multipart/form-data`，降低 LLM 用 `curl` 寫長文時的跳脫字元失敗率。
+  - **原生圖片上傳**：支援 API 圖片上傳 (`/api/upload`) 與 Markdown 連結。
+  - **API 歷史快照管理**：啟用歷史版本後，可使用 `GET /api/:path/history`、`GET /api/:path/history/:versionId`、`POST /api/:path/history/:versionId/restore` 管理歷史快照。
+  - **MCP 與專屬技能**：內建符合 PEP-723 的零安裝 Python MCP 伺服器，也提供專給代理人的 `skills/SKILL.md`。
+  - **Crawler-Friendly 輸出**：分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，方便 ChatGPT、ClaudeBot、n8n 等爬蟲工具抓取內容。
+  - **Markdown 協商**：對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown`，agent 可直接拿到 `text/markdown` 而不是 HTML。
+  - **Agent Discovery**：首頁 `/` 會輸出 `Link` response headers，並提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`。
+  - **robots.txt 與 Content-Signal**：站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler 的明確 `Allow` / `Disallow` 規則，並加入 `Content-Signal` 偏好宣告。
+  - **WebMCP**：在支援的瀏覽器中會保守註冊 WebMCP tools，讓 agent 可讀取當前 markdown、複製 share link、或切到簡報模式。
+
+- **展示與輸出**
+  - **Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 分頁，並支援 `::left::` / `::right::` 雙欄與 `{v-click}` 點擊動畫。
+  - **PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並保留主題邊框與底色設計。
+  - **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
+  - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
+
+- **維運與管理**
+  - **超級管理員介面**：
+    - 檢視所有筆記列表。
+    - 檢查是否設定了密碼。
+    - 直接刪除違規或過期的筆記。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -332,59 +324,60 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 
 ## Features
 
-- **Lightweight & Fast**: Powered by Cloudflare Edge Network.
-- **Markdown Support**: Built-in rendering (marked.js) and sanitation (DOMPurify).
-- **Mermaid Diagram Stability**: Mermaid flowcharts are rendered with stricter font and SVG overflow guards to reduce clipping on mixed Chinese/English labels.
-- **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
-- **Sharing**: Generate read-only share links.
-- **Optional D1 Note History**: Notes can keep historical snapshots in D1. The feature is off by default; when enabled it keeps the latest `10` versions per note by default and uses a 5-minute save interval to avoid excessive writes from editor autosave.
-- **Share Anchor Links**: Shared-note headings get stable IDs so `#...` links can jump directly to sections, including mixed Chinese/English headings and compact TOC-style slugs.
-- **Recent Shares**: The footer includes a `Recent shares` entry backed by browser `localStorage` to track both created and viewed share URLs without extra KV writes.
-- **Back-to-Top for Long Shares**: Shared long-form pages show a compact `＾` control after scrolling down so readers can jump back to the top.
-- **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.
-- **Interface Language**: UI copy is maintained for `en-US` and `zh-TW`; Chinese browser languages use Traditional Chinese, all other browser languages default to English, and the footer includes an `En / Zh` selector.
-- **Desktop / Mobile Preview Toggle**: The editor footer includes a segmented toggle for switching the right-side Markdown preview into a mobile simulation width, with the preference saved per browser; the `Preview` switch can hide the right-side preview.
-- **Preview Divider**: The split panes remain draggable; switching device modes or double-clicking the divider resets the layout to 50/50.
-- **Preview Width Presets**: The footer includes a `Width` selector with `Full / 960 / 1200 / 1440` presets, saved per browser.
-- **Responsive Mobile Tables**: Mobile simulation and real mobile share pages use fixed-layout tables with wrapping cells so long parameters and inline code stay within the viewport.
-- **Share Metadata & Unfurling**: Shared pages emit server-rendered Open Graph / Twitter metadata, and weak short slug-like titles are replaced with stronger human-readable note titles when available.
-- **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses; on mobile it shows `Actions` first and reveals more tools through `...`.
-- **No Share View Tracking by Default**: Shared-note views are not counted or written to Cloudflare KV by default, which avoids ongoing write usage on the free plan.
-- **GA4 Support**: Set `SCN_GA_MEASUREMENT_ID` in Cloudflare to automatically load Google Analytics on editor pages, shared-note pages, and shared-presentation pages.
-- **Analytics Placeholder**: Shared-note footers include a `#share-analytics-hook` placeholder for future GA / analytics code without adding KV-backed share view writes.
-- **Share Font Switcher**: Shared-note footers now use compact `J / M` buttons to switch between `JetBrains Mono` and `Maple Mono`, with `JetBrains Mono` as the default reader font.
-- **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta` groups so typography, language, width, theme, and share-history controls stay together.
-- **Built-in Theme Set**: The app ships with `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `green-simple`, `kanagawa`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`, `playful-geometric`, `professional`, `retro`, `sketch`, `terminal`, and `tokyo-night`, with `catppuccin-macchiato` as the current default.
-- **Built-in Icon Routes**: The Worker serves `/icon.svg`, `/icon.png`, `/favicon.ico`, and `/og-image.png` directly from the bundled assets.
-- **Super Admin Interface**:
-  - List all notes.
-  - Check password status.
-  - Batch-delete selected notes.
-  - Delete empty notes in one action.
-  - **Delete** notes directly from the dashboard.
-- **LLM / API Publishing**:
-  - `POST /api/:path` supports JSON, raw `text/markdown` / `text/plain`, and `multipart/form-data` uploads.
-  - The API also supports native image upload at `/api/upload`.
-  - When note history is enabled, `GET /api/:path/history`, `GET /api/:path/history/:versionId`, and `POST /api/:path/history/:versionId/restore` are available for history access and restore.
-- **LLM / Web Crawler Support**:
-  - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
-  - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
-- **2026-06-09 · Slidev-style Presentation Mode** 📽️:
-  - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
-  - Uses a compact heading scale so long `H1 / H2` titles remain readable without dominating the slide.
-  - Uses compact blockquotes and automatically fits oversized slide content and tables to the viewport.
-  - Reserves a bottom safe area above the presentation progress and navigation controls.
-  - Shared notes can open directly at `/share/<id>/present` and preserve deep links like `#/24`.
-  - Supports Slidev-lite style `::left::` / `::right::` two-column layout and `{v-click}` progressive reveals.
-  - Powered by Reveal.js with smart on-demand asset loading.
-- **2026-06-13 · PDF & Print Optimization** 🖨️: Added print stylesheet rules that automatically hide editor textareas and toolbars during printing or when saving to PDF. It handles page-breaks gracefully for headings, code blocks, and tables, and forces background color rendering to preserve themes' premium styles.
-- **2026-06-10 · Curated Dark Preview Themes**:
-  - Added `catppuccin-macchiato` as the current default Markdown preview theme.
-  - Added `kanagawa` as an additional built-in dark theme option.
-  - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
-  - Bundled themes no longer force a fixed reading width; preview width can now be adjusted from the footer without affecting note content.
-  - Share pages now provide a reader-side `JetBrains Mono / Maple Mono` switcher while keeping typography normalized to a consistent reading scale across themes.
-  - Dark-theme table rendering was corrected for `tokyo-night`, `kanagawa`, and `terminal`, and low-contrast table headers across multiple bundled themes were refreshed.
+- **Core**
+  - **Lightweight & Fast**: Powered by Cloudflare Edge Network.
+  - **Markdown Support**: Built-in rendering (marked.js) and sanitation (DOMPurify).
+  - **Mermaid Diagram Stability**: Mermaid flowcharts use stricter font and SVG overflow guards to reduce clipping on mixed Chinese/English labels.
+  - **Built-in Icon Routes**: The Worker serves `/icon.svg`, `/icon.png`, `/favicon.ico`, and `/og-image.png` directly from the bundled assets.
+
+- **Editing & Reading**
+  - **Interface Language**: UI copy is maintained for `en-US` and `zh-TW`, with an `En / Zh` footer switcher.
+  - **Desktop / Mobile Preview Toggle**: The editor footer can switch the Markdown preview into a mobile simulation width.
+  - **Preview Divider**: The split panes remain draggable, and double-click resets the layout to 50/50.
+  - **Preview Width Presets**: The footer includes `Full / 960 / 1200 / 1440` width presets.
+  - **Built-in Theme Set**: The app ships with multiple bundled preview themes, with `catppuccin-macchiato` as the current default.
+  - **Share Font Switcher**: Shared-note footers use compact `J / M` buttons to switch between `JetBrains Mono` and `Maple Mono`.
+  - **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta`.
+  - **Responsive Mobile Tables**: Mobile simulation and real mobile share pages wrap long cell text and inline code safely.
+  - **Back-to-Top for Long Shares**: Shared long-form pages show a compact `＾` control after scrolling down.
+  - **Share Anchor Links**: Shared-note headings get stable IDs so `#...` links can jump directly to sections.
+  - **Share Metadata & Unfurling**: Shared pages emit server-rendered Open Graph / Twitter metadata and prefer stronger human-readable titles when available.
+  - **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses.
+
+- **Sharing, Privacy & Lifecycle**
+  - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).
+  - **Sharing**: Generate read-only share links.
+  - **Recent Shares**: The footer includes a `Recent shares` entry backed by browser `localStorage`.
+  - **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.
+  - **Public Index Opt-In**: After creating a share link, the UI can explicitly ask whether the user wants that share to join the future public sitemap; the default remains private.
+  - **No Share View Tracking by Default**: Shared-note views are not counted or written to Cloudflare KV by default.
+  - **Optional D1 Note History**: Notes can keep historical snapshots in D1, with retention and save throttling controls.
+  - **Scheduled Cleanup**: A daily Cron job removes empty notes automatically.
+
+- **AI, API & Agent Ecosystem**
+  - **LLM / API Publishing**: `POST /api/:path` supports JSON, raw `text/markdown` / `text/plain`, and `multipart/form-data` uploads.
+  - **Native Image Upload**: The API supports image upload at `/api/upload`.
+  - **History APIs**: When note history is enabled, `GET /api/:path/history`, `GET /api/:path/history/:versionId`, and `POST /api/:path/history/:versionId/restore` are available.
+  - **MCP & Skills**: The repo includes a zero-install Python MCP server and an agent skill document in `skills/SKILL.md`.
+  - **Crawler-Friendly Output**: Share links expose bare semantic `<article>` tags containing markdown for bots and agents that do not execute JavaScript.
+  - **Markdown Negotiation**: Note and share pages can return `text/markdown` when the client sends `Accept: text/markdown`.
+  - **Agent Discovery**: The homepage emits `Link` headers and the site publishes `/.well-known/api-catalog`, `/.well-known/agent-skills/index.json`, `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`, and `/auth.md`.
+  - **robots.txt & Content Signals**: The site publishes crawler rules and `Content-Signal` preferences in `/robots.txt`.
+  - **WebMCP**: On supported browsers, the site registers guarded WebMCP tools for reading markdown, copying share links, and opening presentation mode.
+
+- **Presentation, Print & Analytics**
+  - **Slidev-style Presentation Mode** 📽️: Transform markdown into fullscreen slides with `---` separators, `::left::` / `::right::` layouts, and `{v-click}` progressive reveals.
+  - **PDF & Print Optimization** 🖨️: Print styles hide editor chrome, remove viewport constraints, and preserve theme visuals when exporting to PDF.
+  - **GA4 Support**: Set `SCN_GA_MEASUREMENT_ID` in Cloudflare to automatically load Google Analytics on editor, share, and presentation pages.
+  - **Analytics Placeholder**: Shared-note footers include a `#share-analytics-hook` placeholder for future analytics code.
+
+- **Administration**
+  - **Super Admin Interface**:
+    - List all notes.
+    - Check password status.
+    - Batch-delete selected notes.
+    - Delete empty notes in one action.
+    - Delete notes directly from the dashboard.
 
 ## Deployment Guide
 
