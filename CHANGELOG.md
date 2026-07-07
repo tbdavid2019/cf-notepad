@@ -14,6 +14,8 @@
   - Replaced plaintext browser `prompt()` password entry with a masked in-page password modal for both unlock and password-setting flows.
 - **Client Error Handling**
   - Hardened frontend JSON API parsing so non-JSON Worker error pages surface as readable errors instead of crashing with `Unexpected token 'W'`.
+- **New Note Creation Flow**
+  - Restored the root-to-random-slug workflow so `https://wiki.david888.com/` redirects to a fresh slug that opens the editor directly instead of falling into a 404-like blocked state.
 
 ## [2026-07-07 00:00 CST]
 ### Added

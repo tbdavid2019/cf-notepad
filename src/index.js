@@ -991,14 +991,6 @@ router.get('/:path', async (request) => {
     // Calculate shareId only if sharing is enabled
     const shareId = metadata.share ? await MD5(path) : null
 
-    // Check if the note actually exists in KV 
-    // (Bots testing random paths like .env will return empty value/metadata)
-    const noteExists = value !== '' || Object.keys(metadata).length > 0
-
-    if (!noteExists) {
-        return returnPage('Page404', { lang, title: '404' })
-    }
-
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
@@ -1071,11 +1063,12 @@ router.get('/:path', async (request) => {
         })
     }
 
-    return returnPage('Share', {
+    return returnPage('Edit', {
         lang,
         title,
         content: value,
         ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        showPwPrompt: true,
         shareId,
         path,
     })
@@ -1088,12 +1081,6 @@ router.head('/:path', async (request) => {
     const { value, metadata } = await queryNote(path)
     const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
     const shareId = metadata.share ? await MD5(path) : null
-    const noteExists = value !== '' || Object.keys(metadata).length > 0
-
-    if (!noteExists) {
-        const lang = getI18n(request)
-        return returnPage('Page404', { lang, title: '404' })
-    }
 
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
@@ -1169,11 +1156,12 @@ router.head('/:path', async (request) => {
         })
     }
 
-    return returnPage('Share', {
+    return returnPage('Edit', {
         lang,
         title,
         content: value,
         ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        showPwPrompt: true,
         shareId,
         path,
     })

@@ -11,7 +11,8 @@ test('direct note route treats view lock separately from edit lock', () => {
     assert.match(indexSource, /if \(!metadata\.pw && !metadata\.vpw\)/)
     assert.match(indexSource, /if \(metadata\.vpw\) \{/)
     assert.match(indexSource, /return returnPage\('NeedPasswd', \{ lang, title \}\)/)
-    assert.match(indexSource, /return returnPage\('Share', \{\s*lang,\s*title,\s*content: value,/s)
+    assert.match(indexSource, /return returnPage\('Edit', \{\s*lang,\s*title,\s*content: value,/s)
+    assert.match(indexSource, /showPwPrompt: true/)
     assert.match(indexSource, /authPath: `\/\$\{path\}\/auth`/)
 })
 
