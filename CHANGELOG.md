@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-07-07 13:30 CST]
+### Fixed
+- **Edit Lock vs Read Lock Semantics**
+  - Corrected direct note route behavior so `編輯鎖 / Edit Lock` only blocks editing and no longer blocks normal reading.
+  - Kept `閱讀鎖 / Read Lock` as the stronger mode that blocks both reading and editing until authentication succeeds.
+- **Readonly-to-Edit Upgrade Flow**
+  - Changed the readonly note footer `edit` control from a plain link into an auth-triggering action, so locked notes can prompt for the edit password and upgrade into the editor correctly.
+- **Password Auth Reliability**
+  - Moved secret/salt reads to runtime instead of module-load time, preventing worker failures such as `secret must be a string`.
+  - Added compatibility for legacy password hashes created during the broken runtime-config window, so existing edit locks continue to work.
+- **Password Entry UX**
+  - Replaced plaintext browser `prompt()` password entry with a masked in-page password modal for both unlock and password-setting flows.
+- **Client Error Handling**
+  - Hardened frontend JSON API parsing so non-JSON Worker error pages surface as readable errors instead of crashing with `Unexpected token 'W'`.
+
 ## [2026-07-07 00:00 CST]
 ### Added
 - **Well-Known API Discovery**

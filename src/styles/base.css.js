@@ -148,6 +148,64 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .publish-nudge-later:hover { background: #eef1f4; }
 .publish-nudge-publish { background: #1f883d; }
 .publish-nudge-publish:hover { background: #1a7f37; }
+.password-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: #fff;
+    color: #24292f;
+    border-radius: 8px;
+    box-shadow: 0 18px 40px rgba(31, 35, 40, 0.22);
+    z-index: 1001;
+    width: min(420px, calc(100vw - 32px));
+    padding: 22px;
+}
+.password-modal-content h2 {
+    margin: 0 28px 8px 0;
+    font-size: 18px;
+    line-height: 1.35;
+}
+.password-modal-message {
+    margin: 0 0 14px;
+    color: #57606a;
+    font-size: 14px;
+    line-height: 1.55;
+}
+.password-modal-input {
+    width: 100%;
+    height: 38px;
+    padding: 0 12px;
+    border: 1px solid #d0d7de;
+    border-radius: 6px;
+    font-size: 14px;
+    margin-bottom: 16px;
+}
+.password-modal-input:focus-visible {
+    outline: 2px solid #0969da;
+    outline-offset: 1px;
+}
+.password-modal-content .close-btn {
+    position: absolute;
+    right: 12px;
+    top: 10px;
+    border: 0;
+    background: transparent;
+    color: #6e7781;
+    cursor: pointer;
+    font-size: 18px;
+}
+.password-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+}
+.password-modal-cancel {
+    background: #f6f8fa;
+    color: #24292f;
+    border: 1px solid #d0d7de;
+}
+.password-modal-cancel:hover { background: #eef1f4; }
 
 /* Footer */
 .footer {

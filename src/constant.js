@@ -8,6 +8,8 @@ const readRuntimeVar = name => globalThis?.[name]
 export const SALT = readRuntimeVar('SCN_SALT')
 // server side secret
 export const SECRET = readRuntimeVar('SCN_SECRET')
+export const getSalt = () => readRuntimeVar('SCN_SALT')
+export const getSecret = () => readRuntimeVar('SCN_SECRET')
 
 // admin
 export const ADMIN_PATH = readRuntimeVar('SCN_ADMIN_PATH') || '/admin'
@@ -70,6 +72,8 @@ export const SUPPORTED_LANG = {
         uploading: 'Uploading...',
         err: 'Error',
         pepw: 'Please enter password.',
+        passwordConfirm: 'Continue',
+        passwordCancel: 'Cancel',
         pwcnbe: 'Password is empty!',
         enpw: 'Enter a new password (Keeping it empty will remove the current password)',
         pwss: 'Password set successfully.',
@@ -142,6 +146,8 @@ export const SUPPORTED_LANG = {
         uploading: '上傳中...',
         err: '出錯了',
         pepw: '請輸入密碼',
+        passwordConfirm: '確認',
+        passwordCancel: '取消',
         pwcnbe: '密碼不能為空！',
         enpw: '輸入新密碼（留空可清除當前密碼）',
         pwss: '密碼設置成功！',

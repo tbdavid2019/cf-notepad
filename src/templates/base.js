@@ -534,6 +534,34 @@ ${getMarkdownCss()}
 
     const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
 
+    const summarizeErrorText = text => {
+        const normalized = String(text || '').replace(/\s+/g, ' ').trim()
+        if (!normalized) return 'Empty response'
+        return normalized.length > 240 ? normalized.slice(0, 237) + '...' : normalized
+    }
+
+    const parseJsonResponse = async response => {
+        const rawText = await response.text()
+        let payload = null
+        try {
+            payload = rawText ? JSON.parse(rawText) : null
+        } catch (error) {
+            const statusText = response.status ? 'HTTP ' + response.status : 'Unknown status'
+            throw new Error(statusText + ' - ' + summarizeErrorText(rawText || error.message || 'Invalid JSON response'))
+        }
+
+        if (!payload || typeof payload !== 'object') {
+            throw new Error('Invalid API response payload')
+        }
+
+        return payload
+    }
+
+    const fetchJson = async (input, init) => {
+        const response = await window.fetch(input, init)
+        return parseJsonResponse(response)
+    }
+
     const initWebMcp = () => {
         const provideContext = navigator.modelContext && navigator.modelContext.provideContext
         if (typeof provideContext !== 'function') return
@@ -606,12 +634,11 @@ ${getMarkdownCss()}
         const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
         const getSettingPath = () => APP_STATE.settingPath || (location.pathname + '/setting')
         const persistSetting = async nextSettings => {
-            const response = await window.fetch(getSettingPath(), {
+            const payload = await fetchJson(getSettingPath(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(nextSettings),
             })
-            const payload = await response.json()
             if (payload.err !== 0) throw new Error(payload.msg || 'setting update failed')
             APP_STATE.noteSettings = { ...APP_STATE.noteSettings, ...nextSettings }
             return payload
@@ -634,6 +661,71 @@ ${getMarkdownCss()}
         }
     }
 
+    const openPasswordModal = ({ title, initialValue = '', allowEmpty = false } = {}) => new Promise(resolve => {
+        const modal = document.querySelector('.password-modal')
+        const input = modal ? modal.querySelector('.password-modal-input') : null
+        const titleNode = modal ? modal.querySelector('#password-modal-title') : null
+        const messageNode = modal ? modal.querySelector('.password-modal-message') : null
+        const confirmBtn = modal ? modal.querySelector('.password-modal-confirm') : null
+        const cancelBtn = modal ? modal.querySelector('.password-modal-cancel') : null
+        const closeBtn = modal ? modal.querySelector('.password-modal-close') : null
+        const mask = modal ? modal.querySelector('.modal-mask') : null
+
+        if (!modal || !input || !titleNode || !confirmBtn || !cancelBtn || !closeBtn || !mask) {
+            resolve(window.prompt(title || getI18n('pepw')))
+            return
+        }
+
+        let settled = false
+        const cleanup = result => {
+            if (settled) return
+            settled = true
+            modal.style.display = 'none'
+            input.value = ''
+            input.removeEventListener('keydown', onKeyDown)
+            confirmBtn.removeEventListener('click', onConfirm)
+            cancelBtn.removeEventListener('click', onCancel)
+            closeBtn.removeEventListener('click', onCancel)
+            mask.removeEventListener('click', onCancel)
+            resolve(result)
+        }
+
+        const onConfirm = () => {
+            const value = input.value
+            if (!allowEmpty && !value.trim()) {
+                alert(getI18n('pwcnbe'))
+                input.focus()
+                return
+            }
+            cleanup(value)
+        }
+
+        const onCancel = () => cleanup(null)
+        const onKeyDown = event => {
+            if (event.key === 'Enter') {
+                event.preventDefault()
+                onConfirm()
+            }
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                onCancel()
+            }
+        }
+
+        titleNode.textContent = title || getI18n('pepw')
+        if (messageNode) {
+            messageNode.textContent = allowEmpty ? getI18n('enpw') : getI18n('pepw')
+        }
+        input.value = initialValue
+        modal.style.display = 'block'
+        input.addEventListener('keydown', onKeyDown)
+        confirmBtn.addEventListener('click', onConfirm)
+        cancelBtn.addEventListener('click', onCancel)
+        closeBtn.addEventListener('click', onCancel)
+        mask.addEventListener('click', onCancel)
+        window.setTimeout(() => input.focus(), 0)
+    })
+
     const throttle = (func, delay) => {
         let tid = null
         return (...arg) => {
@@ -642,14 +734,13 @@ ${getMarkdownCss()}
         }
     }
 
-    const passwdPrompt = () => {
-        const passwd = window.prompt(getI18n('pepw'))
+    const passwdPrompt = async () => {
+        const passwd = await openPasswordModal({ title: getI18n('pepw') })
         if (passwd == null) return;
         const normalizedPasswd = passwd.trim()
         if (!normalizedPasswd) { alert(getI18n('pwcnbe')); return; }
         const destination = rememberPresentationDestination() || (location.pathname + location.hash)
-        window.fetch(getAuthPath(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: normalizedPasswd }) })
-            .then(res => res.json())
+        fetchJson(getAuthPath(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: normalizedPasswd }) })
             .then(res => {
                 if (res.err !== 0) { return errHandle(res.msg) }
                 if (res.data.refresh) {
@@ -916,8 +1007,7 @@ ${getMarkdownCss()}
         }
 
         const fetchVersion = async versionId => {
-            const response = await window.fetch(apiBase() + '/' + encodeURIComponent(versionId))
-            const payload = await response.json()
+            const payload = await fetchJson(apiBase() + '/' + encodeURIComponent(versionId))
             if (payload.err !== 0) throw new Error(payload.msg || 'history fetch failed')
             return payload.data
         }
@@ -954,8 +1044,7 @@ ${getMarkdownCss()}
             renderStatus(getI18n('historyLoading'))
 
             try {
-                const response = await window.fetch(apiBase())
-                const payload = await response.json()
+                const payload = await fetchJson(apiBase())
                 if (payload.err !== 0) throw new Error(payload.msg || 'history list failed')
 
                 versions = Array.isArray(payload.data?.versions) ? payload.data.versions : []
@@ -1022,8 +1111,7 @@ ${getMarkdownCss()}
                 if (!selectedVersion) return
                 if (!confirm(getI18n('historyRestoreConfirm'))) return
                 try {
-                    const response = await window.fetch(apiBase() + '/' + encodeURIComponent(selectedVersion.id) + '/restore', { method: 'POST' })
-                    const payload = await response.json()
+                    const payload = await fetchJson(apiBase() + '/' + encodeURIComponent(selectedVersion.id) + '/restore', { method: 'POST' })
                     if (payload.err !== 0) throw new Error(payload.msg || 'history restore failed')
                     if (textarea) {
                         textarea.value = selectedVersion.content || ''
@@ -1119,12 +1207,11 @@ ${getMarkdownCss()}
         }
 
         const setPublicIndex = async enabled => {
-            const response = await window.fetch(window.location.pathname + '/setting', {
+            const payload = await fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ publicIndex: enabled })
             })
-            const payload = await response.json()
             if (payload.err !== 0) throw new Error(payload.msg || 'public index update failed')
             APP_STATE.publicIndex = enabled === true
             return payload
@@ -1143,12 +1230,11 @@ ${getMarkdownCss()}
         }
 
         const publishCurrentNote = () => {
-            return window.fetch(window.location.pathname + '/setting', {
+            return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ share: true })
             })
-                .then(res => res.json())
                 .then(res => {
                     if (res.err !== 0) {
                         if ($shareBtn) $shareBtn.checked = false;
@@ -1269,8 +1355,7 @@ ${getMarkdownCss()}
                             $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
                             const formData = new FormData()
                             formData.append('image', blob)
-                            window.fetch('/upload', { method: 'POST', body: formData })
-                                .then(res => res.json())
+                            fetchJson('/upload', { method: 'POST', body: formData })
                                 .then(res => {
                                     if (res.err === 0) { $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')'); triggerRender($previewMd, $textarea.value) }
                                     else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); alert(getI18n('uploadFailed') + ': ' + res.msg) }
@@ -1306,8 +1391,7 @@ ${getMarkdownCss()}
                 schedulePublishNudge();
                 triggerRender($previewMd, $textarea.value)
                 $loading.style.display = 'inline-block'
-                window.fetch('', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ t: $textarea.value }) })
-                    .then(res => res.json())
+                fetchJson('', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ t: $textarea.value }) })
                     .then(res => { if (res.err !== 0) { errHandle(res.msg) } })
                     .catch(err => errHandle(err))
                     .finally(() => { $loading.style.display = 'none' })
@@ -1317,11 +1401,10 @@ ${getMarkdownCss()}
         // Password buttons
         const bindPwHandler = (btnSelector, type) => {
             const btn = document.querySelector(btnSelector);
-            if (btn) { btn.onclick = function () {
-                const passwd = window.prompt(getI18n('enpw'))
+            if (btn) { btn.onclick = async function () {
+                const passwd = await openPasswordModal({ title: getI18n('enpw'), allowEmpty: true })
                 if (passwd == null) return;
-                window.fetch(window.location.pathname + '/pw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: passwd.trim(), type }) })
-                    .then(res => res.json())
+                fetchJson(window.location.pathname + '/pw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: passwd.trim(), type }) })
                     .then(res => { if (res.err !== 0) { return errHandle(res.msg) } alert(passwd ? getI18n('pwss') : getI18n('pwrs')); location.reload() })
                     .catch(err => errHandle(err))
             }}
@@ -1332,8 +1415,8 @@ ${getMarkdownCss()}
         if ($modeBtn) {
             $modeBtn.onclick = function (e) {
                 const isMd = e.target.checked
-                window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: isMd ? 'md' : 'plain' }) })
-                    .then(res => res.json()).then(res => { if (res.err !== 0) { return errHandle(res.msg) } window.location.reload() }).catch(err => errHandle(err))
+                fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: isMd ? 'md' : 'plain' }) })
+                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } window.location.reload() }).catch(err => errHandle(err))
             }
         }
 
@@ -1343,6 +1426,7 @@ ${getMarkdownCss()}
         const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
         const $publicIndexBtn = document.querySelector('#public-index-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
+        const $readonlyEditBtn = document.querySelector('#readonly-edit-btn');
         if ($shareUrlInput && $shareCopyBtn) {
             try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
             recordShareHistory('created', $shareUrlInput.value, APP_STATE.title);
@@ -1372,8 +1456,8 @@ ${getMarkdownCss()}
         if ($unpublishBtn) {
             $unpublishBtn.addEventListener('click', () => {
                 if (!confirm(getI18n('unpublishConfirm'))) return;
-                window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                    .then(res => res.json()).then(res => { if (res.err !== 0) { return errHandle(res.msg); } window.location.reload(); }).catch(err => errHandle(err));
+                fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
+                    .then(res => { if (res.err !== 0) { return errHandle(res.msg); } window.location.reload(); }).catch(err => errHandle(err));
             });
         }
 
@@ -1384,8 +1468,7 @@ ${getMarkdownCss()}
                     publishCurrentNote();
                     return;
                 }
-                window.fetch(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                    .then(res => res.json())
+                fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
                     .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; })
                     .catch(err => errHandle(err))
             }
@@ -1415,6 +1498,10 @@ ${getMarkdownCss()}
                     if ($shareIndexPrompt) $shareIndexPrompt.style.display = 'none'
                 }
             }
+        }
+
+        if ($readonlyEditBtn) {
+            $readonlyEditBtn.addEventListener('click', () => passwdPrompt())
         }
 
         const setupMobileShareFooter = () => {

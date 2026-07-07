@@ -1,7 +1,7 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import Cookies from 'cookie'
 import * as TEMPL from './template'
-import { SALT, SECRET, SUPPORTED_LANG, getGaMeasurementId } from './constant'
+import { SUPPORTED_LANG, getGaMeasurementId, getSalt, getSecret } from './constant'
 import { getNoteHistoryConfig, deleteNoteHistoryVersions } from './note_history.mjs'
 
 const getNotesNamespace = () => globalThis.NOTES
@@ -70,19 +70,42 @@ export async function MD5(str) {
 
 export async function saltPw(password) {
     const hashPw = await MD5(password)
-    return await MD5(`${hashPw}+${SALT}`)
+    return await MD5(`${hashPw}+${getSalt() || ''}`)
+}
+
+async function legacySaltPw(password) {
+    const hashPw = await MD5(password)
+    return await MD5(`${hashPw}+undefined`)
+}
+
+export async function passwordMatches(password, storedHash) {
+    if (!storedHash) return false
+    const currentHash = await saltPw(password)
+    if (storedHash === currentHash) return true
+
+    const legacyHash = await legacySaltPw(password)
+    return storedHash === legacyHash
 }
 
 export async function checkAuth(cookie, path) {
     if (cookie.auth) {
-        const valid = await jwt.verify(cookie.auth, SECRET)
-        if (valid) {
-            const payload = jwt.decode(cookie.auth)
-            // Backward compatibility: if no role, assume 'edit' (old tokens)
-            const role = payload.role || 'edit'
-            if (payload.path === path) {
-                return { valid: true, role }
+        try {
+            const secret = getSecret()
+            if (typeof secret !== 'string' || !secret) {
+                return { valid: false, role: null }
             }
+
+            const valid = await jwt.verify(cookie.auth, secret)
+            if (valid) {
+                const payload = jwt.decode(cookie.auth)
+                // Backward compatibility: if no role, assume 'edit' (old tokens)
+                const role = payload.role || 'edit'
+                if (payload.path === path) {
+                    return { valid: true, role }
+                }
+            }
+        } catch (error) {
+            console.warn('Auth verification failed:', error?.message || error)
         }
     }
     return { valid: false, role: null }

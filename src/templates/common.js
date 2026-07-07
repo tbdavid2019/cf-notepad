@@ -34,7 +34,7 @@ export const SWITCHER = (text, open, className = '') => `
 </label>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath }) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true && isEdit
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
@@ -65,7 +65,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ` : SWITCHER(t.share, share, 'opt-share')}
                         ${mode === 'md' ? `<button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}"><span aria-hidden="true">▶</span><span>${t.present}</span></button>` : ''}
                     ` : (path ? `
-                        <a href="/${path}" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</a>
+                        ${authPath
+                            ? `<button type="button" id="readonly-edit-btn" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</button>`
+                            : `<a href="/${path}" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">✎</a>`
+                        }
                         <button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}"><span aria-hidden="true">▶</span><span>${t.present}</span></button>
                     ` : '')}
                     <button type="button" id="share-history-btn" class="opt-button share-history-trigger" aria-haspopup="dialog" aria-expanded="false">${shareHistoryLabel}</button>
@@ -144,7 +147,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
                 </div>
             </div>
         </div>
-    </div>
+</div>
 </div>
 <div class="modal share-history-modal" role="dialog" aria-modal="true" aria-labelledby="share-history-title">
     <div class="modal-mask"></div>
@@ -156,6 +159,19 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
             <button type="button" class="share-history-tab" data-share-history-tab="viewed" aria-selected="false">${lang === 'zh-TW' ? '我看過的' : 'Viewed'}</button>
         </div>
         <div class="share-history-list" data-share-history-list></div>
+</div>
+</div>
+<div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+    <div class="modal-mask"></div>
+    <div class="password-modal-content">
+        <button type="button" class="close-btn password-modal-close" aria-label="${t.passwordCancel}">x</button>
+        <h2 id="password-modal-title"></h2>
+        <p class="password-modal-message"></p>
+        <input type="password" class="password-modal-input" autocomplete="current-password" />
+        <div class="password-modal-actions">
+            <button type="button" class="opt-button password-modal-cancel">${t.passwordCancel}</button>
+            <button type="button" class="opt-button opt-button-accent password-modal-confirm">${t.passwordConfirm}</button>
+        </div>
     </div>
 </div>
 ${showNoteHistory ? `
