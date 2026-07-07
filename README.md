@@ -51,6 +51,9 @@
 - **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
   - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
+  - 站點根目錄提供 `/robots.txt`，含一般爬蟲與 AI crawler（如 `GPTBot`、`OAI-SearchBot`、`Claude-Web`、`Google-Extended`）的明確 `Allow` / `Disallow` 規則。
+  - 首頁 `/` 會輸出 `Link` response headers，指向 `/.well-known/api-catalog`、`/docs/api`、`/openapi.json` 以利 agent discovery。
+  - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json` 與 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，支援 API 與 Agent Skills 的標準化發現流程。
 - **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
   - 演示模式使用較緊湊的標題級距，避免長中文 `H1 / H2` 佔滿投影片。
@@ -80,6 +83,9 @@ Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, 
 如果你使用的是 Google DeepMind 提供的工作流引擎或類 Antigravity 代理，我們也在開源專案內建了專用的 Prompt Skills。
 *   **如何安裝**：只需將 `skills/` 資料夾下的內容複製到你的 `~/.gemini/antigravity/skills/` 目錄下即可。
 *   這能讓 Agent 直接學習透過 cURL 呼叫 API，原生執行上傳圖片與產生文章回你的 Wiki 站點。
+*   若要讓外部 Agent 自動發現技能，也可直接讀取：
+    * `/.well-known/agent-skills/index.json`
+    * `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`
 
 ### 3. 一鍵詠唱 (給其他 LLM 的 Prompt)
 如果你想請 ChatGPT、Claude 網頁版等 AI 幫你寫文章並**自動發布**，請直接複製以下整段文字（Prompt）貼給你的 AI：
@@ -95,6 +101,21 @@ Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, 
 ```
 
 詳細的 API 規格表可參考：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
+
+### 4. Well-Known Discovery Endpoints
+
+部署完成後，站點會額外提供以下 discovery 入口：
+
+- `GET /.well-known/api-catalog`
+  - 回傳 RFC 9727 Linkset JSON，列出 API 入口、`service-desc`、`service-doc`、`status`。
+- `GET /.well-known/agent-skills/index.json`
+  - 回傳 Agent Skills Discovery v0.2.0 index。
+- `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`
+  - 回傳可直接被 agent 載入的技能說明。
+- `GET /robots.txt`
+  - 回傳明確的搜尋引擎與 AI crawler 規則。
+- `HEAD /`
+  - 會帶出 `Link` headers，指向 API catalog 與 API docs / OpenAPI 描述。
 
 ---
 

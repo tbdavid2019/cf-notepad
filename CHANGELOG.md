@@ -1,5 +1,23 @@
 # Changelog
 
+## [2026-07-07 00:00 CST]
+### Added
+- **Well-Known API Discovery**
+  - Added `/.well-known/api-catalog` and return an RFC 9727-compatible Linkset document as `application/linkset+json`.
+  - Added `/docs/api`, `/openapi.json`, and `/api/health` so the API catalog can point to real machine-readable and human-readable API resources.
+- **Agent Skills Discovery Index**
+  - Added `/.well-known/agent-skills/index.json` using the Agent Skills Discovery v0.2.0 schema.
+  - Added a published skill artifact at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
+
+### Changed
+- **Homepage Discovery Headers**
+  - Added `Link` response headers on `/` advertising `api-catalog`, `service-doc`, and `service-desc` resources for automated agent discovery.
+
+### Fixed
+- **robots.txt Coverage**
+  - Added a plain-text `/robots.txt` route served by the Worker.
+  - Published explicit `User-agent` rules for `GPTBot`, `OAI-SearchBot`, `Claude-Web`, and `Google-Extended`, alongside default crawler rules for key public and private paths.
+
 ## [2026-07-02 00:00 CST]
 ### Fixed
 - **Share Appearance Settings Now Persist Per Note**

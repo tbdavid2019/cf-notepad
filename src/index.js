@@ -9,6 +9,17 @@ import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './i
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
+    AGENT_SKILL_MARKDOWN,
+    API_DOCS_MARKDOWN,
+    applyDiscoveryHeaders,
+    buildAgentSkillsIndex,
+    buildApiCatalog,
+    buildOpenApiDocument,
+    buildRobotsTxt,
+    createDiscoveryResponse,
+    getDiscoveryConstants,
+} from './discovery.mjs'
+import {
     getNoteHistoryConfig,
     getNoteHistoryVersionById,
     listNoteHistoryVersions,
@@ -20,6 +31,15 @@ const router = Router()
 const getNotesNamespace = () => globalThis.NOTES
 const getShareNamespace = () => globalThis.SHARE
 const getImagesBucket = () => globalThis.IMAGES
+const {
+    AGENT_SKILL_PATH,
+    AGENT_SKILLS_INDEX_PATH,
+    API_CATALOG_PATH,
+    API_CATALOG_PROFILE,
+    API_DOCS_PATH,
+    API_HEALTH_PATH,
+    OPENAPI_PATH,
+} = getDiscoveryConstants()
 
 const iconSvgResponse = () => new Response(NOTEPAD_ICON_SVG, {
     headers: {
@@ -479,6 +499,140 @@ router.head('/og-image.png', ogImageResponse)
 
 router.get('/favicon.ico', faviconResponse)
 router.head('/favicon.ico', faviconResponse)
+
+router.get('/robots.txt', () => createDiscoveryResponse(
+    buildRobotsTxt(),
+    'text/plain; charset=UTF-8',
+))
+
+router.head('/robots.txt', () => createDiscoveryResponse(
+    buildRobotsTxt(),
+    'text/plain; charset=UTF-8',
+))
+
+router.get(API_CATALOG_PATH, async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        JSON.stringify(buildApiCatalog(origin), null, 2),
+        `application/linkset+json; charset=UTF-8; profile="${API_CATALOG_PROFILE}"`,
+    )
+})
+
+router.head(API_CATALOG_PATH, async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        JSON.stringify(buildApiCatalog(origin), null, 2),
+        `application/linkset+json; charset=UTF-8; profile="${API_CATALOG_PROFILE}"`,
+    )
+})
+
+router.get(API_DOCS_PATH, () => createDiscoveryResponse(
+    API_DOCS_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.head(API_DOCS_PATH, () => createDiscoveryResponse(
+    API_DOCS_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.get(OPENAPI_PATH, async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        JSON.stringify(buildOpenApiDocument(origin), null, 2),
+        'application/openapi+json; charset=UTF-8',
+    )
+})
+
+router.head(OPENAPI_PATH, async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        JSON.stringify(buildOpenApiDocument(origin), null, 2),
+        'application/openapi+json; charset=UTF-8',
+    )
+})
+
+router.get(API_HEALTH_PATH, () => createDiscoveryResponse(
+    JSON.stringify({
+        status: 'ok',
+    }),
+    'application/json; charset=UTF-8',
+))
+
+router.head(API_HEALTH_PATH, () => createDiscoveryResponse(
+    JSON.stringify({
+        status: 'ok',
+    }),
+    'application/json; charset=UTF-8',
+))
+
+router.get(AGENT_SKILLS_INDEX_PATH, async () => createDiscoveryResponse(
+    JSON.stringify(await buildAgentSkillsIndex(), null, 2),
+    'application/json; charset=UTF-8',
+))
+
+router.head(AGENT_SKILLS_INDEX_PATH, async () => createDiscoveryResponse(
+    JSON.stringify(await buildAgentSkillsIndex(), null, 2),
+    'application/json; charset=UTF-8',
+))
+
+router.get(AGENT_SKILL_PATH, () => createDiscoveryResponse(
+    AGENT_SKILL_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.head(AGENT_SKILL_PATH, () => createDiscoveryResponse(
+    AGENT_SKILL_MARKDOWN,
+    'text/markdown; charset=UTF-8',
+))
+
+router.get('/.well-known/agent-skills/:asset', async (request) => {
+    if (request.params.asset !== 'index.json') {
+        const lang = getI18n(request)
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
+    return createDiscoveryResponse(
+        JSON.stringify(await buildAgentSkillsIndex(), null, 2),
+        'application/json; charset=UTF-8',
+    )
+})
+
+router.head('/.well-known/agent-skills/:asset', async (request) => {
+    if (request.params.asset !== 'index.json') {
+        const lang = getI18n(request)
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
+    return createDiscoveryResponse(
+        JSON.stringify(await buildAgentSkillsIndex(), null, 2),
+        'application/json; charset=UTF-8',
+    )
+})
+
+router.get('/.well-known/agent-skills/:skillName/:fileName', (request) => {
+    if (request.params.skillName !== 'david888-wiki-publisher' || request.params.fileName !== 'SKILL.md') {
+        const lang = getI18n(request)
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
+    return createDiscoveryResponse(
+        AGENT_SKILL_MARKDOWN,
+        'text/markdown; charset=UTF-8',
+    )
+})
+
+router.head('/.well-known/agent-skills/:skillName/:fileName', (request) => {
+    if (request.params.skillName !== 'david888-wiki-publisher' || request.params.fileName !== 'SKILL.md') {
+        const lang = getI18n(request)
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
+    return createDiscoveryResponse(
+        AGENT_SKILL_MARKDOWN,
+        'text/markdown; charset=UTF-8',
+    )
+})
 
 router.get('/api/:path/history', async (request) => {
     const { path } = request.params
@@ -1061,16 +1215,28 @@ export default {
                 env,
                 waitUntil: promise => ctx.waitUntil(promise),
             })
+            const requestPath = new URL(request.url).pathname
+            let finalResponse = response
 
-            if (request.method === 'HEAD') {
-                return new Response(null, {
-                    headers: response.headers,
+            if (requestPath === '/') {
+                const headers = new Headers(response.headers)
+                applyDiscoveryHeaders(headers)
+                finalResponse = new Response(response.body, {
+                    headers,
                     status: response.status,
                     statusText: response.statusText,
                 })
             }
 
-            return response
+            if (request.method === 'HEAD') {
+                return new Response(null, {
+                    headers: finalResponse.headers,
+                    status: finalResponse.status,
+                    statusText: finalResponse.statusText,
+                })
+            }
+
+            return finalResponse
         } catch (err) {
             console.error('Fetch Event Error:', err)
             return new Response(`Worker Error: ${err.message}`, { status: 500 })
