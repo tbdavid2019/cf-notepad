@@ -40,16 +40,16 @@
   - 檢視所有筆記列表。
   - 檢查是否設定了密碼。
   - **直接刪除**違規或過期的筆記。
-- **[NEW] LLM & AI Agent API (無頭 CMS)**：
+- **2026-06-18 · LLM & AI Agent API (無頭 CMS)**：
   - 完全支援外部 App 或 AI Agent (如 OpenClaw, n8n) 透過 REST API (`/api/:path`) 進行讀寫與接續撰寫 (Append)。
   - `/api/:path` 除了原本的 JSON body，也支援 `text/markdown` / `text/plain` 直接上傳整份 `.md`，以及 `multipart/form-data` 的檔案上傳，降低 LLM 用 `curl` 寫長文時的跳脫字元失敗率。
   - 支援 API 原生圖片上傳 (`/api/upload`) 與 Markdown 連結。
   - 啟用歷史版本後，可使用 `GET /api/:path/history`、`GET /api/:path/history/:versionId`、`POST /api/:path/history/:versionId/restore` 管理歷史快照。
   - 詳見：[LLM_API_DOCS.md](./LLM_API_DOCS.md)。
-- **[NEW] 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
+- **2026-06-18 · 支援 MCP (Model Context Protocol) 與專屬 AI 技能 (Skills)**：
   - 內建符合 PEP-723 的零安裝 Python MCP 伺服器，直接透過 `uv run https://.../mcp/server.py` 接上你的 AI。
   - 內含專給 Antigravity 或其他代理人的系統提示詞 (Prompt/Skills 包)，請參考 `skills/SKILL.md`。
-- **[NEW] 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
+- **2026-07-07 · 自動適配 LLM 爬蟲與 SEO (Crawler-Friendly)**：
   - 分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，確保 ChatGPT、ClaudeBot、n8n 等爬蟲工具皆可完美抓取文章內容。
   - 分享連結也會輸出 server-rendered metadata（`og:title`、`og:description`、`twitter:*`），改善 Slack / IM / 社群平台的 URL unfurl 結果。
   - 對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown` 內容協商，agent 可直接拿到 `text/markdown` 而不是 HTML。
@@ -58,7 +58,7 @@
   - 首頁 `/` 會輸出 `Link` response headers，指向 `/.well-known/api-catalog`、`/docs/api`、`/openapi.json` 以利 agent discovery。
   - 提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`，支援 API、Auth 與 Agent Skills 的標準化發現流程。
   - 在支援的瀏覽器中會保守註冊 WebMCP tools，讓 agent 可讀取當前 markdown、複製 share link、或切到簡報模式。
-- **[NEW] Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
+- **2026-06-09 · Slidev 風格全螢幕簡報模式 (Presentation Mode)** 📽️：
   - 支援將 Markdown 直接轉化為互動式簡報，使用標準 `---` 符號即可分頁（Slidev/Marp 相容）。
   - 演示模式使用較緊湊的標題級距，避免長中文 `H1 / H2` 佔滿投影片。
   - 引用區塊採用較小字級；內容超過投影片範圍時會自動縮放該頁正文與表格。
@@ -70,7 +70,7 @@
     - 支援 **點擊動畫**：在內容後加上 `{v-click}` 實現逐條顯示。
     - **高級視覺**：內建 Inter 精緻字體與深色主題優化。
   - 內建 Reveal.js 懶加載引擎，一鍵進入沉浸式演示體驗。
-- **[NEW] PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並完美保留主題的邊框與底色設計。
+- **2026-06-13 · PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並完美保留主題的邊框與底色設計。
 ## 擴充套件：MCP 與 AI Skills (無頭 CMS)
 
 Cloud Notepad 現在完整支援被 AI Agent（如 Claude, Cursor, Antigravity, OpenClaw）當作「外部大腦」或「發文平台」使用！
@@ -369,7 +369,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 - **LLM / Web Crawler Support**:
   - `HEAD` requests are natively supported (prevents 500 errors during crawler probes).
   - Share links expose bare semantic `<article>` tags containing markdown so agents like ChatGPT-User, ClaudeBot, and meta-scrapers can easily read the notes without executing Javascript.
-- **[NEW] Slidev-style Presentation Mode** 📽️:
+- **2026-06-09 · Slidev-style Presentation Mode** 📽️:
   - Transform your markdown into fullscreen interactive slides using the standard `---` separator.
   - Uses a compact heading scale so long `H1 / H2` titles remain readable without dominating the slide.
   - Uses compact blockquotes and automatically fits oversized slide content and tables to the viewport.
@@ -377,8 +377,8 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - Shared notes can open directly at `/share/<id>/present` and preserve deep links like `#/24`.
   - Supports Slidev-lite style `::left::` / `::right::` two-column layout and `{v-click}` progressive reveals.
   - Powered by Reveal.js with smart on-demand asset loading.
-- **[NEW] PDF & Print Optimization** 🖨️: Added print stylesheet rules that automatically hide editor textareas and toolbars during printing or when saving to PDF. It handles page-breaks gracefully for headings, code blocks, and tables, and forces background color rendering to preserve themes' premium styles.
-- **[NEW] Curated Dark Preview Themes**:
+- **2026-06-13 · PDF & Print Optimization** 🖨️: Added print stylesheet rules that automatically hide editor textareas and toolbars during printing or when saving to PDF. It handles page-breaks gracefully for headings, code blocks, and tables, and forces background color rendering to preserve themes' premium styles.
+- **2026-06-10 · Curated Dark Preview Themes**:
   - Added `catppuccin-macchiato` as the current default Markdown preview theme.
   - Added `kanagawa` as an additional built-in dark theme option.
   - Editor and preview now share the bundled `Maple Mono` font for a more code-centric reading experience.
