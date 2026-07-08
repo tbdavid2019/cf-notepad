@@ -33,3 +33,8 @@ test('language strings cover public index actions', () => {
     assert.match(constantSource, /publicIndexEnable: '加入 sitemap'/)
     assert.match(constantSource, /publicIndexPromptApprove: '同意加入'/)
 })
+
+test('footer skill link points to the built-in well-known skill endpoint', () => {
+    assert.match(commonTemplateSource, /href="\/\.well-known\/agent-skills\/david888-wiki-publisher\/SKILL\.md"/)
+    assert.doesNotMatch(commonTemplateSource, /github\.com\/tbdavid2019\/cf-notepad\/blob\/main\/skills\/SKILL\.md/)
+})

@@ -18,6 +18,7 @@ import {
     buildApiCatalog,
     buildOpenApiDocument,
     buildRobotsTxt,
+    buildSitemapXml,
     createMarkdownResponse,
     createDiscoveryResponse,
     getDiscoveryConstants,
@@ -101,6 +102,32 @@ function readApiPassword(request, bodyPassword) {
     const authHeader = request.headers.get('Authorization')
     const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
     return queryPw || headerPw || bodyPassword || null
+}
+
+function formatSitemapLastmod(updateAt) {
+    const unixSeconds = Number(updateAt)
+    if (!Number.isFinite(unixSeconds) || unixSeconds <= 0) return undefined
+    return dayjs.unix(unixSeconds).format('YYYY-MM-DD')
+}
+
+async function buildSitemapEntries(origin) {
+    const keys = []
+    let cursor
+
+    do {
+        const page = await getNotesNamespace().list(cursor ? { cursor } : undefined)
+        keys.push(...page.keys)
+        cursor = page.list_complete ? undefined : page.cursor
+    } while (cursor)
+
+    const publicKeys = keys.filter(note =>
+        note?.metadata?.share === true && note?.metadata?.publicIndex === true
+    )
+
+    return Promise.all(publicKeys.map(async note => ({
+        loc: `${origin}/share/${await MD5(note.name)}`,
+        lastmod: formatSitemapLastmod(note.metadata?.updateAt),
+    })))
 }
 
 async function requireApiEditAccess(request, metadata, bodyPassword) {
@@ -516,15 +543,31 @@ router.head('/og-image.png', ogImageResponse)
 router.get('/favicon.ico', faviconResponse)
 router.head('/favicon.ico', faviconResponse)
 
-router.get('/robots.txt', () => createDiscoveryResponse(
-    buildRobotsTxt(),
+router.get('/robots.txt', (request) => createDiscoveryResponse(
+    buildRobotsTxt(new URL(request.url).origin),
     'text/plain; charset=UTF-8',
 ))
 
-router.head('/robots.txt', () => createDiscoveryResponse(
-    buildRobotsTxt(),
+router.head('/robots.txt', (request) => createDiscoveryResponse(
+    buildRobotsTxt(new URL(request.url).origin),
     'text/plain; charset=UTF-8',
 ))
+
+router.get('/sitemap.xml', async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        buildSitemapXml(await buildSitemapEntries(origin)),
+        'application/xml; charset=UTF-8',
+    )
+})
+
+router.head('/sitemap.xml', async (request) => {
+    const origin = new URL(request.url).origin
+    return createDiscoveryResponse(
+        buildSitemapXml(await buildSitemapEntries(origin)),
+        'application/xml; charset=UTF-8',
+    )
+})
 
 router.get(API_CATALOG_PATH, async (request) => {
     const origin = new URL(request.url).origin

@@ -38,7 +38,7 @@
   - **分享功能**：可產生唯讀的分享連結。
   - **最近分享紀錄**：footer 提供「最近分享」入口，使用瀏覽器 localStorage 分別保存「我分享的」與「我看過的」share URL，不增加後端 KV 寫入。
   - **發布引導**：使用者在編輯輸入區停留 3 分鐘且內容尚未發布時，會跳出發布分享提示，協助取得 share URL。
-  - **公開索引 Opt-In**：分享連結建立後，系統會額外詢問是否加入公開索引；預設不加入，只有明確同意的分享才會標記為可進入未來的 `sitemap.xml`。
+  - **公開索引 Opt-In**：分享連結建立後，系統會額外詢問是否加入公開索引；預設不加入，只有明確同意的分享才會標記進入根目錄的 `/sitemap.xml`。
   - **分享頁不追蹤瀏覽數**：預設不寫入 share view 計數，避免 Cloudflare 免費方案持續消耗 KV 寫入額度。
   - **可選 D1 歷史版本**：可透過 D1 為筆記保留歷史快照；功能預設關閉，開啟後預設每篇保留最近 `10` 份版本，並且預設以 5 分鐘節流，避免 editor 自動儲存時把資料量衝高。啟用後，編輯頁 footer 會顯示獨立「版本」入口，可檢視舊版、切換預覽/原文、複製內容或還原。
   - **排程清理 (Scheduled Cleanup)**：每日（UTC 01:00 / 台灣 09:00）自動執行 Cron Job，清理內容少於 10 字的空白筆記，保持資料庫整潔。
@@ -49,6 +49,7 @@
   - **原生圖片上傳**：支援 API 圖片上傳 (`/api/upload`) 與 Markdown 連結。
   - **API 歷史快照管理**：啟用歷史版本後，可使用 `GET /api/:path/history`、`GET /api/:path/history/:versionId`、`POST /api/:path/history/:versionId/restore` 管理歷史快照。
   - **MCP 與專屬技能**：內建符合 PEP-723 的零安裝 Python MCP 伺服器，也提供專給代理人的 `skills/SKILL.md`。
+  - **Skill 單一來源**：站內 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 由 `skills/SKILL.md` build-time 產生，避免 repo 文檔與實際 discovery 輸出各自漂移。
   - **Crawler-Friendly 輸出**：分享連結 (`/share/...`) 原生提供無 JavaScript 依賴的純文字 HTML 結構 (`<article>`)，方便 ChatGPT、ClaudeBot、n8n 等爬蟲工具抓取內容。
   - **Markdown 協商**：對本來就有 markdown 原文的頁面（如 note/share 頁）支援 `Accept: text/markdown`，agent 可直接拿到 `text/markdown` 而不是 HTML。
   - **Agent Discovery**：首頁 `/` 會輸出 `Link` response headers，並提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `/auth.md`。
@@ -311,6 +312,8 @@ This project is designed to be natively used by AI agents (like Antigravity, Ope
 ### 1. Agent Skills
 We provide a structured Skill for agents to natively interact with the wiki.
 - **Skill Location**: [skills/SKILL.md](./skills/SKILL.md)
+- **Canonical Published URL**: `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`
+- **Maintenance Model**: `skills/SKILL.md` is the single editable source; `npm run prepare:skill-doc` regenerates the bundled Worker artifact before test/dev/deploy.
 - **What it does**: Teaches LLMs how to read, write, and append to the wiki using simple `curl` commands.
 
 ### 2. MCP Server (Model Context Protocol)
@@ -352,7 +355,7 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
   - **Sharing**: Generate read-only share links.
   - **Recent Shares**: The footer includes a `Recent shares` entry backed by browser `localStorage`.
   - **Publish Nudge**: If a user stays focused in the editor input for 3 minutes with non-empty unpublished content, the UI prompts them to publish and get a share URL.
-  - **Public Index Opt-In**: After creating a share link, the UI can explicitly ask whether the user wants that share to join the future public sitemap; the default remains private.
+  - **Public Index Opt-In**: After creating a share link, the UI can explicitly ask whether that share should be added to the public root sitemap at `/sitemap.xml`; the default remains private.
   - **No Share View Tracking by Default**: Shared-note views are not counted or written to Cloudflare KV by default.
   - **Optional D1 Note History**: Notes can keep historical snapshots in D1, with retention and save throttling controls.
   - **Scheduled Cleanup**: A daily Cron job removes empty notes automatically.

@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-07-08 10:50 CST]
+### Changed
+- **Agent Skill Single Source**
+  - Made `skills/SKILL.md` the only human-edited source for the published agent skill document.
+  - Added `scripts/generate-agent-skill.mjs` plus npm pre-hooks so test/dev/deploy regenerate the bundled Worker skill artifact before use.
+  - Updated the built-in footer skill link to point at the site-local `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` endpoint instead of the GitHub blob URL.
+
+### Fixed
+- **Skill Drift Risk**
+  - Added test coverage that fails when the generated Worker skill markdown diverges from `skills/SKILL.md`.
+
 ## [2026-07-07 13:30 CST]
 ### Fixed
 - **Edit Lock vs Read Lock Semantics**

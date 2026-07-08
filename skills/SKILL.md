@@ -17,6 +17,21 @@ curl -X GET "https://wiki.david888.com/api/<path>"
 ```
 *If protected, use `?pw=<password>` or `Authorization: Bearer <password>`.*
 
+### 1.1 Read Markdown Instead of Rendered HTML
+If you are reading a normal note page or a public share page, do not scrape the rendered HTML first. Ask the server for markdown directly.
+
+```bash
+curl -X GET "https://wiki.david888.com/share/<share-id>" \
+  -H "Accept: text/markdown"
+```
+
+You can use the same header on `https://wiki.david888.com/<path>`.
+
+Reading priority for agents:
+1. Prefer `GET /api/<path>` when you know the note path.
+2. Otherwise use `GET /share/<share-id>` with `Accept: text/markdown`.
+3. Only fall back to HTML parsing when markdown negotiation is unavailable.
+
 ### 2. Create/Overwrite a Page (POST)
 ```bash
 curl -X POST "https://wiki.david888.com/api/<path>" \
@@ -109,6 +124,25 @@ Example:
 2. **Replace**: Extract the returned URL and replace `/local/path.png` in your markdown.
 3. **Publish**: POST the final markdown.
 
+### D. Writing Mermaid and Flow Diagrams
+Use fenced code blocks with language `mermaid`. Prefer standard Mermaid syntax and keep node labels plain.
+
+````md
+```mermaid
+flowchart TD
+    A[Start] --> B{Need share URL?}
+    B -->|Yes| C[Return shareUrl]
+    B -->|No| D[Keep editing]
+```
+````
+
+Practical rules:
+- Prefer `flowchart TD` or `flowchart LR` for process diagrams.
+- Keep one diagram per code fence.
+- Avoid wrapping Mermaid inside HTML blocks.
+- Use short node labels when possible, especially for mixed CJK and English text.
+- When the user asks for a flowchart, sequence diagram, state diagram, gantt chart, or mindmap, emit Mermaid markdown directly unless they explicitly ask for an image.
+
 ## Auth Rules
 - **Edit Password (`pw`)**: Required to overwrite an existing protected page.
 - **View Password (`vpw`)**: Required to GET a protected page.
@@ -118,6 +152,7 @@ Example:
 - **Error 1101**: A server-side exception occurred. I have added logging; check the returned JSON `msg` for the stack trace or error details.
 - **500 on a very long article/context dump**: Treat this as a payload-size or backend-runtime risk, even if auth is correct. The pragmatic fallback is to publish a concise summary plus the original file path/URL instead of embedding the entire long source document.
 - **Markdown with lots of quotes / backslashes / code fences keeps failing in curl**: Prefer `Content-Type: text/markdown` with `--data-binary @file.md`, or multipart `-F "file=@file.md"`, instead of wrapping the full markdown inside JSON.
+- **I fetched a share page and only got full HTML**: Retry with `Accept: text/markdown`. For public reads, prefer `GET /share/<id>` or `GET /<path>` with that header instead of parsing rendered DOM output.
 - **The URL is always the same / IP Restriction?**: No! The `url` field is the *permanent edit link* for that path. If you see the same URL, it means you successfully updated the same page. This is NOT an IP block. **Always check the `shareUrl` for the unique view link.**
 - **Missing `shareUrl`**: Ensure you are looking at the `.data.shareUrl` field in the JSON response.
 - **Need a slideshow link?**: If the page is slide-oriented, derive it from `shareUrl + '/present'`. For a specific slide, append a Reveal hash like `#/2`.

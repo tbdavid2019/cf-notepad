@@ -8,10 +8,16 @@
   },
   "private": true,
   "scripts": {
+    "prepare:skill-doc": "node scripts/generate-agent-skill.mjs",
+    "prestart": "npm run prepare:skill-doc",
     "start": "wrangler dev",
+    "predev": "npm run prepare:skill-doc",
     "dev": "wrangler dev",
+    "predeploy": "npm run prepare:skill-doc",
     "deploy": "wrangler deploy",
+    "prepublish": "npm run prepare:skill-doc",
     "publish": "wrangler deploy",
+    "pretest": "npm run prepare:skill-doc",
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {

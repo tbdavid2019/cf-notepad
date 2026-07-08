@@ -10,16 +10,19 @@ import {
     buildAgentSkillsIndex,
     buildApiCatalog,
     buildRobotsTxt,
+    buildSitemapXml,
     requestAcceptsMarkdown,
 } from '../src/discovery.mjs'
 
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
+const skillSource = readFileSync(new URL('../skills/SKILL.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
 
 test('robots.txt publishes explicit crawler rules for discovery and AI agents', () => {
-    const robots = buildRobotsTxt()
+    const robots = buildRobotsTxt('https://example.com')
 
     assert.match(robots, /User-agent: \*/)
+    assert.match(robots, /Sitemap: https:\/\/example\.com\/sitemap\.xml/)
     assert.match(robots, /Allow: \/\.well-known\/api-catalog/)
     assert.match(robots, /Allow: \/\.well-known\/agent-skills\//)
     assert.match(robots, /Content-Signal: ai-train=no, search=yes, ai-input=no/)
@@ -28,6 +31,24 @@ test('robots.txt publishes explicit crawler rules for discovery and AI agents', 
     assert.match(robots, /User-agent: OAI-SearchBot/)
     assert.match(robots, /User-agent: Claude-Web/)
     assert.match(robots, /User-agent: Google-Extended/)
+})
+
+test('sitemap xml includes canonical share URLs and optional lastmod dates', () => {
+    const xml = buildSitemapXml([
+        {
+            loc: 'https://example.com/share/abc123',
+            lastmod: '2026-07-08',
+        },
+        {
+            loc: 'https://example.com/share/def456?x=1&y=2',
+        },
+    ])
+
+    assert.match(xml, /^<\?xml version="1\.0" encoding="UTF-8"\?>/)
+    assert.match(xml, /<urlset xmlns="http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9">/)
+    assert.match(xml, /<loc>https:\/\/example\.com\/share\/abc123<\/loc>/)
+    assert.match(xml, /<lastmod>2026-07-08<\/lastmod>/)
+    assert.match(xml, /<loc>https:\/\/example\.com\/share\/def456\?x=1&amp;y=2<\/loc>/)
 })
 
 test('api catalog includes required API discovery relations', () => {
@@ -50,6 +71,10 @@ test('agent skills index uses v0.2.0 schema and sha256 digests', async () => {
     assert.equal(skill.url, '/.well-known/agent-skills/david888-wiki-publisher/SKILL.md')
     assert.match(skill.digest, /^sha256:[0-9a-f]{64}$/)
     assert.match(AGENT_SKILL_MARKDOWN, /^---\nname: david888-wiki-publisher\n/m)
+})
+
+test('generated skill markdown stays identical to skills/SKILL.md', () => {
+    assert.equal(AGENT_SKILL_MARKDOWN, skillSource)
 })
 
 test('auth.md is published as markdown guidance for agents', () => {
@@ -88,6 +113,8 @@ test('discovery headers expose api catalog and API docs links', () => {
 test('worker registers discovery routes before dynamic note routes', () => {
     assert.match(indexSource, /router\.get\('\/robots\.txt'/)
     assert.match(indexSource, /router\.head\('\/robots\.txt'/)
+    assert.match(indexSource, /router\.get\('\/sitemap\.xml'/)
+    assert.match(indexSource, /router\.head\('\/sitemap\.xml'/)
     assert.match(indexSource, /router\.get\(API_CATALOG_PATH/)
     assert.match(indexSource, /router\.head\(API_CATALOG_PATH/)
     assert.match(indexSource, /router\.get\(API_DOCS_PATH/)
