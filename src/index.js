@@ -492,7 +492,7 @@ async function renderSharePage(request, presentationMode = false) {
             content: value,
             ext: {
                 ...metadata,
-                authPath,
+                ...(metadata.pw || metadata.vpw ? { authPath } : {}),
                 sharePath,
                 presentationPath,
                 gaMeasurementId,

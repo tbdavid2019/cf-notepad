@@ -16,6 +16,10 @@ test('direct note route treats view lock separately from edit lock', () => {
     assert.match(indexSource, /authPath: `\/\$\{path\}\/auth`/)
 })
 
+test('share route only exposes authPath when the note is actually locked', () => {
+    assert.match(indexSource, /\.\.\.\(metadata\.pw \|\| metadata\.vpw \? \{ authPath \} : \{\}\),/)
+})
+
 test('auth helpers read secret and salt at runtime instead of import time', () => {
     assert.match(helperSource, /MD5\(`\$\{hashPw\}\+\$\{getSalt\(\) \|\| ''\}`\)/)
     assert.match(helperSource, /MD5\(`\$\{hashPw\}\+undefined`\)/)
