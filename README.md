@@ -328,6 +328,13 @@ It supports Markdown preview, password protection, sharing, and a hidden Super A
 
 👉 **⚠️ For AI Agents and Developers: If you need to read/write articles via API, you MUST read the full specification here: [LLM_API_DOCS.md](./LLM_API_DOCS.md) ⚠️**
 
+The API docs now also cover:
+- markdown negotiation on note/share pages
+- `pw` vs `vpw` lock semantics
+- persisted appearance values such as width, share font, and preview device
+- presentation authoring syntax
+- authenticated editor-session routes like `/:path/setting`
+
 ## Features
 
 - **Core**

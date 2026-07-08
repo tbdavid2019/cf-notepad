@@ -6,6 +6,8 @@
   - Made `skills/SKILL.md` the only human-edited source for the published agent skill document.
   - Added `scripts/generate-agent-skill.mjs` plus npm pre-hooks so test/dev/deploy regenerate the bundled Worker skill artifact before use.
   - Updated the built-in footer skill link to point at the site-local `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` endpoint instead of the GitHub blob URL.
+- **LLM Docs Coverage**
+  - Expanded `LLM_API_DOCS.md` to document markdown negotiation, `publicIndex`, lock semantics (`pw` vs `vpw`), persisted appearance values, slide authoring syntax, and the editor-session routes `/:path/setting` and `/:path/pw`.
 
 ### Fixed
 - **Skill Drift Risk**

@@ -77,6 +77,38 @@ Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin
 > Example: `https://wiki.david888.com/share/abc123/present#/2`
 > Use the Reveal hash suffix to point to a specific slide when useful.
 
+### 2.4 Note Settings Route (Browser/Edit Session)
+There is also a note settings route for the normal editor:
+
+```bash
+curl -X POST "https://wiki.david888.com/<path>/setting" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: auth=<editor-session-cookie>" \
+  -d '{
+    "theme": "retro",
+    "width": "1200px",
+    "shareFont": "jetbrains",
+    "previewDevice": "desktop",
+    "publicIndex": false
+  }'
+```
+
+Important:
+- This route uses the normal edit-session cookie flow, not the note API password flow.
+- Use it when an agent is operating inside the authenticated editor/browser context.
+- For headless publishing, prefer `POST /api/<path>` first, then only use `/:path/setting` if you truly need persisted UI settings such as width or share font.
+
+Supported JSON fields on `POST /:path/setting`:
+- `mode`: note mode metadata
+- `share`: whether the note has a public share link
+- `theme`: persisted theme name
+- `width`: preview/share width metadata
+- `shareFont`: `jetbrains` or `maple`
+- `previewDevice`: `desktop` or `mobile`
+- `publicIndex`: whether the shared note should be included in `/sitemap.xml`
+
+If `share` is set to `false`, `publicIndex` is automatically forced to `false`.
+
 ### 3. Append to a Page (POST)
 ```bash
 curl -X POST "https://wiki.david888.com/api/<path>" \
@@ -143,9 +175,68 @@ Practical rules:
 - Use short node labels when possible, especially for mixed CJK and English text.
 - When the user asks for a flowchart, sequence diagram, state diagram, gantt chart, or mindmap, emit Mermaid markdown directly unless they explicitly ask for an image.
 
+### E. Appearance Settings and Allowed Values
+When an agent needs to preserve the reader/editor presentation, use these persisted metadata values:
+
+- `theme`: one of the bundled theme names listed above
+- `width`: `100%`, `960px`, `1200px`, or `1440px`
+- `shareFont`: `jetbrains` or `maple`
+  - `jetbrains` = JetBrains Mono
+  - `maple` = Maple Mono
+- `previewDevice`: `desktop` or `mobile`
+- `publicIndex`: `true` or `false`
+
+Practical guidance:
+- Use `width: "100%"` when the user does not specify a reading width.
+- Use `shareFont: "jetbrains"` as the default shared-reader font.
+- Use `previewDevice: "mobile"` only when the human explicitly wants a phone-oriented preview state saved with the note.
+- If you are only publishing content and do not need to control note appearance, you can omit all of these fields.
+
+### F. Writing Presentation Slides
+Presentation mode is available at `shareUrl + '/present'`.
+
+Authoring rules:
+- Use `---` to split slides.
+- Use `::left::` and `::right::` for a two-column slide.
+- Use `{v-click}` for progressive reveal items.
+
+Example:
+
+````md
+# Product Update
+
+---
+
+::left::
+## What changed
+- API publishing
+- Share settings
+
+::right::
+```mermaid
+flowchart TD
+    A[Draft] --> B[Publish]
+    B --> C[Share]
+```
+
+---
+
+## Rollout
+- {v-click} Deploy worker
+- {v-click} Verify share URL
+- {v-click} Confirm sitemap state
+````
+
+If the user asks for slides, prefer slide-oriented markdown instead of a flat long article.
+
 ## Auth Rules
-- **Edit Password (`pw`)**: Required to overwrite an existing protected page.
-- **View Password (`vpw`)**: Required to GET a protected page.
+- **Edit Password (`pw`)**: This is the edit lock. It protects editing.
+- **View Password (`vpw`)**: This is the read/view lock. It protects reading and is stronger than the edit lock.
+- If a note has `vpw`, readers must authenticate before reading the note/share page.
+- If a note only has `pw`, the direct note page can still be readable to visitors, but editing remains locked.
+- For `GET /api/<path>`, if either `pw` or `vpw` is set, provide a password through `Authorization: Bearer <password>` or `?pw=<password>`.
+- For `POST /api/<path>`, `pw` and `vpw` can be used to set or update those locks as part of the save request.
+- In the editor/browser flow, `POST /:path/pw` can also update locks with JSON `{ "passwd": "...", "type": "edit" }` or `{ "passwd": "...", "type": "view" }` after edit-session authentication.
 - If you get a **401/403**, ask the user: "This page is protected, please provide the password."
 
 ## Troubleshooting

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 
 import {
     AGENT_SKILL_MARKDOWN,
+    API_DOCS_MARKDOWN,
     AUTH_MD_MARKDOWN,
     applyDiscoveryHeaders,
     buildMarkdownDocument,
@@ -17,6 +18,7 @@ import {
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const skillSource = readFileSync(new URL('../skills/SKILL.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
+const apiDocsSource = readFileSync(new URL('../LLM_API_DOCS.md', import.meta.url), 'utf8').replace(/\r\n/g, '\n')
 
 test('robots.txt publishes explicit crawler rules for discovery and AI agents', () => {
     const robots = buildRobotsTxt('https://example.com')
@@ -75,6 +77,10 @@ test('agent skills index uses v0.2.0 schema and sha256 digests', async () => {
 
 test('generated skill markdown stays identical to skills/SKILL.md', () => {
     assert.equal(AGENT_SKILL_MARKDOWN, skillSource)
+})
+
+test('generated api docs stay identical to LLM_API_DOCS.md', () => {
+    assert.equal(API_DOCS_MARKDOWN, apiDocsSource)
 })
 
 test('auth.md is published as markdown guidance for agents', () => {

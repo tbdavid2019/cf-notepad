@@ -1,6 +1,8 @@
 import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
+import { API_DOCS_MARKDOWN } from './generated/api-docs.generated.mjs'
 
 export { AGENT_SKILL_MARKDOWN }
+export { API_DOCS_MARKDOWN }
 
 const AGENT_SKILL_NAME = 'david888-wiki-publisher'
 const AGENT_SKILL_PATH = `/.well-known/agent-skills/${AGENT_SKILL_NAME}/SKILL.md`
@@ -13,39 +15,6 @@ const AGENT_SKILLS_INDEX_PATH = '/.well-known/agent-skills/index.json'
 const SITEMAP_PATH = '/sitemap.xml'
 const AGENT_SKILLS_SCHEMA = 'https://schemas.agentskills.io/discovery/0.2.0/schema.json'
 const API_CATALOG_PROFILE = 'https://www.rfc-editor.org/info/rfc9727'
-
-export const API_DOCS_MARKDOWN = `# API Documentation
-
-This site exposes a simple markdown publishing API for agents and scripts.
-
-## Endpoints
-
-- \`GET /api/:path\`: read note content as markdown. Protected notes require \`Authorization: Bearer <password>\` or \`?pw=<password>\`.
-- \`GET /api/:path?format=json\`: read note content plus safe metadata.
-- \`POST /api/:path\`: create, overwrite, or append note content using \`application/json\`, \`text/markdown\`, \`text/plain\`, or \`multipart/form-data\`.
-- \`POST /api/upload\`: upload an image file when R2 uploads are enabled.
-- \`GET /api/:path/history\`, \`GET /api/:path/history/:versionId\`, \`POST /api/:path/history/:versionId/restore\`: optional note-history endpoints for edit-authorized callers.
-
-## Request Body
-
-For \`POST /api/:path\`, the main fields are:
-
-- \`text\`: markdown content to write.
-- \`append\`: when \`true\`, append instead of overwrite.
-- \`share\` or \`public\`: control whether a public share URL is created.
-- \`theme\`: choose a bundled share theme.
-- \`pw\`: edit password.
-- \`vpw\`: view password.
-
-## Response Notes
-
-Successful writes return both:
-
-- \`url\`: the edit URL.
-- \`shareUrl\`: the public read-only URL.
-
-Agents should return \`shareUrl\` to humans when public viewing is intended.
-`
 
 export const AUTH_MD_MARKDOWN = `# Auth
 

@@ -13,6 +13,12 @@ The underlying page storage can hold very large markdown pages, but that is **no
 - Instead, publish a **concise summary** plus the **source file path, repo path, or canonical URL** so a human or later agent can retrieve the original when needed.
 - Use `append: true` for incremental updates instead of repeatedly re-sending large full-page bodies.
 
+**Two different access models exist:**
+- **Headless API flow**: use `/api/...` routes with note passwords (`pw`, `vpw`) when needed.
+- **Browser/editor session flow**: use normal note routes such as `/:path/setting` or `/:path/pw` only when you already have an authenticated editor session cookie.
+
+Do not assume these two flows are interchangeable.
+
 ### 1. Reading Content (`GET /api/:path`)
 
 Retrieve the content of any post.
@@ -28,6 +34,23 @@ If the post is password-protected, provide the password using **one** of the fol
 **JSON Format (Optional):**
 If you need view counts or update times, append `?format=json`.
 *   Returns: `{"err": 0, "data": {"content": "...", "metadata": {"views": ...}}}`
+
+### 1.1 Read Markdown From Note/Share Pages Instead of Parsing HTML
+If you are given a normal note URL or a public share URL and you want the original markdown, ask the server for markdown directly instead of scraping rendered HTML.
+
+```bash
+curl -X GET "https://wiki.david888.com/share/<share-id>" \
+  -H "Accept: text/markdown"
+```
+
+You can use the same header on:
+- `https://wiki.david888.com/<path>`
+- `https://wiki.david888.com/share/<share-id>`
+
+Recommended reading order:
+1. `GET /api/<path>` if you know the note path
+2. `GET /share/<share-id>` with `Accept: text/markdown`
+3. Only parse HTML as a fallback
 
 ### 2. Writing / Appending Content (`POST /api/:path`)
 
@@ -49,6 +72,7 @@ When you successfully write or create a post via this API, it will return both `
 | `pw` | string | (Optional) Sets or verifies the **edit password**. Required if the existing post has an edit password. |
 | `vpw` | string | (Optional) Sets the **view password**. Only people (or LLMs) with this password can GET the page. |
 | `public` | boolean | (Optional) Defaults to `true` unconditionally for API creations. Set to `false` to keep it private. (`share` is an accepted alias). |
+| `publicIndex` | boolean | (Optional) Controls whether the share should be included in `/sitemap.xml`. Only relevant when the note is shared. |
 | `theme` | string | (Optional) Choose a visual theme: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `green-simple`, `kanagawa`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`, `playful-geometric`, `professional`, `retro`, `sketch`, `terminal`, `tokyo-night`. |
 
 **Recommended for LLM + curl when you already have a `.md` file:**
@@ -72,7 +96,7 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 
 In multipart mode, use these form fields:
 - `file`, `markdown`, or `text`: the markdown content to save
-- `append`, `public`, `share`, `theme`, `pw`, `vpw`: same meaning as the JSON fields
+- `append`, `public`, `share`, `publicIndex`, `theme`, `pw`, `vpw`: same meaning as the JSON fields
 
 **Important Note for Appending Context:**
 If you only need to add an update section, DO NOT read the whole page and overwrite. Simply send `{"text": "\n\n## Update\n...", "append": true}` to automatically stick it at the bottom.
@@ -100,6 +124,55 @@ If your content mainly exists to preserve a source artifact such as `SKILL.md`, 
 
 Avoid pasting the entire long source document into the wiki unless the human explicitly asks for the full text to be mirrored there.
 
+### 2.1 Locks: `pw` vs `vpw`
+These two fields do different things.
+
+- `pw` = **edit lock**
+  - Protects editing
+  - For direct note pages, visitors may still be able to read if only `pw` exists
+  - For `GET /api/<path>`, the API still requires a password when `pw` exists
+- `vpw` = **view/read lock**
+  - Protects reading and editing
+  - This is the stronger lock
+  - If `vpw` exists, readers must authenticate before reading the note/share page
+
+Practical rule:
+- Use `pw` when the human wants read-only visitors but restricted editing
+- Use `vpw` when the human wants the content itself hidden from unauthenticated readers
+
+### 2.2 Share URL, Presentation URL, and Public Index
+- If sharing is enabled, successful saves return `shareUrl`
+- Presentation mode is derived from `shareUrl + '/present'`
+  - Example: `https://wiki.david888.com/share/abc123/present#/2`
+- `publicIndex: true` requests inclusion in the public root sitemap at `/sitemap.xml`
+- If sharing is disabled, `publicIndex` is effectively meaningless and is forced off by the app
+
+### 2.3 Persisted Appearance Metadata on the API
+`POST /api/<path>` can persist some note metadata directly:
+- `theme`
+- `publicIndex`
+- `share` / `public`
+- `pw`
+- `vpw`
+
+However, the API does **not** currently expose all editor appearance fields in the same route. Width, share font, and preview device are handled by the browser/editor settings route below.
+
+### 2.4 Appearance Values Used by the App
+When you need to preserve note appearance, the app uses these values:
+
+- `theme`: one of the bundled themes listed above
+- `width`: `100%`, `960px`, `1200px`, `1440px`
+- `shareFont`: `jetbrains` or `maple`
+  - `jetbrains` = JetBrains Mono
+  - `maple` = Maple Mono
+- `previewDevice`: `desktop` or `mobile`
+
+If the human did not specify appearance details, the safest defaults are:
+- `theme`: omit unless needed
+- `width`: `100%`
+- `shareFont`: `jetbrains`
+- `previewDevice`: `desktop`
+
 ### 3. Uploading Images (`POST /api/upload`)
 
 If you generate an image, download an image, or **if the user gives you local file paths to images** (e.g., `/home/user/images/chart.png`), you **MUST** use this native R2 upload endpoint to host the image online before embedding it.
@@ -117,6 +190,61 @@ If you generate an image, download an image, or **if the user gives you local fi
 2. Extract the `data` URL string (`https://s3...`) from the response.
 3. Replace the local file path in your text with the public URL: `![Generated Image](https://s3.wiki.david888.com/.../xxxx.png)`.
 4. ONLY after uploading all local images and replacing their paths with the public URLs, call `POST /api/:path` with the final markdown text.
+
+### 3.1 Writing Mermaid and Diagrams
+The app supports Mermaid in markdown code fences.
+
+Example:
+
+````md
+```mermaid
+flowchart TD
+    A[Draft] --> B[Publish]
+    B --> C[Share]
+```
+````
+
+Guidance:
+- Prefer standard Mermaid syntax
+- Use one diagram per fence
+- Keep labels concise, especially for mixed Chinese/English text
+- When a user asks for a flowchart, sequence diagram, state diagram, gantt chart, or mindmap, emitting Mermaid markdown is usually better than generating an image
+
+### 3.2 Writing Slide Decks
+Presentation mode is available from a share link by appending `/present`.
+
+Authoring features:
+- `---` splits slides
+- `::left::` and `::right::` create a two-column slide
+- `{v-click}` creates progressive reveal fragments
+
+Example:
+
+````md
+# Weekly Review
+
+---
+
+::left::
+## Progress
+- API docs
+- Skill docs
+
+::right::
+```mermaid
+flowchart LR
+    A[Draft] --> B[Deploy]
+```
+
+---
+
+## Rollout
+- {v-click} Update docs
+- {v-click} Deploy worker
+- {v-click} Verify share link
+````
+
+If the user asks for slides, prefer slide-oriented markdown over a flat article.
 
 ### 4. Note History (`/api/:path/history...`)
 
@@ -138,3 +266,54 @@ If the server operator has enabled note history, the following endpoints are ava
 - History is **optional** and may be disabled on a given deployment.
 - The current implementation stores prior saved content snapshots, not every keystroke.
 - Operators can cap retained versions; this repo defaults to `10`.
+
+### 5. Browser/Editor Session Routes
+These routes are **not** the same as the headless API. Use them only when the agent is operating inside an authenticated browser/editor context with the note's edit session cookie.
+
+### 5.1 Persist Editor/Share Settings (`POST /:path/setting`)
+
+```bash
+curl -X POST "https://wiki.david888.com/<path>/setting" \
+  -H "Content-Type: application/json" \
+  -H "Cookie: auth=<editor-session-cookie>" \
+  -d '{
+    "theme": "retro",
+    "width": "1200px",
+    "shareFont": "jetbrains",
+    "previewDevice": "desktop",
+    "publicIndex": false
+  }'
+```
+
+Supported JSON fields:
+- `mode`
+- `share`
+- `theme`
+- `width`
+- `shareFont`
+- `previewDevice`
+- `publicIndex`
+
+Important behavior:
+- This route requires edit-session auth, not API bearer/query password auth
+- `share: false` also clears public-index inclusion
+- If you only need content publishing, use `POST /api/<path>` instead
+
+### 5.2 Update Locks in the Editor (`POST /:path/pw`)
+In an authenticated editor/browser session, the UI can update locks through:
+
+```json
+{ "passwd": "new-password", "type": "edit" }
+```
+
+or
+
+```json
+{ "passwd": "new-password", "type": "view" }
+```
+
+Meaning:
+- `type: "edit"` updates `pw`
+- `type: "view"` updates `vpw`
+
+This route is mainly relevant to browser automation or in-page agents, not generic external API clients.
