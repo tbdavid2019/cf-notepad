@@ -1,5 +1,11 @@
 # Changelog
 
+## [2026-07-08 12:40 CST]
+### Fixed
+- **Share Page Edit Link Regression**
+  - Fixed shared-note footer `edit` behavior so unlocked share pages link directly back to the note path instead of incorrectly opening the password prompt flow.
+  - Limited share-page `authPath` injection to actually locked notes only, preventing public shares from being treated like password-protected edit entries.
+
 ## [2026-07-08 10:50 CST]
 ### Changed
 - **Agent Skill Single Source**
