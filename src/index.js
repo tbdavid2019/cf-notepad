@@ -36,6 +36,7 @@ const router = Router()
 const getNotesNamespace = () => globalThis.NOTES
 const getShareNamespace = () => globalThis.SHARE
 const getImagesBucket = () => globalThis.IMAGES
+const SHARE_SLUG_LENGTH = 6
 const {
     AGENT_SKILL_PATH,
     AGENT_SKILLS_INDEX_PATH,
@@ -104,6 +105,48 @@ function readApiPassword(request, bodyPassword) {
     return queryPw || headerPw || bodyPassword || null
 }
 
+async function generateUniqueShareSlug() {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const candidate = genRandomStr(SHARE_SLUG_LENGTH)
+        const existing = await getShareNamespace().get(candidate)
+        if (!existing) return candidate
+    }
+    throw new Error('Failed to generate unique share slug')
+}
+
+async function getShareIdForPath(path, metadata = {}) {
+    if (metadata.share !== true) return null
+    return metadata.shareSlug || await MD5(path)
+}
+
+async function ensureShareMetadata(path, metadata = {}) {
+    if (metadata.share !== true) return { ...metadata }
+    if (metadata.shareSlug) return { ...metadata }
+    return {
+        ...metadata,
+        shareSlug: await generateUniqueShareSlug(),
+    }
+}
+
+async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
+    const legacyShareId = await MD5(path)
+
+    if (metadata.share === true) {
+        await getShareNamespace().put(legacyShareId, path)
+        if (metadata.shareSlug) {
+            await getShareNamespace().put(metadata.shareSlug, path)
+        }
+    } else {
+        await getShareNamespace().delete(legacyShareId)
+        if (previousMetadata.shareSlug) {
+            await getShareNamespace().delete(previousMetadata.shareSlug)
+        }
+        if (metadata.shareSlug && metadata.shareSlug !== previousMetadata.shareSlug) {
+            await getShareNamespace().delete(metadata.shareSlug)
+        }
+    }
+}
+
 function formatSitemapLastmod(updateAt) {
     const unixSeconds = Number(updateAt)
     if (!Number.isFinite(unixSeconds) || unixSeconds <= 0) return undefined
@@ -125,7 +168,7 @@ async function buildSitemapEntries(origin) {
     )
 
     return Promise.all(publicKeys.map(async note => ({
-        loc: `${origin}/share/${await MD5(note.name)}`,
+        loc: `${origin}/share/${await getShareIdForPath(note.name, note.metadata || {})}`,
         lastmod: formatSitemapLastmod(note.metadata?.updateAt),
     })))
 }
@@ -272,9 +315,9 @@ router.post(ADMIN_PATH, async (request) => {
                     try {
                         // Delete all selected notes
                         await Promise.all(paths.map(async (path) => {
+                            const { metadata } = await queryNote(path)
                             await getNotesNamespace().delete(path)
-                            const md5 = await MD5(path)
-                            await getShareNamespace().delete(md5)
+                            await syncShareMappings(path, { share: false }, metadata || {})
                             await deleteNoteHistoryForPath(path)
                         }))
 
@@ -338,9 +381,9 @@ router.post(ADMIN_PATH, async (request) => {
             if (action === 'delete') {
                 const path = formData.get('path')
                 if (path) {
+                    const { metadata } = await queryNote(path)
                     await getNotesNamespace().delete(path)
-                    const md5 = await MD5(path)
-                    await getShareNamespace().delete(md5)
+                    await syncShareMappings(path, { share: false }, metadata || {})
                     await deleteNoteHistoryForPath(path)
                 }
                 return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
@@ -384,9 +427,9 @@ router.post('/upload', async (request) => {
 
 
 
-router.post('/share/:md5/auth', async request => {
-    const { md5 } = request.params
-    const path = await getShareNamespace().get(md5)
+router.post('/share/:shareId/auth', async request => {
+    const { shareId } = request.params
+    const path = await getShareNamespace().get(shareId)
 
     if (!!path) {
         if (request.headers.get('Content-Type') === 'application/json') {
@@ -401,7 +444,7 @@ router.post('/share/:md5/auth', async request => {
                         refresh: true,
                     }, {
                         'Set-Cookie': Cookies.serialize('auth', token, {
-                            path: `/share/${md5}`,
+                            path: `/share/${shareId}`,
                             expires: dayjs().add(7, 'day').toDate(),
                             httpOnly: true,
                         })
@@ -420,7 +463,7 @@ router.post('/share/:md5/auth', async request => {
                         refresh: true,
                     }, {
                         'Set-Cookie': Cookies.serialize('auth', token, {
-                            path: `/share/${md5}`,
+                            path: `/share/${shareId}`,
                             expires: dayjs().add(7, 'day').toDate(),
                             httpOnly: true,
                         })
@@ -435,9 +478,9 @@ router.post('/share/:md5/auth', async request => {
 
 async function renderSharePage(request, presentationMode = false) {
     const lang = getI18n(request)
-    const { md5 } = request.params
-    const path = await getShareNamespace().get(md5)
-    const sharePath = `/share/${md5}`
+    const { shareId } = request.params
+    const path = await getShareNamespace().get(shareId)
+    const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
     const authPath = `${sharePath}/auth`
     const gaMeasurementId = getGaMeasurementId()
@@ -515,19 +558,19 @@ async function renderSharePage(request, presentationMode = false) {
     return returnPage('Page404', { lang, title: '404' })
 }
 
-router.get('/share/:md5', async (request) => {
+router.get('/share/:shareId', async (request) => {
     return renderSharePage(request, false)
 })
 
-router.head('/share/:md5', async (request) => {
+router.head('/share/:shareId', async (request) => {
     return renderSharePage(request, false)
 })
 
-router.get('/share/:md5/present', async (request) => {
+router.get('/share/:shareId/present', async (request) => {
     return renderSharePage(request, true)
 })
 
-router.head('/share/:md5/present', async (request) => {
+router.head('/share/:shareId/present', async (request) => {
     return renderSharePage(request, true)
 })
 
@@ -810,7 +853,7 @@ router.post('/api/:path/history/:versionId/restore', async (request) => {
         }
 
         if (nextMetadata.share) {
-            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${await MD5(path)}`
+            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${await getShareIdForPath(path, nextMetadata)}`
         }
 
         return returnJSON(0, responseData)
@@ -958,7 +1001,7 @@ router.post('/api/:path', async (request) => {
 
     const newContent = append ? (value ? value + '\n\n' + text : text) : text
 
-    const updateMetadata = {
+    let updateMetadata = {
         ...metadata,
         updateAt: dayjs().unix(),
     }
@@ -987,6 +1030,7 @@ router.post('/api/:path', async (request) => {
     if (updateMetadata.share === false) {
         updateMetadata.publicIndex = false
     }
+    updateMetadata = await ensureShareMetadata(path, updateMetadata)
 
     try {
         await persistNoteContent({
@@ -996,12 +1040,7 @@ router.post('/api/:path', async (request) => {
             previousContent: value,
         })
 
-        const md5 = await MD5(path)
-        if (updateMetadata.share) {
-            await getShareNamespace().put(md5, path)
-        } else if (updateMetadata.share === false) {
-            await getShareNamespace().delete(md5)
-        }
+        await syncShareMappings(path, updateMetadata, metadata)
 
         const fullUrl = new URL(request.url)
         const responseData = {
@@ -1011,7 +1050,7 @@ router.post('/api/:path', async (request) => {
         
         // Always provide the share URL if it's shared, so the LLM can give a safe link to the human
         if (updateMetadata.share) {
-            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${md5}`
+            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${await getShareIdForPath(path, updateMetadata)}`
         }
 
         return returnJSON(0, responseData)
@@ -1032,7 +1071,7 @@ router.get('/:path', async (request) => {
     const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
 
     // Calculate shareId only if sharing is enabled
-    const shareId = metadata.share ? await MD5(path) : null
+    const shareId = await getShareIdForPath(path, metadata)
 
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
@@ -1123,7 +1162,7 @@ router.head('/:path', async (request) => {
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const { value, metadata } = await queryNote(path)
     const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
-    const shareId = metadata.share ? await MD5(path) : null
+    const shareId = await getShareIdForPath(path, metadata)
 
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
@@ -1305,7 +1344,7 @@ router.post('/:path/setting', async request => {
 
             if (!metadata.pw || valid) {
                 try {
-                    const nextMetadata = {
+                    let nextMetadata = {
                         ...metadata,
                         ...mode !== undefined && { mode },
                         ...share !== undefined && { share },
@@ -1319,18 +1358,18 @@ router.post('/:path/setting', async request => {
                     if (share === false) {
                         nextMetadata.publicIndex = false
                     }
+                    nextMetadata = await ensureShareMetadata(path, nextMetadata)
 
                     await getNotesNamespace().put(path, value, {
                         metadata: nextMetadata,
                     })
 
-                    const md5 = await MD5(path)
                     if (share) {
-                        await getShareNamespace().put(md5, path)
-                        return returnJSON(0, md5)
+                        await syncShareMappings(path, nextMetadata, metadata)
+                        return returnJSON(0, await getShareIdForPath(path, nextMetadata))
                     }
                     if (share === false) {
-                        await getShareNamespace().delete(md5)
+                        await syncShareMappings(path, nextMetadata, metadata)
                     }
 
 

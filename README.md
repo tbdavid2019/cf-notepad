@@ -61,6 +61,10 @@
   - **PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並保留主題邊框與底色設計。
   - **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
   - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
+  - **Footer 窄化微調**：保存時間已縮成單一 `◷` icon，完整絕對時間放在 tooltip；主題選單也改用較短的 theme label，例如 `cp-macchiato`。
+  - **Markdown / PDF 快捷工具**：footer 新增 icon-only 的 `導入 Markdown`、`導出 Markdown`、`列印 / 導出 PDF` 工具，並以 tooltip / aria-label 提供明確說明；同區也補上站內 `Skill` 與 `API` 文檔入口。
+  - **發布區塊語義化**：已發布狀態不再顯示一大串 share URL；改為可直接另開新分頁的 `Share / 分享頁` 按鈕，旁邊保留複製 share 與簡報連結 icon。`編輯鎖 / 閱讀鎖 / 最近分享 / 版本 / Skill / API` 也統一改為 icon-first footer 控件。
+  - **短分享網址相容層**：新分享會優先使用較短的 `shareSlug`，但系統仍保留舊的 `md5(path)` share key，因此既有長 share URL 不會失效。
 
 - **維運與管理**
   - **超級管理員介面**：

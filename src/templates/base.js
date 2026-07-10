@@ -1179,6 +1179,10 @@ ${getMarkdownCss()}
         const $publishNudgeLater = document.querySelector('.publish-nudge-later')
         const $publishNudgeClose = document.querySelector('.publish-nudge-close')
         const $mobileFooterMoreBtn = document.querySelector('#mobile-footer-more-btn')
+        const $importMdBtn = document.querySelector('#import-md-btn')
+        const $importMdInput = document.querySelector('#import-md-input')
+        const $exportMdBtn = document.querySelector('#export-md-btn')
+        const $exportPdfBtn = document.querySelector('#export-pdf-btn')
 
         setupShareHistory()
         setupNoteHistory({
@@ -1196,6 +1200,68 @@ ${getMarkdownCss()}
         renderPlain($previewPlain, $textarea ? $textarea.value : '')
         triggerRender($previewMd, $textarea ? $textarea.value : '')
         setupShareBackToTop($previewMd || $previewPlain)
+
+        const getCurrentMarkdownForExport = () => {
+            if ($textarea && !$textarea.classList.contains('hide')) return $textarea.value || ''
+            const article = document.querySelector('#bot-accessible-content')
+            return article ? (article.textContent || '') : ''
+        }
+
+        const getMarkdownFilename = () => {
+            const source = APP_STATE.path || APP_STATE.title || 'note'
+            const sanitized = String(source)
+                .trim()
+                .replace(/[\\/:*?"<>|]+/g, '-')
+                .replace(/\s+/g, '-')
+                .replace(/-+/g, '-')
+                .replace(/^-|-$/g, '')
+            return (sanitized || 'note') + '.md'
+        }
+
+        if ($exportMdBtn) {
+            $exportMdBtn.addEventListener('click', () => {
+                const blob = new Blob([getCurrentMarkdownForExport()], { type: 'text/markdown;charset=utf-8' })
+                const url = URL.createObjectURL(blob)
+                const link = document.createElement('a')
+                link.href = url
+                link.download = getMarkdownFilename()
+                document.body.appendChild(link)
+                link.click()
+                link.remove()
+                window.setTimeout(() => URL.revokeObjectURL(url), 0)
+            })
+        }
+
+        if ($exportPdfBtn) {
+            $exportPdfBtn.addEventListener('click', () => {
+                window.print()
+            })
+        }
+
+        if ($importMdBtn && $importMdInput && $textarea) {
+            $importMdBtn.addEventListener('click', () => {
+                $importMdInput.click()
+            })
+            $importMdInput.addEventListener('change', () => {
+                const file = $importMdInput.files && $importMdInput.files[0]
+                if (!file) return;
+                const reader = new FileReader()
+                reader.onload = () => {
+                    const text = typeof reader.result === 'string' ? reader.result : ''
+                    $textarea.value = text
+                    renderPlain($previewPlain, text)
+                    triggerRender($previewMd, text)
+                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                    alert(getI18n('markdownImported'))
+                    $importMdInput.value = ''
+                }
+                reader.onerror = () => {
+                    alert(getI18n('markdownImportFailed'))
+                    $importMdInput.value = ''
+                }
+                reader.readAsText(file, 'utf-8')
+            })
+        }
 
         const showShareModal = (shareId) => {
             if (!$shareModal || !$shareInput || !shareId) return;
@@ -1421,22 +1487,23 @@ ${getMarkdownCss()}
         }
 
         // Published share URL
-        const $shareUrlInput = document.querySelector('.share-url-input');
+        const $shareOpenLink = document.querySelector('#share-open-link');
         const $shareCopyBtn = document.querySelector('#copy-share-btn');
         const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
         const $publicIndexBtn = document.querySelector('#public-index-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         const $readonlyEditBtn = document.querySelector('#readonly-edit-btn');
-        if ($shareUrlInput && $shareCopyBtn) {
-            try { $shareUrlInput.value = window.location.origin + ($shareUrlInput.getAttribute('value') || $shareUrlInput.value); } catch(e) {}
-            recordShareHistory('created', $shareUrlInput.value, APP_STATE.title);
+        if ($shareOpenLink && $shareCopyBtn) {
+            const shareUrl = new URL($shareOpenLink.getAttribute('href') || '', window.location.origin).toString()
+            $shareOpenLink.href = shareUrl
+            recordShareHistory('created', shareUrl, APP_STATE.title);
             $shareCopyBtn.addEventListener('click', async () => {
-                try { await clipboardCopy($shareUrlInput.value); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
+                try { await clipboardCopy(shareUrl); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });
         }
-        if ($shareUrlInput && $copyPresentShareBtn) {
+        if ($shareOpenLink && $copyPresentShareBtn) {
             $copyPresentShareBtn.addEventListener('click', async () => {
-                const presentationUrl = ($shareUrlInput.value || '') + '/present';
+                const presentationUrl = new URL(($shareOpenLink.getAttribute('href') || '') + '/present', window.location.origin).toString();
                 try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
             });
         }

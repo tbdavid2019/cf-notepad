@@ -268,6 +268,14 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     line-height: var(--toolbar-height);
     cursor: pointer;
 }
+#preview-width-selector {
+    width: 76px;
+    max-width: 76px;
+}
+#theme-selector {
+    width: 98px;
+    max-width: 98px;
+}
 .footer-select:hover {
     background: var(--toolbar-bg-hover);
 }
@@ -378,6 +386,11 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     border-color: #ffb3ad;
     background: #ffebe9;
 }
+.toolbar-active-button {
+    border-color: #8cbbf7;
+    background: #ddf4ff;
+    color: var(--toolbar-accent);
+}
 .opt-switcher {
     height: var(--toolbar-height);
     display: inline-flex;
@@ -434,17 +447,23 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-weight: 650;
     line-height: 1;
 }
-.share-url-input {
-    width: 186px;
-    min-width: 132px;
+.share-url-link {
+    min-width: 0;
     height: calc(var(--toolbar-height) - 2px);
-    border: 0;
-    background: transparent;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 10px;
+    border-radius: calc(var(--toolbar-radius) - 1px);
+    background: rgba(255, 255, 255, 0.65);
     color: var(--toolbar-accent);
-    font-family: var(--editor-font-family);
     font-size: 12px;
     font-weight: 650;
-    outline: none;
+    text-decoration: none;
+}
+.share-url-link:hover {
+    background: #fff;
+    text-decoration: none;
 }
 .public-index-btn {
     min-width: 68px;
@@ -467,8 +486,9 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .mobile-footer-more-trigger {
     display: none;
 }
+.toolbar-icon-link,
 .github-link,
-.skill-link {
+.doc-link {
     height: var(--toolbar-height);
     display: inline-flex;
     align-items: center;
@@ -482,14 +502,38 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-size: 13px;
     font-weight: 650;
 }
+.toolbar-icon-link {
+    width: var(--toolbar-height);
+    padding: 0;
+    border: 1px solid transparent;
+}
+.toolbar-icon-link:hover,
 .github-link:hover,
-.skill-link:hover {
+.doc-link:hover {
     border-color: var(--toolbar-border);
     background: var(--toolbar-bg-hover);
+}
+.sr-only,
+.visually-hidden-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
 }
 .last-modified {
     color: var(--toolbar-muted);
     font-size: 12px;
+    letter-spacing: 0.01em;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--toolbar-height);
+    height: var(--toolbar-height);
 }
 .share-history-content {
     position: fixed;

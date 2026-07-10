@@ -1,5 +1,31 @@
 # Changelog
 
+## [2026-07-11 16:20 CST]
+### Changed
+- **Footer File Tools**
+  - Added compact footer icon tools for `Import Markdown`, `Export Markdown`, and `Print / Export PDF` without changing the existing preview/edit interaction model.
+  - Added a direct footer `API` documentation link next to the built-in `Skill` link, both with explicit tooltip / aria labels.
+  - Kept the controls text-light so the footer remains narrow on constrained widths.
+- **Footer Share / Lock Cleanup**
+  - Replaced the raw published share URL field with a compact `Share / 分享頁` button that opens the shared page in a new tab, while keeping dedicated copy buttons for share and presentation URLs.
+  - Converted `Edit Lock / Read Lock` into icon controls with active visual state to reduce footer width.
+  - Reduced saved-time chrome further from `Saved ◷` / `保存 ◷` to a single `◷` icon with the absolute timestamp kept in the tooltip.
+- **Short Share Slug Compatibility**
+  - New shared notes now prefer a short `shareSlug` while preserving the legacy `md5(path)` share key for backward compatibility.
+  - Existing long share URLs remain valid because the Worker now accepts both short slugs and legacy MD5-based share ids.
+- **Footer Icon Consistency**
+  - Converted `Recent Shares / History / Skill / API` into icon-first footer controls with tooltip and aria-label coverage, keeping the footer visually tighter without dropping discoverability.
+### Documentation
+- Updated `README.md` to describe the new footer file tools and compact API / Skill doc entry points.
+
+## [2026-07-11 15:55 CST]
+### Changed
+- **Footer Width Tuning**
+  - Kept the stable footer interaction model intact, but reduced visual width usage by changing saved-time display to a compact `Saved ◷` label with the absolute timestamp in a tooltip.
+  - Shortened theme selector labels such as `catppuccin-macchiato` to compact forms like `cp-macchiato` and reduced the selector width to better fit narrow footer layouts.
+### Documentation
+- Updated `README.md` to describe the compact saved-time display and shortened theme labels.
+
 ## [2026-07-08 12:40 CST]
 ### Fixed
 - **Share Page Edit Link Regression**
