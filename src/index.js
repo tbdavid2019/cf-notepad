@@ -105,6 +105,80 @@ function readApiPassword(request, bodyPassword) {
     return queryPw || headerPw || bodyPassword || null
 }
 
+function normalizeAiText(value) {
+    if (typeof value !== 'string') return ''
+    return value.replace(/\u0000/g, '').trim()
+}
+
+function extractAiText(payload) {
+    if (!payload) return ''
+    if (typeof payload === 'string') return normalizeAiText(payload)
+
+    const directCandidates = [
+        payload.response,
+        payload.output_text,
+        payload.text,
+        payload.content,
+        payload.answer,
+        payload.result?.response,
+        payload.result?.output_text,
+        payload.result?.text,
+        payload.result?.content,
+        payload.choices?.[0]?.message?.content,
+        payload.choices?.[0]?.text,
+    ]
+
+    for (const candidate of directCandidates) {
+        if (typeof candidate === 'string') {
+            const normalized = normalizeAiText(candidate)
+            if (normalized) return normalized
+        }
+
+        if (Array.isArray(candidate)) {
+            const joined = candidate
+                .map(item => {
+                    if (typeof item === 'string') return item
+                    if (typeof item?.text === 'string') return item.text
+                    if (typeof item?.content === 'string') return item.content
+                    return ''
+                })
+                .filter(Boolean)
+                .join('\n')
+            const normalized = normalizeAiText(joined)
+            if (normalized) return normalized
+        }
+    }
+
+    const outputCandidates = [
+        payload.output,
+        payload.result?.output,
+        payload.response?.output,
+    ]
+
+    for (const output of outputCandidates) {
+        if (!Array.isArray(output)) continue
+
+        const text = output
+            .flatMap(item => {
+                if (typeof item?.text === 'string') return [item.text]
+                if (!Array.isArray(item?.content)) return []
+                return item.content
+                    .map(part => {
+                        if (typeof part?.text === 'string') return part.text
+                        if (typeof part?.output_text === 'string') return part.output_text
+                        return ''
+                    })
+                    .filter(Boolean)
+            })
+            .join('\n')
+
+        const normalized = normalizeAiText(text)
+        if (normalized) return normalized
+    }
+
+    return ''
+}
+
 async function generateUniqueShareSlug() {
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const candidate = genRandomStr(SHARE_SLUG_LENGTH)
@@ -1451,45 +1525,8 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(40002, 'Text content is required', { status: 400 })
     }
 
-    const userInstruction = typeof instruction === 'string' ? instruction.trim() : ''
-
-    const extractAiText = (payload) => {
-        if (!payload) return ''
-        if (typeof payload === 'string') return payload.trim()
-
-        const directCandidates = [
-            payload.response,
-            payload.output_text,
-            payload.text,
-            payload.content,
-            payload.answer,
-            payload.result?.response,
-            payload.result?.output_text,
-            payload.result?.text,
-            payload.result?.content,
-            payload.choices?.[0]?.message?.content,
-            payload.choices?.[0]?.text,
-        ]
-
-        for (const candidate of directCandidates) {
-            if (typeof candidate === 'string' && candidate.trim()) return candidate.trim()
-            if (Array.isArray(candidate)) {
-                const joined = candidate
-                    .map(item => {
-                        if (typeof item === 'string') return item
-                        if (typeof item?.text === 'string') return item.text
-                        if (typeof item?.content === 'string') return item.content
-                        return ''
-                    })
-                    .filter(Boolean)
-                    .join('\n')
-                    .trim()
-                if (joined) return joined
-            }
-        }
-
-        return ''
-    }
+    const normalizedText = typeof text === 'string' ? text.replace(/\u0000/g, '') : ''
+    const userInstruction = typeof instruction === 'string' ? instruction.replace(/\u0000/g, '').trim() : ''
 
     let model = ''
     let systemPrompt = ''
@@ -1502,7 +1539,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
             'Task: format this full note.',
             userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: improve structure, readability, headings, and lists.',
             'Full note:',
-            text,
+            normalizedText,
         ].join('\n\n')
     } else if (mode === 'continue') {
         model = '@cf/openai/gpt-oss-120b'
@@ -1511,32 +1548,35 @@ router.post('/:path/ai-format', async (request, { env }) => {
             'Task: continue this full note.',
             userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: continue naturally from the current content.',
             'Full note:',
-            text,
+            normalizedText,
         ].join('\n\n')
     } else {
         return returnJSON(40003, 'Unsupported AI mode', { status: 400 })
     }
 
-    const attempts = [
-        {
-            payload: {
-                messages: [
-                    { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt }
-                ]
+    const attempts = mode === 'format'
+        ? [
+            {
+                payload: {
+                    prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
+                    max_tokens: 4096,
+                }
+            },
+            {
+                payload: {
+                    input: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
+                    max_tokens: 4096,
+                }
             }
-        },
-        {
-            payload: {
-                prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`
+        ]
+        : [
+            {
+                payload: {
+                    prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
+                    max_tokens: 4096,
+                }
             }
-        },
-        {
-            payload: {
-                input: userPrompt
-            }
-        }
-    ]
+        ]
 
     let lastError = null
     for (const attempt of attempts) {

@@ -1230,6 +1230,75 @@ ${getMarkdownCss()}
             })
         }
 
+        const $aiFormatBtn = document.querySelector('#ai-format-btn')
+        const $aiContinueBtn = document.querySelector('#ai-continue-btn')
+
+        const runAiAssistant = async mode => {
+            if (!$textarea) return;
+
+            const rawText = $textarea.value || ''
+            if (!rawText.trim()) {
+                window.showToast(APP_STATE.lang === 'zh-TW' ? '請先輸入內容' : 'Please input content first')
+                return;
+            }
+
+            const instructionPrompt = mode === 'format'
+                ? (APP_STATE.lang === 'zh-TW'
+                    ? '請輸入排版需求，例如：整理成會議紀錄、補標題、條列重點'
+                    : 'Enter formatting instructions, for example: turn this into meeting notes with headings and bullet points')
+                : (APP_STATE.lang === 'zh-TW'
+                    ? '請輸入續寫需求，例如：補一段結論、延伸成正式版本'
+                    : 'Enter continuation instructions, for example: add a conclusion and expand in a formal tone')
+
+            const instruction = window.prompt(instructionPrompt, '')
+            if (instruction === null) return;
+
+            const loadingMsg = APP_STATE.lang === 'zh-TW' ? 'AI 正在處理中，請稍候...' : 'AI processing, please wait...'
+            window.showToast(loadingMsg)
+
+            if ($aiFormatBtn) $aiFormatBtn.disabled = true
+            if ($aiContinueBtn) $aiContinueBtn.disabled = true
+
+            try {
+                const res = await fetchJson('/' + encodeURIComponent(APP_STATE.path || '') + '/ai-format', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: rawText, mode, instruction })
+                })
+
+                if (res.err === 0 && res.result) {
+                    const resultText = res.result
+                    if (mode === 'format') {
+                        $textarea.value = resultText
+                    } else {
+                        const current = ($textarea.value || '').trimEnd()
+                        $textarea.value = current ? current + '\n\n' + resultText.trimStart() : resultText
+                    }
+
+                    renderPlain($previewPlain, $textarea.value)
+                    triggerRender($previewMd, $textarea.value)
+                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? 'AI 輔助完成' : 'AI completed')
+                    return;
+                }
+
+                alert((APP_STATE.lang === 'zh-TW' ? 'AI 處理失敗：' : 'AI processing failed: ') + (res.msg || 'Unknown error'))
+            } catch (err) {
+                console.error('AI assistant error:', err)
+                alert((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
+            } finally {
+                if ($aiFormatBtn) $aiFormatBtn.disabled = false
+                if ($aiContinueBtn) $aiContinueBtn.disabled = false
+            }
+        }
+
+        if ($aiFormatBtn) {
+            $aiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
+        }
+        if ($aiContinueBtn) {
+            $aiContinueBtn.addEventListener('click', () => runAiAssistant('continue'))
+        }
+
         if ($importMdBtn && $importMdInput && $textarea) {
             $importMdBtn.addEventListener('click', () => {
                 $importMdInput.click()
