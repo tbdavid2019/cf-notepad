@@ -1424,6 +1424,141 @@ router.post('/:path', async request => {
     }
 })
 
+router.post('/:path/ai-format', async (request, { env }) => {
+    const path = decodeURIComponent(request.params.path)
+
+    const { metadata } = await queryNote(path)
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid } = await checkAuth(cookie, path)
+
+    if (metadata && metadata.pw && !valid) {
+        return returnJSON(10002, 'Password auth failed!', { status: 401 })
+    }
+
+    if (!env.AI) {
+        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
+    }
+
+    let json
+    try {
+        json = await request.json()
+    } catch (e) {
+        return returnJSON(40001, 'Invalid JSON body', { status: 400 })
+    }
+
+    const { text, mode, instruction } = json
+    if (!text || typeof text !== 'string') {
+        return returnJSON(40002, 'Text content is required', { status: 400 })
+    }
+
+    const userInstruction = typeof instruction === 'string' ? instruction.trim() : ''
+
+    const extractAiText = (payload) => {
+        if (!payload) return ''
+        if (typeof payload === 'string') return payload.trim()
+
+        const directCandidates = [
+            payload.response,
+            payload.output_text,
+            payload.text,
+            payload.content,
+            payload.answer,
+            payload.result?.response,
+            payload.result?.output_text,
+            payload.result?.text,
+            payload.result?.content,
+            payload.choices?.[0]?.message?.content,
+            payload.choices?.[0]?.text,
+        ]
+
+        for (const candidate of directCandidates) {
+            if (typeof candidate === 'string' && candidate.trim()) return candidate.trim()
+            if (Array.isArray(candidate)) {
+                const joined = candidate
+                    .map(item => {
+                        if (typeof item === 'string') return item
+                        if (typeof item?.text === 'string') return item.text
+                        if (typeof item?.content === 'string') return item.content
+                        return ''
+                    })
+                    .filter(Boolean)
+                    .join('\n')
+                    .trim()
+                if (joined) return joined
+            }
+        }
+
+        return ''
+    }
+
+    let model = ''
+    let systemPrompt = ''
+    let userPrompt = ''
+
+    if (mode === 'format') {
+        model = '@cf/openai/gpt-oss-20b'
+        systemPrompt = 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and language. Output only the final Markdown with no explanations.'
+        userPrompt = [
+            'Task: format this full note.',
+            userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: improve structure, readability, headings, and lists.',
+            'Full note:',
+            text,
+        ].join('\n\n')
+    } else if (mode === 'continue') {
+        model = '@cf/openai/gpt-oss-120b'
+        systemPrompt = 'You are a writing assistant. Continue the full note in the same language and style. Output only the newly written continuation in Markdown. Do not repeat the original text.'
+        userPrompt = [
+            'Task: continue this full note.',
+            userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: continue naturally from the current content.',
+            'Full note:',
+            text,
+        ].join('\n\n')
+    } else {
+        return returnJSON(40003, 'Unsupported AI mode', { status: 400 })
+    }
+
+    const attempts = [
+        {
+            payload: {
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userPrompt }
+                ]
+            }
+        },
+        {
+            payload: {
+                prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`
+            }
+        },
+        {
+            payload: {
+                input: userPrompt
+            }
+        }
+    ]
+
+    let lastError = null
+    for (const attempt of attempts) {
+        try {
+            const aiResponse = await env.AI.run(model, attempt.payload)
+            const resultText = extractAiText(aiResponse)
+            if (resultText) {
+                return returnJSON(0, 'Success', { result: resultText, modelUsed: model })
+            }
+        } catch (error) {
+            console.error(`Workers AI model ${model} failed:`, error)
+            lastError = error
+        }
+    }
+
+    if (lastError) {
+        return returnJSON(50003, `Workers AI model ${model} failed: ${lastError.message}`)
+    }
+
+    return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
+})
+
 router.all('*', (request) => {
     const lang = getI18n(request)
     return returnPage('Page404', { lang, title: '404' })

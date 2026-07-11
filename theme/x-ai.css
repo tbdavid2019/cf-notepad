@@ -1,0 +1,196 @@
+/* ============================================
+   x.ai Grok - 硬核科技深黑風格
+   基於 x.ai 官網與 DESIGN.md 規範
+   ============================================ */
+
+#bm-md {
+  color: #dadbdf;
+  background: #0a0a0a;
+  font-family: universalSans, Inter, system-ui, -apple-system, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 2em 1.5em;
+  letter-spacing: -0.01em;
+}
+
+#bm-md h1,
+#bm-md h2,
+#bm-md h3,
+#bm-md h4,
+#bm-md h5,
+#bm-md h6 {
+  color: #ffffff;
+  line-height: 1.2;
+  margin-top: 1.4em;
+  margin-bottom: 0.4em;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+#bm-md h1 {
+  font-size: 2.2em;
+  border-bottom: 1px solid #212327;
+  padding-bottom: 0.35em;
+  margin-top: 0;
+  color: #ffffff;
+}
+
+#bm-md h2 {
+  font-size: 1.65em;
+  border-bottom: 1px solid #212327;
+  padding-bottom: 0.25em;
+}
+
+#bm-md h3 {
+  font-size: 1.35em;
+}
+
+#bm-md h4 {
+  font-size: 1.15em;
+}
+
+#bm-md p,
+#bm-md ul,
+#bm-md ol,
+#bm-md dl,
+#bm-md table,
+#bm-md blockquote,
+#bm-md pre,
+#bm-md details {
+  margin-top: 0;
+  margin-bottom: 1.0em;
+}
+
+#bm-md strong,
+#bm-md b {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+#bm-md em,
+#bm-md i {
+  color: #ff7a17; /* sunset orange */
+  font-style: italic;
+}
+
+#bm-md a {
+  color: #ffffff;
+  text-decoration: none;
+  border-bottom: 1.5px solid #ffffff;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+#bm-md a:hover {
+  opacity: 0.8;
+  border-bottom-color: #ff7a17;
+}
+
+#bm-md blockquote {
+  padding: 12px 16px;
+  border-left: 3px solid #ff7a17;
+  background: #1a1c20;
+  color: #dadbdf;
+  border-radius: 4px;
+}
+
+#bm-md code {
+  font-family: GeistMono, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #ff7a17;
+  background: #1a1c20;
+  border: 1px solid #212327;
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-size: 0.88em;
+}
+
+#bm-md pre {
+  overflow: auto;
+  padding: 16px 20px;
+  background: #101010;
+  border: 1px solid #212327;
+  border-radius: 6px;
+}
+
+#bm-md pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #dadbdf;
+  font-size: 0.9em;
+}
+
+#bm-md hr {
+  border: 0;
+  height: 1px;
+  margin: 2em 0;
+  background: #212327;
+}
+
+#bm-md table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #212327;
+}
+
+#bm-md th,
+#bm-md td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #212327;
+  text-align: left;
+}
+
+#bm-md th {
+  font-weight: 600;
+  background: #1a1c20;
+  color: #ffffff;
+}
+
+#bm-md tbody tr:nth-child(even) {
+  background: #141414;
+}
+
+#bm-md img {
+  max-width: 100%;
+  border-radius: 6px;
+  border: 1px solid #212327;
+}
+
+#bm-md .markdown-alert {
+  padding: 14px 16px;
+  border-radius: 6px;
+  border: 1px solid #212327;
+  background: #1a1c20;
+}
+
+#bm-md .markdown-alert-note {
+  border-left: 4px solid #7d8187;
+}
+
+#bm-md .markdown-alert-tip {
+  border-left: 4px solid #a0c3ec;
+}
+
+#bm-md .markdown-alert-important {
+  border-left: 4px solid #ffffff;
+}
+
+#bm-md .markdown-alert-warning {
+  border-left: 4px solid #ff7a17;
+}
+
+#bm-md .markdown-alert-caution {
+  border-left: 4px solid #e03131;
+}
+
+#bm-md .footnotes {
+  border-top: 1px solid #212327;
+  padding-top: 1.25em;
+  font-size: 0.9em;
+  color: #7d8187;
+}
+
+@media (max-width: 720px) {
+  #bm-md {
+    padding: 20px 16px;
+  }
+}

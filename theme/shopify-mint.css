@@ -1,0 +1,198 @@
+/* ============================================
+   Shopify Mint - 清新薄荷商務風格
+   基於 Shopify 經典介面與 DESIGN.md 規範
+   ============================================ */
+
+#bm-md {
+  color: #1a1a1a;
+  background: #fbfbf5;
+  font-family: "Inter Variable", Inter, Helvetica, Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  padding: 1.8em 1.3em;
+  letter-spacing: -0.01em;
+}
+
+#bm-md h1,
+#bm-md h2,
+#bm-md h3,
+#bm-md h4,
+#bm-md h5,
+#bm-md h6 {
+  font-family: "NeueHaasGrotesk Display", Helvetica, Arial, sans-serif;
+  color: #000000;
+  line-height: 1.15;
+  margin-top: 1.3em;
+  margin-bottom: 0.4em;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+#bm-md h1 {
+  font-size: 2.3em;
+  border-bottom: 2px solid #000000;
+  padding-bottom: 0.35em;
+  margin-top: 0;
+}
+
+#bm-md h2 {
+  font-size: 1.7em;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 0.25em;
+}
+
+#bm-md h3 {
+  font-size: 1.35em;
+}
+
+#bm-md h4 {
+  font-size: 1.15em;
+}
+
+#bm-md p,
+#bm-md ul,
+#bm-md ol,
+#bm-md dl,
+#bm-md table,
+#bm-md blockquote,
+#bm-md pre,
+#bm-md details {
+  margin-top: 0;
+  margin-bottom: 1.0em;
+}
+
+#bm-md strong,
+#bm-md b {
+  color: #000000;
+  font-weight: 700;
+}
+
+#bm-md em,
+#bm-md i {
+  color: #52525b;
+  font-style: italic;
+}
+
+#bm-md a {
+  color: #000000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1.5px;
+  transition: opacity 0.15s ease;
+}
+
+#bm-md a:hover {
+  opacity: 0.7;
+}
+
+#bm-md blockquote {
+  padding: 14px 18px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+  color: #3f3f46;
+  border-radius: 9999px; /* Pill blockquote style */
+  text-align: center;
+  font-style: italic;
+}
+
+#bm-md code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  color: #000000;
+  background: #c1fbd4; /* aloe-10 */
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+  font-size: 0.88em;
+}
+
+#bm-md pre {
+  overflow: auto;
+  padding: 16px 20px;
+  background: #ffffff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+}
+
+#bm-md pre code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #000000;
+  font-size: 0.9em;
+}
+
+#bm-md hr {
+  border: 0;
+  height: 2px;
+  margin: 2.2em 0;
+  background: #000000;
+}
+
+#bm-md table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#bm-md th,
+#bm-md td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #e4e4e7;
+  text-align: left;
+}
+
+#bm-md th {
+  font-weight: 600;
+  background: #d4f9e0; /* pistachio-10 */
+  color: #000000;
+}
+
+#bm-md tbody tr:nth-child(even) {
+  background: #ffffff;
+}
+
+#bm-md img {
+  max-width: 100%;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+}
+
+#bm-md .markdown-alert {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid #e4e4e7;
+  background: #ffffff;
+}
+
+#bm-md .markdown-alert-note {
+  border-left: 4px solid #71717a;
+}
+
+#bm-md .markdown-alert-tip {
+  border-left: 4px solid #c1fbd4;
+}
+
+#bm-md .markdown-alert-important {
+  border-left: 4px solid #000000;
+}
+
+#bm-md .markdown-alert-warning {
+  border-left: 4px solid #ff7a17;
+}
+
+#bm-md .markdown-alert-caution {
+  border-left: 4px solid #e03131;
+}
+
+#bm-md .footnotes {
+  border-top: 1px solid #e4e4e7;
+  padding-top: 1.25em;
+  font-size: 0.9em;
+}
+
+@media (max-width: 720px) {
+  #bm-md {
+    padding: 20px 16px;
+  }
+}

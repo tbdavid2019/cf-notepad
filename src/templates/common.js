@@ -22,6 +22,7 @@ const SVG_ICONS = {
     history: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
     more: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>`,
     sparkles: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707-.707M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"></path></svg>`,
+    magic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11.5 12.5 9-9M16 3l5 5M6.5 17.5l-4 4M2 17h5M2 22v-5M12.5 18.5l-.5-2.5-2.5-.5 2.5-.5.5-2.5.5 2.5 2.5.5-2.5.5zM5 8.5 4.5 6 2 5.5 4.5 5 5 2.5 5.5 5 8 5.5 5.5 6z"></path></svg>`,
     apiDocs: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13l3 3-3 3M16 19h-3"></path></svg>`,
     clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
 }
@@ -76,9 +77,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     ${isEdit ? `
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯鎖' : 'Lock'}</span>
                         </button>
                         <button class="toolbar-icon-button opt-pw-view ${vpw ? 'toolbar-active-button' : ''}" data-type="view" title="${t.readLockTitle}" aria-label="${t.readLockTitle}">
                             ${SVG_ICONS.readLock}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '唯讀鎖' : 'Read'}</span>
                         </button>
                         <div class="footer-preview-group">
                             ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
@@ -86,6 +89,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <div class="dropdown-container tools-dropdown">
                             <button type="button" class="toolbar-icon-button dropdown-trigger" title="${lang === 'zh-TW' ? '檔案與匯出' : 'File & Export'}" aria-label="${lang === 'zh-TW' ? '檔案與匯出' : 'File & Export'}">
                                 ${SVG_ICONS.export}
+                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '工具' : 'Tools'}</span>
                             </button>
                             <div class="dropdown-menu">
                                 <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
@@ -104,6 +108,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <div class="dropdown-container history-dropdown">
                                 <button type="button" class="toolbar-icon-button dropdown-trigger" title="${t.historyTitle}" aria-label="${t.historyTitle}">
                                     ${SVG_ICONS.history}
+                                    <span class="toolbar-button-label">${lang === 'zh-TW' ? '歷史' : 'History'}</span>
                                 </button>
                                 <div class="dropdown-menu">
                                     <button type="button" id="note-history-btn" class="dropdown-item note-history-trigger" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}">
@@ -112,10 +117,18 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 </div>
                             </div>
                         ` : ''}
+                        <button type="button" id="ai-format-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}">
+                            ${SVG_ICONS.sparkles}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI排版' : 'Format'}</span>
+                        </button>
+                        <button type="button" id="ai-continue-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 內容續寫' : 'AI Continue Writing'}" aria-label="${lang === 'zh-TW' ? 'AI 內容續寫' : 'AI Continue Writing'}">
+                            ${SVG_ICONS.magic}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI續寫' : 'Continue'}</span>
+                        </button>
                     ` : (path ? `
                         ${authPath
-                            ? `<button type="button" id="readonly-edit-btn" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}</button>`
-                            : `<a href="/${path}" class="opt-button opt-button-icon" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}</a>`
+                            ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
+                            : `<a href="/${path}" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
                         }
                     ` : '')}
                 </div>
@@ -153,11 +166,15 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ` : SWITCHER(t.share, share, 'opt-share')}
                         ${mode === 'md' ? `<button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}">${SVG_ICONS.play}<span class="btn-label">${t.present}</span></button>` : ''}
                     ` : `
-                        <button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}">${SVG_ICONS.play}<span class="btn-label">${t.present}</span></button>
+                        <button id="present-btn" class="toolbar-icon-button toolbar-active-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">
+                            ${SVG_ICONS.play}
+                            <span class="toolbar-button-label">${t.present}</span>
+                        </button>
                     `}
                     <div class="dropdown-container history-dropdown">
                         <button type="button" class="toolbar-icon-button dropdown-trigger" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}">
                             ${SVG_ICONS.shareHistory}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '分享' : 'Shares'}</span>
                         </button>
                         <div class="dropdown-menu">
                             <button type="button" id="share-history-btn" class="dropdown-item share-history-trigger" aria-haspopup="dialog" aria-expanded="false" title="${t.recentSharesTitle}">

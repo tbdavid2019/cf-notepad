@@ -10,7 +10,6 @@ import catppuccinLatteCss from './catppuccin-latte.css?raw'
 import catppuccinMacchiatoCss from './catppuccin-macchiato.css?raw'
 import greenSimpleCss from './green-simple.css?raw'
 import kanagawaCss from './kanagawa.css?raw'
-import maximalismCss from './maximalism.css?raw'
 import neoBrutalismCss from './neo-brutalism.css?raw'
 import newsprintCss from './newsprint.css?raw'
 import organicCss from './organic.css?raw'
@@ -21,6 +20,10 @@ import retroCss from './retro.css?raw'
 import sketchCss from './sketch.css?raw'
 import terminalCss from './terminal.css?raw'
 import tokyoNightCss from './tokyo-night.css?raw'
+import claudeCanvasCss from './claude-canvas.css?raw'
+import notionCleanCss from './notion-clean.css?raw'
+import shopifyMintCss from './shopify-mint.css?raw'
+import xAiCss from './x-ai.css?raw'
 
 export interface MarkdownStyle {
   id: string
@@ -32,6 +35,26 @@ export interface MarkdownStyle {
  * Available markdown styles
  */
 export const markdownStyles: MarkdownStyle[] = [
+  {
+    id: 'claude-canvas',
+    name: 'Claude Canvas',
+    css: resetCss + claudeCanvasCss,
+  },
+  {
+    id: 'notion-clean',
+    name: 'Notion Clean',
+    css: resetCss + notionCleanCss,
+  },
+  {
+    id: 'shopify-mint',
+    name: 'Shopify Mint',
+    css: resetCss + shopifyMintCss,
+  },
+  {
+    id: 'x-ai',
+    name: 'xAI Grok',
+    css: resetCss + xAiCss,
+  },
   {
     id: 'ayu-light',
     name: 'Ayu Light',
@@ -106,11 +129,6 @@ export const markdownStyles: MarkdownStyle[] = [
     id: 'organic',
     name: 'Organic',
     css: resetCss + organicCss,
-  },
-  {
-    id: 'maximalism',
-    name: 'Maximalism',
-    css: resetCss + maximalismCss,
   },
   {
     id: 'retro',

@@ -64,7 +64,7 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 Use form fields `append`, `public`, `share`, `theme`, `pw`, and `vpw` when needed.
 
 ### 2.3 Available Themes
-Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `green-simple`, `kanagawa`, `maximalism`, `neo-brutalism`, `newsprint`, `organic`, `playful-geometric`, `professional`, `retro`, `sketch`, `terminal`, `tokyo-night`.
+Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
 > [!IMPORTANT]
 > **CRITICAL: READ THE RESPONSE CAREFULLY!**
 > The response contains TWO URLs:
