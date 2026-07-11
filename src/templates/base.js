@@ -1178,7 +1178,6 @@ ${getMarkdownCss()}
         const $publishNudgePublish = document.querySelector('.publish-nudge-publish')
         const $publishNudgeLater = document.querySelector('.publish-nudge-later')
         const $publishNudgeClose = document.querySelector('.publish-nudge-close')
-        const $mobileFooterMoreBtn = document.querySelector('#mobile-footer-more-btn')
         const $importMdBtn = document.querySelector('#import-md-btn')
         const $importMdInput = document.querySelector('#import-md-input')
         const $exportMdBtn = document.querySelector('#export-md-btn')
@@ -1190,13 +1189,6 @@ ${getMarkdownCss()}
             previewMarkdownNode: $previewMd,
             previewPlainNode: $previewPlain,
         })
-        if ($mobileFooterMoreBtn) {
-            $mobileFooterMoreBtn.addEventListener('click', () => {
-                const expanded = !document.body.classList.contains('mobile-footer-expanded')
-                document.body.classList.toggle('mobile-footer-expanded', expanded)
-                $mobileFooterMoreBtn.setAttribute('aria-expanded', expanded ? 'true' : 'false')
-            })
-        }
         renderPlain($previewPlain, $textarea ? $textarea.value : '')
         triggerRender($previewMd, $textarea ? $textarea.value : '')
         setupShareBackToTop($previewMd || $previewPlain)
@@ -1498,13 +1490,23 @@ ${getMarkdownCss()}
             $shareOpenLink.href = shareUrl
             recordShareHistory('created', shareUrl, APP_STATE.title);
             $shareCopyBtn.addEventListener('click', async () => {
-                try { await clipboardCopy(shareUrl); const orig = $shareCopyBtn.innerText; $shareCopyBtn.innerText = '✅'; setTimeout(() => $shareCopyBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
+                try { 
+                    await clipboardCopy(shareUrl); 
+                    window.showToast(getI18n('copied') || 'Copied!'); 
+                } catch (e) { 
+                    alert(getI18n('copyFailed')); 
+                }
             });
         }
         if ($shareOpenLink && $copyPresentShareBtn) {
             $copyPresentShareBtn.addEventListener('click', async () => {
                 const presentationUrl = new URL(($shareOpenLink.getAttribute('href') || '') + '/present', window.location.origin).toString();
-                try { await clipboardCopy(presentationUrl); const orig = $copyPresentShareBtn.innerText; $copyPresentShareBtn.innerText = '✅'; setTimeout(() => $copyPresentShareBtn.innerText = orig, 2000); } catch (e) { alert(getI18n('copyFailed')); }
+                try { 
+                    await clipboardCopy(presentationUrl); 
+                    window.showToast(getI18n('copied') || 'Copied!'); 
+                } catch (e) { 
+                    alert(getI18n('copyFailed')); 
+                }
             });
         }
         if ($publicIndexBtn) {
@@ -1577,7 +1579,6 @@ ${getMarkdownCss()}
             if (!document.body.classList.contains('share-view') || !footer || !scrollTarget) return;
             const media = window.matchMedia('(max-width: 960px)');
             let lastScrollTop = scrollTarget.scrollTop;
-            let revealTimer = null;
 
             const showFooter = () => footer.classList.remove('footer-hidden');
             const hideFooter = () => {
@@ -1590,15 +1591,17 @@ ${getMarkdownCss()}
                 }
 
                 const currentScrollTop = scrollTarget.scrollTop;
-                if (currentScrollTop <= 8 || currentScrollTop < lastScrollTop) {
+                
+                // Near top or near bottom triggers forced show for better accessibility
+                const isNearTop = currentScrollTop <= 15;
+                const isNearBottom = scrollTarget.scrollHeight - scrollTarget.scrollTop <= scrollTarget.clientHeight + 15;
+
+                if (isNearTop || isNearBottom || currentScrollTop < lastScrollTop) {
                     showFooter();
                 } else {
                     hideFooter();
                 }
                 lastScrollTop = Math.max(currentScrollTop, 0);
-
-                clearTimeout(revealTimer);
-                revealTimer = setTimeout(showFooter, 900);
             }
 
             scrollTarget.addEventListener('scroll', handleScroll, { passive: true });
@@ -1609,6 +1612,195 @@ ${getMarkdownCss()}
             }
         }
         setupMobileShareFooter();
+
+        // --- Custom Dropdown Menus Logic ---
+        const setupDropdowns = () => {
+            document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+                trigger.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const container = trigger.closest('.dropdown-container');
+                    const isShown = container.classList.contains('show');
+                    
+                    // Close other dropdowns
+                    document.querySelectorAll('.dropdown-container').forEach(c => {
+                        if (c !== container) c.classList.remove('show');
+                    });
+                    
+                    container.classList.toggle('show', !isShown);
+
+                    // Dynamic viewport boundary detection (prevent clipping on top edge)
+                    if (!isShown) {
+                        const menu = container.querySelector('.dropdown-menu');
+                        if (menu) {
+                            menu.style.bottom = '';
+                            menu.style.top = '';
+                            const rect = menu.getBoundingClientRect();
+                            if (rect.top < 0) {
+                                menu.style.bottom = 'auto';
+                                menu.style.top = 'calc(100% + 8px)';
+                            }
+                        }
+                    }
+                });
+            });
+        }
+        setupDropdowns();
+
+        // Close dropdowns on clicking outside (Guaranteed single registration)
+        if (!window.__dropdownListenerBound) {
+            document.addEventListener('click', () => {
+                document.querySelectorAll('.dropdown-container').forEach(c => c.classList.remove('show'));
+            });
+            window.__dropdownListenerBound = true;
+        }
+
+        // --- Custom Bottom Sheet (Mobile settings drawer) ---
+        const setupBottomSheet = () => {
+            const bottomSheet = document.getElementById('mobile-bottom-sheet');
+            if (!bottomSheet) return;
+            
+            const bottomSheetBody = bottomSheet.querySelector('.bottom-sheet-body');
+            const bottomSheetCloseBtn = bottomSheet.querySelector('.bottom-sheet-close-btn');
+            const backdrop = bottomSheet.querySelector('.bottom-sheet-backdrop');
+            const content = bottomSheet.querySelector('.bottom-sheet-content');
+            const dragHandle = bottomSheet.querySelector('.bottom-sheet-drag-handle');
+            
+            const footerSections = document.querySelector('.footer-sections');
+            const publishSection = document.querySelector('.footer-section-publish');
+            const appearanceSection = document.querySelector('.footer-section-appearance');
+            const infoSection = document.querySelector('.footer-section-info');
+
+            // Section container targets in bottom sheet
+            const publishTarget = bottomSheet.querySelector('.bottom-sheet-section-publish .bottom-sheet-section-content');
+            const appearanceTarget = bottomSheet.querySelector('.bottom-sheet-section-appearance .bottom-sheet-section-content');
+            const infoTarget = bottomSheet.querySelector('.bottom-sheet-section-info .bottom-sheet-section-content');
+
+            // Responsive DOM Nodes Shuffling
+            const mediaQuery = window.matchMedia('(max-width: 960px)');
+            const handleResponsive = (e) => {
+                if (e.matches) {
+                    if (publishSection && publishTarget) publishTarget.appendChild(publishSection);
+                    if (appearanceSection && appearanceTarget) appearanceTarget.appendChild(appearanceSection);
+                    if (infoSection && infoTarget) infoTarget.appendChild(infoSection);
+                } else {
+                    if (footerSections) {
+                        const editSection = footerSections.querySelector('.footer-section-edit');
+                        if (publishSection) {
+                            if (editSection && editSection.nextSibling) {
+                                footerSections.insertBefore(publishSection, editSection.nextSibling);
+                            } else {
+                                footerSections.appendChild(publishSection);
+                            }
+                        }
+                        if (appearanceSection) footerSections.appendChild(appearanceSection);
+                        if (infoSection) footerSections.appendChild(infoSection);
+                    }
+                    bottomSheet.classList.remove('show');
+                }
+            }
+            
+            if (mediaQuery.addEventListener) {
+                mediaQuery.addEventListener('change', handleResponsive);
+            } else if (mediaQuery.addListener) {
+                mediaQuery.addListener(handleResponsive);
+            }
+            handleResponsive(mediaQuery);
+
+            // Open trigger - clicking footer opens bottom sheet
+            const footer = document.querySelector('.footer');
+            if (footer) {
+                footer.addEventListener('click', (e) => {
+                    if (!mediaQuery.matches) return;
+                    // Don't open if clicking inside the edit section (which stays in footer)
+                    if (e.target.closest('.footer-section-edit')) return;
+                    e.stopPropagation();
+                    bottomSheet.classList.add('show');
+                });
+            }
+
+            // Close trigger functions
+            const closeSheet = () => {
+                bottomSheet.classList.remove('show');
+            }
+            if (bottomSheetCloseBtn) bottomSheetCloseBtn.addEventListener('click', closeSheet);
+            if (backdrop) backdrop.addEventListener('click', closeSheet);
+
+            // Prevent scroll propagation on backdrop
+            backdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
+
+            // Touch Swipe Down to Dismiss Gestures
+            let startY = 0;
+            let currentY = 0;
+            let isDragging = false;
+
+            if (dragHandle && content) {
+                dragHandle.addEventListener('touchstart', (e) => {
+                    startY = e.touches[0].clientY;
+                    isDragging = true;
+                    content.style.transition = 'none';
+                }, { passive: true });
+
+                dragHandle.addEventListener('touchmove', (e) => {
+                    if (!isDragging) return;
+                    currentY = e.touches[0].clientY;
+                    const diff = currentY - startY;
+                    if (diff > 0) {
+                        content.style.transform = 'translateY(' + diff + 'px)';
+                    }
+                }, { passive: true });
+
+                dragHandle.addEventListener('touchend', (e) => {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    content.style.transition = '';
+                    const diff = currentY - startY;
+                    if (diff > 80) {
+                        closeSheet();
+                    }
+                    content.style.transform = '';
+                    startY = 0;
+                    currentY = 0;
+                });
+            }
+        }
+        setupBottomSheet();
+
+        // --- Keyboard Viewport Adjuster for Mobile Input ---
+        const setupKeyboardViewport = () => {
+            if (window.visualViewport) {
+                const initialHeight = window.innerHeight;
+                window.visualViewport.addEventListener('resize', () => {
+                    const currentHeight = window.visualViewport.height;
+                    // If height shrinks by more than 150px, keyboard is likely open
+                    if (initialHeight - currentHeight > 150) {
+                        document.body.classList.add('keyboard-open');
+                    } else {
+                        document.body.classList.remove('keyboard-open');
+                    }
+                });
+            }
+        }
+        setupKeyboardViewport();
+
+        // --- Toast Notification Utility ---
+        window.showToast = (message) => {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerHTML = '<span class="toast-check">✓</span> <span>' + message + '</span>';
+            container.appendChild(toast);
+            
+            // Fade-in trigger
+            setTimeout(() => toast.classList.add('show'), 15);
+            
+            // Auto fade-out & remove
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 250);
+            }, 2000);
+        }
     })
 </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
