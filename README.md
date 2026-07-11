@@ -20,15 +20,15 @@
   - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
   - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
   - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換；設定會寫入該篇筆記 metadata，share 頁會沿用相同寬度，而不是只存在單一瀏覽器。
-  - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`organic`、`playful-geometric`、`professional`、`retro`、`sketch`、`terminal`、`tokyo-night` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
-  - **分享頁字體切換**：editor / share footer 內建 `J / M` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
+  - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`claude-canvas`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`notion-clean`、`organic`、`playful-geometric`、`professional`、`retro`、`shopify-mint`、`sketch`、`terminal`、`tokyo-night`、`x-ai` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
+  - **分享頁字體切換**：editor / share footer 內建 `Font: JB Mono / Maple` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
   - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
-  - **分享頁行動版 footer 優化**：mobile share 頁 footer 預設只顯示操作區，其他外觀/資訊工具可透過 `...` 展開；向下閱讀時仍會自動隱藏，向上滑動或停止滑動後再顯示，降低閱讀遮擋。
+  - **分享頁行動版 Bottom Sheet 與滾動優化**：在手機上 Footer 重構為精簡的圓角膠囊工具列，僅保留編輯區按鈕；點擊 footer 其他區域時，會從底部平滑滑出精美 Bottom Sheet 抽屜面板，以卡片式分區收納「發佈 / 外觀 / 資訊」設定，支援向下滑動手勢關閉與觸控防穿透。向下閱讀時會自動隱藏，向上滑動或滑到頁面頂端/底部時會自動顯示（方向感知，去除了 900ms 強制彈出閃爍的問題）。
   - **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
   - **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
   - **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
   - **分享預覽優化**：分享頁現在會輸出 server-side 的 Open Graph / Twitter metadata，Slack 與其他 unfurl 工具能更穩定讀到標題與摘要；若 metadata title 是短 slug，會改用正文中較完整的可讀標題，且分享卡不強調站名以避免壓過文章標題。
-  - **Footer 分組整理**：editor 與 share footer 目前依 `Actions / Appearance / Meta` 分組，`J / M`、`Zh / En`、寬度、主題等外觀控制會集中顯示。
+  - **Footer 四欄邏輯分區**：Footer 從三欄重組為四欄邏輯分區：**編輯**（Lock、Preview、檔案匯入匯出、版本紀錄）、**發佈**（Share、Present、最近分享紀錄）、**外觀**（Font、Lang、Width、Theme）、**資訊**（GitHub、Docs、Saved time）。版本紀錄（D1）與最近分享紀錄（localStorage）明確分開，不再混在同一個下拉選單。
 
 - **分享、隱私與內容生命週期**
   - **隱私保護**：可為個別筆記設定密碼 (Salted MD5 雜湊儲存)。
@@ -61,9 +61,9 @@
   - **PDF 與列印自適應優化** 🖨️：新增 `@media print` 列印媒體查詢，列印或「另存為 PDF」時會自動隱藏編輯控制項，解除單頁高度限制，防止標題、程式碼區塊、引用或表格被強行截斷，並保留主題邊框與底色設計。
   - **GA4 支援**：設定 Cloudflare 參數 `SCN_GA_MEASUREMENT_ID` 後，編輯頁、share 頁與 share 簡報頁都會自動載入 Google Analytics。
   - **分享頁分析預留點**：分享 footer 保留 `#share-analytics-hook` 供未來插入 GA / analytics 程式碼；目前不對 share 頁新增 KV view 寫入。
-  - **Footer 窄化微調**：保存時間已縮成單一 `◷` icon，完整絕對時間放在 tooltip；主題選單也改用較短的 theme label，例如 `cp-macchiato`。
-  - **Markdown / PDF 快捷工具**：footer 新增 icon-only 的 `導入 Markdown`、`導出 Markdown`、`列印 / 導出 PDF` 工具，並以 tooltip / aria-label 提供明確說明；同區也補上站內 `Skill` 與 `API` 文檔入口。
-  - **發布區塊語義化**：已發布狀態不再顯示一大串 share URL；改為可直接另開新分頁的 `Share / 分享頁` 按鈕，旁邊保留複製 share 與簡報連結 icon。`編輯鎖 / 閱讀鎖 / 最近分享 / 版本 / Skill / API` 也統一改為 icon-first footer 控件。
+  - **Footer UI 精緻度提升**：全站圖標改為向量 SVG，儲存時間以 `Saved 3m ago` 與 tooltip 呈現。主題選擇器與寬度選擇器自訂了 CSS 下拉箭頭，美化原生 `<select>`。分段切換按鈕加入 CSS transition 開啟平滑切換動畫。
+  - **Dropdown 工具收納**：將 Markdown 匯入匯出、PDF 產生等工具收進編輯區的「檔案與匯出」下拉選單；版本紀錄收進編輯區的「歷史紀錄」下拉選單；近期分享紀錄收進發佈區的「歷史紀錄」下拉選單，大幅精簡 Footer 按鈕數量。
+  - **發布區塊優化 (Share Dropdown)**：已發布狀態下不再展開 5 個按鈕，改為精緻的「分享中 ▾」下拉選單，內含開啟分享、複製連結、複製簡報、公開索引與取消發布，並將敏感的 `Unpublish` 移動到選單底部作為紅色警告項，預防誤觸。
   - **短分享網址相容層**：新分享會優先使用較短的 `shareSlug`，但系統仍保留舊的 `md5(path)` share key，因此既有長 share URL 不會失效。
 
 - **維運與管理**
@@ -353,13 +353,13 @@ The API docs now also cover:
   - **Preview Divider**: The split panes remain draggable, and double-click resets the layout to 50/50.
   - **Preview Width Presets**: The footer includes `Full / 960 / 1200 / 1440` width presets.
   - **Built-in Theme Set**: The app ships with multiple bundled preview themes, with `catppuccin-macchiato` as the current default.
-  - **Share Font Switcher**: Shared-note footers use compact `J / M` buttons to switch between `JetBrains Mono` and `Maple Mono`.
-  - **Grouped Footer Layout**: Editor and shared-note footers are organized into `Actions`, `Appearance`, and `Meta`.
+  - **Share Font Switcher**: Shared-note footers use an explicit `Font: JB Mono / Maple` switcher instead of cryptic buttons to improve clarity.
+  - **Optimized & Grouped Footer Layout**: Editor and share footers are reorganized into four logical sections: **Edit** (locks, preview, file tools, version history), **Publish** (share, present, recent share history), **Appearance** (font, language, width, theme), and **Info** (GitHub, docs, saved time). Version history (D1-based) and share history (localStorage-based) are clearly separated into different sections.
   - **Responsive Mobile Tables**: Mobile simulation and real mobile share pages wrap long cell text and inline code safely.
   - **Back-to-Top for Long Shares**: Shared long-form pages show a compact `＾` control after scrolling down.
   - **Share Anchor Links**: Shared-note headings get stable IDs so `#...` links can jump directly to sections.
   - **Share Metadata & Unfurling**: Shared pages emit server-rendered Open Graph / Twitter metadata and prefer stronger human-readable titles when available.
-  - **Mobile Share Footer**: On shared notes, the mobile footer hides while reading downward and reappears when scrolling up or after scrolling pauses.
+  - **Mobile Pill Bar & Bottom Sheet**: The mobile footer is redesigned as a compact floating Pill bar (`48px` height) showing only the Edit section. Tapping the footer area (outside Edit) slides up a card-based **BottomSheet** drawer with Publish, Appearance, and Info sections. Supports swipe-down dismiss, backdrop tap close, and auto-hides on keyboard focus or scroll-down (directional sensing).
 
 - **Sharing, Privacy & Lifecycle**
   - **Privacy**: Password protection for individual notes (stored as Salted MD5 hash).

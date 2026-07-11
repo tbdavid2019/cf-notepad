@@ -1,5 +1,43 @@
 # Changelog
 
+## [2026-07-11 23:30 CST]
+### Changed
+- **Footer Four-Section Reorganization**
+  - Reorganized the footer from three sections (`Actions` / `Appearance` / `Meta`) into four logically-grouped columns: **Edit** / **Publish** / **Appearance** / **Info**.
+  - **Edit** section: Lock buttons, Preview switcher, File & Export dropdown, Version History dropdown.
+  - **Publish** section: Share dropdown/toggle, Present button, Recent Shares dropdown.
+  - **Appearance** section: Font selector, Language toggle, Preview device, Width, Theme.
+  - **Info** section: GitHub, Skill docs, API docs, Saved time.
+  - This separation ensures editing tools never mix with publishing controls, and version history (D1-based) is clearly distinct from share history (localStorage-based).
+- **Mobile Bottom Sheet Card Layout**
+  - The mobile Bottom Sheet now displays Publish, Appearance, and Info sections as individual cards with section titles, improving scannability.
+  - Removed the legacy `⋯` more button; the footer itself now triggers the Bottom Sheet on mobile tap (outside the Edit section).
+
+## [2026-07-11 22:30 CST]
+### Changed
+- **Claude Canvas Style Theme**: Added a new humanist editorial theme inspired by Anthropic's Claude website design, featuring a warm cream canvas background (`#faf9f5`), coral active highlightings (`#cc785c`), a humanist sans-serif body layout with serif headers, dark-surface code blocks, and custom styled alert blocks. Integrated it fully with the Vite/Wrangler theme bundling process and API lists.
+- **Footer UI/UX Redesign & Optimization**
+  - **SVG Icon Conversion**: Replaced all abstract Unicode symbols (`✎`, `◌`, `↗`, `▶`, `⧉`, `×`, `⤴`, `⤵`, `▣`, `◷`, `⋯`, `◇`, `◫`) with a unified, lightweight SVG icon system.
+  - **Secondary Actions Dropdown Grouping**:
+    - Grouped the cluttered 5 share-related actions into a clean "Share ▾" dropdown, moving `Unpublish` to the bottom as a styled warning item to prevent misclicks.
+    - Moved Markdown Import, Export, and PDF generation into a unified "File & Export" dropdown.
+    - Grouped Recent Shares and Version History into a unified "History" dropdown.
+    - This reduces actions list buttons from 10+ down to 4-5 neat sections, reducing visual noise.
+  - **Mobile Pill Bar & Bottom Sheet**:
+    - Converted the mobile footer layout into a modern floating Pill bar (`48px` height).
+    - Shuffled appearance/meta sections into a custom sliding **BottomSheet** drawer on mobile screen widths (under 960px).
+    - Equipped the mobile drawer with a fuzzy glass backdrop, swipe-down to dismiss gesture support, and scroll-bubbling prevention.
+  - **Directional Scroll Hiding**: Refined the share-view mobile auto-hide logic to hide on page scroll-down and show on scroll-up (directional sensing) with near-edge sticky logic, removing the abrupt 900ms timer showing.
+  - **Select & Segmented Toggle Enhancements**:
+    - Custom styled theme & width dropdowns by eliminating native `<select>` arrows and using CSS-driven SVG arrows.
+    - Added CSS transitions for `segmented-toggle-btn` to make state switching smoother.
+    - Improved the font switcher label to a clear `Font: JB Mono / Maple` instead of the cryptic J / M toggle.
+  - **Mobile Keyboard Avoidance**: Automatically hid the mobile footer Pill bar when the virtual keyboard is active (via `visualViewport` height resize tracking).
+  - **Toast Notifications**: Replaced intrusive browser alerts and raw button label mutations with clear, smooth, frosted-glass toast notifications for copy actions.
+  - **Edge Cases & Stack Level Fixes**:
+    - **Dynamic Dropdown Boundary Sensing**: Added viewport boundary detection on dropdown trigger clicks to automatically flip the dropdown downward (`top: 100%`) when it risks overflowing the top edge of the viewport.
+    - **Z-Index Fine-tuning**: Increased `.dropdown-menu` z-index to `1060` to prevent conflicts with `.bottom-sheet` (z-index `1050`) and boosted toast notifications to `20000` to keep them visible over presentation mode's slides.
+
 ## [2026-07-11 16:20 CST]
 ### Changed
 - **Footer File Tools**
