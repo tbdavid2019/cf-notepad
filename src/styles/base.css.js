@@ -586,11 +586,6 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-size: 12px;
     color: #586069;
 }
-.last-modified-text {
-    font-size: 11px;
-    color: var(--toolbar-muted, #57606a);
-    margin-left: 2px;
-}
 .opt-button,
 .toolbar-icon-button {
     height: var(--toolbar-height);

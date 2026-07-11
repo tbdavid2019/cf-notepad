@@ -29,13 +29,15 @@ const SVG_ICONS = {
 const THEME_OPTION_LABELS = {
     'ayu-light': 'ayu',
     'claude-canvas': 'claude',
+    'notion-clean': 'notion',
+    'shopify-mint': 'shopify',
+    'x-ai': 'xAI',
     'bauhaus': 'bauhaus',
     'botanical': 'botanical',
     'catppuccin-latte': 'cp-latte',
     'catppuccin-macchiato': 'cp-macchiato',
     'green-simple': 'green',
     'kanagawa': 'kanagawa',
-    'maximalism': 'max',
     'neo-brutalism': 'neo-brutal',
     'newsprint': 'newsprint',
     'organic': 'organic',
@@ -240,7 +242,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     </a>
                     ${updateAt ? `
                         <span class="last-modified" title="${t.savedAtTitle}: ${getAbsoluteTime(updateAt, lang)}" aria-label="${t.savedAtTitle}: ${getAbsoluteTime(updateAt, lang)}">
-                            ${SVG_ICONS.clock}<span class="last-modified-text">Saved ${getCompactRelativeTime(updateAt, lang)}</span>
+                            ${SVG_ICONS.clock}
                         </span>
                     ` : ''}
                 </div>
