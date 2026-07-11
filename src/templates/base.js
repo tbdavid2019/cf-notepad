@@ -1272,7 +1272,7 @@ ${getMarkdownCss()}
                         $textarea.value = resultText
                     } else {
                         const current = ($textarea.value || '').trimEnd()
-                        $textarea.value = current ? current + '\n\n' + resultText.trimStart() : resultText
+                        $textarea.value = current ? current + '\\n\\n' + resultText.trimStart() : resultText
                     }
 
                     renderPlain($previewPlain, $textarea.value)
