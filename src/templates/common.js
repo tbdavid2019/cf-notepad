@@ -48,32 +48,6 @@ const THEME_OPTION_LABELS = {
     'terminal': 'terminal',
     'tokyo-night': 'tokyo',
 }
-const getCompactRelativeTime = (unixTime, lang) => {
-    const savedAt = Number(unixTime || 0)
-    const diffSeconds = Math.max(0, dayjs().unix() - savedAt)
-    const isZh = lang === 'zh-TW'
-
-    if (diffSeconds < 60) return isZh ? '剛剛' : 'now'
-
-    const minutes = Math.floor(diffSeconds / 60)
-    if (minutes < 60) return isZh ? `${minutes}m前` : `${minutes}m ago`
-
-    const hours = Math.floor(minutes / 60)
-    if (hours < 24) return isZh ? `${hours}h前` : `${hours}h ago`
-
-    const days = Math.floor(hours / 24)
-    if (days < 30) return isZh ? `${days}d前` : `${days}d ago`
-
-    return dayjs.unix(savedAt).format('M/D')
-}
-
-const getAbsoluteTime = (unixTime, lang) => {
-    const savedAt = Number(unixTime || 0)
-    if (!savedAt) return ''
-    return lang === 'zh-TW'
-        ? dayjs.unix(savedAt).format('YYYY/MM/DD HH:mm')
-        : dayjs.unix(savedAt).format('YYYY-MM-DD HH:mm')
-}
 
 export const SWITCHER = (text, open, className = '') => `
 <span class="opt-desc">${text}</span>
@@ -240,11 +214,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     <a class="toolbar-icon-link" title="${t.apiDocTitle}" aria-label="${t.apiDocTitle}" target="_blank" href="/docs/api" rel="noreferrer">
                         ${SVG_ICONS.apiDocs}
                     </a>
-                    ${updateAt ? `
-                        <span class="last-modified" title="${t.savedAtTitle}: ${getAbsoluteTime(updateAt, lang)}" aria-label="${t.savedAtTitle}: ${getAbsoluteTime(updateAt, lang)}">
-                            ${SVG_ICONS.clock}
-                        </span>
-                    ` : ''}
                 </div>
             </div>
         </div>

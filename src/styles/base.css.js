@@ -579,13 +579,6 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     white-space: nowrap;
     margin-right: 4px;
 }
-.last-modified {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 12px;
-    color: #586069;
-}
 .opt-button,
 .toolbar-icon-button {
     height: var(--toolbar-height);
@@ -777,16 +770,6 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
-}
-.last-modified {
-    color: var(--toolbar-muted);
-    font-size: 12px;
-    letter-spacing: 0.01em;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: var(--toolbar-height);
-    height: var(--toolbar-height);
 }
 .share-history-content {
     position: fixed;
