@@ -29,6 +29,15 @@ test('published footer exposes public index control and removes published label 
     assert.doesNotMatch(commonTemplateSource, /publish-status/)
 })
 
+test('share state uses a working toggle and does not interrupt preview rendering', () => {
+    assert.match(commonTemplateSource, /share-state-switcher opt-share/)
+    assert.match(commonTemplateSource, /id="share-menu-btn"/)
+    assert.match(commonTemplateSource, /share-publish-menu-btn/)
+    assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
+    assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
+    assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', publishCurrentNote\)/)
+})
+
 test('share modal prompts for public index approval after publish', () => {
     assert.match(commonTemplateSource, /share-index-prompt/)
     assert.match(commonTemplateSource, /share-index-approve/)

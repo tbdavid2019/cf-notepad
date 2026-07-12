@@ -75,16 +75,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-edit">
                 <div class="footer-section-body">
                     ${isEdit ? `
-                        ${share && shareId ? `
-                            <div class="dropdown-container share-dropdown">
-                                <button type="button" class="toolbar-icon-button share-state-btn share-published-state" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
-                                    ${SVG_ICONS.link}
-                                    <span class="toolbar-button-label" id="share-state-text">${lang === 'zh-TW' ? '已發佈' : 'Published'}</span>
+                        <div class="footer-control-group">
+                            <div class="dropdown-container share-dropdown share-state-toggle">
+                                <button type="button" class="opt-switcher share-state-switcher opt-share ${share ? 'share-published' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
+                                    <span class="slider round"></span>
                                 </button>
-                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
+                                <span class="footer-control-label share-state-label ${share ? 'share-published' : ''}" id="share-state-text">${share ? (lang === 'zh-TW' ? '已發佈' : 'Published') : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')}</span>
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
                                     ${SVG_ICONS.more}
                                 </button>
                                 <div class="dropdown-menu">
+                                    ${share && shareId ? `
                                     <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
                                         ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
                                     </a>
@@ -103,14 +104,14 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
                                         ${SVG_ICONS.close} <span>${unpublishTitle}</span>
                                     </button>
+                                    ` : `
+                                    <button type="button" class="dropdown-item share-publish-menu-btn">
+                                        ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '發布並建立分享連結' : 'Publish and create share link'}</span>
+                                    </button>
+                                    `}
                                 </div>
                             </div>
-                        ` : `
-                            <button type="button" id="share-switch-btn" class="toolbar-icon-button opt-share" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
-                                ${SVG_ICONS.link}
-                                <span class="toolbar-button-label">${t.shareLink}</span>
-                            </button>
-                        `}
+                        </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯鎖' : 'Lock'}</span>

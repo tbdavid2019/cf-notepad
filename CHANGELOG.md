@@ -8,6 +8,9 @@
   - Require an explicit editing instruction and return the complete edited Markdown, including untouched content, while keeping the existing GLM formatting action unchanged.
 
 ### Fixed
+- **Share Toggle and Editor Preview Regression**
+  - Restored the published/unpublished share toggle and its options menu after a share toolbar rewrite disconnected the published control from its click handler.
+  - Hoisted share-state initialization so it no longer throws before Markdown rendering, which had left the editor preview pane blank.
 - **xAI Theme Heading Contrast**
   - Added explicit dark heading colors for the app's white preview canvas while retaining the black H1 panel, so every title level remains visible.
   - Ensure heading links inherit the heading color instead of being obscured by generic link styles.

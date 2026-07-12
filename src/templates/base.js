@@ -1379,19 +1379,17 @@ ${getMarkdownCss()}
             button.setAttribute('aria-label', label)
         }
 
-        const syncShareStateUI = () => {
-            const btn = document.querySelector('.share-state-btn')
-            const label = document.querySelector('#share-state-text')
-            if (!btn || !label) return
+        function syncShareStateUI() {
+            const switcher = document.querySelector('.share-state-switcher')
+            const label = document.querySelector('.share-state-label')
+            if (!switcher || !label) return
             const isPublished = APP_STATE.isPublished
             const lang = APP_STATE.lang
-            if (isPublished) {
-                btn.classList.add('toolbar-active-button')
-                label.textContent = lang === 'zh-TW' ? '已發佈' : 'Published'
-            } else {
-                btn.classList.remove('toolbar-active-button')
-                label.textContent = lang === 'zh-TW' ? '未發佈' : 'Unpublished'
-            }
+            switcher.classList.toggle('share-published', isPublished)
+            label.classList.toggle('share-published', isPublished)
+            label.textContent = isPublished
+                ? (lang === 'zh-TW' ? '已發佈' : 'Published')
+                : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')
         }
 
         const publishCurrentNote = () => {
@@ -1592,6 +1590,7 @@ ${getMarkdownCss()}
         const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
         const $publicIndexBtn = document.querySelector('#public-index-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
+        const $sharePublishMenuBtn = document.querySelector('.share-publish-menu-btn');
         const $readonlyEditBtn = document.querySelector('#readonly-edit-btn');
         if ($shareOpenLink && $shareCopyBtn) {
             const shareUrl = new URL($shareOpenLink.getAttribute('href') || '', window.location.origin).toString()
@@ -1636,6 +1635,9 @@ ${getMarkdownCss()}
                 fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
                     .then(res => { if (res.err !== 0) { return errHandle(res.msg); } window.location.reload(); }).catch(err => errHandle(err));
             });
+        }
+        if ($sharePublishMenuBtn) {
+            $sharePublishMenuBtn.addEventListener('click', publishCurrentNote)
         }
 
         if ($shareBtn) {
