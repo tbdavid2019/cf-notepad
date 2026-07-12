@@ -83,9 +83,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.readLock}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '唯讀鎖' : 'Read'}</span>
                         </button>
-                        <div class="footer-preview-group footer-control-group">
-                            ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
-                        </div>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
@@ -116,6 +113,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.sparkles}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI排版' : 'Format'}</span>
                         </button>
+                        <button type="button" id="ai-edit-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}">
+                            ${SVG_ICONS.magic}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI編輯' : 'AI Edit'}</span>
+                        </button>
+                        <div class="footer-preview-group footer-control-group">
+                            ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
+                        </div>
                     ` : (path ? `
                         ${authPath
                             ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
