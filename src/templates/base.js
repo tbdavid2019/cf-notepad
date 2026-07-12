@@ -1741,7 +1741,7 @@ ${getMarkdownCss()}
             const mediaQuery = window.matchMedia('(max-width: 960px)');
             const handleResponsive = (e) => {
                 if (e.matches) {
-                    if (publishSection && publishTarget) publishTarget.appendChild(publishSection);
+                    // On mobile: keep publish in footer, only move appearance/info to bottom sheet
                     if (appearanceSection && appearanceTarget) appearanceTarget.appendChild(appearanceSection);
                     if (infoSection && infoTarget) infoTarget.appendChild(infoSection);
                 } else {

@@ -1583,10 +1583,38 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     }
 
     /* Hide desktop version sections, handled by BottomSheet */
-    .footer:not(.bottom-sheet-body) .footer-section-publish,
     .footer:not(.bottom-sheet-body) .footer-section-appearance,
     .footer:not(.bottom-sheet-body) .footer-section-info {
         display: none !important;
+    }
+
+    /* Hide preview toggle on mobile */
+    .footer-section-edit .footer-preview-group {
+        display: none !important;
+    }
+
+    /* Keep publish section visible on mobile - inline with edit */
+    .footer:not(.bottom-sheet-body) .footer-section-publish {
+        display: flex !important;
+        flex-shrink: 0;
+        border-right: 0;
+        padding: 0;
+        margin: 0;
+        background: transparent;
+    }
+    .footer:not(.bottom-sheet-body) .footer-section-publish .footer-section-body {
+        flex-wrap: nowrap;
+        gap: 4px;
+        align-items: center;
+    }
+    .footer:not(.bottom-sheet-body) .footer-section-publish .toolbar-icon-button {
+        width: auto !important;
+        padding: 0 6px !important;
+        gap: 3px;
+    }
+    .footer:not(.bottom-sheet-body) .footer-section-publish .toolbar-button-label {
+        display: inline !important;
+        font-size: 11px;
     }
 
     /* BottomSheet styles override */
