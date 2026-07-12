@@ -18,7 +18,7 @@ test('x-ai theme keeps every heading level visible on the white preview canvas',
 })
 
 test('setting route persists publicIndex metadata and clears it on unpublish', () => {
-    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*publicIndex\s*\}\s*=\s*await request\.json\(\)/)
+    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*splitDirection,\s*publicIndex\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /publicIndex !== undefined && \{ publicIndex: publicIndex === true \}/)
     assert.match(indexSource, /if \(share === false\) \{\s*nextMetadata\.publicIndex = false/s)
 })
@@ -136,6 +136,9 @@ test('footer exposes AI format and edit controls for whole-note assistance', () 
     assert.match(indexSource, /'@cf\/openai\/gpt-oss-120b'/)
     assert.match(indexSource, /scope: hasSelection \? 'selection' : 'document'/)
     assert.match(baseTemplateSource, /rawText\.slice\(0, selectionStart\) \+ res\.data\.result \+ rawText\.slice\(selectionEnd\)/)
+    assert.match(baseTemplateSource, /selectionAiButton\.className = 'selection-ai-button'/)
+    assert.match(baseTemplateSource, /\$textarea\.addEventListener\('mouseup', showSelectionAiButton\)/)
+    assert.match(baseTemplateSource, /runAiAssistant\('edit'\)/)
     assert.match(indexSource, /reasoning_effort: 'low'/)
     assert.match(indexSource, /max_completion_tokens: 8192/)
     assert.match(indexSource, /\}, 120000\)/)

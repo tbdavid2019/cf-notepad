@@ -2,6 +2,11 @@
 
 ## [2026-07-12]
 ### Added
+- **Desktop Preview Split Direction**
+  - Added a persisted `Layout` control that lets desktop editors switch between side-by-side and stacked editor/preview panes.
+  - Mobile editing remains stacked automatically.
+- **Selection AI Edit Shortcut**
+  - Show a contextual AI Edit button after text is selected in the editor and reuse the existing GPT-OSS 120B selection replacement flow.
 - **GPT-OSS 120B AI Editing**
   - Added a separate AI editing button powered by `@cf/openai/gpt-oss-120b` for instruction-based passage insertion, partial editing, or full-note refinement.
   - Capture textarea selections before prompting and splice the model's replacement text into the exact selection range, guaranteeing that unselected content remains unchanged.

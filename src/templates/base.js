@@ -515,6 +515,7 @@ ${getMarkdownCss()}
             width: ext.width || '',
             shareFont: ext.shareFont || '',
             previewDevice: ext.previewDevice || '',
+            splitDirection: ext.splitDirection || '',
         },
         lang,
         title: title || '',
@@ -1322,6 +1323,42 @@ ${getMarkdownCss()}
             $aiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
         }
 
+        if ($textarea) {
+            const selectionAiButton = document.createElement('button')
+            selectionAiButton.type = 'button'
+            selectionAiButton.className = 'selection-ai-button'
+            selectionAiButton.textContent = APP_STATE.lang === 'zh-TW' ? 'AI 編輯' : 'AI Edit'
+            selectionAiButton.setAttribute('aria-label', APP_STATE.lang === 'zh-TW' ? '使用 AI 編輯圈選文字' : 'Edit selected text with AI')
+            document.body.appendChild(selectionAiButton)
+
+            const hideSelectionAiButton = () => selectionAiButton.classList.remove('visible')
+            const showSelectionAiButton = event => {
+                if ($textarea.selectionEnd <= $textarea.selectionStart) {
+                    hideSelectionAiButton()
+                    return
+                }
+                const editorRect = $textarea.getBoundingClientRect()
+                const left = event?.clientX || editorRect.right - 90
+                const top = event?.clientY || editorRect.top + 16
+                selectionAiButton.style.left = Math.min(window.innerWidth - 100, Math.max(8, left + 10)) + 'px'
+                selectionAiButton.style.top = Math.min(window.innerHeight - 48, Math.max(8, top - 42)) + 'px'
+                selectionAiButton.classList.add('visible')
+            }
+
+            selectionAiButton.addEventListener('mousedown', event => event.preventDefault())
+            selectionAiButton.addEventListener('click', () => {
+                hideSelectionAiButton()
+                runAiAssistant('edit')
+            })
+            $textarea.addEventListener('mouseup', showSelectionAiButton)
+            $textarea.addEventListener('keyup', event => {
+                if (event.shiftKey) showSelectionAiButton()
+            })
+            $textarea.addEventListener('input', hideSelectionAiButton)
+            $textarea.addEventListener('scroll', hideSelectionAiButton, { passive: true })
+            window.addEventListener('resize', hideSelectionAiButton)
+        }
+
         if ($importMdBtn && $importMdInput && $textarea) {
             $importMdBtn.addEventListener('click', () => {
                 $importMdInput.click()
@@ -1481,22 +1518,27 @@ ${getMarkdownCss()}
                 $previewPane.style.removeProperty('flex');
             };
             window.resetEditorSplitPane = resetSplitPane;
-            let x = 0, leftWidth = 0, parentWidth = 0;
+            let startPosition = 0, firstPaneSize = 0, parentSize = 0, isVertical = false;
             const mouseDownHandler = function(e) {
-                x = e.clientX; leftWidth = $textarea.getBoundingClientRect().width;
-                parentWidth = $resizer.parentNode.getBoundingClientRect().width;
+                isVertical = document.body.classList.contains('preview-split-vertical') || window.matchMedia('(max-width: 960px)').matches;
+                startPosition = isVertical ? e.clientY : e.clientX;
+                firstPaneSize = isVertical ? $textarea.getBoundingClientRect().height : $textarea.getBoundingClientRect().width;
+                const parentRect = $resizer.parentNode.getBoundingClientRect();
+                parentSize = isVertical ? parentRect.height : parentRect.width;
                 document.addEventListener('mousemove', mouseMoveHandler); document.addEventListener('mouseup', mouseUpHandler);
-                $resizer.style.borderLeft = '1px solid #0366d6'; $resizer.style.borderRight = '1px solid #0366d6';
-                document.body.style.cursor = 'col-resize'; $textarea.style.pointerEvents = 'none'; $preview.style.pointerEvents = 'none';
+                document.body.style.cursor = isVertical ? 'row-resize' : 'col-resize';
+                $textarea.style.pointerEvents = 'none'; $preview.style.pointerEvents = 'none';
             };
             const mouseMoveHandler = function(e) {
-                const dx = e.clientX - x; const newLeftPercent = ((leftWidth + dx) * 100) / parentWidth;
-                if (newLeftPercent < 10 || newLeftPercent > 90) return;
-                $textarea.style.flex = \`0 0 \${newLeftPercent}%\`; $previewPane.style.flex = \`0 0 calc(\${100 - newLeftPercent}% - 8px)\`;
+                const currentPosition = isVertical ? e.clientY : e.clientX;
+                const newFirstPercent = ((firstPaneSize + currentPosition - startPosition) * 100) / parentSize;
+                if (newFirstPercent < 10 || newFirstPercent > 90) return;
+                $textarea.style.flex = \`0 0 \${newFirstPercent}%\`;
+                $previewPane.style.flex = \`0 0 calc(\${100 - newFirstPercent}% - 8px)\`;
             };
             const mouseUpHandler = function() {
                 document.removeEventListener('mousemove', mouseMoveHandler); document.removeEventListener('mouseup', mouseUpHandler);
-                $resizer.style.borderLeft = null; $resizer.style.borderRight = null; document.body.style.cursor = null;
+                document.body.style.cursor = null;
                 $textarea.style.removeProperty('pointer-events'); $preview.style.removeProperty('pointer-events');
             };
             $resizer.addEventListener('mousedown', mouseDownHandler);
@@ -1934,6 +1976,7 @@ ${getMarkdownCss()}
         const themeSelector = document.getElementById('theme-selector');
         const previewWidthSelector = document.getElementById('preview-width-selector');
         const previewDeviceSelector = document.getElementById('preview-device-selector');
+        const splitDirectionSelector = document.getElementById('split-direction-selector');
         const languageSelector = document.getElementById('language-selector');
         const previewWidthRoot = document.documentElement;
         const shareFontSelector = document.getElementById('share-font-selector');
@@ -1969,6 +2012,16 @@ ${getMarkdownCss()}
             }
         }
 
+        function applySplitDirection(value) {
+            const direction = value === 'vertical' ? 'vertical' : 'horizontal';
+            if (typeof window.resetEditorSplitPane === 'function') {
+                window.resetEditorSplitPane();
+            }
+            document.body.classList.toggle('preview-split-vertical', direction === 'vertical');
+            document.body.classList.toggle('preview-split-horizontal', direction === 'horizontal');
+            setSegmentedActive(splitDirectionSelector, 'data-split-direction', direction);
+        }
+
         function applyShareFont(value) {
             const shareFont = value === 'maple' ? 'maple' : 'jetbrains';
             if (shareViewBody.classList.contains('share-view')) {
@@ -1992,6 +2045,18 @@ ${getMarkdownCss()}
                     applyPreviewDevice(device);
                     window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
                     persistSetting({ previewDevice: device }).catch(err => errHandle(err.message || err));
+                });
+            });
+        }
+
+        if (splitDirectionSelector) {
+            const initialSplitDirection = APP_STATE.noteSettings.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
+            applySplitDirection(initialSplitDirection);
+            splitDirectionSelector.querySelectorAll('[data-split-direction]').forEach(button => {
+                button.addEventListener('click', function() {
+                    const direction = this.getAttribute('data-split-direction') === 'vertical' ? 'vertical' : 'horizontal';
+                    applySplitDirection(direction);
+                    persistSetting({ splitDirection: direction }).catch(err => errHandle(err.message || err));
                 });
             });
         }

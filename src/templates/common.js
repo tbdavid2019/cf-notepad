@@ -202,6 +202,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <span class="footer-control-label">Lang</span>
                     </div>
                     ${isEdit && mode === 'md' ? `
+                        <div class="footer-control-group desktop-split-control">
+                            <div id="split-direction-selector" class="segmented-toggle" role="group" aria-label="${lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout'}">
+                                <button type="button" class="segmented-toggle-btn active" data-split-direction="horizontal" aria-pressed="true">${lang === 'zh-TW' ? '左右' : 'Side'}</button>
+                                <button type="button" class="segmented-toggle-btn" data-split-direction="vertical" aria-pressed="false">${lang === 'zh-TW' ? '上下' : 'Stack'}</button>
+                            </div>
+                            <span class="footer-control-label">Layout</span>
+                        </div>
                         <div class="footer-control-group">
                             <div id="preview-device-selector" class="segmented-toggle preview-device-toggle" role="group" aria-label="${t.previewDevice}">
                                 <button type="button" class="segmented-toggle-btn active" data-preview-device="desktop" aria-pressed="true">${t.desktop}</button>
