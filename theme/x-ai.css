@@ -20,6 +20,7 @@
 #bm-md h5,
 #bm-md h6 {
   color: #ffffff;
+  -webkit-text-fill-color: currentColor;
   line-height: 1.2;
   margin-top: 1.4em;
   margin-bottom: 0.4em;
@@ -29,24 +30,47 @@
 
 #bm-md h1 {
   font-size: 2.2em;
-  border-bottom: 1px solid #212327;
-  padding-bottom: 0.35em;
+  border: 1px solid #2b2d31;
+  border-left: 5px solid #ff7a17;
+  border-radius: 6px;
+  background: #151515;
+  padding: 0.45em 0.65em;
   margin-top: 0;
   color: #ffffff;
 }
 
 #bm-md h2 {
   font-size: 1.65em;
-  border-bottom: 1px solid #212327;
+  color: #f5f5f5;
+  border-bottom: 2px solid #ff7a17;
   padding-bottom: 0.25em;
 }
 
 #bm-md h3 {
   font-size: 1.35em;
+  color: #ffb27a;
 }
 
 #bm-md h4 {
   font-size: 1.15em;
+  color: #ffffff;
+}
+
+#bm-md h5,
+#bm-md h6 {
+  font-size: 1em;
+  color: #dadbdf;
+}
+
+#bm-md h1 a,
+#bm-md h2 a,
+#bm-md h3 a,
+#bm-md h4 a,
+#bm-md h5 a,
+#bm-md h6 a {
+  color: inherit;
+  -webkit-text-fill-color: currentColor;
+  border-bottom: 0;
 }
 
 #bm-md p,

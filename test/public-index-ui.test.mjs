@@ -6,6 +6,15 @@ const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'u
 const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const constantSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
+const xAiThemeSource = readFileSync(new URL('../theme/x-ai.css', import.meta.url), 'utf8')
+
+test('x-ai theme keeps every heading level visible on its dark surface', () => {
+    assert.match(xAiThemeSource, /#bm-md h6 \{\s*color: #ffffff;\s*-webkit-text-fill-color: currentColor;/s)
+    assert.match(xAiThemeSource, /#bm-md h1 \{[\s\S]*background: #151515;[\s\S]*color: #ffffff;/)
+    assert.match(xAiThemeSource, /#bm-md h2 \{[\s\S]*color: #f5f5f5;/)
+    assert.match(xAiThemeSource, /#bm-md h3 \{[\s\S]*color: #ffb27a;/)
+    assert.match(xAiThemeSource, /#bm-md h6 a \{[\s\S]*color: inherit;/)
+})
 
 test('setting route persists publicIndex metadata and clears it on unpublish', () => {
     assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*publicIndex\s*\}\s*=\s*await request\.json\(\)/)
@@ -110,7 +119,7 @@ test('footer exposes AI format and edit controls for whole-note assistance', () 
     assert.match(baseTemplateSource, /res\.err === 0 && res\.data\?\.result/)
     assert.match(baseTemplateSource, /\$textarea\.value = res\.data\.result/)
     assert.match(indexSource, /router\.post\('\/:path\/ai-format'/)
-    assert.match(indexSource, /'@cf\/zai-org\/glm-4\.7-flash'/)
+    assert.match(indexSource, /'@cf\/openai\/gpt-oss-20b'/)
     assert.match(indexSource, /'@cf\/openai\/gpt-oss-120b'/)
     assert.match(indexSource, /scope: hasSelection \? 'selection' : 'document'/)
     assert.match(baseTemplateSource, /rawText\.slice\(0, selectionStart\) \+ res\.data\.result \+ rawText\.slice\(selectionEnd\)/)

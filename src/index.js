@@ -1563,7 +1563,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         && selectionStart >= 0
         && selectionEnd > selectionStart
         && selectionEnd <= normalizedText.length
-    const model = mode === 'edit' ? '@cf/openai/gpt-oss-120b' : '@cf/zai-org/glm-4.7-flash'
+    const model = mode === 'edit' ? '@cf/openai/gpt-oss-120b' : '@cf/openai/gpt-oss-20b'
     const messages = [
         {
             role: 'system',

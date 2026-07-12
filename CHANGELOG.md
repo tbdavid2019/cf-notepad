@@ -8,6 +8,9 @@
   - Require an explicit editing instruction and return the complete edited Markdown, including untouched content, while keeping the existing GLM formatting action unchanged.
 
 ### Fixed
+- **xAI Theme Heading Contrast**
+  - Added explicit high-contrast colors and surfaces for all heading levels so titles remain visible in editor previews and shared pages.
+  - Ensure heading links inherit the heading color instead of being obscured by generic link styles.
 - **AI Format Response Handling**
   - Fixed successful Workers AI output being passed to `returnJSON()` as HTTP headers, which caused `Invalid header value` for Chinese or multiline Markdown.
   - Return the formatted Markdown in the JSON response body and read it from `data.result` before replacing the full editor content.
@@ -31,6 +34,8 @@
   - All themes now have balanced braces and complete selector coverage.
 
 ### Changed
+- **AI Formatting Model**
+  - Switched the focused formatting action from GLM 4.7 Flash to `@cf/openai/gpt-oss-20b` for lower-latency formatting with behavior consistent with the GPT-OSS 120B editing assistant.
 - **Theme Selector Enhancement**
   - Added visual indicators (☀️/🌙) and descriptive labels to theme selector for better UX.
   - Themes now show: `ayu ☀️ 極簡温暖`, `bauhaus ☀️ 幾何藝術`, `botanical ☀️ 植物圖鑑`, etc.
