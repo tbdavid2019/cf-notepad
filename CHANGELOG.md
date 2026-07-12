@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-12]
+### Added
+- **GPT-OSS 120B AI Editing**
+  - Added a separate AI editing button powered by `@cf/openai/gpt-oss-120b` for instruction-based passage insertion, partial editing, or full-note refinement.
+  - Capture textarea selections before prompting and splice the model's replacement text into the exact selection range, guaranteeing that unselected content remains unchanged.
+  - Require an explicit editing instruction and return the complete edited Markdown, including untouched content, while keeping the existing GLM formatting action unchanged.
+
 ### Fixed
 - **AI Format Response Handling**
   - Fixed successful Workers AI output being passed to `returnJSON()` as HTTP headers, which caused `Invalid header value` for Chinese or multiline Markdown.

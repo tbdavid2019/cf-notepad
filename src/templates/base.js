@@ -1240,8 +1240,9 @@ ${getMarkdownCss()}
         }
 
         const $aiFormatBtn = document.querySelector('#ai-format-btn')
+        const $aiEditBtn = document.querySelector('#ai-edit-btn')
 
-        const runAiFormatAssistant = async () => {
+        const runAiAssistant = async mode => {
             if (!$textarea) return;
 
             const rawText = $textarea.value || ''
@@ -1250,26 +1251,49 @@ ${getMarkdownCss()}
                 return;
             }
 
-            const instructionPrompt = APP_STATE.lang === 'zh-TW'
-                ? '請輸入排版需求，例如：補標題、整理段落、改成條列重點'
-                : 'Enter formatting instructions, for example: add headings, clean paragraphs, and turn key points into bullets'
+            const isEdit = mode === 'edit'
+            const selectionStart = isEdit ? $textarea.selectionStart : 0
+            const selectionEnd = isEdit ? $textarea.selectionEnd : 0
+            const hasSelection = isEdit && selectionEnd > selectionStart
+            const instructionPrompt = isEdit
+                ? (APP_STATE.lang === 'zh-TW'
+                    ? (hasSelection
+                        ? '請輸入圈選文字的修改要求，例如：精簡、改寫語氣、修正文句'
+                        : '請輸入編輯要求，例如：在第二段後插入一段說明，或全文微調但保留原意')
+                    : (hasSelection
+                        ? 'Enter instructions for the selected text, for example: shorten it, change its tone, or improve the wording'
+                        : 'Enter editing instructions, for example: insert a paragraph after section two, or refine the full note while preserving its meaning'))
+                : (APP_STATE.lang === 'zh-TW'
+                    ? '請輸入排版需求，例如：補標題、整理段落、改成條列重點'
+                    : 'Enter formatting instructions, for example: add headings, clean paragraphs, and turn key points into bullets')
             const instruction = window.prompt(instructionPrompt, '')
             if (instruction === null) return;
+            if (isEdit && !instruction.trim()) {
+                window.showToast(APP_STATE.lang === 'zh-TW' ? '請輸入編輯要求' : 'Please enter editing instructions')
+                return;
+            }
 
             const loadingMsg = APP_STATE.lang === 'zh-TW' ? 'AI 正在處理中，請稍候...' : 'AI processing, please wait...'
             window.showToast(loadingMsg)
 
             if ($aiFormatBtn) $aiFormatBtn.disabled = true
+            if ($aiEditBtn) $aiEditBtn.disabled = true
 
             try {
                 const res = await fetchJson('/' + encodeURIComponent(APP_STATE.path || '') + '/ai-format', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: rawText, mode: 'format', instruction })
+                    body: JSON.stringify({ text: rawText, mode, instruction, selectionStart, selectionEnd })
                 }, 130000)
 
                 if (res.err === 0 && res.data?.result) {
-                    $textarea.value = res.data.result
+                    if (res.data.scope === 'selection' && hasSelection) {
+                        $textarea.value = rawText.slice(0, selectionStart) + res.data.result + rawText.slice(selectionEnd)
+                        const nextCursor = selectionStart + res.data.result.length
+                        $textarea.setSelectionRange(selectionStart, nextCursor)
+                    } else {
+                        $textarea.value = res.data.result
+                    }
                     renderPlain($previewPlain, $textarea.value)
                     triggerRender($previewMd, $textarea.value)
                     $textarea.dispatchEvent(new Event('input', { bubbles: true }))
@@ -1286,11 +1310,15 @@ ${getMarkdownCss()}
                 alert(message)
             } finally {
                 if ($aiFormatBtn) $aiFormatBtn.disabled = false
+                if ($aiEditBtn) $aiEditBtn.disabled = false
             }
         }
 
         if ($aiFormatBtn) {
-            $aiFormatBtn.addEventListener('click', runAiFormatAssistant)
+            $aiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
+        }
+        if ($aiEditBtn) {
+            $aiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
         }
 
         if ($importMdBtn && $importMdInput && $textarea) {

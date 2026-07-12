@@ -1541,7 +1541,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(40001, 'Invalid JSON body', { status: 400 })
     }
 
-    const { text, mode, instruction } = json
+    const { text, mode, instruction, selectionStart, selectionEnd } = json
     if (!text || typeof text !== 'string') {
         return returnJSON(40002, 'Text content is required', { status: 400 })
     }
@@ -1549,20 +1549,46 @@ router.post('/:path/ai-format', async (request, { env }) => {
     const normalizedText = typeof text === 'string' ? text.replace(/\u0000/g, '') : ''
     const userInstruction = typeof instruction === 'string' ? instruction.replace(/\u0000/g, '').trim() : ''
 
-    if (mode !== 'format') {
+    if (mode !== 'format' && mode !== 'edit') {
         return returnJSON(40003, 'Unsupported AI mode', { status: 400 })
     }
 
-    const model = '@cf/zai-org/glm-4.7-flash'
+    if (mode === 'edit' && !userInstruction) {
+        return returnJSON(40004, 'Editing instructions are required', { status: 400 })
+    }
+
+    const hasSelection = mode === 'edit'
+        && Number.isInteger(selectionStart)
+        && Number.isInteger(selectionEnd)
+        && selectionStart >= 0
+        && selectionEnd > selectionStart
+        && selectionEnd <= normalizedText.length
+    const model = mode === 'edit' ? '@cf/openai/gpt-oss-120b' : '@cf/zai-org/glm-4.7-flash'
     const messages = [
         {
             role: 'system',
-            content: 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and original language. Output only the final Markdown with no explanations.'
+            content: hasSelection
+                ? 'You are a careful Markdown editing assistant. Rewrite only the selected text according to the user requirements. Use the surrounding text only as context. Return only the replacement text for the selection, with no markers, explanations, quotes, or unchanged surrounding text.'
+                : mode === 'edit'
+                ? 'You are a careful Markdown editing assistant. Apply the user requirements precisely, whether they request inserting a passage, editing part of the note, or refining the full note. Preserve all untouched content, facts, links, Markdown structure, and the original language unless explicitly asked otherwise. Return the complete edited note, not a summary or patch. Output only the final Markdown with no explanations.'
+                : 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and original language. Output only the final Markdown with no explanations.'
         },
         {
             role: 'user',
-            content: [
-                'Task: format this full note.',
+            content: hasSelection ? [
+                'Task: replace the selected text only.',
+                `User requirements: ${userInstruction}`,
+                '',
+                'Text before selection (context only):',
+                normalizedText.slice(0, selectionStart),
+                '',
+                'Selected text to edit:',
+                normalizedText.slice(selectionStart, selectionEnd),
+                '',
+                'Text after selection (context only):',
+                normalizedText.slice(selectionEnd),
+            ].join('\n') : [
+                mode === 'edit' ? 'Task: edit this full note.' : 'Task: format this full note.',
                 userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: add headings, improve structure, clean paragraphs, and use lists when helpful.',
                 '',
                 'Full note:',
@@ -1585,7 +1611,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
         const resultText = extractAiText(aiResponse)
         if (resultText) {
-            return returnJSON(0, { result: resultText, modelUsed: model })
+            return returnJSON(0, { result: resultText, scope: hasSelection ? 'selection' : 'document', modelUsed: model })
         }
         return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
     } catch (error) {
