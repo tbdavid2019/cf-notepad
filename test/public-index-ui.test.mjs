@@ -7,6 +7,7 @@ const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const constantSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
 const xAiThemeSource = readFileSync(new URL('../theme/x-ai.css', import.meta.url), 'utf8')
+const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
 
 test('x-ai theme keeps every heading level visible on the white preview canvas', () => {
     assert.match(xAiThemeSource, /#bm-md h6 \{\s*color: #202124;\s*-webkit-text-fill-color: currentColor;/s)
@@ -36,6 +37,8 @@ test('share state uses a working toggle and does not interrupt preview rendering
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
     assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
     assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', publishCurrentNote\)/)
+    assert.doesNotMatch(baseCssSource, /\.share-state-switcher \.slider \{\s*position:/)
+    assert.match(baseCssSource, /\.share-state-switcher\.share-published \.slider \{\s*background: var\(--toolbar-success\)/)
 })
 
 test('share modal prompts for public index approval after publish', () => {

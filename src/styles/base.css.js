@@ -369,33 +369,10 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     padding: 4px 0;
 }
 .share-state-switcher {
-    position: relative;
-    width: 36px;
-    height: 20px;
     flex-shrink: 0;
-    cursor: pointer;
-}
-.share-state-switcher .slider {
-    position: absolute;
-    inset: 0;
-    background: #b8b8b8;
-    border-radius: 20px;
-    transition: background 0.2s;
-}
-.share-state-switcher .slider::before {
-    content: '';
-    position: absolute;
-    left: 2px;
-    top: 2px;
-    width: 16px;
-    height: 16px;
-    background: #fff;
-    border-radius: 50%;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
-    transition: transform 0.2s;
 }
 .share-state-switcher.share-published .slider {
-    background: #2da44e;
+    background: var(--toolbar-success);
 }
 .share-state-switcher.share-published .slider::before {
     transform: translateX(16px);
