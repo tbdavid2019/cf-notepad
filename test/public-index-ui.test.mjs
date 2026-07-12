@@ -95,15 +95,13 @@ test('share routes support short slugs while keeping legacy md5 compatibility', 
     assert.match(indexSource, /router\.post\('\/share\/:shareId\/auth'/)
 })
 
-test('footer exposes AI helper controls and wires whole-note AI actions', () => {
+test('footer exposes AI format control and wires whole-note markdown formatting', () => {
     assert.match(commonTemplateSource, /id="ai-format-btn"/)
-    assert.match(commonTemplateSource, /id="ai-continue-btn"/)
     assert.match(baseTemplateSource, /const \$aiFormatBtn = document\.querySelector\('#ai-format-btn'\)/)
-    assert.match(baseTemplateSource, /const \$aiContinueBtn = document\.querySelector\('#ai-continue-btn'\)/)
-    assert.match(baseTemplateSource, /const runAiAssistant = async mode =>/)
+    assert.match(baseTemplateSource, /const runAiFormatAssistant = async \(\) =>/)
     assert.match(baseTemplateSource, /window\.prompt\(instructionPrompt, ''\)/)
-    assert.match(baseTemplateSource, /body: JSON\.stringify\(\{ text: rawText, mode, instruction \}\)/)
+    assert.match(baseTemplateSource, /body: JSON\.stringify\(\{ text: rawText, mode: 'format', instruction \}\)/)
     assert.match(indexSource, /router\.post\('\/:path\/ai-format'/)
-    assert.match(indexSource, /'@cf\/openai\/gpt-oss-20b'/)
-    assert.match(indexSource, /'@cf\/openai\/gpt-oss-120b'/)
+    assert.match(indexSource, /'@cf\/zai-org\/glm-4\.7-flash'/)
+    assert.doesNotMatch(indexSource, /mode === 'continue'/)
 })

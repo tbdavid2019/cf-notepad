@@ -28,34 +28,34 @@ const SVG_ICONS = {
 }
 
 const THEME_OPTION_LABELS = {
-    'ayu-light': 'ayu',
-    'claude-canvas': 'claude',
-    'notion-clean': 'notion',
-    'shopify-mint': 'shopify',
-    'x-ai': 'xAI',
-    'bauhaus': 'bauhaus',
-    'botanical': 'botanical',
-    'catppuccin-latte': 'cp-latte',
-    'catppuccin-macchiato': 'cp-macchiato',
-    'green-simple': 'green',
-    'kanagawa': 'kanagawa',
-    'neo-brutalism': 'neo-brutal',
-    'newsprint': 'newsprint',
-    'organic': 'organic',
-    'playful-geometric': 'playful-geo',
-    'professional': 'pro',
-    'retro': 'retro',
-    'sketch': 'sketch',
-    'terminal': 'terminal',
-    'tokyo-night': 'tokyo',
+    'ayu-light': 'ayu ☀️ 極簡温暖',
+    'bauhaus': 'bauhaus ☀️ 幾何藝術',
+    'botanical': 'botanical ☀️ 植物圖鑑',
+    'catppuccin-latte': 'cp-latte ☀️ 柔和亮色',
+    'claude-canvas': 'claude ☀️ 人文溫暖',
+    'green-simple': 'green ☀️ 簡潔綠色',
+    'neo-brutalism': 'neo-brutal ☀️ 粗野主義',
+    'newsprint': 'newsprint ☀️ 報紙印刷',
+    'notion-clean': 'notion ☀️ 極簡白板',
+    'organic': 'organic ☀️ 侘寂陶藝',
+    'playful-geometric': 'playful-geo ☀️ 活潑幾何',
+    'professional': 'pro ☀️ 專業商務',
+    'retro': 'retro ☀️ 90年代懷舊',
+    'shopify-mint': 'shopify ☀️ 清新薄荷',
+    'sketch': 'sketch ☀️ 手繪草圖',
+    'catppuccin-macchiato': 'cp-macchiato 🌙 柔和暗色',
+    'kanagawa': 'kanagawa 🌙 日本墨水',
+    'terminal': 'terminal 🌙 終端暗色',
+    'tokyo-night': 'tokyo 🌙 東京夜景',
+    'x-ai': 'xAI 🌙 科技深黑',
 }
 
 export const SWITCHER = (text, open, className = '') => `
-<span class="opt-desc">${text}</span>
 <label class="opt-switcher ${className}">
   <input type="checkbox" ${open ? 'checked' : ''}>
   <span class="slider round"></span>
 </label>
+<span class="footer-control-label">${text}</span>
 `
 
 export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath }) => {
@@ -83,27 +83,22 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.readLock}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '唯讀鎖' : 'Read'}</span>
                         </button>
-                        <div class="footer-preview-group">
+                        <div class="footer-preview-group footer-control-group">
                             ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
                         </div>
-                        <div class="dropdown-container tools-dropdown">
-                            <button type="button" class="toolbar-icon-button dropdown-trigger" title="${lang === 'zh-TW' ? '檔案與匯出' : 'File & Export'}" aria-label="${lang === 'zh-TW' ? '檔案與匯出' : 'File & Export'}">
-                                ${SVG_ICONS.export}
-                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '工具' : 'Tools'}</span>
-                            </button>
-                            <div class="dropdown-menu">
-                                <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
-                                <button type="button" id="import-md-btn" class="dropdown-item" title="${t.importMarkdown}">
-                                    ${SVG_ICONS.import} <span>${t.importMarkdown}</span>
-                                </button>
-                                <button type="button" id="export-md-btn" class="dropdown-item" title="${t.exportMarkdown}">
-                                    ${SVG_ICONS.export} <span>${t.exportMarkdown}</span>
-                                </button>
-                                <button type="button" id="export-pdf-btn" class="dropdown-item" title="${t.exportPdf}">
-                                    ${SVG_ICONS.pdf} <span>${t.exportPdf}</span>
-                                </button>
-                            </div>
-                        </div>
+                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
+                        <button type="button" id="import-md-btn" class="toolbar-icon-button" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
+                            ${SVG_ICONS.import}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
+                        </button>
+                        <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
+                            ${SVG_ICONS.export}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
+                        </button>
+                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
+                            ${SVG_ICONS.pdf}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
+                        </button>
                         ${showNoteHistory ? `
                             <div class="dropdown-container history-dropdown">
                                 <button type="button" class="toolbar-icon-button dropdown-trigger" title="${t.historyTitle}" aria-label="${t.historyTitle}">
@@ -121,15 +116,19 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.sparkles}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI排版' : 'Format'}</span>
                         </button>
-                        <button type="button" id="ai-continue-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 內容續寫' : 'AI Continue Writing'}" aria-label="${lang === 'zh-TW' ? 'AI 內容續寫' : 'AI Continue Writing'}">
-                            ${SVG_ICONS.magic}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI續寫' : 'Continue'}</span>
-                        </button>
                     ` : (path ? `
                         ${authPath
                             ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
                             : `<a href="/${path}" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
                         }
+                        <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
+                            ${SVG_ICONS.export}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
+                        </button>
+                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
+                            ${SVG_ICONS.pdf}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
+                        </button>
                     ` : '')}
                 </div>
             </div>
@@ -139,8 +138,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     ${isEdit ? `
                         ${share && shareId ? `
                             <div class="dropdown-container share-dropdown">
-                                <button type="button" id="share-menu-btn" class="opt-button opt-button-accent dropdown-trigger" title="${t.shareLinkTitle}">
-                                    ${SVG_ICONS.link} <span class="btn-label">${t.shareLink} ▾</span>
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button dropdown-trigger" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
+                                    ${SVG_ICONS.link}
+                                    <span class="toolbar-button-label">${t.shareLink} ▾</span>
                                 </button>
                                 <div class="dropdown-menu">
                                     <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
@@ -163,8 +163,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     </button>
                                 </div>
                             </div>
-                        ` : SWITCHER(t.share, share, 'opt-share')}
-                        ${mode === 'md' ? `<button id="present-btn" class="opt-button opt-button-accent" title="${t.presentTitle}">${SVG_ICONS.play}<span class="btn-label">${t.present}</span></button>` : ''}
+                        ` : `
+                            <button type="button" id="share-switch-btn" class="toolbar-icon-button opt-share ${share ? 'toolbar-active-button' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
+                                ${SVG_ICONS.link}
+                                <span class="toolbar-button-label">${t.shareLink}</span>
+                            </button>
+                        `}
+                        ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
                     ` : `
                         <button id="present-btn" class="toolbar-icon-button toolbar-active-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">
                             ${SVG_ICONS.play}
@@ -188,33 +193,46 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-appearance">
                 <div class="footer-section-body">
                     ${(sharePath || isEdit) ? `
-                        <span class="footer-label" title="${shareFontAriaLabel}">Font</span>
-                        <div id="share-font-selector" class="segmented-toggle share-font-toggle" role="group" aria-label="${shareFontAriaLabel}">
-                            <button type="button" class="segmented-toggle-btn active" data-share-font="jetbrains" aria-pressed="true" title="${jetbrainsTitle}">JB Mono</button>
-                            <button type="button" class="segmented-toggle-btn" data-share-font="maple" aria-pressed="false" title="${mapleTitle}">Maple</button>
+                        <div class="footer-control-group">
+                            <div id="share-font-selector" class="segmented-toggle share-font-toggle" role="group" aria-label="${shareFontAriaLabel}">
+                                <button type="button" class="segmented-toggle-btn active" data-share-font="jetbrains" aria-pressed="true" title="${jetbrainsTitle}">JB</button>
+                                <button type="button" class="segmented-toggle-btn" data-share-font="maple" aria-pressed="false" title="${mapleTitle}">Maple</button>
+                            </div>
+                            <span class="footer-control-label">Font</span>
                         </div>
                     ` : ''}
-                    <div id="language-selector" class="segmented-toggle" role="group" aria-label="${t.language}">
-                        <button type="button" class="segmented-toggle-btn ${lang === 'zh-TW' ? 'active' : ''}" data-lang="zh-TW" aria-pressed="${lang === 'zh-TW' ? 'true' : 'false'}">Zh</button>
-                        <button type="button" class="segmented-toggle-btn ${lang === 'en-US' ? 'active' : ''}" data-lang="en-US" aria-pressed="${lang === 'en-US' ? 'true' : 'false'}">En</button>
+                    <div class="footer-control-group">
+                        <div id="language-selector" class="segmented-toggle" role="group" aria-label="${t.language}">
+                            <button type="button" class="segmented-toggle-btn ${lang === 'zh-TW' ? 'active' : ''}" data-lang="zh-TW" aria-pressed="${lang === 'zh-TW' ? 'true' : 'false'}">Zh</button>
+                            <button type="button" class="segmented-toggle-btn ${lang === 'en-US' ? 'active' : ''}" data-lang="en-US" aria-pressed="${lang === 'en-US' ? 'true' : 'false'}">En</button>
+                        </div>
+                        <span class="footer-control-label">Lang</span>
                     </div>
                     ${isEdit && mode === 'md' ? `
-                        <div id="preview-device-selector" class="segmented-toggle preview-device-toggle" role="group" aria-label="${t.previewDevice}">
-                            <button type="button" class="segmented-toggle-btn active" data-preview-device="desktop" aria-pressed="true">${t.desktop}</button>
-                            <button type="button" class="segmented-toggle-btn" data-preview-device="mobile" aria-pressed="false">${t.mobile}</button>
+                        <div class="footer-control-group">
+                            <div id="preview-device-selector" class="segmented-toggle preview-device-toggle" role="group" aria-label="${t.previewDevice}">
+                                <button type="button" class="segmented-toggle-btn active" data-preview-device="desktop" aria-pressed="true">${t.desktop}</button>
+                                <button type="button" class="segmented-toggle-btn" data-preview-device="mobile" aria-pressed="false">${t.mobile}</button>
+                            </div>
+                            <span class="footer-control-label">Device</span>
                         </div>
                     ` : ''}
                     ${!isEdit || mode === 'md' ? `
-                        <label class="footer-label" for="preview-width-selector">${t.width}</label>
-                        <select id="preview-width-selector" class="footer-select">
-                            <option value="100%">${t.full}</option>
-                            <option value="960px">960</option>
-                            <option value="1200px">1200</option>
-                            <option value="1440px">1440</option>
-                        </select>
-                        <select id="theme-selector" class="footer-select">
-                            ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${THEME_OPTION_LABELS[themeName] || themeName}</option>`).join('')}
-                        </select>
+                        <div class="footer-control-group">
+                            <select id="preview-width-selector" class="footer-select">
+                                <option value="100%">${t.full}</option>
+                                <option value="960px">960</option>
+                                <option value="1200px">1200</option>
+                                <option value="1440px">1440</option>
+                            </select>
+                            <span class="footer-control-label">${t.width}</span>
+                        </div>
+                        <div class="footer-control-group">
+                            <select id="theme-selector" class="footer-select">
+                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${THEME_OPTION_LABELS[themeName] || themeName}</option>`).join('')}
+                            </select>
+                            <span class="footer-control-label">Theme</span>
+                        </div>
                     ` : ''}
                     ${sharePath ? '<div id="share-analytics-hook"></div>' : ''}
                 </div>
@@ -222,14 +240,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 
             <div class="footer-section footer-section-info">
                 <div class="footer-section-body">
-                    <a class="github-link" title="Github" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
+                    <a class="toolbar-icon-link" title="Github" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
                         <svg viewBox="64 64 896 896" focusable="false" data-icon="github" width="1.25em" height="1.25em" fill="currentColor" aria-hidden="true"><path d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9a127.5 127.5 0 0138.1 91v112.5c.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.3z"></path></svg>
+                        <span class="toolbar-button-label">GitHub</span>
                     </a>
                     <a class="toolbar-icon-link" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
                         ${SVG_ICONS.sparkles}
+                        <span class="toolbar-button-label">Skill</span>
                     </a>
                     <a class="toolbar-icon-link" title="${t.apiDocTitle}" aria-label="${t.apiDocTitle}" target="_blank" href="/docs/api" rel="noreferrer">
                         ${SVG_ICONS.apiDocs}
+                        <span class="toolbar-button-label">API</span>
                     </a>
                 </div>
             </div>

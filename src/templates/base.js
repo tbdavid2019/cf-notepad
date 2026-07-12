@@ -80,7 +80,7 @@ ${getBaseCss()}
 ${getEditorCss()}
 ${getMarkdownCss()}
     </style>
-    <style id="theme-style">${THEMES[ext.theme || 'catppuccin-macchiato'] || ''}</style>
+    <style id="theme-style">${THEMES[ext.theme || 'claude-canvas'] || ''}</style>
     <style>
         #preview-md.markdown-body,
         #preview-plain.markdown-body {
@@ -557,9 +557,18 @@ ${getMarkdownCss()}
         return payload
     }
 
-    const fetchJson = async (input, init) => {
-        const response = await window.fetch(input, init)
-        return parseJsonResponse(response)
+    const fetchJson = async (input, init, timeoutMs = 30000) => {
+        const controller = new AbortController()
+        const timeoutId = window.setTimeout(() => controller.abort(new Error('Request timeout')), timeoutMs)
+        try {
+            const response = await window.fetch(input, {
+                ...init,
+                signal: controller.signal,
+            })
+            return parseJsonResponse(response)
+        } finally {
+            window.clearTimeout(timeoutId)
+        }
     }
 
     const initWebMcp = () => {
@@ -1163,7 +1172,7 @@ ${getMarkdownCss()}
         const $textarea = document.querySelector('#contents')
         const $loading = document.querySelector('#loading')
         const $modeBtn = document.querySelector('.opt-mode > input')
-        const $shareBtn = document.querySelector('.opt-share > input')
+        const $shareBtn = document.querySelector('.opt-share')
         const $previewPlain = document.querySelector('#preview-plain')
         const $previewMd = document.querySelector('#preview-md')
         const $shareModal = document.querySelector('.share-modal')
@@ -1231,9 +1240,8 @@ ${getMarkdownCss()}
         }
 
         const $aiFormatBtn = document.querySelector('#ai-format-btn')
-        const $aiContinueBtn = document.querySelector('#ai-continue-btn')
 
-        const runAiAssistant = async mode => {
+        const runAiFormatAssistant = async () => {
             if (!$textarea) return;
 
             const rawText = $textarea.value || ''
@@ -1242,14 +1250,9 @@ ${getMarkdownCss()}
                 return;
             }
 
-            const instructionPrompt = mode === 'format'
-                ? (APP_STATE.lang === 'zh-TW'
-                    ? '請輸入排版需求，例如：整理成會議紀錄、補標題、條列重點'
-                    : 'Enter formatting instructions, for example: turn this into meeting notes with headings and bullet points')
-                : (APP_STATE.lang === 'zh-TW'
-                    ? '請輸入續寫需求，例如：補一段結論、延伸成正式版本'
-                    : 'Enter continuation instructions, for example: add a conclusion and expand in a formal tone')
-
+            const instructionPrompt = APP_STATE.lang === 'zh-TW'
+                ? '請輸入排版需求，例如：補標題、整理段落、改成條列重點'
+                : 'Enter formatting instructions, for example: add headings, clean paragraphs, and turn key points into bullets'
             const instruction = window.prompt(instructionPrompt, '')
             if (instruction === null) return;
 
@@ -1257,24 +1260,16 @@ ${getMarkdownCss()}
             window.showToast(loadingMsg)
 
             if ($aiFormatBtn) $aiFormatBtn.disabled = true
-            if ($aiContinueBtn) $aiContinueBtn.disabled = true
 
             try {
                 const res = await fetchJson('/' + encodeURIComponent(APP_STATE.path || '') + '/ai-format', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: rawText, mode, instruction })
-                })
+                    body: JSON.stringify({ text: rawText, mode: 'format', instruction })
+                }, 45000)
 
                 if (res.err === 0 && res.result) {
-                    const resultText = res.result
-                    if (mode === 'format') {
-                        $textarea.value = resultText
-                    } else {
-                        const current = ($textarea.value || '').trimEnd()
-                        $textarea.value = current ? current + '\\n\\n' + resultText.trimStart() : resultText
-                    }
-
+                    $textarea.value = res.result
                     renderPlain($previewPlain, $textarea.value)
                     triggerRender($previewMd, $textarea.value)
                     $textarea.dispatchEvent(new Event('input', { bubbles: true }))
@@ -1285,18 +1280,17 @@ ${getMarkdownCss()}
                 alert((APP_STATE.lang === 'zh-TW' ? 'AI 處理失敗：' : 'AI processing failed: ') + (res.msg || 'Unknown error'))
             } catch (err) {
                 console.error('AI assistant error:', err)
-                alert((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
+                const message = err && err.name === 'AbortError'
+                    ? (APP_STATE.lang === 'zh-TW' ? 'AI 處理逾時，請再試一次' : 'AI request timed out, please try again')
+                    : ((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
+                alert(message)
             } finally {
                 if ($aiFormatBtn) $aiFormatBtn.disabled = false
-                if ($aiContinueBtn) $aiContinueBtn.disabled = false
             }
         }
 
         if ($aiFormatBtn) {
-            $aiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
-        }
-        if ($aiContinueBtn) {
-            $aiContinueBtn.addEventListener('click', () => runAiAssistant('continue'))
+            $aiFormatBtn.addEventListener('click', runAiFormatAssistant)
         }
 
         if ($importMdBtn && $importMdInput && $textarea) {
@@ -1600,15 +1594,14 @@ ${getMarkdownCss()}
         }
 
         if ($shareBtn) {
-            $shareBtn.onclick = function (e) {
-                const isShare = e.target.checked
-                if (isShare) {
+            $shareBtn.onclick = function () {
+                if (APP_STATE.isPublished) {
+                    fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
+                        .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; window.location.reload(); })
+                        .catch(err => errHandle(err))
+                } else {
                     publishCurrentNote();
-                    return;
                 }
-                fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; })
-                    .catch(err => errHandle(err))
             }
         }
 
@@ -2210,18 +2203,11 @@ ${getMarkdownCss()}
             window.initPresentation();
         }
 
-        // Ensure binding even if DOM is still hydrating
-        function bind() {
+        // Bind present button — only exists when mode === 'md' or in share view
+        (function() {
             var btn = document.getElementById('present-btn');
-            if (btn) {
-                btn.onclick = window.initPresentation;
-                console.log('Present button bound successfully');
-            } else {
-                console.warn('Present button not found, retrying in 500ms...');
-                setTimeout(bind, 500);
-            }
-        }
-        bind();
+            if (btn) btn.onclick = window.initPresentation;
+        })();
         maybeAutoStart();
 
         document.addEventListener('keydown', function(e) {

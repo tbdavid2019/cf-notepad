@@ -179,6 +179,24 @@ function extractAiText(payload) {
     return ''
 }
 
+async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 40000) {
+    let timeoutId
+    const timeoutPromise = new Promise((_, reject) => {
+        timeoutId = setTimeout(() => {
+            reject(new Error(`AI request timed out after ${timeoutMs}ms`))
+        }, timeoutMs)
+    })
+
+    try {
+        return await Promise.race([
+            aiBinding.run(model, payload),
+            timeoutPromise,
+        ])
+    } finally {
+        clearTimeout(timeoutId)
+    }
+}
+
 async function generateUniqueShareSlug() {
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const candidate = genRandomStr(SHARE_SLUG_LENGTH)
@@ -1509,6 +1527,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(10002, 'Password auth failed!', { status: 401 })
     }
 
+    console.log('[AI] env.AI type:', typeof env.AI)
+    console.log('[AI] env.AI keys:', env.AI ? Object.keys(env.AI) : 'null')
+
     if (!env.AI) {
         return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
     }
@@ -1528,75 +1549,50 @@ router.post('/:path/ai-format', async (request, { env }) => {
     const normalizedText = typeof text === 'string' ? text.replace(/\u0000/g, '') : ''
     const userInstruction = typeof instruction === 'string' ? instruction.replace(/\u0000/g, '').trim() : ''
 
-    let model = ''
-    let systemPrompt = ''
-    let userPrompt = ''
-
-    if (mode === 'format') {
-        model = '@cf/openai/gpt-oss-20b'
-        systemPrompt = 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and language. Output only the final Markdown with no explanations.'
-        userPrompt = [
-            'Task: format this full note.',
-            userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: improve structure, readability, headings, and lists.',
-            'Full note:',
-            normalizedText,
-        ].join('\n\n')
-    } else if (mode === 'continue') {
-        model = '@cf/openai/gpt-oss-120b'
-        systemPrompt = 'You are a writing assistant. Continue the full note in the same language and style. Output only the newly written continuation in Markdown. Do not repeat the original text.'
-        userPrompt = [
-            'Task: continue this full note.',
-            userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: continue naturally from the current content.',
-            'Full note:',
-            normalizedText,
-        ].join('\n\n')
-    } else {
+    if (mode !== 'format') {
         return returnJSON(40003, 'Unsupported AI mode', { status: 400 })
     }
 
-    const attempts = mode === 'format'
-        ? [
-            {
-                payload: {
-                    prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
-                    max_tokens: 4096,
-                }
-            },
-            {
-                payload: {
-                    input: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
-                    max_tokens: 4096,
-                }
-            }
-        ]
-        : [
-            {
-                payload: {
-                    prompt: `System:\n${systemPrompt}\n\nUser:\n${userPrompt}`,
-                    max_tokens: 4096,
-                }
-            }
-        ]
-
-    let lastError = null
-    for (const attempt of attempts) {
-        try {
-            const aiResponse = await env.AI.run(model, attempt.payload)
-            const resultText = extractAiText(aiResponse)
-            if (resultText) {
-                return returnJSON(0, 'Success', { result: resultText, modelUsed: model })
-            }
-        } catch (error) {
-            console.error(`Workers AI model ${model} failed:`, error)
-            lastError = error
+    const model = '@cf/zai-org/glm-4.7-flash'
+    const messages = [
+        {
+            role: 'system',
+            content: 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and original language. Output only the final Markdown with no explanations.'
+        },
+        {
+            role: 'user',
+            content: [
+                'Task: format this full note.',
+                userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: add headings, improve structure, clean paragraphs, and use lists when helpful.',
+                '',
+                'Full note:',
+                normalizedText,
+            ].join('\n')
         }
-    }
+    ]
 
-    if (lastError) {
-        return returnJSON(50003, `Workers AI model ${model} failed: ${lastError.message}`)
-    }
+    console.log('[AI] Calling model:', model)
+    console.log('[AI] Input text length:', normalizedText.length)
 
-    return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
+    try {
+        const aiResponse = await runAiWithTimeout(env.AI, model, {
+            messages,
+        }, 40000)
+        console.log('[AI] Response type:', typeof aiResponse)
+        console.log('[AI] Response keys:', aiResponse ? Object.keys(aiResponse) : 'null')
+        console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
+        const resultText = extractAiText(aiResponse)
+        if (resultText) {
+            return returnJSON(0, 'Success', { result: resultText, modelUsed: model })
+        }
+        return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
+    } catch (error) {
+        console.error(`[AI] Workers AI model ${model} failed:`, error)
+        console.error(`[AI] Error name:`, error.name)
+        console.error(`[AI] Error message:`, error.message)
+        console.error(`[AI] Error stack:`, error.stack)
+        return returnJSON(50003, `Workers AI model ${model} failed: ${error.message}`)
+    }
 })
 
 router.all('*', (request) => {

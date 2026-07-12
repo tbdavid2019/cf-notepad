@@ -1,5 +1,48 @@
 # Changelog
 
+## [2026-07-12]
+### Fixed
+- **Present Button Infinite Retry**
+  - Removed the broken `bind()` retry loop that spammed console with "Present button not found" every 500ms in edit/write mode.
+  - Present button now binds once at DOM ready — only exists when mode is `md` or in share view.
+- **Share Button Click Handler**
+  - Fixed share button not responding to clicks. JS was selecting `.opt-share > input` (checkbox) but HTML is a plain `<button>`.
+  - Changed selector to `.opt-share` and updated handler to use `APP_STATE.isPublished` instead of `e.target.checked`.
+- **Share Button Visibility on Mobile**
+  - Share button label (`toolbar-button-label`) now always shows even on mobile (≤960px), overriding the global hide rule.
+  - Added green dot indicator on share dropdown when note is published, so users can see shared status at a glance.
+- **Mobile Edit Layout**
+  - Changed editor+preview from side-by-side to vertical (top-bottom) stack on mobile (≤960px).
+  - Each pane takes 50% height; divider line switches from vertical to horizontal.
+- **Theme Completeness**
+  - Patched 16 themes missing: `thead`, `tbody tr:hover`, first-child margin reset, `kbd`, `del` styles.
+  - Affected themes: ayu-light, bauhaus, botanical, claude-canvas, green-simple, kanagawa, neo-brutalism, newsprint, notion-clean, organic, playful-geometric, professional, retro, shopify-mint, sketch, tokyo-night.
+  - x-ai theme fully rewritten with complete styles.
+
+### Changed
+- **Theme Selector Enhancement**
+  - Added visual indicators (☀️/🌙) and descriptive labels to theme selector for better UX.
+  - Themes now show: `ayu ☀️ 極簡温暖`, `bauhaus ☀️ 幾何藝術`, `botanical ☀️ 植物圖鑑`, etc.
+  - Dark themes marked with 🌙: `cp-macchiato 🌙 柔和暗色`, `kanagawa 🌙 日本墨水`, etc.
+- **Default Theme Changed**
+  - Switched the default preview theme from `catppuccin-macchiato` to `claude-canvas` (warm humanist editorial style).
+- **Footer Tools - Direct Buttons**
+  - Removed dropdown menu for Import/Export/PDF buttons.
+  - All three buttons now appear directly in the footer: 匯入 (Import), 匯出 (Export), 列印 (Print).
+  - Share mode shows Export and Print buttons directly (no Import since it's read-only).
+- **Footer Controls - Two-Line Layout**
+  - All footer controls now use consistent two-line layout (control on top, label below).
+  - Font selector, Language toggle, Preview switcher, Width selector, Theme selector all show labels below controls.
+  - Added text labels: "Font", "Lang", "Device", "Width", "Theme" below each control.
+- **Footer Info Section - Two-Line Buttons**
+  - Changed GitHub, Skill, and API Doc links to two-line style (icon on top, text on bottom).
+  - Added text labels: "GitHub", "Skill", "API" below each icon.
+- **Share Button Layout**
+  - Changed share button to icon+text two-line layout (icon on top, text on bottom) for consistency with other footer buttons.
+- **Wrangler Updated**
+  - Updated wrangler from v3 to v4.86.0.
+  - Updated compatibility_date to 2024-12-01.
+
 ## [2026-07-11 23:30 CST]
 ### Changed
 - **Footer Four-Section Reorganization**

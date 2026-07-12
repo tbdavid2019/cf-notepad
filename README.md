@@ -20,7 +20,7 @@
   - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
   - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
   - **預覽寬度快捷控制**：footer 內建 `Width` 切換，可快速在 `Full / 960 / 1200 / 1440` 間切換；設定會寫入該篇筆記 metadata，share 頁會沿用相同寬度，而不是只存在單一瀏覽器。
-  - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`claude-canvas`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`notion-clean`、`organic`、`playful-geometric`、`professional`、`retro`、`shopify-mint`、`sketch`、`terminal`、`tokyo-night`、`x-ai` 等多種 Markdown 預覽主題；目前全站預設為 `catppuccin-macchiato`。
+  - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`claude-canvas`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`notion-clean`、`organic`、`playful-geometric`、`professional`、`retro`、`shopify-mint`、`sketch`、`terminal`、`tokyo-night`、`x-ai` 等多種 Markdown 預覽主題；目前全站預設為 `claude-canvas`（溫暖人文風格）。
   - **分享頁字體切換**：editor / share footer 內建 `Font: JB Mono / Maple` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
   - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
   - **分享頁行動版 Bottom Sheet 與滾動優化**：在手機上 Footer 重構為精簡的圓角膠囊工具列，僅保留編輯區按鈕；點擊 footer 其他區域時，會從底部平滑滑出精美 Bottom Sheet 抽屜面板，以卡片式分區收納「發佈 / 外觀 / 資訊」設定，支援向下滑動手勢關閉與觸控防穿透。向下閱讀時會自動隱藏，向上滑動或滑到頁面頂端/底部時會自動顯示（方向感知，去除了 900ms 強制彈出閃爍的問題）。

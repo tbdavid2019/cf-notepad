@@ -310,6 +310,32 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     min-width: 220px;
 }
 
+/* Share button: always show label even on mobile */
+.footer-section-publish .toolbar-button-label {
+    display: inline !important;
+}
+.footer-section-publish .toolbar-icon-button {
+    width: auto !important;
+    padding: 0 8px !important;
+    gap: 4px;
+}
+
+/* Shared state indicator: green dot */
+.share-dropdown .dropdown-trigger::after {
+    content: '';
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #2da44e;
+    border: 1.5px solid var(--toolbar-bg, #faf9f5);
+}
+.share-dropdown {
+    position: relative;
+}
+
 /* Bottom Sheet (Mobile) */
 .bottom-sheet {
     position: fixed;
@@ -525,6 +551,19 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     width: auto;
     min-width: 104px;
     max-width: 130px;
+}
+.footer-control-group {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+.footer-control-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--toolbar-muted, #6c6a64);
+    line-height: 1;
+    pointer-events: none;
 }
 .footer-select:hover {
     background-color: var(--toolbar-bg-hover);
@@ -781,13 +820,18 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-weight: 650;
 }
 .toolbar-icon-link {
-    width: var(--toolbar-height);
-    padding: 0;
+    width: auto;
+    min-width: var(--toolbar-height);
+    padding: 1px 7px;
     border: 1px solid transparent;
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    font-size: 14px;
 }
-.toolbar-icon-link:hover,
-.github-link:hover,
-.doc-link:hover {
+.toolbar-icon-link:hover {
     border-color: var(--toolbar-border);
     background: var(--toolbar-bg-hover);
 }
@@ -1446,6 +1490,29 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     body.keyboard-open:not(.share-view) .footer {
         display: none !important;
         pointer-events: none;
+    }
+
+    /* Mobile edit: stack editor + preview vertically */
+    body:not(.share-view) .layer_3 {
+        flex-direction: column !important;
+    }
+    body:not(.share-view) .divide-line {
+        width: 100% !important;
+        height: 8px !important;
+        min-height: 8px !important;
+        cursor: row-resize !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-top: 1px solid #e1e4e8 !important;
+        border-bottom: 1px solid #e1e4e8 !important;
+    }
+    body:not(.share-view) textarea.contents {
+        height: 50% !important;
+        min-height: 0 !important;
+    }
+    body:not(.share-view) .preview-pane {
+        height: 50% !important;
+        min-height: 0 !important;
     }
 
     .footer {
