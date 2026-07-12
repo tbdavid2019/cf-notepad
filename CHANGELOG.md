@@ -12,6 +12,7 @@
   - Restored the published/unpublished share toggle and its options menu after a share toolbar rewrite disconnected the published control from its click handler.
   - Hoisted share-state initialization so it no longer throws before Markdown rendering, which had left the editor preview pane blank.
   - Reused the Preview toggle geometry for the share toggle instead of applying a conflicting smaller set of slider dimensions.
+  - Moved the published/unpublished label below the toggle row to match the footer's two-line icon/control-over-label layout.
 - **xAI Theme Heading Contrast**
   - Added explicit dark heading colors for the app's white preview canvas while retaining the black H1 panel, so every title level remains visible.
   - Ensure heading links inherit the heading color instead of being obscured by generic link styles.

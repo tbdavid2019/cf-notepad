@@ -365,8 +365,8 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .share-state-toggle {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 4px 0;
+    gap: 2px;
+    padding: 0;
 }
 .share-state-switcher {
     flex-shrink: 0;
@@ -378,8 +378,6 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     transform: translateX(16px);
 }
 .share-state-label {
-    font-size: 12px;
-    font-weight: 500;
     white-space: nowrap;
     color: #6c6a64;
 }

@@ -80,7 +80,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <button type="button" class="opt-switcher share-state-switcher opt-share ${share ? 'share-published' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
                                     <span class="slider round"></span>
                                 </button>
-                                <span class="footer-control-label share-state-label ${share ? 'share-published' : ''}" id="share-state-text">${share ? (lang === 'zh-TW' ? '已發佈' : 'Published') : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')}</span>
                                 <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
                                     ${SVG_ICONS.more}
                                 </button>
@@ -111,6 +110,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     `}
                                 </div>
                             </div>
+                            <span class="footer-control-label share-state-label ${share ? 'share-published' : ''}" id="share-state-text">${share ? (lang === 'zh-TW' ? '已發佈' : 'Published') : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')}</span>
                         </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}

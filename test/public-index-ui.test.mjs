@@ -32,6 +32,7 @@ test('published footer exposes public index control and removes published label 
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
     assert.match(commonTemplateSource, /share-state-switcher opt-share/)
+    assert.match(commonTemplateSource, /<\/div>\s*<span class="footer-control-label share-state-label/)
     assert.match(commonTemplateSource, /id="share-menu-btn"/)
     assert.match(commonTemplateSource, /share-publish-menu-btn/)
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
