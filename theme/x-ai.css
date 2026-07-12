@@ -19,7 +19,7 @@
 #bm-md h4,
 #bm-md h5,
 #bm-md h6 {
-  color: #202124;
+  color: #e8eaed;
   -webkit-text-fill-color: currentColor;
   line-height: 1.2;
   margin-top: 1.4em;
@@ -41,25 +41,25 @@
 
 #bm-md h2 {
   font-size: 1.65em;
-  color: #16181b;
+  color: #ffffff;
   border-bottom: 2px solid #ff7a17;
   padding-bottom: 0.25em;
 }
 
 #bm-md h3 {
   font-size: 1.35em;
-  color: #8a3b00;
+  color: #ff7a17;
 }
 
 #bm-md h4 {
   font-size: 1.15em;
-  color: #24272b;
+  color: #dadbdf;
 }
 
 #bm-md h5,
 #bm-md h6 {
   font-size: 1em;
-  color: #4a4d52;
+  color: #9aa0a6;
 }
 
 #bm-md h1 a,
