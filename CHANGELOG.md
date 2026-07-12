@@ -9,7 +9,7 @@
 
 ### Fixed
 - **xAI Theme Heading Contrast**
-  - Added explicit high-contrast colors and surfaces for all heading levels so titles remain visible in editor previews and shared pages.
+  - Added explicit dark heading colors for the app's white preview canvas while retaining the black H1 panel, so every title level remains visible.
   - Ensure heading links inherit the heading color instead of being obscured by generic link styles.
 - **AI Format Response Handling**
   - Fixed successful Workers AI output being passed to `returnJSON()` as HTTP headers, which caused `Invalid header value` for Chinese or multiline Markdown.

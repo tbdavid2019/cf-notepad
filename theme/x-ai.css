@@ -1,5 +1,5 @@
 /* ============================================
-   x.ai Grok - 硬核科技深黑風格
+   x.ai Grok - 黑白科技編輯風格
    基於 x.ai 官網與 DESIGN.md 規範
    ============================================ */
 
@@ -19,7 +19,7 @@
 #bm-md h4,
 #bm-md h5,
 #bm-md h6 {
-  color: #ffffff;
+  color: #202124;
   -webkit-text-fill-color: currentColor;
   line-height: 1.2;
   margin-top: 1.4em;
@@ -41,25 +41,25 @@
 
 #bm-md h2 {
   font-size: 1.65em;
-  color: #f5f5f5;
+  color: #16181b;
   border-bottom: 2px solid #ff7a17;
   padding-bottom: 0.25em;
 }
 
 #bm-md h3 {
   font-size: 1.35em;
-  color: #ffb27a;
+  color: #8a3b00;
 }
 
 #bm-md h4 {
   font-size: 1.15em;
-  color: #ffffff;
+  color: #24272b;
 }
 
 #bm-md h5,
 #bm-md h6 {
   font-size: 1em;
-  color: #dadbdf;
+  color: #4a4d52;
 }
 
 #bm-md h1 a,

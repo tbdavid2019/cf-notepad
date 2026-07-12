@@ -8,11 +8,11 @@ const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', impo
 const constantSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
 const xAiThemeSource = readFileSync(new URL('../theme/x-ai.css', import.meta.url), 'utf8')
 
-test('x-ai theme keeps every heading level visible on its dark surface', () => {
-    assert.match(xAiThemeSource, /#bm-md h6 \{\s*color: #ffffff;\s*-webkit-text-fill-color: currentColor;/s)
+test('x-ai theme keeps every heading level visible on the white preview canvas', () => {
+    assert.match(xAiThemeSource, /#bm-md h6 \{\s*color: #202124;\s*-webkit-text-fill-color: currentColor;/s)
     assert.match(xAiThemeSource, /#bm-md h1 \{[\s\S]*background: #151515;[\s\S]*color: #ffffff;/)
-    assert.match(xAiThemeSource, /#bm-md h2 \{[\s\S]*color: #f5f5f5;/)
-    assert.match(xAiThemeSource, /#bm-md h3 \{[\s\S]*color: #ffb27a;/)
+    assert.match(xAiThemeSource, /#bm-md h2 \{[\s\S]*color: #16181b;/)
+    assert.match(xAiThemeSource, /#bm-md h3 \{[\s\S]*color: #8a3b00;/)
     assert.match(xAiThemeSource, /#bm-md h6 a \{[\s\S]*color: inherit;/)
 })
 
