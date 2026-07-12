@@ -1204,6 +1204,52 @@ ${getMarkdownCss()}
         triggerRender($previewMd, $textarea ? $textarea.value : '')
         setupShareBackToTop($previewMd || $previewPlain)
 
+        // Fetch a random Tagore poem to display in the empty placeholder
+        if (\$textarea) {
+            fetch('https://answerbook.david888.com/StrayBirds')
+                .then(res => res.json())
+                .then(data => {
+                    if (data && data.poem) {
+                        const originalPlaceholder = \$textarea.placeholder || '';
+                        const title = data.poem.title || 'Stray Birds';
+                        const english = data.poem.english || '';
+                        const chinese = data.poem.chinese || '';
+                        
+                        const isZh = APP_STATE.lang === 'zh-TW';
+                        const displayTitle = isZh ? title : ('Stray Birds - No. ' + (data.poem.num || ''));
+                        const poemBody = isZh ? chinese : english;
+                        const poemText = '\\n\\n📖 ' + displayTitle + '\\n' + poemBody;
+                        
+                        // Typing effect for the poem part
+                        let currentIdx = 0;
+                        let typingTimer = setInterval(() => {
+                            if (\$textarea.value || document.activeElement === \$textarea) {
+                                clearInterval(typingTimer);
+                                \$textarea.placeholder = originalPlaceholder + poemText;
+                                return;
+                            }
+                            
+                            if (currentIdx < poemText.length) {
+                                \$textarea.placeholder = originalPlaceholder + poemText.slice(0, currentIdx + 1);
+                                currentIdx++;
+                            } else {
+                                clearInterval(typingTimer);
+                            }
+                        }, 40);
+                        
+                        \$textarea.addEventListener('focus', () => {
+                            if (typingTimer) {
+                                clearInterval(typingTimer);
+                                \$textarea.placeholder = originalPlaceholder + poemText;
+                            }
+                        }, { once: true });
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to fetch StrayBirds poem:', err);
+                });
+        }
+
         const getCurrentMarkdownForExport = () => {
             if ($textarea && !$textarea.classList.contains('hide')) return $textarea.value || ''
             const article = document.querySelector('#bot-accessible-content')
@@ -1805,126 +1851,19 @@ ${getMarkdownCss()}
             window.__dropdownListenerBound = true;
         }
 
-        // --- Custom Bottom Sheet (Mobile settings drawer) ---
-        const setupBottomSheet = () => {
-            const bottomSheet = document.getElementById('mobile-bottom-sheet');
-            if (!bottomSheet) return;
-            
-            const bottomSheetBody = bottomSheet.querySelector('.bottom-sheet-body');
-            const bottomSheetCloseBtn = bottomSheet.querySelector('.bottom-sheet-close-btn');
-            const backdrop = bottomSheet.querySelector('.bottom-sheet-backdrop');
-            const content = bottomSheet.querySelector('.bottom-sheet-content');
-            const dragHandle = bottomSheet.querySelector('.bottom-sheet-drag-handle');
-            
-            const footerSections = document.querySelector('.footer-sections');
-            const publishSection = document.querySelector('.footer-section-publish');
-            const appearanceSection = document.querySelector('.footer-section-appearance');
-            const infoSection = document.querySelector('.footer-section-info');
-
-            // Section container targets in bottom sheet
-            const publishTarget = bottomSheet.querySelector('.bottom-sheet-section-publish .bottom-sheet-section-content');
-            const appearanceTarget = bottomSheet.querySelector('.bottom-sheet-section-appearance .bottom-sheet-section-content');
-            const infoTarget = bottomSheet.querySelector('.bottom-sheet-section-info .bottom-sheet-section-content');
-
-            // Responsive DOM Nodes Shuffling
-            const mediaQuery = window.matchMedia('(max-width: 960px)');
-            const handleResponsive = (e) => {
-                if (e.matches) {
-                    // On mobile: keep publish in footer, only move appearance/info to bottom sheet
-                    if (appearanceSection && appearanceTarget) appearanceTarget.appendChild(appearanceSection);
-                    if (infoSection && infoTarget) infoTarget.appendChild(infoSection);
-                } else {
-                    if (footerSections) {
-                        const editSection = footerSections.querySelector('.footer-section-edit');
-                        if (publishSection) {
-                            if (editSection && editSection.nextSibling) {
-                                footerSections.insertBefore(publishSection, editSection.nextSibling);
-                            } else {
-                                footerSections.appendChild(publishSection);
-                            }
-                        }
-                        if (appearanceSection) footerSections.appendChild(appearanceSection);
-                        if (infoSection) footerSections.appendChild(infoSection);
-                    }
-                    bottomSheet.classList.remove('show');
-                }
-            }
-            
-            if (mediaQuery.addEventListener) {
-                mediaQuery.addEventListener('change', handleResponsive);
-            } else if (mediaQuery.addListener) {
-                mediaQuery.addListener(handleResponsive);
-            }
-            handleResponsive(mediaQuery);
-
-            // Open trigger - clicking footer opens bottom sheet
-            const footer = document.querySelector('.footer');
-            if (footer) {
-                footer.addEventListener('click', (e) => {
-                    if (!mediaQuery.matches) return;
-                    // Don't open if clicking inside the edit section (which stays in footer)
-                    if (e.target.closest('.footer-section-edit')) return;
-                    e.stopPropagation();
-                    bottomSheet.classList.add('show');
-                });
-            }
-
-            // Mobile more button - explicit trigger for bottom sheet
+        // --- Mobile Footer Collapse/Expand Toggle ---
+        const setupMobileFooterToggle = () => {
             const mobileMoreBtn = document.getElementById('mobile-more-btn');
-            if (mobileMoreBtn) {
+            const footer = document.querySelector('.footer');
+            if (mobileMoreBtn && footer) {
                 mobileMoreBtn.addEventListener('click', (e) => {
-                    if (!mediaQuery.matches) return;
                     e.stopPropagation();
-                    bottomSheet.classList.add('show');
-                });
-            }
-
-            // Close trigger functions
-            const closeSheet = () => {
-                bottomSheet.classList.remove('show');
-            }
-            if (bottomSheetCloseBtn) bottomSheetCloseBtn.addEventListener('click', closeSheet);
-            if (backdrop) backdrop.addEventListener('click', closeSheet);
-
-            // Prevent scroll propagation on backdrop
-            backdrop.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false });
-
-            // Touch Swipe Down to Dismiss Gestures
-            let startY = 0;
-            let currentY = 0;
-            let isDragging = false;
-
-            if (dragHandle && content) {
-                dragHandle.addEventListener('touchstart', (e) => {
-                    startY = e.touches[0].clientY;
-                    isDragging = true;
-                    content.style.transition = 'none';
-                }, { passive: true });
-
-                dragHandle.addEventListener('touchmove', (e) => {
-                    if (!isDragging) return;
-                    currentY = e.touches[0].clientY;
-                    const diff = currentY - startY;
-                    if (diff > 0) {
-                        content.style.transform = 'translateY(' + diff + 'px)';
-                    }
-                }, { passive: true });
-
-                dragHandle.addEventListener('touchend', (e) => {
-                    if (!isDragging) return;
-                    isDragging = false;
-                    content.style.transition = '';
-                    const diff = currentY - startY;
-                    if (diff > 80) {
-                        closeSheet();
-                    }
-                    content.style.transform = '';
-                    startY = 0;
-                    currentY = 0;
+                    const isExpanded = footer.classList.toggle('footer-expanded');
+                    document.body.classList.toggle('footer-expanded', isExpanded);
                 });
             }
         }
-        setupBottomSheet();
+        setupMobileFooterToggle();
 
         // --- Keyboard Viewport Adjuster for Mobile Input ---
         const setupKeyboardViewport = () => {

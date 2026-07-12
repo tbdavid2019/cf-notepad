@@ -159,10 +159,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.shareHistory}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '分享' : 'Shares'}</span>
                         </button>
-                        <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
-                            ${SVG_ICONS.more}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '更多' : 'More'}</span>
-                        </button>
                         <div class="footer-preview-group footer-control-group">
                             ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
                         </div>
@@ -180,6 +176,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
                         </button>
                     ` : '')}
+                    <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
+                        ${SVG_ICONS.more}
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '更多' : 'More'}</span>
+                    </button>
                 </div>
             </div>
 

@@ -1580,11 +1580,20 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         display: none !important;
     }
     .toolbar-button-label {
-        display: none !important;
+        display: block !important;
+        font-size: 9px !important;
+        margin-top: 1px !important;
     }
     .toolbar-icon-button {
-        width: var(--toolbar-height) !important;
-        padding: 0 !important;
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        height: 38px !important;
+        width: auto !important;
+        min-width: 38px !important;
+        padding: 2px 6px !important;
+        gap: 2px !important;
     }
     /* Show mobile more button */
     .mobile-more-btn {
@@ -1620,145 +1629,110 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
 
     .footer {
         position: fixed;
-        left: 8px;
-        right: 8px;
-        bottom: 8px;
-        bottom: calc(8px + env(safe-area-inset-bottom));
+        left: 0;
+        right: 0;
+        bottom: 0;
         z-index: 120;
-        min-height: 48px !important;
-        max-height: 48px !important;
-        height: 48px !important;
-        border: 1px solid var(--toolbar-border);
-        border-radius: 24px;
-        box-shadow: 0 8px 30px rgba(108, 106, 100, 0.14);
-        background: rgba(250, 249, 245, 0.85);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        padding: 0 12px;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
+        min-height: 56px !important;
+        max-height: none !important;
+        height: auto !important;
+        border-top: 1px solid var(--toolbar-border) !important;
+        border-left: 0 !important;
+        border-right: 0 !important;
+        border-bottom: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: 0 -4px 20px rgba(108, 106, 100, 0.08) !important;
+        background: var(--toolbar-bg, rgba(250, 249, 245, 0.95)) !important;
+        backdrop-filter: blur(8px) !important;
+        -webkit-backdrop-filter: blur(8px) !important;
+        padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
+        overflow: visible !important;
+        display: block !important;
         transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
     }
 
     .footer.footer-hidden {
         opacity: 0;
         pointer-events: none;
-        transform: translateY(calc(100% + 20px));
+        transform: translateY(100%);
     }
 
     .footer-sections {
-        width: 100%;
-        min-height: 0;
-        padding: 0;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0;
+        width: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        align-items: stretch !important;
+        min-height: 0 !important;
+        padding: 0 !important;
     }
 
     .footer-section {
-        border-right: 0;
-        padding: 0;
-        margin: 0;
-        background: transparent;
+        border-right: 0 !important;
+        border-bottom: 1px solid var(--toolbar-border, #e6dfd8) !important;
+        padding: 6px 0 !important;
+        margin: 0 !important;
+        width: 100% !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        background: transparent !important;
+    }
+    .footer-section:last-child {
+        border-bottom: 0 !important;
+        padding-bottom: 0 !important;
     }
 
-    /* Edit section takes full space on mobile */
-    .footer-section-edit {
-        flex: 1;
-        width: 100%;
+    .footer-section-edit,
+    .footer-section-appearance,
+    .footer-section-info {
+        flex: none !important;
+        width: 100% !important;
     }
 
-    .footer-section-edit .footer-section-body {
-        justify-content: space-between;
-        width: 100%;
-        gap: 8px;
-    }
-
-    /* Hide desktop version sections, handled by BottomSheet */
-    .footer:not(.bottom-sheet-body) .footer-section-appearance,
-    .footer:not(.bottom-sheet-body) .footer-section-info {
+    /* Hide info section completely on mobile */
+    .footer-section-info {
         display: none !important;
+    }
+
+    /* Hide appearance section by default on mobile, show only when expanded */
+    .footer:not(.footer-expanded) .footer-section-appearance {
+        display: none !important;
+    }
+    .footer.footer-expanded .footer-section-appearance {
+        display: flex !important;
+    }
+    /* Style section bottom border based on expansion state */
+    .footer:not(.footer-expanded) .footer-section-edit {
+        border-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+    .footer.footer-expanded .footer-section-appearance {
+        border-bottom: 0 !important;
+        padding-bottom: 0 !important;
+    }
+
+    /* Highlight more button when active/expanded */
+    .footer.footer-expanded .mobile-more-btn {
+        background: var(--toolbar-bg-hover, rgba(0, 0, 0, 0.05)) !important;
+        border-color: var(--toolbar-accent, #cc785c) !important;
+        color: var(--toolbar-accent, #cc785c) !important;
+    }
+
+    .footer-section-edit .footer-section-body,
+    .footer-section-appearance .footer-section-body,
+    .footer-section-info .footer-section-body {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 8px !important;
+        justify-content: center !important;
+        align-items: center !important;
+        width: 100% !important;
     }
 
     /* Hide preview toggle on mobile */
     .footer-section-edit .footer-preview-group {
         display: none !important;
-    }
-
-    /* Keep publish section visible on mobile - inline with edit */
-    .footer:not(.bottom-sheet-body) .footer-section-publish {
-        display: flex !important;
-        flex-shrink: 0;
-        border-right: 0;
-        padding: 0;
-        margin: 0;
-        background: transparent;
-    }
-    .footer:not(.bottom-sheet-body) .footer-section-publish .footer-section-body {
-        flex-wrap: nowrap;
-        gap: 4px;
-        align-items: center;
-    }
-    .footer:not(.bottom-sheet-body) .footer-section-publish .toolbar-icon-button {
-        width: auto !important;
-        padding: 0 6px !important;
-        gap: 3px;
-    }
-    .footer:not(.bottom-sheet-body) .footer-section-publish .toolbar-button-label {
-        display: inline !important;
-        font-size: 11px;
-    }
-
-    /* BottomSheet styles override */
-    .bottom-sheet-body .footer-section-edit,
-    .bottom-sheet-body .footer-section-publish,
-    .bottom-sheet-body .footer-section-appearance,
-    .bottom-sheet-body .footer-section-info {
-        display: flex !important;
-        flex-direction: column;
-        align-items: stretch;
-        border-right: 0;
-        width: 100%;
-        padding: 12px 0;
-    }
-
-    /* Hide mobile more button inside bottom sheet */
-    .bottom-sheet-body .mobile-more-btn {
-        display: none !important;
-    }
-
-    .bottom-sheet-body .footer-section-body {
-        flex-wrap: wrap;
-        gap: 12px;
-        width: 100%;
-    }
-
-    /* Bottom Sheet section card styling */
-    .bottom-sheet-section {
-        background: #ffffff;
-        border: 1px solid var(--toolbar-border, #e6dfd8);
-        border-radius: 10px;
-        padding: 14px 16px;
-    }
-    .bottom-sheet-section-title {
-        margin: 0 0 10px;
-        font-size: 13px;
-        font-weight: 600;
-        color: var(--toolbar-text, #24292f);
-        letter-spacing: 0.01em;
-    }
-    .bottom-sheet-section-content {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        align-items: center;
-    }
-    .bottom-sheet-section-content .footer-section-body {
-        flex-wrap: wrap;
-        gap: 10px;
-        width: 100%;
     }
 
     /* Padding for note container on mobile share/edit views */
@@ -1767,6 +1741,13 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     .preview-pane,
     textarea.contents {
         padding-bottom: 72px !important;
+        transition: padding-bottom 0.2s ease;
+    }
+    body.footer-expanded.share-view #preview-md,
+    body.footer-expanded.share-view #preview-plain,
+    body.footer-expanded .preview-pane,
+    body.footer-expanded textarea.contents {
+        padding-bottom: 180px !important;
     }
 
     body.share-view .footer-select {

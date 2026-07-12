@@ -11,6 +11,9 @@
   - Body text changed to pure white `#ffffff` for maximum readability on `#0a0a0a` background.
 
 ### Added
+- **Dynamic Stray Birds (Tagore) Placeholder**
+  - Added dynamic fetching of a random Stray Birds poem from `https://answerbook.david888.com/StrayBirds` on page load.
+  - The poem is appended to the editor's empty placeholder to keep the starting page engaging.
 - **Desktop Preview Split Direction**
   - Added a persisted `Layout` control that lets desktop editors switch between side-by-side and stacked editor/preview panes.
   - Mobile editing remains stacked automatically.
@@ -53,6 +56,12 @@
   - All themes now have balanced braces and complete selector coverage.
 
 ### Changed
+- **Unified Mobile Footer & Collapse Toggle**
+  - Redesigned the mobile footer to match the PC version's two-line layout: icon on top, label description below.
+  - Hides the developer/info section (GitHub, Skill, API) on mobile entirely.
+  - Displays only the first row (edit actions) by default, and reveals the second row (appearance, language switcher, theme settings) when clicking the `...` (More) button.
+  - Leverages smooth CSS transitions to expand the footer and adjust body padding from 72px to 180px, avoiding viewport overlapping.
+  - Resolves the missing language switcher bug on mobile share views by rendering the "More" button outside the edit conditional.
 - **AI Formatting Model**
   - Switched the focused formatting action from GLM 4.7 Flash to `@cf/openai/gpt-oss-20b` for lower-latency formatting with behavior consistent with the GPT-OSS 120B editing assistant.
 - **Theme Selector Enhancement**

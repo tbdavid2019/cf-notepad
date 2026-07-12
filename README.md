@@ -16,6 +16,7 @@
 
 - **編輯與閱讀體驗**
   - **編輯體驗升級**：編輯區與預覽區預設使用 `Maple Mono` 字體，長文與程式碼閱讀更一致。
+  - **動態空白頁詩歌提示**：當新建或清空編輯器時，系統會自動從飛鳥集 API 動態載入一首隨機的泰戈爾詩歌（英文與中譯）呈現於 placeholder，使空白編輯頁面不再單調。
   - **介面語系**：目前維護 `zh-TW` 與 `en-US` 兩套 UI 文案；中文瀏覽器語系會使用繁中介面，其他語言預設英文，footer 可手動切換 `En / Zh`。
   - **桌面 / 手機預覽切換**：編輯頁 footer 提供 `桌面 / 手機` 分段按鈕，可將右側 Markdown 預覽切換為 mobile 模擬寬度；目前會寫入該篇筆記 metadata，重新開啟同一篇 note 時會沿用同一組 preview device 設定。
   - **預覽分隔線**：左右 pane 可拖曳調整；切換桌面/手機時會回到 50/50，雙擊分隔線也可重設中央。
@@ -23,7 +24,7 @@
   - **多款預覽主題**：內建 `ayu-light`、`bauhaus`、`botanical`、`catppuccin-latte`、`catppuccin-macchiato`、`claude-canvas`、`green-simple`、`kanagawa`、`maximalism`、`neo-brutalism`、`newsprint`、`notion-clean`、`organic`、`playful-geometric`、`professional`、`retro`、`shopify-mint`、`sketch`、`terminal`、`tokyo-night`、`x-ai` 等多種 Markdown 預覽主題；目前全站預設為 `claude-canvas`（溫暖人文風格）。
   - **分享頁字體切換**：editor / share footer 內建 `Font: JB Mono / Maple` 字型切換，預設使用 `JetBrains Mono`，也可切回 `Maple Mono`；設定會寫入該篇筆記 metadata，share 連結打開後所有讀者都會看到相同字型。
   - **分享頁字級統一**：分享模式會以一致的閱讀字級統一正文、標題與程式碼字級，避免切換主題時忽大忽小。
-  - **分享頁行動版 Bottom Sheet 與滾動優化**：在手機上 Footer 重構為精簡的圓角膠囊工具列，僅保留編輯區按鈕；點擊 footer 其他區域時，會從底部平滑滑出精美 Bottom Sheet 抽屜面板，以卡片式分區收納「發佈 / 外觀 / 資訊」設定，支援向下滑動手勢關閉與觸控防穿透。向下閱讀時會自動隱藏，向上滑動或滑到頁面頂端/底部時會自動顯示（方向感知，去除了 900ms 強制彈出閃爍的問題）。
+  - **行動版工具列與收合選單優化**：手機上 Footer 統一與 PC 版採用相同的兩行設計（Icon 在上、說明字在下）。隱藏行動版不需要的資訊欄（GitHub/Skill/API），並預設僅展示第一排常用編輯按鈕與 `...`（更多）按鈕。點選 `...` 會以平滑過場展開外觀設定排（內含「En / Zh」語系切換器、主題與寬度選擇等），使設定功能在手機上（不論編輯或唯讀分享頁）皆方便直接點選。
   - **手機表格自適應**：手機模擬與真實 mobile share 頁會使用固定欄位布局，長文字、參數與 inline code 可自動換行，不再凸出 viewport。
   - **長文閱讀輔助**：share 頁長文向下閱讀後會出現 `＾` 回到頂部按鈕，可快速回到文章開頭。
   - **分享錨點連結**：分享頁 Markdown 標題會產生穩定的 heading id，支援直接用 `#...` 跳到指定章節，包含中英文混合標題；同時支援既有 TOC 常見的 compact slug。
