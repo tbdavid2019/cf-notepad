@@ -1193,6 +1193,7 @@ ${getMarkdownCss()}
         const $exportPdfBtn = document.querySelector('#export-pdf-btn')
 
         setupShareHistory()
+        syncShareStateUI()
         setupNoteHistory({
             textarea: $textarea,
             previewMarkdownNode: $previewMd,
@@ -1378,6 +1379,23 @@ ${getMarkdownCss()}
             button.setAttribute('aria-label', label)
         }
 
+        const syncShareStateUI = () => {
+            const switcher = document.querySelector('.share-state-switcher')
+            const label = document.querySelector('.share-state-label')
+            if (!switcher || !label) return
+            const isPublished = APP_STATE.isPublished
+            const lang = APP_STATE.lang
+            if (isPublished) {
+                switcher.classList.add('share-published')
+                label.classList.add('share-published')
+                label.textContent = lang === 'zh-TW' ? '已發佈' : 'Published'
+            } else {
+                switcher.classList.remove('share-published')
+                label.classList.remove('share-published')
+                label.textContent = lang === 'zh-TW' ? '未發佈' : 'Unpublished'
+            }
+        }
+
         const publishCurrentNote = () => {
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
@@ -1392,6 +1410,7 @@ ${getMarkdownCss()}
                     }
                     APP_STATE.isPublished = true;
                     if ($shareBtn) $shareBtn.checked = true;
+                    syncShareStateUI();
                     recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
                     syncPublicIndexButton();
                     showShareModal(res.data);

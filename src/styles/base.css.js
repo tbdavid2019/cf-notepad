@@ -362,6 +362,56 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .share-dropdown {
     position: relative;
 }
+.share-state-toggle {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    padding: 4px 0;
+}
+.share-state-switcher {
+    position: relative;
+    width: 36px;
+    height: 20px;
+    flex-shrink: 0;
+}
+.share-state-switcher .slider {
+    position: absolute;
+    inset: 0;
+    background: #ccc;
+    border-radius: 20px;
+    transition: background 0.3s;
+    cursor: pointer;
+}
+.share-state-switcher .slider::before {
+    content: '';
+    position: absolute;
+    left: 2px;
+    top: 2px;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    transition: transform 0.3s;
+}
+.share-state-switcher.share-published .slider {
+    background: #2da44e;
+}
+.share-state-switcher.share-published .slider::before {
+    transform: translateX(16px);
+}
+.share-state-label {
+    font-size: 12px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.share-state-label.share-published {
+    color: #2da44e;
+}
+.share-menu-small {
+    padding: 2px 4px;
+    min-width: auto;
+}
 
 /* Bottom Sheet (Mobile) */
 .bottom-sheet {
