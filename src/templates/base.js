@@ -1380,18 +1380,16 @@ ${getMarkdownCss()}
         }
 
         const syncShareStateUI = () => {
-            const switcher = document.querySelector('.share-state-switcher')
-            const label = document.querySelector('.share-state-label')
-            if (!switcher || !label) return
+            const btn = document.querySelector('.share-state-btn')
+            const label = document.querySelector('#share-state-text')
+            if (!btn || !label) return
             const isPublished = APP_STATE.isPublished
             const lang = APP_STATE.lang
             if (isPublished) {
-                switcher.classList.add('share-published')
-                label.classList.add('share-published')
+                btn.classList.add('toolbar-active-button')
                 label.textContent = lang === 'zh-TW' ? '已發佈' : 'Published'
             } else {
-                switcher.classList.remove('share-published')
-                label.classList.remove('share-published')
+                btn.classList.remove('toolbar-active-button')
                 label.textContent = lang === 'zh-TW' ? '未發佈' : 'Unpublished'
             }
         }
