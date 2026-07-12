@@ -179,7 +179,7 @@ function extractAiText(payload) {
     return ''
 }
 
-async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 40000) {
+async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 120000) {
     let timeoutId
     const timeoutPromise = new Promise((_, reject) => {
         timeoutId = setTimeout(() => {
@@ -1577,7 +1577,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
     try {
         const aiResponse = await runAiWithTimeout(env.AI, model, {
             messages,
-        }, 40000)
+            reasoning_effort: 'low',
+            max_completion_tokens: 8192,
+        }, 120000)
         console.log('[AI] Response type:', typeof aiResponse)
         console.log('[AI] Response keys:', aiResponse ? Object.keys(aiResponse) : 'null')
         console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))

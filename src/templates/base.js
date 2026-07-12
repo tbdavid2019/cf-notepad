@@ -1266,7 +1266,7 @@ ${getMarkdownCss()}
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ text: rawText, mode: 'format', instruction })
-                }, 45000)
+                }, 130000)
 
                 if (res.err === 0 && res.data?.result) {
                     $textarea.value = res.data.result
