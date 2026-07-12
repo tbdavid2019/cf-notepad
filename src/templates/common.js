@@ -75,6 +75,42 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-edit">
                 <div class="footer-section-body">
                     ${isEdit ? `
+                        ${share && shareId ? `
+                            <div class="dropdown-container share-dropdown">
+                                <a href="/share/${shareId}" target="_blank" rel="noreferrer" class="toolbar-icon-button toolbar-active-button share-direct-link" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
+                                    ${SVG_ICONS.link}
+                                    <span class="toolbar-button-label">${t.shareLink}</span>
+                                </a>
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
+                                    ${SVG_ICONS.more}
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
+                                        ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
+                                    </a>
+                                    <button type="button" id="copy-share-btn" class="dropdown-item" title="${copyShareTitle}">
+                                        ${SVG_ICONS.copy} <span>${copyShareTitle}</span>
+                                    </button>
+                                    <button type="button" id="copy-present-share-btn" class="dropdown-item" title="${copyPresentTitle}">
+                                        ${SVG_ICONS.play} <span>${copyPresentTitle}</span>
+                                    </button>
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-item-toggle">
+                                        <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
+                                        <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
+                                    </div>
+                                    <div class="dropdown-divider"></div>
+                                    <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
+                                        ${SVG_ICONS.close} <span>${unpublishTitle}</span>
+                                    </button>
+                                </div>
+                            </div>
+                        ` : `
+                            <button type="button" id="share-switch-btn" class="toolbar-icon-button opt-share ${share ? 'toolbar-active-button' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
+                                ${SVG_ICONS.link}
+                                <span class="toolbar-button-label">${t.shareLink}</span>
+                            </button>
+                        `}
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯鎖' : 'Lock'}</span>
@@ -117,42 +153,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.magic}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI編輯' : 'AI Edit'}</span>
                         </button>
-                        ${share && shareId ? `
-                            <div class="dropdown-container share-dropdown">
-                                <a href="/share/${shareId}" target="_blank" rel="noreferrer" class="toolbar-icon-button toolbar-active-button share-direct-link" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
-                                    ${SVG_ICONS.link}
-                                    <span class="toolbar-button-label">${t.shareLink}</span>
-                                </a>
-                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
-                                    ${SVG_ICONS.more}
-                                </button>
-                                <div class="dropdown-menu">
-                                    <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
-                                        ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
-                                    </a>
-                                    <button type="button" id="copy-share-btn" class="dropdown-item" title="${copyShareTitle}">
-                                        ${SVG_ICONS.copy} <span>${copyShareTitle}</span>
-                                    </button>
-                                    <button type="button" id="copy-present-share-btn" class="dropdown-item" title="${copyPresentTitle}">
-                                        ${SVG_ICONS.play} <span>${copyPresentTitle}</span>
-                                    </button>
-                                    <div class="dropdown-divider"></div>
-                                    <div class="dropdown-item-toggle">
-                                        <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
-                                        <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
-                                    </div>
-                                    <div class="dropdown-divider"></div>
-                                    <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
-                                        ${SVG_ICONS.close} <span>${unpublishTitle}</span>
-                                    </button>
-                                </div>
-                            </div>
-                        ` : `
-                            <button type="button" id="share-switch-btn" class="toolbar-icon-button opt-share ${share ? 'toolbar-active-button' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
-                                ${SVG_ICONS.link}
-                                <span class="toolbar-button-label">${t.shareLink}</span>
-                            </button>
-                        `}
                         ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
                         <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
                             ${SVG_ICONS.shareHistory}
