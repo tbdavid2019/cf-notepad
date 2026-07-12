@@ -20,9 +20,9 @@
   - Changed editor+preview from side-by-side to vertical (top-bottom) stack on mobile (≤960px).
   - Each pane takes 50% height; divider line switches from vertical to horizontal.
 - **Theme Completeness**
-  - Patched 16 themes missing: `thead`, `tbody tr:hover`, first-child margin reset, `kbd`, `del` styles.
-  - Affected themes: ayu-light, bauhaus, botanical, claude-canvas, green-simple, kanagawa, neo-brutalism, newsprint, notion-clean, organic, playful-geometric, professional, retro, shopify-mint, sketch, tokyo-night.
-  - x-ai theme fully rewritten with complete styles.
+  - Added missing CSS selectors to ALL 20 themes for complete markdown rendering.
+  - Added: `thead`, `tbody tr:hover`, `figure`, `figcaption`, `kbd`, `dt`, `dd`, `dl`, `li::marker`.
+  - All themes now have balanced braces and complete selector coverage.
 
 ### Changed
 - **Theme Selector Enhancement**
