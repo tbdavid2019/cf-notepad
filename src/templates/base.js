@@ -1780,6 +1780,16 @@ ${getMarkdownCss()}
                 });
             }
 
+            // Mobile more button - explicit trigger for bottom sheet
+            const mobileMoreBtn = document.getElementById('mobile-more-btn');
+            if (mobileMoreBtn) {
+                mobileMoreBtn.addEventListener('click', (e) => {
+                    if (!mediaQuery.matches) return;
+                    e.stopPropagation();
+                    bottomSheet.classList.add('show');
+                });
+            }
+
             // Close trigger functions
             const closeSheet = () => {
                 bottomSheet.classList.remove('show');

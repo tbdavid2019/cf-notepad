@@ -176,6 +176,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${t.present}</span>
                         </button>
                     `}
+                    <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
+                        ${SVG_ICONS.more}
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '更多' : 'More'}</span>
+                    </button>
                     <div class="dropdown-container history-dropdown">
                         <button type="button" class="toolbar-icon-button dropdown-trigger" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}">
                             ${SVG_ICONS.shareHistory}

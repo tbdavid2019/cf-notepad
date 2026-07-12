@@ -320,6 +320,11 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     gap: 4px;
 }
 
+/* Mobile more button: hidden on desktop, shown on mobile */
+.mobile-more-btn {
+    display: none !important;
+}
+
 /* Shared state indicator: green dot */
 .share-dropdown .dropdown-trigger::after {
     content: '';
@@ -1487,6 +1492,10 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         width: var(--toolbar-height) !important;
         padding: 0 !important;
     }
+    /* Show mobile more button */
+    .mobile-more-btn {
+        display: inline-flex !important;
+    }
     body.keyboard-open:not(.share-view) .footer {
         display: none !important;
         pointer-events: none;
@@ -1591,6 +1600,11 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         border-right: 0;
         width: 100%;
         padding: 12px 0;
+    }
+
+    /* Hide mobile more button inside bottom sheet */
+    .bottom-sheet-body .mobile-more-btn {
+        display: none !important;
     }
 
     .bottom-sheet-body .footer-section-body {
