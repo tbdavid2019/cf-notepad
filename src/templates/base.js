@@ -1268,8 +1268,8 @@ ${getMarkdownCss()}
                     body: JSON.stringify({ text: rawText, mode: 'format', instruction })
                 }, 45000)
 
-                if (res.err === 0 && res.result) {
-                    $textarea.value = res.result
+                if (res.err === 0 && res.data?.result) {
+                    $textarea.value = res.data.result
                     renderPlain($previewPlain, $textarea.value)
                     triggerRender($previewMd, $textarea.value)
                     $textarea.dispatchEvent(new Event('input', { bubbles: true }))

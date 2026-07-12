@@ -2,6 +2,10 @@
 
 ## [2026-07-12]
 ### Fixed
+- **AI Format Response Handling**
+  - Fixed successful Workers AI output being passed to `returnJSON()` as HTTP headers, which caused `Invalid header value` for Chinese or multiline Markdown.
+  - Return the formatted Markdown in the JSON response body and read it from `data.result` before replacing the full editor content.
+  - Verified the production `@cf/zai-org/glm-4.7-flash` flow with Traditional Chinese input and output.
 - **Present Button Infinite Retry**
   - Removed the broken `bind()` retry loop that spammed console with "Present button not found" every 500ms in edit/write mode.
   - Present button now binds once at DOM ready — only exists when mode is `md` or in share view.

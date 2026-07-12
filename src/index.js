@@ -1583,7 +1583,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
         const resultText = extractAiText(aiResponse)
         if (resultText) {
-            return returnJSON(0, 'Success', { result: resultText, modelUsed: model })
+            return returnJSON(0, { result: resultText, modelUsed: model })
         }
         return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
     } catch (error) {
