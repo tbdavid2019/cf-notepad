@@ -11,9 +11,8 @@ files.forEach(f => {
     // Read file and replace selector #bm-md with .markdown-body
     let css = fs.readFileSync(path.join(themeDir, f), 'utf8');
     
-    // Replace #bm-md with #preview-md.markdown-body for CSS specificity
-    // (beats #preview-md background/color in editor.css.js)
-    css = css.replace(/#bm-md/g, '#preview-md.markdown-body, #preview-plain.markdown-body');
+    // Replace all occurrences of #bm-md with .markdown-body
+    css = css.replace(/#bm-md/g, '.markdown-body');
     
     // Escape for JS string
     const escapedCss = css.replace(/\r/g, '').replace(/\n/g, '\\n').replace(/'/g, "\\'");

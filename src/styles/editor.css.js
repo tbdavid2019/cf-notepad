@@ -25,9 +25,7 @@ textarea#contents {
     line-height: 1.6;
 }
 
-/* Preview Specific */
+/* Preview Specific - background/color controlled by themes */
 #preview-md, #preview-plain {
-    background-color: #fff;
-    color: #24292e;
 }
 `

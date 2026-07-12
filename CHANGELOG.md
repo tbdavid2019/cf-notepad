@@ -1,6 +1,15 @@
 # Changelog
 
 ## [2026-07-12]
+### Fixed
+- **Theme CSS Specificity Override**
+  - Changed `bundle_themes.js` selector replacement from `.markdown-body` to `#preview-md.markdown-body, #preview-plain.markdown-body`, giving theme CSS specificity (1,1,0) that beats `editor.css.js` `#preview-md` (1,0,0).
+  - This fixes all dark themes (xAI, Tokyo Night, Kanagawa, Terminal, Catppuccin Macchiato) whose background and text colors were silently overridden by the base white canvas.
+  - Removed hardcoded `background-color` from `markdown.css.js` for `table tr`, `code`, `pre`, and `img`, allowing themes full control over element backgrounds.
+- **xAI Theme Colors**
+  - Fixed heading colors for dark background: H2 `#ffffff`, H3 `#ff7a17` (sunset orange), H4 `#dadbdf`, H5-H6 `#9aa0a6`.
+  - Body text changed to pure white `#ffffff` for maximum readability on `#0a0a0a` background.
+
 ### Added
 - **Desktop Preview Split Direction**
   - Added a persisted `Layout` control that lets desktop editors switch between side-by-side and stacked editor/preview panes.
