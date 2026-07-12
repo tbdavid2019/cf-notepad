@@ -320,6 +320,28 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     gap: 4px;
 }
 
+/* Share dropdown: direct link + menu trigger */
+.share-dropdown {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+}
+.share-direct-link {
+    border-radius: 6px 0 0 6px !important;
+    border-right: 1px solid var(--toolbar-border, #e6dfd8) !important;
+}
+.share-menu-trigger {
+    width: 28px !important;
+    padding: 0 !important;
+    border-radius: 0 6px 6px 0 !important;
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+}
+.share-menu-trigger .toolbar-button-label {
+    display: none !important;
+}
+
 /* Mobile more button: hidden on desktop, shown on mobile */
 .mobile-more-btn {
     display: none !important;
