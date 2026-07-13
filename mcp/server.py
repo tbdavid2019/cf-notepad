@@ -27,7 +27,7 @@ async def read_wiki(path: str, password: Optional[str] = None) -> str:
 
     Args:
         path: The unique slug/path of the article (e.g. 'project-notes').
-        password: (Optional) Required if the page is password-protected. Try reading without a password first.
+        password: (Optional) A valid Edit Lock or View Lock password for protected pages. If only a View Lock exists, that password is also the sole owner/edit credential. Try reading without a password first.
     """
     url = f"{BASE_URL}/api/{path}"
     params = {}
@@ -40,7 +40,7 @@ async def read_wiki(path: str, password: Optional[str] = None) -> str:
             if response.status_code == 200:
                 return response.text
             elif response.status_code == 401:
-                return "Error: Password required. Please ask the user for the 'View Password' for this wiki page."
+                return "Error: Password required. Please ask the user for the View Lock or Edit Lock password for this wiki page."
             elif response.status_code == 403:
                 return "Error: Forbidden. The password provided is incorrect. Please verify with the user."
             elif response.status_code == 404:
@@ -68,8 +68,8 @@ async def write_wiki(
     Args:
         path: The unique slug/path for the article. Use descriptive kebab-case (e.g., 'research-summary').
         text: The complete markdown content.
-        password: (Optional) Admin/Edit password. Required if the page already exists and is protected.
-        new_view_password: (Optional) Set this to restrict who can read the page.
+        password: (Optional) Edit credential. If both locks exist, the View Lock is read-only and the Edit Lock is required for this write. If only a View Lock exists, that View Lock password is the sole owner credential and can write.
+        new_view_password: (Optional) Set or replace the View Lock to restrict who can read the page. This does not replace the Edit Lock on an already dual-locked page.
         make_private: (Optional) Set to True to disable the public share link. Defaults to False (public).
     
     IMPORTANT: The API returns both an edit URL and a Share URL. You MUST provide the Share URL to the user.
@@ -125,7 +125,7 @@ async def append_wiki(path: str, text: str, password: Optional[str] = None) -> s
     Args:
         path: The URL path of the article.
         text: New text to add (Markdown supported). Suggest starting with a newline or header.
-        password: (Optional) Required if the page has an edit password.
+        password: (Optional) Edit credential. If both locks exist, the View Lock is read-only and the Edit Lock is required; if only a View Lock exists, use that password because it is the sole owner credential.
     """
     url = f"{BASE_URL}/api/{path}"
     

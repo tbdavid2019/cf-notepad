@@ -178,6 +178,7 @@ We provide a Python-based Model Context Protocol (MCP) server that runs remotely
 ### 2. Antigravity AI Skills
 Copy the contents of the `skills/` directory to your `~/.gemini/antigravity/skills/` directory.
 - **Auto-Discovery**: Agents can discover and load this skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
+- **Feature Coverage**: The published skill documents the browser editor toolbar, ECharts, bilingual startup tips, keyboard shortcuts, Copy, image insertion, view locks, and the admin dashboard. It is generated from `skills/SKILL.md`.
 
 ### 3. One-Click Prompt (For ChatGPT / Claude Web)
 Copy this prompt and paste it to ChatGPT or Claude to let them draft and auto-publish directly to your wiki:
@@ -241,8 +242,10 @@ See the real editor and preview interface here:
 
 When adding or changing a user-facing feature, update all three sources together: `CHANGELOG.md` for the release record, `README.md` for the feature documentation, and `static/data/editor-tips.json` when the feature deserves a startup tip. Keep every tip localized with both `zh-TW` and `en-US` fields.
 
+Keep agent-facing guidance synchronized as well: update `skills/SKILL.md` for the published agent skill, `LLM_API_DOCS.md` for HTTP/API agents, and `mcp/README.md` plus MCP tool docstrings for MCP clients. Run `node scripts/generate-agent-skill.mjs` after changing either generated source document.
+
 ### 🔐 2. Privacy, Versioning & Secure Sharing
-- **Access Control Separation**: Distinct separation between "Edit Lock" (write protection) and "View Lock" (read & write protection) using Salted MD5 hashes and in-page password modals. Visitors can read write-protected notes and click "Edit" to unlock via password.
+- **Access Control Separation**: Distinct "Edit Lock" and "View Lock" policies use Salted MD5 hashes and in-page password modals. An Edit Lock restricts writing; a View Lock restricts reading; with only a View Lock it is also the sole owner/edit credential, while with both locks the View Lock is read-only and the Edit Lock is required to write.
 - **D1 Snapshot History**: Automatically saves content snapshots to Cloudflare D1 with a 5-minute cooldown and a max limit of 10 versions. Editors can preview, restore, or copy text from historical versions.
 - **Presentation Mode & PDF Export**: Splice slides using standard `---` page breaks for fullscreen Slidev-like presentations. Custom `@media print` CSS hides controls, overrides page heights, and prevents text clipping during PDF exports.
 - **Public Index Sitemap**: Opt-in public indexing allows you to choose which shared pages appear in `sitemap.xml`. Shared pages emit server-rendered Open Graph / Twitter metadata and prefer stronger human-readable titles when available.

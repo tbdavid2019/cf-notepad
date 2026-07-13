@@ -60,6 +60,7 @@
 
 ### Documentation
 - Future user-facing changes must update `README.md`, `CHANGELOG.md`, and `static/data/editor-tips.json` when a startup tip is appropriate.
+- Synchronized `skills/SKILL.md`, `LLM_API_DOCS.md`, and MCP guidance with the current editor features, ECharts authoring, bilingual tips, and `pw` / `vpw` lock policy.
 
 ## [2026-07-12]
 ### Fixed

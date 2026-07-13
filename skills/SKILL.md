@@ -229,12 +229,50 @@ flowchart TD
 
 If the user asks for slides, prefer slide-oriented markdown instead of a flat long article.
 
+## Editor Features and Operational Tips
+
+The wiki also includes a browser-based Markdown editor. When helping a user author a note, these features are available:
+
+- **Markdown toolbar**: headings, bold, italic, strikethrough, links, blockquotes, unordered/ordered/task lists, **Inline code**, fenced code blocks, horizontal rules, tables, image insertion, fullscreen editing, Undo / Redo, and AI formatting. Toolbar labels and inserted placeholders follow the selected interface language.
+- **Image Insertion**: the toolbar image button opens a file picker. With R2 enabled, the image is uploaded and a Markdown image URL is inserted automatically. Without R2, an editable Markdown image placeholder is inserted.
+- **ECharts**: put valid JSON chart options in an `echarts` fenced code block to render an interactive chart in the preview. Keep the fence language exactly `echarts`; malformed JSON cannot be rendered as a chart.
+
+````md
+```echarts
+{
+  "title": { "text": "Traffic sources" },
+  "tooltip": { "trigger": "item" },
+  "series": [{
+    "type": "pie",
+    "data": [
+      { "value": 1048, "name": "Search" },
+      { "value": 735, "name": "Direct" },
+      { "value": 580, "name": "Referral" }
+    ]
+  }]
+}
+```
+````
+
+- **Editor view shortcuts**: `⌘-⌥-7` / `Ctrl-Alt-7` selects side-by-side WYSIWYG, `⌘-⌥-8` / `Ctrl-Alt-8` selects pure Markdown, and `⌘-⌥-9` / `Ctrl-Alt-9` selects stacked WYSIWYG.
+- **Undo / Redo** tracks typing, toolbar Markdown commands, image insertion, and pasted content. Use the toolbar or the normal `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, and `Ctrl/Cmd+Y` shortcuts.
+- **AI formatting** is available in both the top toolbar and the footer. It restructures Markdown while preserving the draft's meaning. AI Edit can rewrite a selected passage or the full note only after the user supplies an explicit instruction.
+- **Footer Copy** is beside Markdown Export. It prefers rich HTML and includes Markdown/plain-text fallback for editors such as Notion and Jira, then shows a localized check animation after success.
+- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview.
+- **Share links**: links in rendered Markdown on `/share/...` pages open in a new tab with `noopener noreferrer`.
+- **Startup tips**: the editor randomly chooses a bilingual tip from `static/data/editor-tips.json` and types it below the Stray Birds placeholder with the same typewriter animation. Future user-facing features that deserve a hint must add one object with `id`, `zh-TW`, and `en-US` fields, then update `README.md` and `CHANGELOG.md`.
+- **Admin dashboard**: the route is configured by the runtime `SCN_ADMIN_PATH` binding. The dashboard supports URL/title search, Markdown full-text search, modified-date filters, sortable columns, pagination, URL/public/protected/Sitemap totals, and retained version counts. `views` is a legacy field and may not be available in current data.
+
 ## Auth Rules
 - **Edit Password (`pw`)**: This is the edit lock. It protects editing.
 - **View Password (`vpw`)**: This is the read/view lock. It protects reading and is stronger than the edit lock.
 - If a note has `vpw`, readers must authenticate before reading the note/share page.
 - If a note only has `pw`, the direct note page can still be readable to visitors, but editing remains locked.
+- If only a View Lock exists, its password is the sole owner credential and grants edit access after authentication.
+- If both locks exist, the View Lock is read-only and the Edit Lock is required to modify the note, change settings, change locks, restore history, or invoke AI editing.
+- For a share page with both locks, a valid `vpw` can read the content but must not be treated as edit authorization.
 - For `GET /api/<path>`, if either `pw` or `vpw` is set, provide a password through `Authorization: Bearer <password>` or `?pw=<password>`.
+- For API reads, either valid password is sufficient to read protected content; API writes require the edit password or an edit-role session.
 - For `POST /api/<path>`, `pw` and `vpw` can be used to set or update those locks as part of the save request.
 - In the editor/browser flow, `POST /:path/pw` can also update locks with JSON `{ "passwd": "...", "type": "edit" }` or `{ "passwd": "...", "type": "view" }` after edit-session authentication.
 - If you get a **401/403**, ask the user: "This page is protected, please provide the password."

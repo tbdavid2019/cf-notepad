@@ -60,6 +60,18 @@ Once connected, the AI automatically gains the following powers on `wiki.david88
 2. **`write_wiki(path, text, password, new_view_password)`**: It can generate markdown articles, including images uploaded to R2, and publish them to a specific URL path.
 3. **`append_wiki(path, text, password)`**: It can continuously stream/append updates to the bottom of long, running research pages without pulling down the whole text.
 
+### 🔐 Password policy
+
+The MCP tools use the same `pw` / `vpw` policy as the HTTP API:
+
+- `pw` is the Edit Lock. With only `pw`, visitors can read the note, but writes require `password=pw`.
+- `vpw` is the View Lock. It protects reading. If only a View Lock exists, that password is the sole owner credential and also authorizes writes.
+- If both locks exist, the View Lock is read-only and the Edit Lock is required for `write_wiki` and `append_wiki`.
+- For `read_wiki`, either valid lock password can read protected content.
+- `write_wiki(..., new_view_password=...)` sets or replaces the View Lock; it does not replace the edit credential needed to update an already dual-locked page.
+
+When storing charts through MCP, include the same Markdown in the `text` argument; for example, an ````echarts```` fence containing JSON options will render as ECharts when the published note is opened in the wiki editor or share page. MCP stores the Markdown and does not render the chart itself.
+
 For very long source artifacts such as raw skills, specs, logs, or context dumps, prefer saving a short summary plus the original file path or URL instead of inlining the full document in one write.
 
 If a published page is structured as slides, clients can derive a presentation entry by appending `/present` to the returned share URL, and optionally add a Reveal hash such as `#/2` for a specific slide.

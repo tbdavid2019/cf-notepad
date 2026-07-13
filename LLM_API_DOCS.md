@@ -136,6 +136,11 @@ These two fields do different things.
   - This is the stronger lock
   - If `vpw` exists, readers must authenticate before reading the note/share page
 
+Lock combinations:
+- If only a View Lock exists, its password is the sole owner credential and grants edit access after authentication.
+- If both locks exist, the View Lock is read-only and the Edit Lock is required to modify the note, settings, locks, history, or AI output.
+- For API reads, either valid password can read protected content. API writes still require the edit password or an edit-role session.
+
 Practical rule:
 - Use `pw` when the human wants read-only visitors but restricted editing
 - Use `vpw` when the human wants the content itself hidden from unauthenticated readers
