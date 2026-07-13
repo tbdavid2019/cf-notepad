@@ -114,6 +114,32 @@ export async function listNoteHistoryVersions(db, path, limit) {
     )
 }
 
+export async function getNoteHistoryCounts(db, paths = []) {
+    if (!db || !Array.isArray(paths) || paths.length === 0) return new Map()
+
+    const uniquePaths = [...new Set(paths.filter(path => typeof path === 'string' && path))]
+    if (uniquePaths.length === 0) return new Map()
+
+    const counts = new Map()
+    // Keep each statement comfortably below SQLite/D1 bound-variable limits.
+    for (let index = 0; index < uniquePaths.length; index += 100) {
+        const chunk = uniquePaths.slice(index, index + 100)
+        const placeholders = chunk.map(() => '?').join(', ')
+        const result = await db.prepare(`
+            SELECT path, COUNT(*) AS version_count
+            FROM note_history
+            WHERE path IN (${placeholders})
+            GROUP BY path
+        `).bind(...chunk).all()
+
+        for (const row of result?.results || []) {
+            counts.set(row.path, Number(row.version_count || 0))
+        }
+    }
+
+    return counts
+}
+
 export async function getNoteHistoryVersionById(db, path, id) {
     if (!db) return null
     return await getFirstResult(

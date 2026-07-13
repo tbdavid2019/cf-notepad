@@ -344,6 +344,16 @@ ${getMarkdownCss()}
             });
         };
 
+        const openShareContentLinksInNewTab = node => {
+            if (!node || !document.body.classList.contains('share-view')) return;
+            node.querySelectorAll('a[href]').forEach(anchor => {
+                const href = anchor.getAttribute('href') || '';
+                if (!href || href.startsWith('#') || /^javascript:/i.test(href)) return;
+                anchor.setAttribute('target', '_blank');
+                anchor.setAttribute('rel', 'noopener noreferrer');
+            });
+        };
+
         const scrollToLocationHash = () => {
             if (!location.hash) return;
             let targetId = '';
@@ -512,6 +522,7 @@ ${getMarkdownCss()}
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
                 decorateHeadingAnchors(node);
+                openShareContentLinksInNewTab(node);
                 initDiagrams();
                 scheduleHashScroll();
             } catch (e) {

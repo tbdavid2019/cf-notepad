@@ -5,6 +5,7 @@ import {
     DEFAULT_NOTE_HISTORY_LIMIT,
     DEFAULT_NOTE_HISTORY_MIN_INTERVAL_SECONDS,
     getNoteHistoryConfig,
+    getNoteHistoryCounts,
     getNoteHistoryLimit,
     getNoteHistoryMinIntervalSeconds,
     isNoteHistoryConfigured,
@@ -140,4 +141,32 @@ test('shouldSaveNoteHistory saves eligible prior versions', () => {
         nowSeconds: 400,
         minIntervalSeconds: 300,
     }), true)
+})
+
+test('getNoteHistoryCounts returns grouped version counts for requested paths', async () => {
+    const calls = []
+    const db = {
+        prepare(sql) {
+            calls.push(sql)
+            return {
+                bind(...paths) {
+                    assert.deepEqual(paths, ['alpha', 'beta'])
+                    return {
+                        async all() {
+                            return { results: [
+                                { path: 'alpha', version_count: 3 },
+                                { path: 'beta', version_count: 1 },
+                            ] }
+                        },
+                    }
+                },
+            }
+        },
+    }
+
+    assert.deepEqual(await getNoteHistoryCounts(db, ['alpha', 'beta']), new Map([
+        ['alpha', 3],
+        ['beta', 1],
+    ]))
+    assert.match(calls[0], /COUNT\(\*\)/)
 })

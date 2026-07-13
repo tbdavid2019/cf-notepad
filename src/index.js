@@ -26,10 +26,12 @@ import {
 } from './discovery.mjs'
 import {
     getNoteHistoryConfig,
+    getNoteHistoryCounts,
     getNoteHistoryVersionById,
     listNoteHistoryVersions,
     saveNoteHistoryVersionIfNeeded,
 } from './note_history.mjs'
+import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 
 // init
 const router = Router()
@@ -354,42 +356,125 @@ router.head('/', ({ url }) => {
 const handleAdminGet = async (request) => {
     const lang = getI18n(request)
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const adminPath = getAdminPath()
     const adminPassword = getAdminPassword()
 
     // Check if logged in
     if (cookie.admin_session === adminPassword && adminPassword) {
         // Logged in, list notes
         try {
-            const list = await getNotesNamespace().list()
-
-            // Fetch content for each note to extract title
-            const notesWithTitles = await Promise.all(
-                list.keys.map(async (note) => {
-                    try {
-                        const value = await getNotesNamespace().get(note.name)
-                        const firstLine = value ? value.split('\n')[0] : ''
-                        const title = note.metadata?.title || firstLine.replace(/^#+\s*/, '').substring(0, 50).trim() || ''
-
-                        return {
-                            ...note,
-                            extractedTitle: title
-                        }
-                    } catch (e) {
-                        return {
-                            ...note,
-                            extractedTitle: ''
-                        }
-                    }
-                })
-            )
-
-            return returnPage('Admin', { lang, notes: notesWithTitles })
+            const adminData = await buildAdminData(request)
+            return returnPage('Admin', { lang, adminPath, ...adminData })
         } catch (e) {
-            return returnPage('Admin', { lang, error: 'Failed to retrieve notes: ' + e.message })
+            return returnPage('Admin', { lang, adminPath, error: 'Failed to retrieve notes: ' + e.message })
         }
     }
 
-    return returnPage('Admin', { lang })
+    return returnPage('Admin', { lang, adminPath })
+}
+
+async function listAllAdminNotes() {
+    const notes = []
+    let cursor
+
+    do {
+        const page = await getNotesNamespace().list(cursor ? { cursor } : undefined)
+        notes.push(...(page.keys || []))
+        cursor = page.list_complete ? undefined : page.cursor
+    } while (cursor)
+
+    return notes
+}
+
+async function mapWithConcurrency(items, worker, concurrency = 20) {
+    const results = new Array(items.length)
+    let nextIndex = 0
+
+    async function consume() {
+        while (nextIndex < items.length) {
+            const index = nextIndex++
+            results[index] = await worker(items[index], index)
+        }
+    }
+
+    await Promise.all(Array.from({ length: Math.min(concurrency, items.length) }, consume))
+    return results
+}
+
+function isValidAdminNotePath(path) {
+    return typeof path === 'string'
+        && path.length > 0
+        && path.length <= 512
+        && !path.includes('\0')
+}
+
+async function buildAdminData(request) {
+    const query = normalizeAdminQuery(new URL(request.url).searchParams)
+    const listedNotes = await listAllAdminNotes()
+    const historyConfig = getNoteHistoryConfig()
+    const versionCounts = historyConfig.enabled && historyConfig.db
+        ? await getNoteHistoryCounts(historyConfig.db, listedNotes.map(note => note.name))
+        : new Map()
+    const needsContentScan = Boolean(query.title || query.text || query.sort === 'title')
+
+    const records = await mapWithConcurrency(listedNotes, async note => {
+        const metadata = note.metadata || {}
+        let content = ''
+        let title = metadata.title || ''
+
+        if (needsContentScan) {
+            try {
+                content = await getNotesNamespace().get(note.name) || ''
+                title = extractNoteTitle(content, title, decodeURIComponent(note.name))
+            } catch (error) {
+                console.warn(`Admin note read failed for ${note.name}:`, error?.message || error)
+            }
+        }
+
+        return {
+            path: note.name,
+            title: title || decodeURIComponent(note.name),
+            content,
+            updatedAt: Number.isFinite(Number(metadata.updateAt)) ? Number(metadata.updateAt) : 0,
+            views: Number.isFinite(Number(metadata.views)) ? Number(metadata.views) : 0,
+            versionCount: versionCounts.get(note.name) || 0,
+            shared: metadata.share === true,
+            indexed: metadata.share === true && metadata.publicIndex === true,
+            protected: Boolean(metadata.pw || metadata.vpw),
+            hasEditLock: Boolean(metadata.pw),
+            hasViewLock: Boolean(metadata.vpw),
+        }
+    })
+
+    const filtered = filterAdminNotes(records, query)
+    const sorted = sortAdminNotes(filtered, query)
+    const pagination = paginateAdminNotes(sorted, query.page, query.pageSize)
+
+    if (!needsContentScan) {
+        pagination.items = await mapWithConcurrency(pagination.items, async note => {
+            try {
+                const content = await getNotesNamespace().get(note.path) || ''
+                return {
+                    ...note,
+                    title: extractNoteTitle(content, note.title, decodeURIComponent(note.path)),
+                }
+            } catch (error) {
+                return note
+            }
+        })
+    }
+
+    return {
+        notes: pagination.items,
+        stats: summarizeAdminNotes(records),
+        pagination: {
+            ...pagination,
+            filteredItems: filtered.length,
+        },
+        filters: query,
+        historyEnabled: Boolean(historyConfig.enabled && historyConfig.db),
+        contentScanned: needsContentScan,
+    }
 }
 
 const handleAdminPost = async (request) => {
@@ -400,13 +485,20 @@ const handleAdminPost = async (request) => {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
         // Check if it's JSON request (batch delete)
-        const contentType = request.headers.get('Content-Type') || '';
-        if (contentType.includes('application/json')) {
-            if (cookie.admin_session === adminPassword && adminPassword) {
-                const body = await request.json();
-                const { action, paths } = body;
+            const contentType = request.headers.get('Content-Type') || '';
+            if (contentType.includes('application/json')) {
+                if (cookie.admin_session === adminPassword && adminPassword) {
+                    const body = await request.json();
+                    const { action, paths } = body;
 
-                if (action === 'batch-delete' && Array.isArray(paths)) {
+                    if (action === 'batch-delete' && (!Array.isArray(paths) || paths.length > 100 || paths.some(path => !isValidAdminNotePath(path)))) {
+                        return new Response(JSON.stringify({ success: false, message: 'Invalid note selection' }), {
+                            status: 400,
+                            headers: { 'Content-Type': 'application/json' },
+                        })
+                    }
+
+                    if (action === 'batch-delete' && Array.isArray(paths)) {
                     try {
                         // Delete all selected notes
                         await Promise.all(paths.map(async (path) => {
@@ -475,11 +567,13 @@ const handleAdminPost = async (request) => {
         if (cookie.admin_session === adminPassword && adminPassword) {
             if (action === 'delete') {
                 const path = formData.get('path')
-                if (path) {
+                if (isValidAdminNotePath(path)) {
                     const { metadata } = await queryNote(path)
                     await getNotesNamespace().delete(path)
                     await syncShareMappings(path, { share: false }, metadata || {})
                     await deleteNoteHistoryForPath(path)
+                } else {
+                    return returnPage('Admin', { lang, adminPath, error: 'Invalid note path' })
                 }
                 return Response.redirect(new URL(adminPath, request.url).href, 302)
             }

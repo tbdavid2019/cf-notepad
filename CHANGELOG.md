@@ -23,6 +23,10 @@
   - Added Copy beside Markdown Export in the Footer.
   - Copies rich HTML plus Markdown/plain-text fallback for Notion, Jira, and similar editors.
   - Shows a localized check animation and copied status after success.
+- **Admin Dashboard**
+  - Added URL totals, published/protected/Sitemap counts, legacy view totals, and retained version totals.
+  - Added title/URL search, Markdown full-text search, modified-date range filters, sorting, and server-side pagination.
+  - Added clickable column sorting and per-note publish, Sitemap, lock, view, version, and last-modified status columns.
 
 ### Fixed
 - **Password Lock Consistency**
@@ -39,6 +43,8 @@
   - Escaped the `</>` glyph so it renders correctly in the HTML toolbar.
 - **Footer View Settings Grouping**
   - Grouped Preview, Layout, and Device controls together as one editor view-settings group.
+- **Share Link Navigation**
+  - Markdown links rendered inside share URLs now open in a new tab with `noopener noreferrer`.
 
 ### Changed
 - **Compact Footer Controls**

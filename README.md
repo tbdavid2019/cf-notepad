@@ -139,6 +139,8 @@ wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
 
 後台路徑與密碼會在每次 request 讀取 Cloudflare Worker bindings；修改 `SCN_ADMIN_PATH` 後重新部署，即可使用設定的路徑進入超級管理員後台。
 
+超級管理員後台提供：URL 總數、發佈／Sitemap／鎖定摘要、標題／URL 搜尋、Markdown 全文搜尋、最後修改日期區間、點擊欄位排序、分頁、批次刪除、空白頁清理，以及 D1 保留版本數。`views` 僅顯示舊 metadata 中仍存在的累計值，目前不會被自動遞增。
+
 ### 5. 部署
 ```bash
 npm install
@@ -292,6 +294,8 @@ Set the following secrets in your Cloudflare dashboard or via `wrangler secret p
 - `SCN_GA_MEASUREMENT_ID`: Google Analytics tracking ID (Optional).
 
 The admin path and password are resolved from Cloudflare Worker bindings per request. After changing `SCN_ADMIN_PATH`, redeploy the Worker before opening the configured super-admin route.
+
+The super-admin dashboard includes URL totals, published/Sitemap/protected summaries, title/URL search, Markdown full-text search, modified-date filters, clickable column sorting, pagination, batch cleanup, and retained D1 version counts. `views` is shown only as a legacy metadata total; it is not currently incremented.
 
 ### 5. Deploy
 ```bash
