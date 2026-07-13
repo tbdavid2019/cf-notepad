@@ -14,12 +14,18 @@
 - **ECharts Code Blocks**
   - Added support for fenced `echarts` blocks containing JSON chart options.
   - Charts load ECharts on demand, resize with the editor layout, expose an accessible label, and dispose old instances before re-rendering.
+- **Footer Copy**
+  - Added Copy beside Markdown Export in the Footer.
+  - Copies rich HTML plus Markdown/plain-text fallback for Notion, Jira, and similar editors.
+  - Shows a localized check animation and copied status after success.
 
 ### Fixed
 - **Toolbar Localization**
   - Inline code and other inserted placeholders now follow the current English or Traditional Chinese editor language instead of always using Chinese text.
 - **Inline Code Icon**
   - Escaped the `</>` glyph so it renders correctly in the HTML toolbar.
+- **Footer View Settings Grouping**
+  - Grouped Preview, Layout, and Device controls together as one editor view-settings group.
 
 ### Changed
 - **Compact Footer Controls**

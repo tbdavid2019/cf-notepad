@@ -68,3 +68,11 @@ The editable Markdown toolbar SHALL provide an AI formatting control that invoke
 - **WHEN** the user activates AI Format in the editor toolbar
 - **THEN** the existing formatting prompt and AI request flow is used
 - **AND** the resulting Markdown replaces the current editor content through the normal input pipeline
+
+### Requirement: Copy rendered content
+The Footer SHALL provide a Copy control beside Markdown export that writes both rendered HTML and Markdown-compatible plain text to the clipboard, with a visible success confirmation.
+
+#### Scenario: Copy the current note
+- **WHEN** the user activates Copy
+- **THEN** the current note is written to the clipboard as rich HTML with Markdown/plain-text fallback
+- **AND** the Copy control briefly shows a check animation and a localized copied status

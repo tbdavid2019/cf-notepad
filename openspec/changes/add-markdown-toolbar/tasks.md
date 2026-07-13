@@ -9,6 +9,7 @@
 - [x] 2.2 Add responsive toolbar styles using the existing editor toolbar tokens and icon treatment.
 - [x] 2.3 Wire toolbar buttons, undo/redo history, and common keyboard shortcuts without changing footer behavior.
 - [x] 2.4 Add the existing AI formatting workflow to the editor toolbar.
+- [x] 2.5 Add Footer Copy beside Export with rich clipboard output and a success animation.
 
 ## 3. Verification
 

@@ -36,6 +36,7 @@ const SVG_ICONS = {
     readLock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
     link: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`,
     copy: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
+    check: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"></path></svg>`,
     play: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`,
     close: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>`,
     import: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>`,
@@ -199,6 +200,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.export}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
                         </button>
+                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
+                            <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
+                            <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
+                        </button>
                         <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
@@ -229,18 +235,51 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.shareHistory}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '分享' : 'Shares'}</span>
                         </button>
-                        <div class="footer-preview-group footer-control-group">
-                            ${RAIL_SWITCH({
-                                className: 'opt-mode',
-                                checked: mode === 'md',
-                                checkedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
-                                uncheckedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
-                                checkedText: lang === 'zh-TW' ? '開預覽' : 'On',
-                                uncheckedText: lang === 'zh-TW' ? '關預覽' : 'Off',
-                                ariaLabel: t.preview,
-                                checkedValue: 'md',
-                                uncheckedValue: 'plain',
-                            })}
+                        <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
+                            <div class="footer-preview-group footer-control-group">
+                                ${RAIL_SWITCH({
+                                    className: 'opt-mode',
+                                    checked: mode === 'md',
+                                    checkedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
+                                    uncheckedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
+                                    checkedText: lang === 'zh-TW' ? '開預覽' : 'On',
+                                    uncheckedText: lang === 'zh-TW' ? '關預覽' : 'Off',
+                                    ariaLabel: t.preview,
+                                    checkedValue: 'md',
+                                    uncheckedValue: 'plain',
+                                })}
+                            </div>
+                            ${mode === 'md' ? `
+                                <div class="footer-control-group desktop-split-control">
+                                    <div id="split-direction-selector">
+                                        ${RAIL_SWITCH({
+                                            checked: true,
+                                            checkedTitle: 'Layout',
+                                            uncheckedTitle: 'Layout',
+                                            checkedText: lang === 'zh-TW' ? '左右' : 'Side',
+                                            uncheckedText: lang === 'zh-TW' ? '上下' : 'Stack',
+                                            ariaLabel: lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout',
+                                            checkedValue: 'horizontal',
+                                            uncheckedValue: 'vertical',
+                                        })}
+                                    </div>
+                                </div>
+                                <div class="footer-control-group">
+                                    <div id="preview-device-selector">
+                                        ${RAIL_SWITCH({
+                                            className: 'preview-device-toggle',
+                                            checked: true,
+                                            checkedTitle: 'Device',
+                                            uncheckedTitle: 'Device',
+                                            checkedText: t.desktop,
+                                            uncheckedText: t.mobile,
+                                            ariaLabel: t.previewDevice,
+                                            checkedValue: 'desktop',
+                                            uncheckedValue: 'mobile',
+                                        })}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                     ` : (path ? `
                         ${authPath
@@ -250,6 +289,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
                             ${SVG_ICONS.export}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
+                        </button>
+                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
+                            <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
+                            <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
                         </button>
                         <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
@@ -296,37 +340,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             })}
                         </div>
                     </div>
-                    ${isEdit && mode === 'md' ? `
-                        <div class="footer-control-group desktop-split-control">
-                            <div id="split-direction-selector">
-                                ${RAIL_SWITCH({
-                                    checked: true,
-                                    checkedTitle: 'Layout',
-                                    uncheckedTitle: 'Layout',
-                                    checkedText: lang === 'zh-TW' ? '左右' : 'Side',
-                                    uncheckedText: lang === 'zh-TW' ? '上下' : 'Stack',
-                                    ariaLabel: lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout',
-                                    checkedValue: 'horizontal',
-                                    uncheckedValue: 'vertical',
-                                })}
-                            </div>
-                        </div>
-                        <div class="footer-control-group">
-                            <div id="preview-device-selector">
-                                ${RAIL_SWITCH({
-                                    className: 'preview-device-toggle',
-                                    checked: true,
-                                    checkedTitle: 'Device',
-                                    uncheckedTitle: 'Device',
-                                    checkedText: t.desktop,
-                                    uncheckedText: t.mobile,
-                                    ariaLabel: t.previewDevice,
-                                    checkedValue: 'desktop',
-                                    uncheckedValue: 'mobile',
-                                })}
-                            </div>
-                        </div>
-                    ` : ''}
                     ${!isEdit || mode === 'md' ? `
                         <div class="footer-control-group">
                             <select id="preview-width-selector" class="footer-select">

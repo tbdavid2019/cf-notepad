@@ -527,7 +527,7 @@ ${getMarkdownCss()}
     ` : ''}
 
 <script>
-    function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r = window.document.execCommand("copy")}finally{t.removeAllRanges(), window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}
+    function makeError(){return new DOMException("The request is not allowed","NotAllowedError")}async function copyClipboardApi(e){if(!navigator.clipboard)throw makeError();return navigator.clipboard.writeText(e)}async function copyExecCommand(e){const o=document.createElement("span");o.textContent=e,o.style.whiteSpace="pre",o.style.webkitUserSelect="auto",o.style.userSelect="all",document.body.appendChild(o);const t=window.getSelection(),n=window.document.createRange();t.removeAllRanges(),n.selectNode(o),t.addRange(n);let r=!1;try{r = window.document.execCommand("copy")}finally{t.removeAllRanges(), window.document.body.removeChild(o)}if(!r)throw makeError()}async function clipboardCopy(e){try{await copyClipboardApi(e)}catch(o){try{await copyExecCommand(e)}catch(e){throw e||o||makeError()}}}async function copyRichClipboard(markdown, html){try{if(navigator.clipboard?.write && window.ClipboardItem){const item=new ClipboardItem({'text/html':new Blob([html||''],{type:'text/html'}),'text/plain':new Blob([markdown||''],{type:'text/plain'})});await navigator.clipboard.write([item]);return}}catch(e){}await clipboardCopy(markdown||'')}
 
     const APP_STATE = ${JSON.stringify({
         authPath: ext.authPath || '',
@@ -1222,6 +1222,7 @@ ${getMarkdownCss()}
         const $importMdBtn = document.querySelector('#import-md-btn')
         const $importMdInput = document.querySelector('#import-md-input')
         const $exportMdBtn = document.querySelector('#export-md-btn')
+        const $copyMdBtn = document.querySelector('#copy-md-btn')
         const $exportPdfBtn = document.querySelector('#export-pdf-btn')
 
         setupShareHistory()
@@ -1282,9 +1283,46 @@ ${getMarkdownCss()}
         }
 
         const getCurrentMarkdownForExport = () => {
-            if ($textarea && !$textarea.classList.contains('hide')) return $textarea.value || ''
+            if ($textarea) return $textarea.value || ''
             const article = document.querySelector('#bot-accessible-content')
             return article ? (article.textContent || '') : ''
+        }
+
+        const getCurrentHtmlForCopy = () => {
+            const preview = $previewMd || $previewPlain
+            return preview ? preview.innerHTML || '' : ''
+        }
+
+        let copyResetTimer = null
+        const showCopySuccess = () => {
+            if (!$copyMdBtn) return
+            window.clearTimeout(copyResetTimer)
+            const label = $copyMdBtn.querySelector('.toolbar-button-label')
+            const originalLabel = $copyMdBtn.dataset.originalLabel || label?.textContent || ''
+            $copyMdBtn.dataset.originalLabel = originalLabel
+            $copyMdBtn.classList.add('copy-success')
+            $copyMdBtn.title = getI18n('copied') || 'Copied!'
+            $copyMdBtn.setAttribute('aria-label', getI18n('copied') || 'Copied!')
+            if (label) label.textContent = getI18n('copied') || 'Copied!'
+            copyResetTimer = window.setTimeout(() => {
+                $copyMdBtn.classList.remove('copy-success')
+                $copyMdBtn.title = APP_STATE.lang === 'zh-TW' ? '複製內容' : 'Copy content'
+                $copyMdBtn.setAttribute('aria-label', APP_STATE.lang === 'zh-TW' ? '複製內容' : 'Copy content')
+                if (label) label.textContent = originalLabel
+            }, 1600)
+        }
+
+        if ($copyMdBtn) {
+            $copyMdBtn.addEventListener('click', async () => {
+                try {
+                    await copyRichClipboard(getCurrentMarkdownForExport(), getCurrentHtmlForCopy())
+                    showCopySuccess()
+                    window.showToast(getI18n('copied') || 'Copied!')
+                } catch (error) {
+                    console.error('Copy content failed:', error)
+                    window.showToast(getI18n('copyFailed') || 'Copy failed')
+                }
+            })
         }
 
         const getMarkdownFilename = () => {

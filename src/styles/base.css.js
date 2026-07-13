@@ -620,6 +620,15 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     align-items: center;
     gap: 1px;
 }
+.footer-view-settings-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 5px;
+    border: 1px solid var(--toolbar-border, #e6dfd8);
+    border-radius: var(--toolbar-radius, 6px);
+    background: color-mix(in srgb, var(--toolbar-bg, #faf9f5) 88%, var(--toolbar-accent, #cc785c));
+}
 .footer-control-label {
     font-size: 10px;
     font-weight: 600;
@@ -877,6 +886,29 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 }
 .toolbar-icon-button.toolbar-active-button .toolbar-button-label {
     color: var(--toolbar-accent, #cc785c);
+}
+.copy-button-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 14px;
+}
+.copy-button-icon-success { display: none; }
+.copy-md-button.copy-success {
+    color: var(--toolbar-success, #1a7f37);
+    border-color: var(--toolbar-success, #1a7f37);
+    background: color-mix(in srgb, var(--toolbar-success, #1a7f37) 12%, var(--toolbar-bg, #fff));
+}
+.copy-md-button.copy-success .copy-button-icon-default { display: none; }
+.copy-md-button.copy-success .copy-button-icon-success { display: inline-flex; }
+.copy-md-button.copy-success .toolbar-button-label { color: var(--toolbar-success, #1a7f37); }
+.copy-md-button.copy-success .copy-button-icon-success .svg-icon {
+    animation: copy-check-pop 240ms ease-out;
+}
+@keyframes copy-check-pop {
+    0% { transform: scale(0.55); opacity: 0.25; }
+    70% { transform: scale(1.16); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
 }
 .opt-button-accent {
     color: var(--toolbar-accent);
@@ -1840,11 +1872,6 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         justify-content: center !important;
         align-items: center !important;
         width: 100% !important;
-    }
-
-    /* Hide preview toggle on mobile */
-    .footer-section-edit .footer-preview-group {
-        display: none !important;
     }
 
     /* Padding for note container on mobile share/edit views */
