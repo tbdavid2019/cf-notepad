@@ -29,6 +29,9 @@
   - Added clickable column sorting and per-note publish, Sitemap, lock, view, version, and last-modified status columns.
 
 ### Fixed
+- **Pasted Image Upload Persistence**
+  - Fixed pasted images reverting to `![Uploading...]()` after reload even though the image had uploaded successfully to R2.
+  - The uploaded image URL now triggers the editor auto-save flow immediately after the upload completes.
 - **Password Lock Consistency**
   - Fixed share-page authentication rejecting a correct Edit Lock when no View Lock was configured.
   - Unified direct-note and share authentication for Edit Lock, View Lock, and both-lock combinations.

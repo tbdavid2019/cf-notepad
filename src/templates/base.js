@@ -1715,7 +1715,13 @@ ${getMarkdownCss()}
                             formData.append('image', blob)
                             fetchJson('/upload', { method: 'POST', body: formData })
                                 .then(res => {
-                                    if (res.err === 0) { $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')'); triggerRender($previewMd, $textarea.value) }
+                                    if (res.err === 0) {
+                                        $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')')
+                                        triggerRender($previewMd, $textarea.value)
+                                        // The upload result changes the value programmatically, so it
+                                        // must notify the auto-save handler or the placeholder is saved.
+                                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                                    }
                                     else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); alert(getI18n('uploadFailed') + ': ' + res.msg) }
                                 })
                                 .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']'); alert(getI18n('uploadError') + err) })
