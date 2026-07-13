@@ -32,8 +32,8 @@ test('published footer exposes public index control and removes published label 
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
     assert.match(commonTemplateSource, /className: `share-state-switcher opt-share/)
-    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '已發布' : 'Published'/)
-    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '待發布' : 'Pending'/)
+    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '已發布' : 'Live'/)
+    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '待發布' : 'Draft'/)
     assert.match(commonTemplateSource, /id="share-menu-btn"/)
     assert.match(commonTemplateSource, /share-publish-menu-btn/)
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
@@ -43,8 +43,8 @@ test('share state uses a working toggle and does not interrupt preview rendering
 })
 
 test('footer uses native-style rails for the requested two-state controls', () => {
-    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '開預覽' : 'Preview On'/)
-    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '關預覽' : 'Preview Off'/)
+    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '開預覽' : 'On'/)
+    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '關預覽' : 'Off'/)
     assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '左右' : 'Side'/)
     assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '上下' : 'Stack'/)
     assert.match(commonTemplateSource, /checkedText: '中'/)
@@ -76,14 +76,10 @@ test('footer skill link points to the built-in well-known skill endpoint', () =>
     assert.doesNotMatch(commonTemplateSource, /github\.com\/tbdavid2019\/cf-notepad\/blob\/main\/skills\/SKILL\.md/)
 })
 
-test('footer uses compact saved-time display and shortened theme labels', () => {
-    assert.match(commonTemplateSource, /savedAtTitle/)
-    assert.match(commonTemplateSource, /getAbsoluteTime\(updateAt, lang\)/)
-    assert.match(commonTemplateSource, /cp-macchiato/)
-    assert.match(commonTemplateSource, /playful-geo/)
-    assert.match(commonTemplateSource, />◷<\/span>/)
-    assert.match(constantSource, /savedAtTitle: 'Saved at'/)
-    assert.match(constantSource, /savedAtTitle: '保存時間'/)
+test('footer uses full theme labels and descriptive width options', () => {
+    assert.match(commonTemplateSource, /themeName\}\<\/option>/)
+    assert.match(commonTemplateSource, /value="100%">\$\{t\.width\}: \$\{t\.full\}/)
+    assert.doesNotMatch(commonTemplateSource, /cp-macchiato ☀️|playful-geo/)
 })
 
 test('footer exposes markdown import export and PDF tools without reusing existing controls', () => {

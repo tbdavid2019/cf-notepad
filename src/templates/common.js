@@ -27,29 +27,6 @@ const SVG_ICONS = {
     clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
 }
 
-const THEME_OPTION_LABELS = {
-    'ayu-light': 'ayu ☀️ 極簡温暖',
-    'bauhaus': 'bauhaus ☀️ 幾何藝術',
-    'botanical': 'botanical ☀️ 植物圖鑑',
-    'catppuccin-latte': 'cp-latte ☀️ 柔和亮色',
-    'claude-canvas': 'claude ☀️ 人文溫暖',
-    'green-simple': 'green ☀️ 簡潔綠色',
-    'neo-brutalism': 'neo-brutal ☀️ 粗野主義',
-    'newsprint': 'newsprint ☀️ 報紙印刷',
-    'notion-clean': 'notion ☀️ 極簡白板',
-    'organic': 'organic ☀️ 侘寂陶藝',
-    'playful-geometric': 'playful-geo ☀️ 活潑幾何',
-    'professional': 'pro ☀️ 專業商務',
-    'retro': 'retro ☀️ 90年代懷舊',
-    'shopify-mint': 'shopify ☀️ 清新薄荷',
-    'sketch': 'sketch ☀️ 手繪草圖',
-    'catppuccin-macchiato': 'cp-macchiato 🌙 柔和暗色',
-    'kanagawa': 'kanagawa 🌙 日本墨水',
-    'terminal': 'terminal 🌙 終端暗色',
-    'tokyo-night': 'tokyo 🌙 東京夜景',
-    'x-ai': 'xAI 🌙 科技深黑',
-}
-
 export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue }) => `
 <button
   type="button"
@@ -98,8 +75,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     checked: share,
                                     checkedTitle: lang === 'zh-TW' ? '發布' : 'Publish',
                                     uncheckedTitle: lang === 'zh-TW' ? '發布' : 'Publish',
-                                    checkedText: lang === 'zh-TW' ? '已發布' : 'Published',
-                                    uncheckedText: lang === 'zh-TW' ? '待發布' : 'Pending',
+                                    checkedText: lang === 'zh-TW' ? '已發布' : 'Live',
+                                    uncheckedText: lang === 'zh-TW' ? '待發布' : 'Draft',
                                     ariaLabel: t.shareLinkTitle,
                                 })}
                                 <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
@@ -186,8 +163,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 checked: mode === 'md',
                                 checkedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
                                 uncheckedTitle: lang === 'zh-TW' ? '預覽' : 'Preview',
-                                checkedText: lang === 'zh-TW' ? '開預覽' : 'Preview On',
-                                uncheckedText: lang === 'zh-TW' ? '關預覽' : 'Preview Off',
+                                checkedText: lang === 'zh-TW' ? '開預覽' : 'On',
+                                uncheckedText: lang === 'zh-TW' ? '關預覽' : 'Off',
                                 ariaLabel: t.preview,
                                 checkedValue: 'md',
                                 uncheckedValue: 'plain',
@@ -281,16 +258,15 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     ${!isEdit || mode === 'md' ? `
                         <div class="footer-control-group">
                             <select id="preview-width-selector" class="footer-select">
-                                <option value="100%">${t.full}</option>
-                                <option value="960px">960</option>
-                                <option value="1200px">1200</option>
-                                <option value="1440px">1440</option>
+                                <option value="100%">${t.width}: ${t.full}</option>
+                                <option value="960px">${t.width}: 960</option>
+                                <option value="1200px">${t.width}: 1200</option>
+                                <option value="1440px">${t.width}: 1440</option>
                             </select>
-                            <span class="footer-control-label">${t.width}</span>
                         </div>
                         <div class="footer-control-group">
                             <select id="theme-selector" class="footer-select">
-                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${THEME_OPTION_LABELS[themeName] || themeName}</option>`).join('')}
+                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${themeName}</option>`).join('')}
                             </select>
                             <span class="footer-control-label">Theme</span>
                         </div>

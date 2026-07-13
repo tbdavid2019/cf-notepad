@@ -606,8 +606,8 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 #preview-width-selector {
-    width: 76px;
-    max-width: 76px;
+    width: 112px;
+    max-width: 112px;
 }
 #theme-selector {
     width: auto;
@@ -689,10 +689,18 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 }
 .footer-rail-text-checked {
     left: 0;
+    right: 24px;
+    padding-left: 5px;
+    padding-right: 2px;
+    overflow: hidden;
     opacity: 0;
 }
 .footer-rail-text-unchecked {
+    left: 24px;
     right: 0;
+    padding-left: 2px;
+    padding-right: 5px;
+    overflow: hidden;
     opacity: 1;
 }
 .footer-rail-switch.is-checked .footer-rail-text-checked {
@@ -705,9 +713,9 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     position: absolute;
     left: 3px;
     z-index: 2;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    border-radius: 4px;
     background: #fff;
     box-shadow: 0 1px 3px rgba(31, 35, 40, 0.28);
     transition: transform 0.16s ease;
