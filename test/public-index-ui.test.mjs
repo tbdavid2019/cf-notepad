@@ -80,6 +80,8 @@ test('footer uses full theme labels and descriptive width options', () => {
     assert.match(commonTemplateSource, /themeName\}\<\/option>/)
     assert.match(commonTemplateSource, /value="100%">\$\{t\.width\}: \$\{t\.full\}/)
     assert.doesNotMatch(commonTemplateSource, /cp-macchiato ☀️|playful-geo/)
+    assert.doesNotMatch(commonTemplateSource, /<span class="footer-control-label">Theme<\/span>/)
+    assert.match(baseCssSource, /\.footer-rail-switch \{[\s\S]*border-radius: 4px;/)
 })
 
 test('footer exposes markdown import export and PDF tools without reusing existing controls', () => {

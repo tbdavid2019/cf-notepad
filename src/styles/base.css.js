@@ -638,7 +638,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     height: var(--toolbar-height);
     padding: 0;
     border: 1px solid var(--toolbar-border);
-    border-radius: 999px;
+    border-radius: 4px;
     background: #d8dee4;
     color: #5c5a54;
     cursor: pointer;

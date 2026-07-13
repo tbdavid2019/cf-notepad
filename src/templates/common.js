@@ -268,7 +268,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <select id="theme-selector" class="footer-select">
                                 ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${themeName}</option>`).join('')}
                             </select>
-                            <span class="footer-control-label">Theme</span>
                         </div>
                     ` : ''}
                     ${sharePath ? '<div id="share-analytics-hook"></div>' : ''}
