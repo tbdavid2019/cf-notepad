@@ -2,7 +2,12 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-import { applyMarkdownCommand, createEditorHistory, getImageAltText } from '../static/js/markdown-toolbar.mjs'
+import {
+    applyMarkdownCommand,
+    createEditorHistory,
+    createUploadedAssetMarkdown,
+    getImageAltText,
+} from '../static/js/markdown-toolbar.mjs'
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const commonTemplate = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
@@ -93,11 +98,40 @@ test('renders the toolbar only for editable Markdown pages', () => {
     assert.match(commonTemplate, /data-command="\$\{item\.command\}"/)
     assert.match(commonTemplate, /glyph: '&lt;\/&gt;'/)
     assert.match(commonTemplate, /markdown-toolbar-image-input/)
+    assert.match(commonTemplate, /markdown-toolbar-asset-input/)
+    assert.match(commonTemplate, /command: 'asset'/)
+    assert.match(commonTemplate, /accept="video\/\*,audio\/\*,application\/pdf/)
     assert.match(commonTemplate, /command: 'fullscreen'/)
     assert.match(commonTemplate, /command: 'undo'/)
     assert.match(commonTemplate, /command: 'redo'/)
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
+})
+
+test('creates Markdown for uploaded 888box assets by media type', () => {
+    assert.equal(
+        createUploadedAssetMarkdown('https://box.glsoft.ai/storage/video/demo.mp4', 'Demo Clip.mp4', 'video/mp4'),
+        '<video controls src="https://box.glsoft.ai/storage/video/demo.mp4"></video>'
+    )
+    assert.equal(
+        createUploadedAssetMarkdown('https://box.glsoft.ai/storage/audio/demo.mp3', 'Demo Audio.mp3', 'audio/mpeg'),
+        '<audio controls src="https://box.glsoft.ai/storage/audio/demo.mp3"></audio>'
+    )
+    assert.equal(
+        createUploadedAssetMarkdown('https://box.glsoft.ai/storage/file/demo.pdf', 'Project Plan.pdf', 'application/pdf'),
+        '[Project Plan](https://box.glsoft.ai/storage/file/demo.pdf)'
+    )
+})
+
+test('toolbar uploads attachments directly to the public 888box API', () => {
+    assert.match(commonTemplate, /command: 'asset'/)
+    assert.match(commonTemplate, /markdown-toolbar-asset-input/)
+    assert.match(commonTemplate, /選擇要上傳的附件/)
+    assert.match(commonTemplate, /Choose an attachment to upload/)
+    assert.match(
+        readFileSync(new URL('../static/js/markdown-toolbar.mjs', import.meta.url), 'utf8'),
+        /https:\/\/box\.glsoft\.ai\/api\.php\?action=upload/
+    )
 })
 
 test('creates a safe image alt label from a filename', () => {

@@ -17,6 +17,11 @@
       "en-US": "Tip: Use the image button to upload a picture. With R2 enabled, the editor inserts a ready-to-use Markdown image URL."
     },
     {
+      "id": "asset-upload",
+      "zh-TW": "小訣竅：工具列的附件按鈕可將影片、音訊、文件與檔案上傳到 888box；圖片仍使用 R2。",
+      "en-US": "Tip: The toolbar attachment button uploads videos, audio, documents, and files to 888box. Images still use R2."
+    },
+    {
       "id": "echarts",
       "zh-TW": "小訣竅：使用 ```echarts 程式碼區塊放入 JSON 圖表設定，就能在預覽區繪製互動式 ECharts。",
       "en-US": "Tip: Put JSON chart options inside an ```echarts code fence to render an interactive ECharts chart in preview."

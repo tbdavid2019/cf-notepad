@@ -129,6 +129,8 @@ const SHORTCUTS = {
     k: 'link',
 }
 
+const BOX_UPLOAD_ENDPOINT = 'https://box.glsoft.ai/api.php?action=upload'
+
 const normalizeEditorState = state => ({
     value: String(state?.value || ''),
     selectionStart: Math.max(0, Number(state?.selectionStart) || 0),
@@ -171,10 +173,31 @@ export const getImageAltText = filename => String(filename || 'image')
     .replace(/\s+/g, ' ')
     .trim() || 'image'
 
+const getAssetLabel = filename => String(filename || 'attachment')
+    .replace(/\.[^.]+$/, '')
+    .replace(/[\[\]\(\)\{\}<>]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim() || 'attachment'
+
+const escapeAttribute = value => String(value || '')
+    .replace(/&/g, '&amp;')
+    .replace(/"/g, '&quot;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+
+export const createUploadedAssetMarkdown = (url, filename, mimeType = '') => {
+    const safeUrl = String(url || '').trim()
+    const type = String(mimeType || '').toLowerCase()
+    if (type.startsWith('video/')) return `<video controls src="${escapeAttribute(safeUrl)}"></video>`
+    if (type.startsWith('audio/')) return `<audio controls src="${escapeAttribute(safeUrl)}"></audio>`
+    return `[${getAssetLabel(filename)}](${safeUrl})`
+}
+
 export const initMarkdownToolbar = (root = document) => {
     const toolbar = root.querySelector('[data-markdown-toolbar]')
     const textarea = root.querySelector('#contents')
     const imageInput = root.querySelector('#markdown-toolbar-image-input')
+    const assetInput = root.querySelector('#markdown-toolbar-asset-input')
     if (!toolbar || !textarea) return false
     const lang = toolbar.dataset.language || 'zh-TW'
     const history = createEditorHistory({
@@ -242,6 +265,30 @@ export const initMarkdownToolbar = (root = document) => {
         insertUploadedImage(payload.data, file.name, start, end)
     }
 
+    const insertUploadedAsset = (url, file, start, end) => {
+        const replacement = createUploadedAssetMarkdown(url, file.name, file.type)
+        textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end)
+        textarea.focus()
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const uploadAsset = async (file, start, end) => {
+        if (file.type?.startsWith('image/')) {
+            throw new Error('Images still use the R2 image uploader')
+        }
+        const formData = new FormData()
+        formData.append('file', file)
+        formData.append('title', file.name || 'attachment')
+        const response = await fetch(BOX_UPLOAD_ENDPOINT, { method: 'POST', body: formData })
+        const payload = await response.json()
+        const url = payload?.data?.url
+        if (!response.ok || payload?.result !== 'success' || !url) {
+            throw new Error(payload?.message || 'Attachment upload failed')
+        }
+        insertUploadedAsset(url, file, start, end)
+    }
+
     const toggleFullscreen = () => {
         const pane = textarea.closest('.editor-pane')
         if (!pane) return
@@ -273,6 +320,13 @@ export const initMarkdownToolbar = (root = document) => {
                 imageInput.click()
                 return
             }
+            if (command === 'asset' && assetInput) {
+                assetInput.value = ''
+                assetInput.dataset.selectionStart = String(textarea.selectionStart)
+                assetInput.dataset.selectionEnd = String(textarea.selectionEnd)
+                assetInput.click()
+                return
+            }
             runCommand(command)
         })
     })
@@ -291,6 +345,19 @@ export const initMarkdownToolbar = (root = document) => {
         } catch (error) {
             window.showToast?.(error.message || 'Image upload failed')
             if (!window.showToast) alert(error.message || 'Image upload failed')
+        }
+    })
+
+    assetInput?.addEventListener('change', async () => {
+        const file = assetInput.files?.[0]
+        if (!file) return
+        const start = Number(assetInput.dataset.selectionStart || textarea.selectionStart)
+        const end = Number(assetInput.dataset.selectionEnd || textarea.selectionEnd)
+        try {
+            await uploadAsset(file, start, end)
+        } catch (error) {
+            window.showToast?.(error.message || 'Attachment upload failed')
+            if (!window.showToast) alert(error.message || 'Attachment upload failed')
         }
     })
 

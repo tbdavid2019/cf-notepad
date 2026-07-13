@@ -11,6 +11,10 @@
   - Added file selection from the editor toolbar.
   - When R2 is enabled, selected images upload through `/upload` and are inserted as Markdown image links using the uploaded file name as the alt text.
   - When R2 is disabled, the toolbar inserts a Markdown image placeholder for manual URL editing.
+- **888box Attachment Uploads**
+  - Added a toolbar attachment button for video, audio, document, archive, and generic file uploads.
+  - Attachments upload directly to `https://box.glsoft.ai/api.php?action=upload` and insert media-aware Markdown or HTML snippets.
+  - Image uploads remain unchanged and continue to use the built-in R2 image flow.
 - **ECharts Code Blocks**
   - Added support for fenced `echarts` blocks containing JSON chart options.
   - Charts load ECharts on demand, resize with the editor layout, expose an accessible label, and dispose old instances before re-rendering.

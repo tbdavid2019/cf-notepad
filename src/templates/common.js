@@ -74,6 +74,7 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'rule', glyph: '―', zh: '分隔線', en: 'Horizontal rule' },
     { command: 'table', glyph: '▦', glyphClass: 'is-table', zh: '插入表格', en: 'Insert table' },
     { command: 'image', glyph: '▧', glyphClass: 'is-image', zh: '上傳圖片', en: 'Upload image' },
+    { command: 'asset', glyph: '⇧', glyphClass: 'is-asset', zh: '上傳附件', en: 'Upload attachment' },
     { separator: true },
     { command: 'fullscreen', glyph: '⛶', zh: '全螢幕編輯', en: 'Fullscreen editor' },
 ]
@@ -92,6 +93,7 @@ export const EDITOR_TOOLBAR = lang => {
         <button type="button" id="editor-ai-format-btn" class="markdown-toolbar-button" data-ai-action="format" title="${isZh ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${isZh ? 'AI 格式化排版' : 'AI Format Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">✦</span></button>
     </div>
     <input id="markdown-toolbar-image-input" class="visually-hidden-file-input" type="file" accept="image/*" aria-label="${isZh ? '選擇要上傳的圖片' : 'Choose an image to upload'}">
+    <input id="markdown-toolbar-asset-input" class="visually-hidden-file-input" type="file" accept="video/*,audio/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.zip,.rar,.7z" aria-label="${isZh ? '選擇要上傳的附件' : 'Choose an attachment to upload'}">
     </div>
     `
 }
