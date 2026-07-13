@@ -179,6 +179,7 @@ We provide a Python-based Model Context Protocol (MCP) server that runs remotely
 Copy the contents of the `skills/` directory to your `~/.gemini/antigravity/skills/` directory.
 - **Auto-Discovery**: Agents can discover and load this skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
 - **Feature Coverage**: The published skill documents the browser editor toolbar, ECharts, bilingual startup tips, keyboard shortcuts, Copy, image insertion, view locks, and the admin dashboard. It is generated from `skills/SKILL.md`.
+- **Freshness Rule**: Agents must fetch the canonical skill URL before every skill invocation with `Cache-Control: no-cache`; local or cached guidance is only a documented fallback when the website is unavailable.
 
 ### 3. One-Click Prompt (For ChatGPT / Claude Web)
 Copy this prompt and paste it to ChatGPT or Claude to let them draft and auto-publish directly to your wiki:

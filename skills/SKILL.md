@@ -9,6 +9,17 @@ You have the ability to read, write, and append markdown content natively to `wi
 
 **API Base URL**: `https://wiki.david888.com/api`
 
+## Mandatory Freshness Check
+
+Before every invocation of this skill, fetch and read the latest complete skill document from the canonical website URL. Do not assume a local, repository, or previously cached copy is current.
+
+```bash
+curl -fsSL -H "Cache-Control: no-cache" \
+  "https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md"
+```
+
+Apply the fetched version's instructions for the rest of the task. If the canonical URL is temporarily unavailable, only use a local or cached copy as a fallback, clearly note that freshness could not be verified, and avoid assuming that undocumented behavior is supported.
+
 ## Quick Start Guide
 
 ### 1. Read a Wiki Page (GET)

@@ -23,6 +23,12 @@ test('agent skill documents editor features and bilingual startup tips', () => {
     }
 })
 
+test('agent skill requires a fresh canonical fetch before every invocation', () => {
+    assert.match(skill, /Before every invocation[\s\S]*fetch[\s\S]*https:\/\/wiki\.david888\.com\/.well-known\/agent-skills\/david888-wiki-publisher\/SKILL\.md/i)
+    assert.match(skill, /Cache-Control: no-cache/i)
+    assert.match(skill, /only use a local or cached copy as a fallback/i)
+})
+
 test('agent-facing lock documentation matches the current password policy', () => {
     for (const document of [skill, apiDocs, mcpReadme, mcpServer]) {
         assert.match(document, /only a View Lock exists[\s\S]*sole owner credential/i)
