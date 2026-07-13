@@ -2,6 +2,7 @@ import jwt from '@tsndr/cloudflare-worker-jwt'
 import Cookies from 'cookie'
 import * as TEMPL from './template'
 import { SUPPORTED_LANG, getGaMeasurementId, getSalt, getSecret } from './constant'
+import { resolvePasswordRole } from './password_policy.mjs'
 import { getNoteHistoryConfig, deleteNoteHistoryVersions } from './note_history.mjs'
 
 const getNotesNamespace = () => globalThis.NOTES
@@ -85,6 +86,13 @@ export async function passwordMatches(password, storedHash) {
 
     const legacyHash = await legacySaltPw(password)
     return storedHash === legacyHash
+}
+
+// Keep password policy identical for direct notes and share links.
+// An edit password always grants edit access. If there is no separate edit
+// password, the view password is the sole owner credential and grants edit.
+export async function getPasswordRole(password, metadata = {}) {
+    return resolvePasswordRole(password, metadata, passwordMatches)
 }
 
 export async function checkAuth(cookie, path) {

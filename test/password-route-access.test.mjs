@@ -9,11 +9,23 @@ const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', impo
 
 test('direct note route treats view lock separately from edit lock', () => {
     assert.match(indexSource, /if \(!metadata\.pw && !metadata\.vpw\)/)
-    assert.match(indexSource, /if \(metadata\.vpw\) \{/)
-    assert.match(indexSource, /return returnPage\('NeedPasswd', \{ lang, title \}\)/)
+    assert.match(indexSource, /if \(valid && role === 'edit'\)/)
+    assert.match(indexSource, /if \(valid && role === 'view'\)/)
+    assert.match(indexSource, /if \(metadata\.vpw\) return returnPage\('NeedPasswd'/)
     assert.match(indexSource, /return returnPage\('Edit', \{\s*lang,\s*title,\s*content: value,/s)
-    assert.match(indexSource, /showPwPrompt: true/)
+    assert.match(indexSource, /return returnPage\('Share', \{\s*lang,\s*title,\s*content: value,/s)
     assert.match(indexSource, /authPath: `\/\$\{path\}\/auth`/)
+})
+
+test('password role policy distinguishes edit and view credentials', async () => {
+    const { resolvePasswordRole } = await import('../src/password_policy.mjs')
+    const matches = async (password, storedHash) => password === storedHash
+
+    assert.equal(await resolvePasswordRole('edit-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), 'edit')
+    assert.equal(await resolvePasswordRole('view-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), 'view')
+    assert.equal(await resolvePasswordRole('edit-secret', { pw: 'edit-secret' }, matches), 'edit')
+    assert.equal(await resolvePasswordRole('view-secret', { vpw: 'view-secret' }, matches), 'edit')
+    assert.equal(await resolvePasswordRole('wrong-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), null)
 })
 
 test('share route only exposes authPath when the note is actually locked', () => {
@@ -24,6 +36,7 @@ test('auth helpers read secret and salt at runtime instead of import time', () =
     assert.match(helperSource, /MD5\(`\$\{hashPw\}\+\$\{getSalt\(\) \|\| ''\}`\)/)
     assert.match(helperSource, /MD5\(`\$\{hashPw\}\+undefined`\)/)
     assert.match(helperSource, /export async function passwordMatches\(password, storedHash\)/)
+    assert.match(helperSource, /export async function getPasswordRole\(password, metadata = \{\}\)/)
     assert.match(helperSource, /const secret = getSecret\(\)/)
     assert.match(helperSource, /if \(typeof secret !== 'string' \|\| !secret\)/)
 })
@@ -35,4 +48,5 @@ test('readonly direct note footer opens password prompt for edit lock', () => {
     assert.match(commonTemplateSource, /authPath\s*\? `<button type="button" id="readonly-edit-btn"/)
     assert.match(baseTemplateSource, /const openPasswordModal = \(\{ title, initialValue = '', allowEmpty = false \} = \{\}\) => new Promise/)
     assert.match(baseTemplateSource, /\$readonlyEditBtn\.addEventListener\('click', \(\) => passwdPrompt\(\)\)/)
+    assert.match(baseTemplateSource, /res\.data\.role === 'edit' && APP_STATE\.sharePath/)
 })

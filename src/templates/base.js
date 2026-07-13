@@ -785,6 +785,10 @@ ${getMarkdownCss()}
             .then(res => {
                 if (res.err !== 0) { return errHandle(res.msg) }
                 if (res.data.refresh) {
+                    if (res.data.role === 'edit' && APP_STATE.sharePath && APP_STATE.path) {
+                        window.location.href = '/' + APP_STATE.path
+                        return
+                    }
                     if (APP_STATE.presentationEntry) {
                         consumePresentationDestination()
                         window.location.reload()

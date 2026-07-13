@@ -2,7 +2,7 @@ import dayjs from 'dayjs'
 import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
+import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
 import { ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain, getGaMeasurementId, getSecret } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
@@ -266,7 +266,7 @@ async function buildSitemapEntries(origin) {
 }
 
 async function requireApiEditAccess(request, metadata, bodyPassword) {
-    if (!metadata?.pw) {
+    if (!metadata?.pw && !metadata?.vpw) {
         return { ok: true }
     }
 
@@ -281,7 +281,7 @@ async function requireApiEditAccess(request, metadata, bodyPassword) {
         return { ok: false, response: returnJSON(401, 'Unauthorized: Password required to edit') }
     }
 
-    if (!(await passwordMatches(providedPw, metadata.pw))) {
+    if ((await getPasswordRole(providedPw, metadata)) !== 'edit') {
         return { ok: false, response: returnJSON(403, 'Forbidden: Incorrect edit password') }
     }
 
@@ -528,39 +528,19 @@ router.post('/share/:shareId/auth', async request => {
             const { passwd } = await request.json()
             const { metadata } = await queryNote(path)
 
-            if (metadata.vpw) {
-                // Check View Password
-                if (await passwordMatches(passwd, metadata.vpw)) {
-                    const token = await jwt.sign({ path, role: 'view' }, getSecret())
-                    return returnJSON(0, {
-                        refresh: true,
-                    }, {
-                        'Set-Cookie': Cookies.serialize('auth', token, {
-                            path: `/share/${shareId}`,
-                            expires: dayjs().add(7, 'day').toDate(),
-                            httpOnly: true,
-                        })
+            const role = await getPasswordRole(passwd, metadata)
+            if (role) {
+                const token = await jwt.sign({ path, role }, getSecret())
+                return returnJSON(0, {
+                    refresh: true,
+                    role,
+                }, {
+                    'Set-Cookie': Cookies.serialize('auth', token, {
+                        path: role === 'edit' ? `/${path}` : `/share/${shareId}`,
+                        expires: dayjs().add(7, 'day').toDate(),
+                        httpOnly: true,
                     })
-                }
-
-                // Check Edit Password (allow admin to view share page too)
-                if (await passwordMatches(passwd, metadata.pw)) {
-                    // Even if using edit password, on share page we give view role (or edit role?)
-                    // Let's give view role to keep it safe/simple for share page context, 
-                    // or edit role if we want to track who is who.
-                    // Since router.get('/share/:md5') doesn't check specific role (just valid token), either works.
-                    // Giving 'view' role is safer for the cookie on share path.
-                    const token = await jwt.sign({ path, role: 'view' }, getSecret())
-                    return returnJSON(0, {
-                        refresh: true,
-                    }, {
-                        'Set-Cookie': Cookies.serialize('auth', token, {
-                            path: `/share/${shareId}`,
-                            expires: dayjs().add(7, 'day').toDate(),
-                            httpOnly: true,
-                        })
-                    })
-                }
+                })
             }
         }
         return returnJSON(10002, 'Password auth failed!')
@@ -1189,32 +1169,6 @@ router.get('/:path', async (request) => {
 
     const { valid, role } = await checkAuth(cookie, path)
 
-    if (metadata.vpw) {
-        if (valid && role === 'edit') {
-            if (requestAcceptsMarkdown(request)) {
-                return createMarkdownResponse(
-                    buildMarkdownDocument(value, {
-                        title,
-                        note_path: path,
-                        edit_url: `${new URL(request.url).origin}/${path}`,
-                        share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
-                    }),
-                )
-            }
-
-            return returnPage('Edit', {
-                lang,
-                title,
-                content: value,
-                ext: { ...metadata, enableR2: getEnableR2() },
-                shareId,
-                path,
-            })
-        }
-
-        return returnPage('NeedPasswd', { lang, title })
-    }
-
     if (valid && role === 'edit') {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
@@ -1237,12 +1191,24 @@ router.get('/:path', async (request) => {
         })
     }
 
-    return returnPage('Edit', {
+    if (valid && role === 'view') {
+        return returnPage('Share', {
+            lang,
+            title,
+            content: value,
+            ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            shareId,
+            path,
+        })
+    }
+
+    if (metadata.vpw) return returnPage('NeedPasswd', { lang, title, path, ext: { authPath: `/${path}/auth` } })
+
+    return returnPage('Share', {
         lang,
         title,
         content: value,
         ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
-        showPwPrompt: true,
         shareId,
         path,
     })
@@ -1282,32 +1248,6 @@ router.head('/:path', async (request) => {
     const lang = getI18n(request)
     const { valid, role } = await checkAuth(cookie, path)
 
-    if (metadata.vpw) {
-        if (valid && role === 'edit') {
-            if (requestAcceptsMarkdown(request)) {
-                return createMarkdownResponse(
-                    buildMarkdownDocument(value, {
-                        title,
-                        note_path: path,
-                        edit_url: `${new URL(request.url).origin}/${path}`,
-                        share_url: shareId ? `${new URL(request.url).origin}/share/${shareId}` : '',
-                    }),
-                )
-            }
-
-            return returnPage('Edit', {
-                lang,
-                title,
-                content: value,
-                ext: { ...metadata, enableR2: getEnableR2() },
-                shareId,
-                path,
-            })
-        }
-
-        return returnPage('NeedPasswd', { lang, title })
-    }
-
     if (valid && role === 'edit') {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
@@ -1330,12 +1270,24 @@ router.head('/:path', async (request) => {
         })
     }
 
-    return returnPage('Edit', {
+    if (valid && role === 'view') {
+        return returnPage('Share', {
+            lang,
+            title,
+            content: value,
+            ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            shareId,
+            path,
+        })
+    }
+
+    if (metadata.vpw) return returnPage('NeedPasswd', { lang, title, path, ext: { authPath: `/${path}/auth` } })
+
+    return returnPage('Share', {
         lang,
         title,
         content: value,
         ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
-        showPwPrompt: true,
         shareId,
         path,
     })
@@ -1348,34 +1300,19 @@ router.post('/:path/auth', async request => {
 
         const { metadata } = await queryNote(path)
 
-        if (metadata.pw) {
-            // Check Edit Password
-            if (await passwordMatches(passwd, metadata.pw)) {
-                const token = await jwt.sign({ path, role: 'edit' }, getSecret())
-                return returnJSON(0, {
-                    refresh: true,
-                }, {
-                    'Set-Cookie': Cookies.serialize('auth', token, {
-                        path: `/${path}`,
-                        expires: dayjs().add(7, 'day').toDate(),
-                        httpOnly: true,
-                    })
+        const role = await getPasswordRole(passwd, metadata)
+        if (role) {
+            const token = await jwt.sign({ path, role }, getSecret())
+            return returnJSON(0, {
+                refresh: true,
+                role,
+            }, {
+                'Set-Cookie': Cookies.serialize('auth', token, {
+                    path: `/${path}`,
+                    expires: dayjs().add(7, 'day').toDate(),
+                    httpOnly: true,
                 })
-            }
-
-            // Check View Password
-            if (metadata.vpw && await passwordMatches(passwd, metadata.vpw)) {
-                const token = await jwt.sign({ path, role: 'view' }, getSecret())
-                return returnJSON(0, {
-                    refresh: true,
-                }, {
-                    'Set-Cookie': Cookies.serialize('auth', token, {
-                        path: `/${path}`,
-                        expires: dayjs().add(7, 'day').toDate(),
-                        httpOnly: true,
-                    })
-                })
-            }
+            })
         }
     }
 
@@ -1390,9 +1327,9 @@ router.post('/:path/pw', async request => {
             const { passwd, type } = await request.json()
 
             const { value, metadata } = await queryNote(path)
-            const { valid } = await checkAuth(cookie, path)
+            const { valid, role } = await checkAuth(cookie, path)
 
-            if (!metadata.pw || valid) {
+            if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
                 const pwField = type === 'view' ? 'vpw' : 'pw'
                 const pw = passwd ? await saltPw(passwd) : undefined
                 try {
@@ -1432,9 +1369,9 @@ router.post('/:path/setting', async request => {
             const { mode, share, theme, width, shareFont, previewDevice, splitDirection, publicIndex } = await request.json()
 
             const { value, metadata } = await queryNote(path)
-            const { valid } = await checkAuth(cookie, path)
+            const { valid, role } = await checkAuth(cookie, path)
 
-            if (!metadata.pw || valid) {
+            if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
                 try {
                     let nextMetadata = {
                         ...metadata,
@@ -1486,9 +1423,9 @@ router.post('/:path', async request => {
     const { value, metadata } = await queryNote(path)
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-    const { valid } = await checkAuth(cookie, path)
+    const { valid, role } = await checkAuth(cookie, path)
 
-    if (!metadata.pw || valid) {
+    if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
         // OK
     } else {
         return returnJSON(10002, 'Password auth failed! Try refreshing this page if you had just set a password.')
@@ -1522,9 +1459,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
 
     const { metadata } = await queryNote(path)
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-    const { valid } = await checkAuth(cookie, path)
+    const { valid, role } = await checkAuth(cookie, path)
 
-    if (metadata && metadata.pw && !valid) {
+    if (metadata && (metadata.pw || metadata.vpw) && (!valid || role !== 'edit')) {
         return returnJSON(10002, 'Password auth failed!', { status: 401 })
     }
 

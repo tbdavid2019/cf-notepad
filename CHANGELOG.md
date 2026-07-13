@@ -25,6 +25,11 @@
   - Shows a localized check animation and copied status after success.
 
 ### Fixed
+- **Password Lock Consistency**
+  - Fixed share-page authentication rejecting a correct Edit Lock when no View Lock was configured.
+  - Unified direct-note and share authentication for Edit Lock, View Lock, and both-lock combinations.
+  - Prevented view-only sessions from saving notes, changing settings, changing locks, or invoking AI editing endpoints.
+  - A View Lock without a separate Edit Lock now acts as the sole owner credential, so the note remains recoverable after enabling it.
 - **Toolbar Localization**
   - Inline code and other inserted placeholders now follow the current English or Traditional Chinese editor language instead of always using Chinese text.
 - **Inline Code Icon**
