@@ -2001,7 +2001,7 @@ ${getMarkdownCss()}
                 shareViewBody.classList.toggle('share-font-jetbrains', shareFont === 'jetbrains');
                 shareViewBody.classList.toggle('share-font-maple', shareFont === 'maple');
             }
-            setSegmentedActive(shareFontSelector, 'data-share-font', shareFont);
+            setRailSwitchState(shareFontSelector, shareFont === 'jetbrains');
         }
 
         const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
@@ -2057,13 +2057,13 @@ ${getMarkdownCss()}
         }
 
         if (shareFontSelector) {
-            shareFontSelector.querySelectorAll('[data-share-font]').forEach(button => {
-                button.addEventListener('click', function() {
-                    const shareFont = this.getAttribute('data-share-font') === 'maple' ? 'maple' : 'jetbrains';
-                    applyShareFont(shareFont);
-                    window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
-                    persistSetting({ shareFont }).catch(err => errHandle(err.message || err));
-                });
+            const shareFontSwitch = getRailSwitch(shareFontSelector)
+            if (shareFontSwitch) shareFontSwitch.addEventListener('click', function() {
+                const current = this.getAttribute('aria-pressed') === 'true' ? 'jetbrains' : 'maple';
+                const shareFont = current === 'jetbrains' ? 'maple' : 'jetbrains';
+                applyShareFont(shareFont);
+                window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
+                persistSetting({ shareFont }).catch(err => errHandle(err.message || err));
             });
         }
 
