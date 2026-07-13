@@ -3,7 +3,7 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
-import { ADMIN_PATH, ADMIN_PW, SLUG_LENGTH, getEnableR2, getR2Domain, getGaMeasurementId, getSecret } from './constant'
+import { SLUG_LENGTH, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getSecret } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
@@ -351,12 +351,13 @@ router.head('/', ({ url }) => {
     return Response.redirect(`${url}${newHash}`, 302)
 })
 
-router.get(ADMIN_PATH, async (request) => {
+const handleAdminGet = async (request) => {
     const lang = getI18n(request)
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const adminPassword = getAdminPassword()
 
     // Check if logged in
-    if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+    if (cookie.admin_session === adminPassword && adminPassword) {
         // Logged in, list notes
         try {
             const list = await getNotesNamespace().list()
@@ -389,17 +390,19 @@ router.get(ADMIN_PATH, async (request) => {
     }
 
     return returnPage('Admin', { lang })
-})
+}
 
-router.post(ADMIN_PATH, async (request) => {
+const handleAdminPost = async (request) => {
     const lang = getI18n(request)
+    const adminPath = getAdminPath()
+    const adminPassword = getAdminPassword()
     try {
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
 
         // Check if it's JSON request (batch delete)
         const contentType = request.headers.get('Content-Type') || '';
         if (contentType.includes('application/json')) {
-            if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+            if (cookie.admin_session === adminPassword && adminPassword) {
                 const body = await request.json();
                 const { action, paths } = body;
 
@@ -452,13 +455,13 @@ router.post(ADMIN_PATH, async (request) => {
         const action = formData.get('action')
 
         // Login Logic
-        if (password === ADMIN_PW && ADMIN_PW) {
+        if (password === adminPassword && adminPassword) {
             return new Response(null, {
                 status: 302,
                 headers: {
-                    'Location': ADMIN_PATH,
-                    'Set-Cookie': Cookies.serialize('admin_session', ADMIN_PW, {
-                        path: ADMIN_PATH,
+                    'Location': adminPath,
+                    'Set-Cookie': Cookies.serialize('admin_session', adminPassword, {
+                        path: adminPath,
                         expires: dayjs().add(1, 'day').toDate(),
                         httpOnly: true,
                         sameSite: 'Strict'
@@ -469,7 +472,7 @@ router.post(ADMIN_PATH, async (request) => {
 
         // Action Logic (Delete)
         // Check session for actions
-        if (cookie.admin_session === ADMIN_PW && ADMIN_PW) {
+        if (cookie.admin_session === adminPassword && adminPassword) {
             if (action === 'delete') {
                 const path = formData.get('path')
                 if (path) {
@@ -478,14 +481,14 @@ router.post(ADMIN_PATH, async (request) => {
                     await syncShareMappings(path, { share: false }, metadata || {})
                     await deleteNoteHistoryForPath(path)
                 }
-                return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
+                return Response.redirect(new URL(adminPath, request.url).href, 302)
             }
 
             // Handle delete-empty action
             if (action === 'delete-empty') {
                 const result = await deleteEmptyPages()
                 // Redirect back to admin page (the page will reload and show updated list)
-                return Response.redirect(new URL(ADMIN_PATH, request.url).href, 302)
+                return Response.redirect(new URL(adminPath, request.url).href, 302)
             }
         }
 
@@ -494,9 +497,9 @@ router.post(ADMIN_PATH, async (request) => {
         return returnPage('Admin', { lang, error: `Exception: ${e.message}` })
     }
 
-    const debugInfo = `Auth Failed. Cookie: ${cookie.admin_session ? 'Present' : 'Missing'}, Match: ${cookie.admin_session === ADMIN_PW}, Action: ${action || 'None'}`
+    const debugInfo = `Auth Failed. Cookie: ${cookie.admin_session ? 'Present' : 'Missing'}, Match: ${cookie.admin_session === adminPassword}, Action: ${action || 'None'}`
     return returnPage('Admin', { lang, error: `Operation Failed: ${debugInfo}` })
-})
+}
 
 router.post('/upload', async (request) => {
     if (!getEnableR2()) return returnJSON(403, 'R2 Upload Disabled')
@@ -1130,6 +1133,26 @@ router.post('/api/:path', async (request) => {
         console.error('API Error:', error)
         return returnJSON(500, `API Internal Error: ${error.message}${error.stack ? '\n' + error.stack : ''}`)
     }
+})
+
+// Cloudflare bindings are populated in fetch() after this module is loaded.
+// Resolve the configured admin path per request so SCN_ADMIN_PATH is not
+// frozen to the local fallback during module evaluation.
+router.all('*', async (request) => {
+    const adminPath = getAdminPath()
+    const requestPath = new URL(request.url).pathname
+
+    if (requestPath !== adminPath) return
+
+    if (request.method === 'GET' || request.method === 'HEAD') {
+        return handleAdminGet(request)
+    }
+
+    if (request.method === 'POST') {
+        return handleAdminPost(request)
+    }
+
+    return new Response('Method Not Allowed', { status: 405 })
 })
 
 router.get('/:path', async (request) => {

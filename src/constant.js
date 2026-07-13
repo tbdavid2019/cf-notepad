@@ -12,8 +12,13 @@ export const getSalt = () => readRuntimeVar('SCN_SALT')
 export const getSecret = () => readRuntimeVar('SCN_SECRET')
 
 // admin
-export const ADMIN_PATH = readRuntimeVar('SCN_ADMIN_PATH') || '/admin'
-export const ADMIN_PW = readRuntimeVar('SCN_ADMIN_PW')
+export const getAdminPath = () => readRuntimeVar('SCN_ADMIN_PATH') || '/admin'
+export const getAdminPassword = () => readRuntimeVar('SCN_ADMIN_PW')
+// Kept for compatibility with callers that import the old constants. Request
+// handlers should use the getters because Cloudflare bindings are available
+// after the Worker module has been evaluated.
+export const ADMIN_PATH = getAdminPath()
+export const ADMIN_PW = getAdminPassword()
 export const SLUG_LENGTH = parseInt(readRuntimeVar('SCN_SLUG_LENGTH') || '3')
 // Access R2 config at runtime instead of module load time
 export const getEnableR2 = () => readRuntimeVar('SCN_ENABLE_R2') === '1'

@@ -137,6 +137,8 @@ wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
 - `SCN_ENABLE_NOTE_HISTORY`: 設為 `"1"` 啟用 D1 版本紀錄
 - `SCN_GA_MEASUREMENT_ID`: GA 追蹤碼（選用）
 
+後台路徑與密碼會在每次 request 讀取 Cloudflare Worker bindings；修改 `SCN_ADMIN_PATH` 後重新部署，即可使用設定的路徑進入超級管理員後台。
+
 ### 5. 部署
 ```bash
 npm install
@@ -288,6 +290,8 @@ Set the following secrets in your Cloudflare dashboard or via `wrangler secret p
 - `SCN_SLUG_LENGTH`: Length of random share URLs (default is `3`).
 - `SCN_ENABLE_NOTE_HISTORY`: Set to `"1"` to enable the D1 history panel.
 - `SCN_GA_MEASUREMENT_ID`: Google Analytics tracking ID (Optional).
+
+The admin path and password are resolved from Cloudflare Worker bindings per request. After changing `SCN_ADMIN_PATH`, redeploy the Worker before opening the configured super-admin route.
 
 ### 5. Deploy
 ```bash

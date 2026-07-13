@@ -30,6 +30,9 @@
   - Unified direct-note and share authentication for Edit Lock, View Lock, and both-lock combinations.
   - Prevented view-only sessions from saving notes, changing settings, changing locks, or invoking AI editing endpoints.
   - A View Lock without a separate Edit Lock now acts as the sole owner credential, so the note remains recoverable after enabling it.
+- **Admin Route Runtime Configuration**
+  - Fixed `SCN_ADMIN_PATH` and `SCN_ADMIN_PW` being read before Cloudflare Worker bindings were available.
+  - The configured god-mode backend route, such as `/admin333`, is now resolved per request before the dynamic note route.
 - **Toolbar Localization**
   - Inline code and other inserted placeholders now follow the current English or Traditional Chinese editor language instead of always using Chinese text.
 - **Inline Code Icon**
