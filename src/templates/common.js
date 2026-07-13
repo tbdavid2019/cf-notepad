@@ -65,6 +65,15 @@ export const RAIL_SWITCH = ({ className = '', checked = false, checkedText, unch
 </button>
 `
 
+// Keep the legacy export available for callers outside the footer template.
+export const SWITCHER = (text, open, className = '') => `
+<label class="opt-switcher ${className}">
+  <input type="checkbox" ${open ? 'checked' : ''}>
+  <span class="slider round"></span>
+</label>
+<span class="footer-control-label">${text}</span>
+`
+
 export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath }) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true && isEdit
