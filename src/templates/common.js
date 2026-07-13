@@ -50,12 +50,19 @@ const THEME_OPTION_LABELS = {
     'x-ai': 'xAI 🌙 科技深黑',
 }
 
-export const SWITCHER = (text, open, className = '') => `
-<label class="opt-switcher ${className}">
-  <input type="checkbox" ${open ? 'checked' : ''}>
-  <span class="slider round"></span>
-</label>
-<span class="footer-control-label">${text}</span>
+export const RAIL_SWITCH = ({ className = '', checked = false, checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue }) => `
+<button
+  type="button"
+  class="footer-rail-switch ${className} ${checked ? 'is-checked' : ''}"
+  aria-label="${ariaLabel}"
+  aria-pressed="${checked ? 'true' : 'false'}"
+  ${checkedValue ? `data-rail-checked-value="${checkedValue}"` : ''}
+  ${uncheckedValue ? `data-rail-unchecked-value="${uncheckedValue}"` : ''}
+>
+  <span class="footer-rail-text footer-rail-text-checked">${checkedText}</span>
+  <span class="footer-rail-text footer-rail-text-unchecked">${uncheckedText}</span>
+  <span class="footer-rail-thumb" aria-hidden="true"></span>
+</button>
 `
 
 export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath }) => {
@@ -77,9 +84,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     ${isEdit ? `
                         <div class="footer-control-group">
                             <div class="dropdown-container share-dropdown share-state-toggle">
-                                <button type="button" class="opt-switcher share-state-switcher opt-share ${share ? 'share-published' : ''}" title="${t.shareLinkTitle}" aria-label="${t.shareLinkTitle}">
-                                    <span class="slider round"></span>
-                                </button>
+                                ${RAIL_SWITCH({
+                                    className: `share-state-switcher opt-share ${share ? 'share-published' : ''}`,
+                                    checked: share,
+                                    checkedText: lang === 'zh-TW' ? '已發布' : 'Published',
+                                    uncheckedText: lang === 'zh-TW' ? '待發布' : 'Pending',
+                                    ariaLabel: t.shareLinkTitle,
+                                })}
                                 <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
                                     ${SVG_ICONS.more}
                                 </button>
@@ -110,7 +121,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     `}
                                 </div>
                             </div>
-                            <span class="footer-control-label share-state-label ${share ? 'share-published' : ''}" id="share-state-text">${share ? (lang === 'zh-TW' ? '已發佈' : 'Published') : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')}</span>
                         </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
@@ -160,7 +170,15 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '分享' : 'Shares'}</span>
                         </button>
                         <div class="footer-preview-group footer-control-group">
-                            ${SWITCHER(t.preview, mode === 'md', 'opt-mode')}
+                            ${RAIL_SWITCH({
+                                className: 'opt-mode',
+                                checked: mode === 'md',
+                                checkedText: lang === 'zh-TW' ? '開預覽' : 'Preview On',
+                                uncheckedText: lang === 'zh-TW' ? '關預覽' : 'Preview Off',
+                                ariaLabel: t.preview,
+                                checkedValue: 'md',
+                                uncheckedValue: 'plain',
+                            })}
                         </div>
                     ` : (path ? `
                         ${authPath
@@ -195,24 +213,43 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                     ` : ''}
                     <div class="footer-control-group">
-                        <div id="language-selector" class="segmented-toggle" role="group" aria-label="${t.language}">
-                            <button type="button" class="segmented-toggle-btn ${lang === 'zh-TW' ? 'active' : ''}" data-lang="zh-TW" aria-pressed="${lang === 'zh-TW' ? 'true' : 'false'}">Zh</button>
-                            <button type="button" class="segmented-toggle-btn ${lang === 'en-US' ? 'active' : ''}" data-lang="en-US" aria-pressed="${lang === 'en-US' ? 'true' : 'false'}">En</button>
+                        <div id="language-selector">
+                            ${RAIL_SWITCH({
+                                checked: lang === 'zh-TW',
+                                checkedText: '中',
+                                uncheckedText: 'En',
+                                ariaLabel: t.language,
+                                checkedValue: 'zh-TW',
+                                uncheckedValue: 'en-US',
+                            })}
                         </div>
                         <span class="footer-control-label">Lang</span>
                     </div>
                     ${isEdit && mode === 'md' ? `
                         <div class="footer-control-group desktop-split-control">
-                            <div id="split-direction-selector" class="segmented-toggle" role="group" aria-label="${lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout'}">
-                                <button type="button" class="segmented-toggle-btn active" data-split-direction="horizontal" aria-pressed="true">${lang === 'zh-TW' ? '左右' : 'Side'}</button>
-                                <button type="button" class="segmented-toggle-btn" data-split-direction="vertical" aria-pressed="false">${lang === 'zh-TW' ? '上下' : 'Stack'}</button>
+                            <div id="split-direction-selector">
+                                ${RAIL_SWITCH({
+                                    checked: true,
+                                    checkedText: lang === 'zh-TW' ? '左右' : 'Side',
+                                    uncheckedText: lang === 'zh-TW' ? '上下' : 'Stack',
+                                    ariaLabel: lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout',
+                                    checkedValue: 'horizontal',
+                                    uncheckedValue: 'vertical',
+                                })}
                             </div>
                             <span class="footer-control-label">Layout</span>
                         </div>
                         <div class="footer-control-group">
-                            <div id="preview-device-selector" class="segmented-toggle preview-device-toggle" role="group" aria-label="${t.previewDevice}">
-                                <button type="button" class="segmented-toggle-btn active" data-preview-device="desktop" aria-pressed="true">${t.desktop}</button>
-                                <button type="button" class="segmented-toggle-btn" data-preview-device="mobile" aria-pressed="false">${t.mobile}</button>
+                            <div id="preview-device-selector">
+                                ${RAIL_SWITCH({
+                                    className: 'preview-device-toggle',
+                                    checked: true,
+                                    checkedText: t.desktop,
+                                    uncheckedText: t.mobile,
+                                    ariaLabel: t.previewDevice,
+                                    checkedValue: 'desktop',
+                                    uncheckedValue: 'mobile',
+                                })}
                             </div>
                             <span class="footer-control-label">Device</span>
                         </div>

@@ -31,15 +31,27 @@ test('published footer exposes public index control and removes published label 
 })
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
-    assert.match(commonTemplateSource, /share-state-switcher opt-share/)
-    assert.match(commonTemplateSource, /<\/div>\s*<span class="footer-control-label share-state-label/)
+    assert.match(commonTemplateSource, /className: `share-state-switcher opt-share/)
+    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '已發布' : 'Published'/)
+    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '待發布' : 'Pending'/)
     assert.match(commonTemplateSource, /id="share-menu-btn"/)
     assert.match(commonTemplateSource, /share-publish-menu-btn/)
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
     assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
     assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', publishCurrentNote\)/)
-    assert.doesNotMatch(baseCssSource, /\.share-state-switcher \.slider \{\s*position:/)
-    assert.match(baseCssSource, /\.share-state-switcher\.share-published \.slider \{\s*background: var\(--toolbar-success\)/)
+    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-success\)/)
+})
+
+test('footer uses native-style rails for the requested two-state controls', () => {
+    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '開預覽' : 'Preview On'/)
+    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '關預覽' : 'Preview Off'/)
+    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '左右' : 'Side'/)
+    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '上下' : 'Stack'/)
+    assert.match(commonTemplateSource, /checkedText: '中'/)
+    assert.match(commonTemplateSource, /checkedText: t\.desktop/)
+    assert.match(baseTemplateSource, /const \$modeBtn = document\.querySelector\('\.opt-mode'\)/)
+    assert.match(baseTemplateSource, /function setRailSwitchState\(selector, checked\)/)
+    assert.match(baseCssSource, /\.toolbar-button-label \{\s*font-size: 10px;/)
 })
 
 test('share modal prompts for public index approval after publish', () => {

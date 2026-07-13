@@ -1172,7 +1172,7 @@ ${getMarkdownCss()}
     window.addEventListener('DOMContentLoaded', function () {
         const $textarea = document.querySelector('#contents')
         const $loading = document.querySelector('#loading')
-        const $modeBtn = document.querySelector('.opt-mode > input')
+        const $modeBtn = document.querySelector('.opt-mode')
         const $shareBtn = document.querySelector('.opt-share')
         const $previewPlain = document.querySelector('#preview-plain')
         const $previewMd = document.querySelector('#preview-md')
@@ -1464,15 +1464,11 @@ ${getMarkdownCss()}
 
         function syncShareStateUI() {
             const switcher = document.querySelector('.share-state-switcher')
-            const label = document.querySelector('.share-state-label')
-            if (!switcher || !label) return
+            if (!switcher) return
             const isPublished = APP_STATE.isPublished
-            const lang = APP_STATE.lang
+            switcher.classList.toggle('is-checked', isPublished)
             switcher.classList.toggle('share-published', isPublished)
-            label.classList.toggle('share-published', isPublished)
-            label.textContent = isPublished
-                ? (lang === 'zh-TW' ? '已發佈' : 'Published')
-                : (lang === 'zh-TW' ? '未發佈' : 'Unpublished')
+            switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
         }
 
         const publishCurrentNote = () => {
@@ -1483,12 +1479,18 @@ ${getMarkdownCss()}
             })
                 .then(res => {
                     if (res.err !== 0) {
-                        if ($shareBtn) $shareBtn.checked = false;
+                        if ($shareBtn) {
+                            $shareBtn.classList.remove('is-checked')
+                            $shareBtn.setAttribute('aria-pressed', 'false')
+                        }
                         errHandle(res.msg);
                         return false;
                     }
                     APP_STATE.isPublished = true;
-                    if ($shareBtn) $shareBtn.checked = true;
+                    if ($shareBtn) {
+                        $shareBtn.classList.add('is-checked')
+                        $shareBtn.setAttribute('aria-pressed', 'true')
+                    }
                     syncShareStateUI();
                     recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
                     syncPublicIndexButton();
@@ -1496,7 +1498,10 @@ ${getMarkdownCss()}
                     return true;
                 })
                 .catch(err => {
-                    if ($shareBtn) $shareBtn.checked = false;
+                    if ($shareBtn) {
+                        $shareBtn.classList.remove('is-checked')
+                        $shareBtn.setAttribute('aria-pressed', 'false')
+                    }
                     errHandle(err);
                     return false;
                 })
@@ -1514,12 +1519,14 @@ ${getMarkdownCss()}
         }
 
         if ($languageSelector) {
-            $languageSelector.querySelectorAll('[data-lang]').forEach(button => {
-                button.addEventListener('click', function() {
-                    const nextLang = this.getAttribute('data-lang') === 'zh-TW' ? 'zh-TW' : 'en-US';
-                    if (nextLang !== APP_STATE.lang) setLanguage(nextLang);
-                });
-            });
+            const languageSwitch = $languageSelector.querySelector('.footer-rail-switch')
+            if (languageSwitch) languageSwitch.addEventListener('click', function() {
+                const checked = this.getAttribute('aria-pressed') === 'true'
+                const nextLang = checked
+                    ? this.getAttribute('data-rail-unchecked-value')
+                    : this.getAttribute('data-rail-checked-value')
+                if (nextLang && nextLang !== APP_STATE.lang) setLanguage(nextLang)
+            })
         }
 
         if ($publishNudgePublish) {
@@ -1666,9 +1673,24 @@ ${getMarkdownCss()}
 
         if ($modeBtn) {
             $modeBtn.onclick = function (e) {
-                const isMd = e.target.checked
+                const previousIsMd = this.getAttribute('aria-pressed') === 'true'
+                const isMd = !previousIsMd
+                this.classList.toggle('is-checked', isMd)
+                this.setAttribute('aria-pressed', isMd ? 'true' : 'false')
                 fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: isMd ? 'md' : 'plain' }) })
-                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } window.location.reload() }).catch(err => errHandle(err))
+                    .then(res => {
+                        if (res.err !== 0) {
+                            this.classList.toggle('is-checked', previousIsMd)
+                            this.setAttribute('aria-pressed', previousIsMd ? 'true' : 'false')
+                            return errHandle(res.msg)
+                        }
+                        window.location.reload()
+                    })
+                    .catch(err => {
+                        this.classList.toggle('is-checked', previousIsMd)
+                        this.setAttribute('aria-pressed', previousIsMd ? 'true' : 'false')
+                        errHandle(err)
+                    })
             }
         }
 
@@ -1938,6 +1960,18 @@ ${getMarkdownCss()}
             });
         }
 
+        function getRailSwitch(selector) {
+            if (!selector) return null;
+            return selector.matches('.footer-rail-switch') ? selector : selector.querySelector('.footer-rail-switch');
+        }
+
+        function setRailSwitchState(selector, checked) {
+            const switcher = getRailSwitch(selector);
+            if (!switcher) return;
+            switcher.classList.toggle('is-checked', checked === true);
+            switcher.setAttribute('aria-pressed', checked === true ? 'true' : 'false');
+        }
+
         function applyPreviewDevice(value) {
             const device = value === 'mobile' ? 'mobile' : 'desktop';
             if (typeof window.resetEditorSplitPane === 'function') {
@@ -1945,7 +1979,7 @@ ${getMarkdownCss()}
             }
             document.body.classList.toggle('preview-device-mobile', device === 'mobile');
             document.body.classList.toggle('preview-device-desktop', device === 'desktop');
-            setSegmentedActive(previewDeviceSelector, 'data-preview-device', device);
+            setRailSwitchState(previewDeviceSelector, device === 'desktop');
             if (previewWidthSelector) {
                 previewWidthSelector.disabled = device === 'mobile';
             }
@@ -1958,7 +1992,7 @@ ${getMarkdownCss()}
             }
             document.body.classList.toggle('preview-split-vertical', direction === 'vertical');
             document.body.classList.toggle('preview-split-horizontal', direction === 'horizontal');
-            setSegmentedActive(splitDirectionSelector, 'data-split-direction', direction);
+            setRailSwitchState(splitDirectionSelector, direction === 'horizontal');
         }
 
         function applyShareFont(value) {
@@ -1978,25 +2012,25 @@ ${getMarkdownCss()}
             const savedPreviewDevice = window.localStorage.getItem(PREVIEW_DEVICE_STORAGE_KEY);
             const initialPreviewDevice = APP_STATE.noteSettings.previewDevice || savedPreviewDevice || 'desktop';
             applyPreviewDevice(initialPreviewDevice);
-            previewDeviceSelector.querySelectorAll('[data-preview-device]').forEach(button => {
-                button.addEventListener('click', function() {
-                    const device = this.getAttribute('data-preview-device') === 'mobile' ? 'mobile' : 'desktop';
-                    applyPreviewDevice(device);
-                    window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
-                    persistSetting({ previewDevice: device }).catch(err => errHandle(err.message || err));
-                });
+            const previewDeviceSwitch = getRailSwitch(previewDeviceSelector)
+            if (previewDeviceSwitch) previewDeviceSwitch.addEventListener('click', function() {
+                const current = this.getAttribute('aria-pressed') === 'true' ? 'desktop' : 'mobile';
+                const device = current === 'desktop' ? 'mobile' : 'desktop';
+                applyPreviewDevice(device);
+                window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
+                persistSetting({ previewDevice: device }).catch(err => errHandle(err.message || err));
             });
         }
 
         if (splitDirectionSelector) {
             const initialSplitDirection = APP_STATE.noteSettings.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
             applySplitDirection(initialSplitDirection);
-            splitDirectionSelector.querySelectorAll('[data-split-direction]').forEach(button => {
-                button.addEventListener('click', function() {
-                    const direction = this.getAttribute('data-split-direction') === 'vertical' ? 'vertical' : 'horizontal';
-                    applySplitDirection(direction);
-                    persistSetting({ splitDirection: direction }).catch(err => errHandle(err.message || err));
-                });
+            const splitDirectionSwitch = getRailSwitch(splitDirectionSelector)
+            if (splitDirectionSwitch) splitDirectionSwitch.addEventListener('click', function() {
+                const current = this.getAttribute('aria-pressed') === 'true' ? 'horizontal' : 'vertical';
+                const direction = current === 'horizontal' ? 'vertical' : 'horizontal';
+                applySplitDirection(direction);
+                persistSetting({ splitDirection: direction }).catch(err => errHandle(err.message || err));
             });
         }
 
@@ -2019,7 +2053,7 @@ ${getMarkdownCss()}
         }
 
         if (languageSelector) {
-            setSegmentedActive(languageSelector, 'data-lang', APP_STATE.lang);
+            setRailSwitchState(languageSelector, APP_STATE.lang === 'zh-TW');
         }
 
         if (shareFontSelector) {

@@ -369,20 +369,8 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     padding: 0;
 }
 .share-state-switcher {
+    --rail-checked-bg: var(--toolbar-success);
     flex-shrink: 0;
-}
-.share-state-switcher.share-published .slider {
-    background: var(--toolbar-success);
-}
-.share-state-switcher.share-published .slider::before {
-    transform: translateX(16px);
-}
-.share-state-label {
-    white-space: nowrap;
-    color: #6c6a64;
-}
-.share-state-label.share-published {
-    color: #2da44e;
 }
 .share-menu-small {
     padding: 2px 4px;
@@ -633,11 +621,101 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     gap: 1px;
 }
 .footer-control-label {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--toolbar-muted, #6c6a64);
     line-height: 1;
     pointer-events: none;
+}
+
+/* Compact two-state controls inspired by native switch rails. */
+.footer-rail-switch {
+    --rail-checked-bg: var(--toolbar-accent);
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    width: 64px;
+    height: var(--toolbar-height);
+    padding: 0;
+    border: 1px solid var(--toolbar-border);
+    border-radius: 999px;
+    background: #d8dee4;
+    color: #5c5a54;
+    cursor: pointer;
+    overflow: hidden;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+}
+.footer-rail-switch:hover {
+    border-color: var(--toolbar-accent);
+}
+.footer-rail-switch:focus-visible {
+    outline: 2px solid var(--toolbar-accent);
+    outline-offset: 2px;
+}
+.footer-rail-switch.is-checked {
+    background: var(--rail-checked-bg);
+    color: #fff;
+}
+.footer-rail-text {
+    position: absolute;
+    top: 0;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    height: 100%;
+    padding: 0 7px;
+    font-size: 10px;
+    font-weight: 700;
+    line-height: 1;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.12s ease;
+}
+.footer-rail-text-checked {
+    left: 0;
+    opacity: 0;
+}
+.footer-rail-text-unchecked {
+    right: 0;
+    opacity: 1;
+}
+.footer-rail-switch.is-checked .footer-rail-text-checked {
+    opacity: 1;
+}
+.footer-rail-switch.is-checked .footer-rail-text-unchecked {
+    opacity: 0;
+}
+.footer-rail-thumb {
+    position: absolute;
+    left: 3px;
+    z-index: 2;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(31, 35, 40, 0.28);
+    transition: transform 0.16s ease;
+}
+.footer-rail-switch.is-checked .footer-rail-thumb {
+    transform: translateX(36px);
+}
+#language-selector .footer-rail-switch {
+    width: 48px;
+}
+#language-selector .footer-rail-switch.is-checked .footer-rail-thumb {
+    transform: translateX(20px);
+}
+#split-direction-selector .footer-rail-switch {
+    width: 58px;
+}
+#split-direction-selector .footer-rail-switch.is-checked .footer-rail-thumb {
+    transform: translateX(30px);
+}
+.preview-device-toggle {
+    width: 70px;
+}
+.preview-device-toggle.is-checked .footer-rail-thumb {
+    transform: translateX(42px);
 }
 .footer-select:hover {
     background-color: var(--toolbar-bg-hover);
@@ -751,7 +829,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     box-sizing: border-box;
 }
 .toolbar-button-label {
-    font-size: 9px;
+    font-size: 10px;
     font-weight: 600;
     color: var(--toolbar-muted, #6c6a64);
     line-height: 1;
@@ -1581,7 +1659,7 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     }
     .toolbar-button-label {
         display: block !important;
-        font-size: 9px !important;
+        font-size: 10px !important;
         margin-top: 1px !important;
     }
     .toolbar-icon-button {
