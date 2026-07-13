@@ -76,3 +76,23 @@ The Footer SHALL provide a Copy control beside Markdown export that writes both 
 - **WHEN** the user activates Copy
 - **THEN** the current note is written to the clipboard as rich HTML with Markdown/plain-text fallback
 - **AND** the Copy control briefly shows a check animation and a localized copied status
+
+### Requirement: Switch editor views with keyboard shortcuts
+The editable note SHALL support keyboard shortcuts for the three primary editor views.
+
+#### Scenario: Select a view layout
+- **WHEN** an editor presses `Meta-Alt-7` or `Ctrl-Alt-7`
+- **THEN** the editor switches to Markdown plus side-by-side preview
+- **WHEN** an editor presses `Meta-Alt-8` or `Ctrl-Alt-8`
+- **THEN** the editor switches to pure Markdown
+- **WHEN** an editor presses `Meta-Alt-9` or `Ctrl-Alt-9`
+- **THEN** the editor switches to Markdown plus stacked preview
+
+### Requirement: Show a localized startup tip
+The empty editable note SHALL display one randomly selected localized tip below the Stray Birds placeholder.
+
+#### Scenario: Open an empty editor
+- **WHEN** an editor opens an empty note
+- **THEN** the page loads one tip from the versioned tips JSON data
+- **AND** the tip uses the current Traditional Chinese or English interface language
+- **AND** the poem and tip appear through one synchronized typewriter animation

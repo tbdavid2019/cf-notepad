@@ -14,6 +14,11 @@
 - **ECharts Code Blocks**
   - Added support for fenced `echarts` blocks containing JSON chart options.
   - Charts load ECharts on demand, resize with the editor layout, expose an accessible label, and dispose old instances before re-rendering.
+- **Editor View Shortcuts**
+  - Added `⌘-⌥-7` / `Ctrl-Alt-7` for side-by-side WYSIWYG, `⌘-⌥-8` / `Ctrl-Alt-8` for pure Markdown, and `⌘-⌥-9` / `Ctrl-Alt-9` for stacked WYSIWYG.
+- **Localized Startup Tips**
+  - Added `static/data/editor-tips.json` as the bilingual source of editor usage tips.
+  - The editor now chooses one tip at random on each load and types it below the Stray Birds placeholder in the same animation.
 - **Footer Copy**
   - Added Copy beside Markdown Export in the Footer.
   - Copies rich HTML plus Markdown/plain-text fallback for Notion, Jira, and similar editors.
@@ -38,6 +43,9 @@
   - Added a tooltip for the selected theme so the full description remains discoverable without widening the footer.
 - **Lock Labels**
   - Changed the English lock labels to `Edit` and `View`, with `Edit lock` and `View lock` tooltips for clarity.
+
+### Documentation
+- Future user-facing changes must update `README.md`, `CHANGELOG.md`, and `static/data/editor-tips.json` when a startup tip is appropriate.
 
 ## [2026-07-12]
 ### Fixed

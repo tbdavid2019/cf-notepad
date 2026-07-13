@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "tips": [
+    {
+      "id": "view-shortcuts",
+      "zh-TW": "小訣竅：⌘-⌥-7 左右預覽、⌘-⌥-8 純 Markdown、⌘-⌥-9 上下預覽。Windows / Linux 請使用 Ctrl-Alt。",
+      "en-US": "Tip: ⌘-⌥-7 uses side-by-side preview, ⌘-⌥-8 uses pure Markdown, and ⌘-⌥-9 stacks the preview. Use Ctrl-Alt on Windows / Linux."
+    },
+    {
+      "id": "toolbar-selection",
+      "zh-TW": "小訣竅：先選取文字，再按粗體、斜體、連結或行內程式碼，工具列會直接套用 Markdown 語法。",
+      "en-US": "Tip: Select text first, then choose Bold, Italic, Link, or Inline code to apply Markdown syntax directly."
+    },
+    {
+      "id": "image-upload",
+      "zh-TW": "小訣竅：按工具列的圖片按鈕可以上傳圖片；啟用 R2 時會自動產生可用的 Markdown 圖片連結。",
+      "en-US": "Tip: Use the image button to upload a picture. With R2 enabled, the editor inserts a ready-to-use Markdown image URL."
+    },
+    {
+      "id": "echarts",
+      "zh-TW": "小訣竅：使用 ```echarts 程式碼區塊放入 JSON 圖表設定，就能在預覽區繪製互動式 ECharts。",
+      "en-US": "Tip: Put JSON chart options inside an ```echarts code fence to render an interactive ECharts chart in preview."
+    },
+    {
+      "id": "undo-redo",
+      "zh-TW": "小訣竅：工具列的復原 / 重做會記住打字、Markdown 指令、圖片插入與貼上內容。",
+      "en-US": "Tip: Toolbar Undo / Redo tracks typing, Markdown commands, image insertion, and pasted content."
+    },
+    {
+      "id": "ai-format",
+      "zh-TW": "小訣竅：需要整理長文時，可以按上方的 ✦ AI 排版，讓內容保留原意並改善 Markdown 結構。",
+      "en-US": "Tip: For a rough draft, choose ✦ AI Format to improve the Markdown structure while preserving the meaning."
+    },
+    {
+      "id": "copy-rich-content",
+      "zh-TW": "小訣竅：Footer 的複製會優先保留格式化 HTML，同時提供 Markdown / 純文字 fallback，貼到 Notion 或 Jira 也方便。",
+      "en-US": "Tip: Footer Copy prefers formatted HTML and includes a Markdown / plain-text fallback, making pasting into Notion or Jira convenient."
+    },
+    {
+      "id": "layout-controls",
+      "zh-TW": "小訣竅：Footer 的預覽、排列與裝置已集中在同一組，可以快速切換左右、上下與桌面 / 行動預覽。",
+      "en-US": "Tip: Footer Preview, Layout, and Device controls are grouped together for quick side-by-side, stacked, desktop, or mobile previews."
+    },
+    {
+      "id": "fullscreen",
+      "zh-TW": "小訣竅：工具列的全螢幕按鈕適合專心寫作；再按一次即可回到一般編輯畫面。",
+      "en-US": "Tip: Use the toolbar Fullscreen button for focused writing, then choose it again to return to the normal editor."
+    }
+  ]
+}

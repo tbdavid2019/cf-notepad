@@ -1236,50 +1236,60 @@ ${getMarkdownCss()}
         triggerRender($previewMd, $textarea ? $textarea.value : '')
         setupShareBackToTop($previewMd || $previewPlain)
 
-        // Fetch a random Tagore poem to display in the empty placeholder
-        if (\$textarea) {
-            fetch('https://answerbook.david888.com/StrayBirds')
+        // Fetch a random Tagore poem and a random localized editor tip. They
+        // share one timer so both lines appear together in the welcome text.
+        if (APP_STATE.isEdit && \$textarea) {
+            const poemPromise = fetch('https://answerbook.david888.com/StrayBirds')
                 .then(res => res.json())
-                .then(data => {
-                    if (data && data.poem) {
-                        const originalPlaceholder = \$textarea.placeholder || '';
-                        const title = data.poem.title || 'Stray Birds';
-                        const english = data.poem.english || '';
-                        const chinese = data.poem.chinese || '';
-                        
-                        const isZh = APP_STATE.lang === 'zh-TW';
-                        const displayTitle = isZh ? title : ('Stray Birds - No. ' + (data.poem.num || ''));
-                        const poemBody = isZh ? chinese : english;
-                        const poemText = '\\n\\n📖 ' + displayTitle + '\\n' + poemBody;
-                        
-                        // Typing effect for the poem part
-                        let currentIdx = 0;
-                        let typingTimer = setInterval(() => {
-                            if (\$textarea.value || document.activeElement === \$textarea) {
-                                clearInterval(typingTimer);
-                                \$textarea.placeholder = originalPlaceholder + poemText;
-                                return;
-                            }
-                            
-                            if (currentIdx < poemText.length) {
-                                \$textarea.placeholder = originalPlaceholder + poemText.slice(0, currentIdx + 1);
-                                currentIdx++;
-                            } else {
-                                clearInterval(typingTimer);
-                            }
-                        }, 40);
-                        
-                        \$textarea.addEventListener('focus', () => {
-                            if (typingTimer) {
-                                clearInterval(typingTimer);
-                                \$textarea.placeholder = originalPlaceholder + poemText;
-                            }
-                        }, { once: true });
-                    }
-                })
                 .catch(err => {
                     console.error('Failed to fetch StrayBirds poem:', err);
+                    return null;
                 });
+            const tipsPromise = fetch('/data/editor-tips.json')
+                .then(res => res.json())
+                .catch(err => {
+                    console.error('Failed to fetch editor tips:', err);
+                    return null;
+                });
+
+            Promise.all([poemPromise, tipsPromise]).then(([poemData, tipsData]) => {
+                const poem = poemData && poemData.poem;
+                const tips = tipsData && Array.isArray(tipsData.tips) ? tipsData.tips : [];
+                const randomTip = tips.length ? tips[Math.floor(Math.random() * tips.length)] : null;
+                if (!poem && !randomTip) return;
+
+                const originalPlaceholder = \$textarea.placeholder || '';
+                const isZh = APP_STATE.lang === 'zh-TW';
+                const poemText = poem
+                    ? '\\n\\n📖 ' + (isZh ? (poem.title || 'Stray Birds') : ('Stray Birds - No. ' + (poem.num || ''))) + '\\n' + (isZh ? (poem.chinese || '') : (poem.english || ''))
+                    : '';
+                const tipText = randomTip
+                    ? '\\n\\n💡 ' + (isZh ? randomTip['zh-TW'] : randomTip['en-US'])
+                    : '';
+                const welcomeText = poemText + tipText;
+                let currentIdx = 0;
+                let typingTimer = setInterval(() => {
+                    if (\$textarea.value || document.activeElement === \$textarea) {
+                        clearInterval(typingTimer);
+                        \$textarea.placeholder = originalPlaceholder + welcomeText;
+                        return;
+                    }
+
+                    if (currentIdx < welcomeText.length) {
+                        \$textarea.placeholder = originalPlaceholder + welcomeText.slice(0, currentIdx + 1);
+                        currentIdx++;
+                    } else {
+                        clearInterval(typingTimer);
+                    }
+                }, 40);
+
+                \$textarea.addEventListener('focus', () => {
+                    if (typingTimer) {
+                        clearInterval(typingTimer);
+                        \$textarea.placeholder = originalPlaceholder + welcomeText;
+                    }
+                }, { once: true });
+            });
         }
 
         const getCurrentMarkdownForExport = () => {
@@ -2002,6 +2012,7 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit && (ext.mode || 'md') === 'md' ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};
@@ -2108,6 +2119,39 @@ ${getMarkdownCss()}
                 persistSetting({ splitDirection: direction }).catch(err => errHandle(err.message || err));
             });
         }
+
+        const setupEditorViewShortcuts = () => {
+            if (!APP_STATE.isEdit || typeof window.getEditorViewShortcut !== 'function' || !$modeBtn) return;
+            const modeSwitch = getRailSwitch($modeBtn);
+            if (!modeSwitch) return;
+
+            document.addEventListener('keydown', async event => {
+                const action = window.getEditorViewShortcut(event);
+                if (!action) return;
+                event.preventDefault();
+
+                const currentMode = modeSwitch.getAttribute('aria-pressed') === 'true' ? 'md' : 'plain';
+                if (action.mode === 'plain') {
+                    if (currentMode === 'md') modeSwitch.click();
+                    return;
+                }
+
+                const splitDirection = action.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
+                try {
+                    await persistSetting({ previewDevice: 'desktop', splitDirection });
+                    if (currentMode === 'md') {
+                        applyPreviewDevice('desktop');
+                        applySplitDirection(splitDirection);
+                    } else {
+                        modeSwitch.click();
+                    }
+                } catch (error) {
+                    errHandle(error.message || error);
+                }
+            });
+        };
+
+        setupEditorViewShortcuts();
 
         if (shareViewBody.classList.contains('share-view') || shareFontSelector) {
             const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
