@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant'
 import { THEMES } from '../theme_data'
-import { FOOTER, MODAL } from './common'
+import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -185,7 +185,10 @@ ${getMarkdownCss()}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                          <article style="display:none;" id="bot-accessible-content">${content}</article>
-                        <textarea id="contents" class="contents ${isEdit ? '' : 'hide'}" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                        ${isEdit ? `<div class="editor-pane">
+                            ${(ext.mode || 'md') === 'md' ? EDITOR_TOOLBAR(lang) : ''}
+                            <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                        </div>` : '<textarea id="contents" class="contents hide" spellcheck="false">' + content + '</textarea>'}
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
                             isEdit
@@ -263,9 +266,10 @@ ${getMarkdownCss()}
                     else if (lang === 'flow') type = 'flow';
                     else if (lang === 'graphviz') type = 'graphviz';
                     else if (lang === 'abc') type = 'abc';
+                    else if (lang === 'echarts') type = 'echarts';
                     
                     if (type) {
-                        const safeValue = node.value.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        const safeValue = node.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         parent.children[index] = {
                             type: 'html',
                             value: \`<div class="diagram-\${type}-container diagram-source" style="display:none">\${safeValue}</div><div class="diagram-\${type}-render"></div>\`
@@ -467,6 +471,32 @@ ${getMarkdownCss()}
                      });
                  } catch(e) { console.error('ABC load failed', e); }
             }
+
+            const echartsNodes = document.querySelectorAll('.diagram-echarts-render');
+            if (echartsNodes.length > 0) {
+                const showEchartsError = (node, error) => {
+                    node.textContent = 'ECharts Render Error: ' + (error?.message || error || 'Unknown error');
+                    node.classList.add('diagram-render-error');
+                };
+                try {
+                    await loadScript('https://cdn.jsdelivr.net/npm/echarts@6.1.0/dist/echarts.min.js');
+                    const { renderEchartsChart } = await import('/js/echarts-renderer.mjs');
+                    document.querySelectorAll('.diagram-echarts-render').forEach(el => {
+                        if (el.hasAttribute('data-processed') || !el.isConnected) return;
+                        const source = el.previousElementSibling?.textContent || '';
+                        try {
+                            renderEchartsChart(el, source, window.echarts);
+                            el.setAttribute('data-processed', 'true');
+                        } catch (error) {
+                            console.error('ECharts render error', error);
+                            showEchartsError(el, error);
+                        }
+                    });
+                } catch (error) {
+                    console.error('ECharts load failed', error);
+                    document.querySelectorAll('.diagram-echarts-render').forEach(el => showEchartsError(el, error));
+                }
+            }
         }
 
         window.renderMarkdown = async (node, text) => {
@@ -479,6 +509,7 @@ ${getMarkdownCss()}
                     WHOLE_DOCUMENT: false,
                     FORCE_BODY: true
                 });
+                window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
                 decorateHeadingAnchors(node);
                 initDiagrams();
@@ -1288,7 +1319,9 @@ ${getMarkdownCss()}
         }
 
         const $aiFormatBtn = document.querySelector('#ai-format-btn')
+        const $editorAiFormatBtn = document.querySelector('#editor-ai-format-btn')
         const $aiEditBtn = document.querySelector('#ai-edit-btn')
+        const $aiFormatButtons = [$aiFormatBtn, $editorAiFormatBtn].filter(Boolean)
 
         const runAiAssistant = async mode => {
             if (!$textarea) return;
@@ -1324,7 +1357,7 @@ ${getMarkdownCss()}
             const loadingMsg = APP_STATE.lang === 'zh-TW' ? 'AI 正在處理中，請稍候...' : 'AI processing, please wait...'
             window.showToast(loadingMsg)
 
-            if ($aiFormatBtn) $aiFormatBtn.disabled = true
+            $aiFormatButtons.forEach(button => { button.disabled = true })
             if ($aiEditBtn) $aiEditBtn.disabled = true
 
             try {
@@ -1357,13 +1390,16 @@ ${getMarkdownCss()}
                     : ((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
                 alert(message)
             } finally {
-                if ($aiFormatBtn) $aiFormatBtn.disabled = false
+                $aiFormatButtons.forEach(button => { button.disabled = false })
                 if ($aiEditBtn) $aiEditBtn.disabled = false
             }
         }
 
         if ($aiFormatBtn) {
             $aiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
+        }
+        if ($editorAiFormatBtn) {
+            $editorAiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
         }
         if ($aiEditBtn) {
             $aiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
@@ -1927,6 +1963,7 @@ ${getMarkdownCss()}
 </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
+    ${isEdit && (ext.mode || 'md') === 'md' ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};

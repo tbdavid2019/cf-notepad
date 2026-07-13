@@ -50,6 +50,51 @@ const SVG_ICONS = {
     clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
 }
 
+const EDITOR_TOOLBAR_COMMANDS = [
+    { command: 'undo', glyph: '↶', zh: '復原', en: 'Undo' },
+    { command: 'redo', glyph: '↷', zh: '重做', en: 'Redo' },
+    { separator: true },
+    { command: 'heading1', glyph: 'H1', zh: '一級標題', en: 'Heading 1' },
+    { command: 'heading2', glyph: 'H2', zh: '二級標題', en: 'Heading 2' },
+    { command: 'heading3', glyph: 'H3', zh: '三級標題', en: 'Heading 3' },
+    { separator: true },
+    { command: 'bold', glyph: 'B', glyphClass: 'is-bold', zh: '粗體', en: 'Bold' },
+    { command: 'italic', glyph: 'I', glyphClass: 'is-italic', zh: '斜體', en: 'Italic' },
+    { command: 'strike', glyph: 'S', glyphClass: 'is-strike', zh: '刪除線', en: 'Strikethrough' },
+    { command: 'link', glyph: '↗', zh: '連結', en: 'Link' },
+    { separator: true },
+    { command: 'quote', glyph: '❝', zh: '引用', en: 'Quote' },
+    { command: 'bullet', glyph: '☷', zh: '無序清單', en: 'Bullet list' },
+    { command: 'ordered', glyph: '1.', zh: '有序清單', en: 'Numbered list' },
+    { command: 'task', glyph: '☑', zh: '待辦清單', en: 'Task list' },
+    { separator: true },
+    { command: 'inlineCode', glyph: '&lt;/&gt;', glyphClass: 'is-code', zh: '行內程式碼', en: 'Inline code' },
+    { command: 'codeBlock', glyph: '{ }', glyphClass: 'is-code', zh: '程式碼區塊', en: 'Code block' },
+    { command: 'rule', glyph: '―', zh: '分隔線', en: 'Horizontal rule' },
+    { command: 'table', glyph: '▦', glyphClass: 'is-table', zh: '插入表格', en: 'Insert table' },
+    { command: 'image', glyph: '▧', glyphClass: 'is-image', zh: '上傳圖片', en: 'Upload image' },
+    { separator: true },
+    { command: 'fullscreen', glyph: '⛶', zh: '全螢幕編輯', en: 'Fullscreen editor' },
+]
+
+export const EDITOR_TOOLBAR = lang => {
+    const isZh = lang === 'zh-TW'
+    const label = isZh ? 'Markdown 編輯工具' : 'Markdown editing tools'
+    return `
+    <div class="markdown-editor-toolbar-wrap">
+    <div class="markdown-editor-toolbar" data-markdown-toolbar data-language="${lang}" role="toolbar" aria-label="${label}">
+        ${EDITOR_TOOLBAR_COMMANDS.map(item => item.separator
+            ? '<span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>'
+            : `<button type="button" class="markdown-toolbar-button" data-command="${item.command}" title="${isZh ? item.zh : item.en}" aria-label="${isZh ? item.zh : item.en}"><span class="markdown-toolbar-glyph ${item.glyphClass || ''}" aria-hidden="true">${item.glyph}</span></button>`
+        ).join('')}
+        <span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>
+        <button type="button" id="editor-ai-format-btn" class="markdown-toolbar-button" data-ai-action="format" title="${isZh ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${isZh ? 'AI 格式化排版' : 'AI Format Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">✦</span></button>
+    </div>
+    <input id="markdown-toolbar-image-input" class="visually-hidden-file-input" type="file" accept="image/*" aria-label="${isZh ? '選擇要上傳的圖片' : 'Choose an image to upload'}">
+    </div>
+    `
+}
+
 export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue }) => `
 <button
   type="button"

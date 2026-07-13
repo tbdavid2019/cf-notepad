@@ -29,6 +29,30 @@ export const getMarkdownCss = () => `
 .markdown-body a:hover { text-decoration: underline; }
 .markdown-body img { max-width: 100%; box-sizing: content-box; }
 
+/* Apache ECharts code fences */
+.diagram-echarts-render {
+    width: 100%;
+    min-height: 360px;
+    margin: 20px 0;
+    overflow: hidden;
+    border-radius: 6px;
+}
+.diagram-echarts-render canvas {
+    max-width: 100%;
+}
+.diagram-render-error {
+    min-height: 0;
+    padding: 12px 16px;
+    overflow-x: auto;
+    border: 1px solid #f1aeb5;
+    border-radius: 6px;
+    background: #fff5f5;
+    color: #842029;
+    font-family: var(--editor-font-family);
+    font-size: 13px;
+    white-space: pre-wrap;
+}
+
 /* GitHub Alerts */
 .markdown-alert { padding: 8px 16px; margin-bottom: 16px; border-left: 0.25em solid; border-radius: 6px; }
 .markdown-alert > :first-child { margin-top: 0; }

@@ -134,8 +134,11 @@ test('share routes support short slugs while keeping legacy md5 compatibility', 
 
 test('footer exposes AI format and edit controls for whole-note assistance', () => {
     assert.match(commonTemplateSource, /id="ai-format-btn"/)
+    assert.match(commonTemplateSource, /id="editor-ai-format-btn"/)
     assert.match(commonTemplateSource, /id="ai-edit-btn"/)
     assert.match(baseTemplateSource, /const \$aiFormatBtn = document\.querySelector\('#ai-format-btn'\)/)
+    assert.match(baseTemplateSource, /const \$editorAiFormatBtn = document\.querySelector\('#editor-ai-format-btn'\)/)
+    assert.match(baseTemplateSource, /\$editorAiFormatBtn\.addEventListener\('click', \(\) => runAiAssistant\('format'\)\)/)
     assert.match(baseTemplateSource, /const \$aiEditBtn = document\.querySelector\('#ai-edit-btn'\)/)
     assert.match(baseTemplateSource, /const runAiAssistant = async mode =>/)
     assert.match(baseTemplateSource, /window\.prompt\(instructionPrompt, ''\)/)

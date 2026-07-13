@@ -1,6 +1,26 @@
 # Changelog
 
 ## [2026-07-13]
+### Added
+- **Markdown Editor Toolbar**
+  - Added a localized toolbar above editable Markdown notes.
+  - Added headings, emphasis, strikethrough, links, quotes, lists, task lists, inline code, code blocks, horizontal rules, tables, image insertion, and fullscreen editing.
+  - Added Undo / Redo buttons and `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, and `Ctrl/Cmd+Y` shortcuts with selection-aware editor history.
+  - Added the existing AI formatting workflow to the editor toolbar while retaining the footer button.
+- **Image Insertion**
+  - Added file selection from the editor toolbar.
+  - When R2 is enabled, selected images upload through `/upload` and are inserted as Markdown image links using the uploaded file name as the alt text.
+  - When R2 is disabled, the toolbar inserts a Markdown image placeholder for manual URL editing.
+- **ECharts Code Blocks**
+  - Added support for fenced `echarts` blocks containing JSON chart options.
+  - Charts load ECharts on demand, resize with the editor layout, expose an accessible label, and dispose old instances before re-rendering.
+
+### Fixed
+- **Toolbar Localization**
+  - Inline code and other inserted placeholders now follow the current English or Traditional Chinese editor language instead of always using Chinese text.
+- **Inline Code Icon**
+  - Escaped the `</>` glyph so it renders correctly in the HTML toolbar.
+
 ### Changed
 - **Compact Footer Controls**
   - Reduced the desktop footer height to reclaim vertical workspace while keeping two-line labels readable.
