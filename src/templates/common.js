@@ -8,6 +8,29 @@ import { THEMES } from '../theme_data'
 
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
+const THEME_OPTION_LABELS = {
+    'ayu-light': { 'zh-TW': '極簡溫暖', 'en-US': 'Minimal warmth' },
+    'bauhaus': { 'zh-TW': '幾何藝術', 'en-US': 'Geometric art' },
+    'botanical': { 'zh-TW': '植物圖鑑', 'en-US': 'Botanical field guide' },
+    'catppuccin-latte': { 'zh-TW': '柔和亮色', 'en-US': 'Soft light' },
+    'catppuccin-macchiato': { 'zh-TW': '柔和暗色', 'en-US': 'Soft dark' },
+    'claude-canvas': { 'zh-TW': '人文溫暖', 'en-US': 'Warm humanist' },
+    'green-simple': { 'zh-TW': '簡潔綠色', 'en-US': 'Clean green' },
+    'kanagawa': { 'zh-TW': '日本墨水', 'en-US': 'Japanese ink' },
+    'neo-brutalism': { 'zh-TW': '粗野主義', 'en-US': 'Neo-brutalist' },
+    'newsprint': { 'zh-TW': '報紙印刷', 'en-US': 'Newsprint' },
+    'notion-clean': { 'zh-TW': '極簡白板', 'en-US': 'Minimal whiteboard' },
+    'organic': { 'zh-TW': '侘寂陶藝', 'en-US': 'Wabi-sabi ceramic' },
+    'playful-geometric': { 'zh-TW': '活潑幾何', 'en-US': 'Playful geometry' },
+    'professional': { 'zh-TW': '專業商務', 'en-US': 'Professional business' },
+    'retro': { 'zh-TW': '90年代懷舊', 'en-US': '90s nostalgia' },
+    'shopify-mint': { 'zh-TW': '清新薄荷', 'en-US': 'Fresh mint' },
+    'sketch': { 'zh-TW': '手繪草圖', 'en-US': 'Hand-drawn sketch' },
+    'terminal': { 'zh-TW': '終端暗色', 'en-US': 'Terminal dark' },
+    'tokyo-night': { 'zh-TW': '東京夜景', 'en-US': 'Tokyo night' },
+    'x-ai': { 'zh-TW': '科技深黑', 'en-US': 'Tech black' },
+}
+
 const SVG_ICONS = {
     editLock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`,
     readLock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
@@ -62,6 +85,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
     const moreToolsTitle = lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'
+    const getThemeLabel = themeName => {
+        const description = THEME_OPTION_LABELS[themeName]?.[lang] || ''
+        return description ? `${themeName} · ${description}` : themeName
+    }
     return `
     <div class="footer">
         <div class="footer-sections">
@@ -112,11 +139,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯鎖' : 'Lock'}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span>
                         </button>
                         <button class="toolbar-icon-button opt-pw-view ${vpw ? 'toolbar-active-button' : ''}" data-type="view" title="${t.readLockTitle}" aria-label="${t.readLockTitle}">
                             ${SVG_ICONS.readLock}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '唯讀鎖' : 'Read'}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '閱讀' : 'View'}</span>
                         </button>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
@@ -266,7 +293,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                         <div class="footer-control-group">
                             <select id="theme-selector" class="footer-select">
-                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${themeName}</option>`).join('')}
+                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" title="${getThemeLabel(themeName)}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${getThemeLabel(themeName)}</option>`).join('')}
                             </select>
                         </div>
                     ` : ''}

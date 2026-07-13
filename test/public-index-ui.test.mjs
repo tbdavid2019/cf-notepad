@@ -77,9 +77,11 @@ test('footer skill link points to the built-in well-known skill endpoint', () =>
 })
 
 test('footer uses full theme labels and descriptive width options', () => {
-    assert.match(commonTemplateSource, /themeName\}\<\/option>/)
+    assert.match(commonTemplateSource, /THEME_OPTION_LABELS/)
+    assert.match(commonTemplateSource, /'catppuccin-macchiato': \{ 'zh-TW': '柔和暗色', 'en-US': 'Soft dark' \}/)
+    assert.match(commonTemplateSource, /getThemeLabel\(themeName\)/)
     assert.match(commonTemplateSource, /value="100%">\$\{t\.width\}: \$\{t\.full\}/)
-    assert.doesNotMatch(commonTemplateSource, /cp-macchiato ☀️|playful-geo/)
+    assert.doesNotMatch(commonTemplateSource, /cp-macchiato ☀️|['"]playful-geo['"]|playful-geo ☀️/)
     assert.doesNotMatch(commonTemplateSource, /<span class="footer-control-label">Theme<\/span>/)
     assert.match(baseCssSource, /\.footer-rail-switch \{[\s\S]*border-radius: 4px;/)
 })
@@ -105,6 +107,9 @@ test('edit footer uses icon locks and share link opens in a new tab', () => {
     assert.match(baseTemplateSource, /recordShareHistory\('created', shareUrl, APP_STATE\.title\);/)
     assert.match(constantSource, /shareLinkTitle: 'Open shared page in a new tab'/)
     assert.match(constantSource, /editLockTitle: 'Edit lock'/)
+    assert.match(constantSource, /readLockTitle: 'View lock'/)
+    assert.match(commonTemplateSource, /lang === 'zh-TW' \? '編輯' : 'Edit'/)
+    assert.match(commonTemplateSource, /lang === 'zh-TW' \? '閱讀' : 'View'/)
 })
 
 test('footer uses icon-first controls for history and docs', () => {

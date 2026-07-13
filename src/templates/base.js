@@ -2068,9 +2068,11 @@ ${getMarkdownCss()}
         }
 
         if (themeSelector) {
+            themeSelector.title = themeSelector.options[themeSelector.selectedIndex]?.textContent || '';
             themeSelector.addEventListener('change', function() {
                 const theme = this.value;
                 themeStyleNode.textContent = THEMES[theme];
+                this.title = this.options[this.selectedIndex]?.textContent || '';
                 persistSetting({ theme }).catch(err => errHandle(err.message || err));
             });
         }

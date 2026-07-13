@@ -25,7 +25,7 @@ export const getBaseCss = () => `
     --share-font-jetbrains-family: "JetBrains Mono", "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono NL", "Roboto Mono", "Consolas", "Menlo", monospace;
     --share-font-maple-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
     --preview-max-width: 100%;
-    --toolbar-height: 28px;
+    --toolbar-height: 30px;
     --toolbar-radius: 4px;
     --toolbar-border: #e6dfd8;
     --toolbar-bg: #ffffff;
@@ -537,7 +537,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 
 /* Footer */
 .footer {
-    min-height: 56px;
+    min-height: 48px;
     background: #faf9f5;
     border-top: 1px solid #e6dfd8;
     display: block;
@@ -548,13 +548,13 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     transition: transform 0.22s ease, opacity 0.22s ease;
 }
 .footer-sections {
-    min-height: 56px;
+    min-height: 48px;
     display: flex;
     align-items: stretch;
     gap: 10px;
     flex-wrap: nowrap;
     white-space: nowrap;
-    padding: 8px 0 9px;
+    padding: 5px 0 6px;
 }
 .footer-section {
     display: flex;
