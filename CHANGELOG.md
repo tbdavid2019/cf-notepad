@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-07-13]
+### Changed
+- **Compact Footer Controls**
+  - Reduced the desktop footer height to reclaim vertical workspace while keeping two-line labels readable.
+  - Standardized preview, publishing, font, language, layout, and device controls as square-corner rail switches.
+  - Moved control names and current values inside the rails, such as `Layout / Side` and `Device / Desktop`.
+  - Removed redundant `Width` and `Theme` footer labels; width context now appears in each select option.
+- **Theme Selector Descriptions**
+  - Restored full theme names and added localized Traditional Chinese and English style descriptions.
+  - Added a tooltip for the selected theme so the full description remains discoverable without widening the footer.
+- **Lock Labels**
+  - Changed the English lock labels to `Edit` and `View`, with `Edit lock` and `View lock` tooltips for clarity.
+
 ## [2026-07-12]
 ### Fixed
 - **Theme CSS Specificity Override**
