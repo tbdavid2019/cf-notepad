@@ -32,8 +32,8 @@ const THEME_OPTION_LABELS = {
 }
 
 const SVG_ICONS = {
-    editLock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>`,
-    readLock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`,
+    editLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="11" height="10" rx="2"></rect><path d="M7 10V7a3 3 0 0 1 5.5-1.7"></path><path d="m13.5 16.5 5.7-5.7a1.4 1.4 0 0 1 2 2l-5.7 5.7-3 1z"></path><path d="m17.8 12.2 2 2"></path></svg>`,
+    readLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="10" width="10.5" height="10" rx="2"></rect><path d="M5.5 10V7a3 3 0 0 1 5.5-1.7"></path><path d="M14.5 14.5s2-3 4.5-3 4.5 3 4.5 3-2 3-4.5 3-4.5-3-4.5-3z"></path><circle cx="19" cy="14.5" r="1.1"></circle></svg>`,
     link: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`,
     copy: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`,
     check: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"></path></svg>`,
@@ -122,7 +122,7 @@ export const SWITCHER = (text, open, className = '') => `
 <span class="footer-control-label">${text}</span>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave }) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true && isEdit
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
@@ -185,13 +185,23 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 </div>
                             </div>
                         </div>
+                        <div class="save-control-group" aria-label="${lang === 'zh-TW' ? '儲存設定' : 'Save settings'}">
+                            <button type="button" id="save-note-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" aria-label="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}">
+                                ${SVG_ICONS.check}
+                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '儲存' : 'Save'}</span>
+                            </button>
+                            <label class="autosave-toggle-label" title="${share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave')}" aria-label="${lang === 'zh-TW' ? '啟用文章自動儲存' : 'Enable note autosave'}">
+                                <input type="checkbox" id="autosave-toggle" ${autosave === true && share === true ? 'checked' : ''} ${share === true ? '' : 'disabled'}>
+                                <span>${lang === 'zh-TW' ? '自動儲存' : 'Autosave'}</span>
+                            </label>
+                        </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span>
+                            <span class="toolbar-button-label">${t.editLockTitle}</span>
                         </button>
                         <button class="toolbar-icon-button opt-pw-view ${vpw ? 'toolbar-active-button' : ''}" data-type="view" title="${t.readLockTitle}" aria-label="${t.readLockTitle}">
                             ${SVG_ICONS.readLock}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '閱讀' : 'View'}</span>
+                            <span class="toolbar-button-label">${t.readLockTitle}</span>
                         </button>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
@@ -457,6 +467,20 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <div class="password-modal-actions">
             <button type="button" class="opt-button password-modal-cancel">${t.passwordCancel}</button>
             <button type="button" class="opt-button opt-button-accent password-modal-confirm">${t.passwordConfirm}</button>
+        </div>
+    </div>
+</div>
+<div class="modal app-dialog-modal" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message">
+    <div class="modal-mask"></div>
+    <div class="app-dialog-content" data-dialog-kind="info">
+        <div class="app-dialog-icon" aria-hidden="true">i</div>
+        <div class="app-dialog-copy">
+            <h2 id="app-dialog-title"></h2>
+            <p id="app-dialog-message"></p>
+        </div>
+        <div class="app-dialog-actions">
+            <button type="button" class="opt-button app-dialog-cancel">${t.passwordCancel}</button>
+            <button type="button" class="opt-button opt-button-accent app-dialog-confirm">${t.passwordConfirm}</button>
         </div>
     </div>
 </div>

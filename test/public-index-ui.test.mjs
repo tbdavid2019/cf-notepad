@@ -18,7 +18,7 @@ test('x-ai theme keeps every heading level visible on the white preview canvas',
 })
 
 test('setting route persists publicIndex metadata and clears it on unpublish', () => {
-    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*splitDirection,\s*publicIndex\s*\}\s*=\s*await request\.json\(\)/)
+    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*splitDirection,\s*publicIndex,\s*autosave,\s*content\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /publicIndex !== undefined && \{ publicIndex: publicIndex === true \}/)
     assert.match(indexSource, /if \(share === false\) \{\s*nextMetadata\.publicIndex = false/s)
 })
@@ -28,6 +28,10 @@ test('published footer exposes public index control and removes published label 
     assert.match(commonTemplateSource, /id="share-open-link"/)
     assert.match(commonTemplateSource, /t\.publicIndexOn : t\.publicIndexOff/)
     assert.doesNotMatch(commonTemplateSource, /publish-status/)
+})
+
+test('share pages expose the requested Open Graph site name', () => {
+    assert.match(indexSource, /siteName: 'DAVID888 WIKI'/)
 })
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
@@ -113,8 +117,9 @@ test('edit footer uses icon locks and share link opens in a new tab', () => {
     assert.match(constantSource, /shareLinkTitle: 'Open shared page in a new tab'/)
     assert.match(constantSource, /editLockTitle: 'Edit lock'/)
     assert.match(constantSource, /readLockTitle: 'View lock'/)
-    assert.match(commonTemplateSource, /lang === 'zh-TW' \? '編輯' : 'Edit'/)
-    assert.match(commonTemplateSource, /lang === 'zh-TW' \? '閱讀' : 'View'/)
+    assert.match(commonTemplateSource, /\$\{t\.editLockTitle\}/)
+    assert.match(commonTemplateSource, /\$\{t\.readLockTitle\}/)
+    assert.match(commonTemplateSource, /lock-combo-icon/)
 })
 
 test('footer uses icon-first controls for history and docs', () => {

@@ -8,6 +8,7 @@ import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
+import { AUTOSAVE_IDLE_MS } from '../save_policy.mjs'
 
 const PUBLIC_ICON_SVG_URL = '/icon.svg'
 const PUBLIC_ICON_PNG_URL = '/icon.png'
@@ -32,7 +33,7 @@ const PUBLISH_NUDGE_MODAL = lang => {
             <p>${escapeHtml(t.publishNudgeText)}</p>
             <div class="publish-nudge-actions">
                 <button type="button" class="opt-button publish-nudge-later">${escapeHtml(t.later)}</button>
-                <button type="button" class="opt-button publish-nudge-publish">${escapeHtml(t.publishNow)}</button>
+                <button type="button" class="opt-button publish-nudge-publish">${escapeHtml(t.publishAndSave)}</button>
             </div>
         </div>
     </div>
@@ -199,7 +200,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath })}
+        ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true })}
     </div>
     ${ext.sharePath && !isEdit ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
     <div id="loading"></div>
@@ -551,6 +552,7 @@ ${getMarkdownCss()}
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
         isPublished: ext.share === true,
+        autosave: ext.autosave === true && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
         publicIndex: ext.publicIndex === true,
         noteSettings: {
@@ -570,12 +572,68 @@ ${getMarkdownCss()}
         return (APP_STATE.i18n && APP_STATE.i18n[key]) || key
     }
 
+    const openAppDialog = ({ title = getI18n('err'), message = '', kind = 'info', confirm = false, cancelText, confirmText } = {}) => new Promise(resolve => {
+        const modal = document.querySelector('.app-dialog-modal')
+        const content = modal?.querySelector('.app-dialog-content')
+        const icon = modal?.querySelector('.app-dialog-icon')
+        const titleNode = modal?.querySelector('#app-dialog-title')
+        const messageNode = modal?.querySelector('#app-dialog-message')
+        const confirmBtn = modal?.querySelector('.app-dialog-confirm')
+        const cancelBtn = modal?.querySelector('.app-dialog-cancel')
+        const mask = modal?.querySelector('.modal-mask')
+
+        if (!modal || !content || !icon || !titleNode || !messageNode || !confirmBtn || !cancelBtn || !mask) {
+            if (confirm) resolve(window.confirm(message))
+            else { window.alert(message); resolve(true) }
+            return
+        }
+
+        let settled = false
+        const cleanup = result => {
+            if (settled) return
+            settled = true
+            modal.style.display = 'none'
+            confirmBtn.removeEventListener('click', onConfirm)
+            cancelBtn.removeEventListener('click', onCancel)
+            mask.removeEventListener('click', onCancel)
+            modal.removeEventListener('keydown', onKeyDown)
+            resolve(result)
+        }
+        const onConfirm = () => cleanup(true)
+        const onCancel = () => cleanup(false)
+        const onKeyDown = event => {
+            if (event.key === 'Escape') {
+                event.preventDefault()
+                onCancel()
+            }
+            if (event.key === 'Enter') {
+                event.preventDefault()
+                onConfirm()
+            }
+        }
+
+        content.dataset.dialogKind = kind
+        icon.textContent = kind === 'error' ? '!' : kind === 'confirm' ? '?' : 'i'
+        titleNode.textContent = title
+        messageNode.textContent = message
+        cancelBtn.style.display = confirm ? '' : 'none'
+        cancelBtn.textContent = cancelText || getI18n('passwordCancel')
+        confirmBtn.textContent = confirmText || getI18n('passwordConfirm')
+        modal.style.display = 'block'
+        confirmBtn.addEventListener('click', onConfirm)
+        cancelBtn.addEventListener('click', onCancel)
+        mask.addEventListener('click', onCancel)
+        modal.addEventListener('keydown', onKeyDown)
+        window.setTimeout(() => (confirm ? cancelBtn : confirmBtn).focus(), 0)
+    })
+    window.showAppDialog = openAppDialog
+
     const setLanguage = lang => {
         document.cookie = 'lang=' + encodeURIComponent(lang) + '; path=/; max-age=' + LANG_COOKIE_MAX_AGE + '; SameSite=Lax'
         window.location.reload()
     }
 
-    const errHandle = (err) => { alert(getI18n('err') + ': ' + err) }
+    const errHandle = (err) => { window.showAppDialog({ title: getI18n('err'), message: String(err), kind: 'error' }) }
 
     const summarizeErrorText = text => {
         const normalized = String(text || '').replace(/\s+/g, ' ').trim()
@@ -693,6 +751,9 @@ ${getMarkdownCss()}
             })
             if (payload.err !== 0) throw new Error(payload.msg || 'setting update failed')
             APP_STATE.noteSettings = { ...APP_STATE.noteSettings, ...nextSettings }
+            if (Object.prototype.hasOwnProperty.call(nextSettings, 'autosave')) {
+                APP_STATE.autosave = nextSettings.autosave === true && APP_STATE.isPublished === true
+            }
             return payload
         }
 
@@ -742,10 +803,10 @@ ${getMarkdownCss()}
             resolve(result)
         }
 
-        const onConfirm = () => {
-            const value = input.value
-            if (!allowEmpty && !value.trim()) {
-                alert(getI18n('pwcnbe'))
+            const onConfirm = () => {
+                const value = input.value
+                if (!allowEmpty && !value.trim()) {
+                window.showAppDialog({ title: getI18n('err'), message: getI18n('pwcnbe'), kind: 'error' })
                 input.focus()
                 return
             }
@@ -778,19 +839,11 @@ ${getMarkdownCss()}
         window.setTimeout(() => input.focus(), 0)
     })
 
-    const throttle = (func, delay) => {
-        let tid = null
-        return (...arg) => {
-            if (tid) return;
-            tid = setTimeout(() => { func(...arg); tid = null }, delay)
-        }
-    }
-
     const passwdPrompt = async () => {
         const passwd = await openPasswordModal({ title: getI18n('pepw') })
         if (passwd == null) return;
         const normalizedPasswd = passwd.trim()
-        if (!normalizedPasswd) { alert(getI18n('pwcnbe')); return; }
+        if (!normalizedPasswd) { window.showAppDialog({ title: getI18n('err'), message: getI18n('pwcnbe'), kind: 'error' }); return; }
         const destination = rememberPresentationDestination() || (location.pathname + location.hash)
         fetchJson(getAuthPath(), { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: normalizedPasswd }) })
             .then(res => {
@@ -902,7 +955,7 @@ ${getMarkdownCss()}
                         copy.textContent = getI18n('copied')
                         setTimeout(() => { copy.textContent = original }, 1200)
                     } catch (e) {
-                        alert(getI18n('copyFailed'))
+                        window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' })
                     }
                 })
 
@@ -1156,16 +1209,16 @@ ${getMarkdownCss()}
                 if (!selectedVersion) return
                 try {
                     await clipboardCopy(selectedVersion.content || '')
-                    alert(getI18n('historyCopiedContent'))
+                    window.showToast(getI18n('historyCopiedContent'))
                 } catch (e) {
-                    alert(getI18n('copyFailed'))
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' })
                 }
             })
         }
         if (restoreBtn) {
             restoreBtn.addEventListener('click', async () => {
                 if (!selectedVersion) return
-                if (!confirm(getI18n('historyRestoreConfirm'))) return
+                if (!await window.showAppDialog({ title: getI18n('history'), message: getI18n('historyRestoreConfirm'), kind: 'confirm', confirm: true })) return
                 try {
                     const payload = await fetchJson(apiBase() + '/' + encodeURIComponent(selectedVersion.id) + '/restore', { method: 'POST' })
                     if (payload.err !== 0) throw new Error(payload.msg || 'history restore failed')
@@ -1183,7 +1236,7 @@ ${getMarkdownCss()}
                     loaded = false
                     selectedVersion = null
                     await refreshHistory({ force: true })
-                    alert(getI18n('historyRestoreDone'))
+                    window.showToast(getI18n('historyRestoreDone'))
                 } catch (error) {
                     errHandle(error.message || error)
                 }
@@ -1239,6 +1292,88 @@ ${getMarkdownCss()}
         const $exportMdBtn = document.querySelector('#export-md-btn')
         const $copyMdBtn = document.querySelector('#copy-md-btn')
         const $exportPdfBtn = document.querySelector('#export-pdf-btn')
+        const $saveNoteBtn = document.querySelector('#save-note-btn')
+        const $autosaveToggle = document.querySelector('#autosave-toggle')
+
+        const AUTOSAVE_IDLE_MS = ${AUTOSAVE_IDLE_MS}
+        let savedContent = $textarea ? $textarea.value : ''
+        let autosaveTimer = null
+        let saveInFlight = null
+        let saveQueued = false
+        let allowUnload = false
+        const hasUnsavedChanges = () => Boolean($textarea && $textarea.value !== savedContent)
+        const showSaveStatus = (message, isError = false) => {
+            if (!$loading) return
+            $loading.setAttribute('aria-label', message)
+            $loading.dataset.saveStatus = isError ? 'error' : 'saved'
+        }
+        const getSaveBlockedMessage = () => APP_STATE.lang === 'zh-TW'
+            ? '文章尚未發布，請先發布後再儲存；若不想公開閱讀，可以啟用閱讀鎖。'
+            : 'Publish this note before saving. If you do not want public reading, enable the read lock.'
+
+        const clearAutosaveTimer = () => {
+            if (autosaveTimer) {
+                window.clearTimeout(autosaveTimer)
+                autosaveTimer = null
+            }
+        }
+
+        const saveCurrentNote = async ({ showBlocked = true } = {}) => {
+            if (!$textarea) return false
+            if (!APP_STATE.isPublished) {
+                if (showBlocked) window.showToast?.(getSaveBlockedMessage())
+                return false
+            }
+            if (!hasUnsavedChanges()) {
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '內容已是最新' : 'Content is already saved')
+                return true
+            }
+            if (saveInFlight) {
+                saveQueued = true
+                return saveInFlight
+            }
+
+            const content = $textarea.value
+            clearAutosaveTimer()
+            $loading.style.display = 'inline-block'
+            saveInFlight = fetchJson('', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: new URLSearchParams({ t: content }),
+            })
+                .then(res => {
+                    if (res.err !== 0) throw new Error(res.msg || 'save failed')
+                    if ($textarea.value === content) savedContent = content
+                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '已儲存' : 'Saved')
+                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已儲存' : 'Note saved')
+                    return true
+                })
+                .catch(error => {
+                    showSaveStatus(error.message || 'save failed', true)
+                    errHandle(error.message || error)
+                    return false
+                })
+                .finally(() => {
+                    saveInFlight = null
+                    $loading.style.display = 'none'
+                    if (saveQueued) {
+                        saveQueued = false
+                        if (hasUnsavedChanges() && APP_STATE.isPublished) {
+                            window.setTimeout(() => saveCurrentNote({ showBlocked: false }), 0)
+                        }
+                    }
+                })
+            return saveInFlight
+        }
+
+        const scheduleAutosave = () => {
+            clearAutosaveTimer()
+            if (!$textarea || !APP_STATE.isPublished || APP_STATE.autosave !== true || !hasUnsavedChanges()) return
+            autosaveTimer = window.setTimeout(() => {
+                autosaveTimer = null
+                saveCurrentNote({ showBlocked: false })
+            }, AUTOSAVE_IDLE_MS)
+        }
 
         setupShareHistory()
         syncShareStateUI()
@@ -1351,7 +1486,7 @@ ${getMarkdownCss()}
         }
 
         const getMarkdownFilename = () => {
-            const source = APP_STATE.path || APP_STATE.title || 'note'
+            const source = APP_STATE.title || APP_STATE.path || 'note'
             const sanitized = String(source)
                 .trim()
                 .replace(/[\\/:*?"<>|]+/g, '-')
@@ -1445,13 +1580,13 @@ ${getMarkdownCss()}
                     return;
                 }
 
-                alert((APP_STATE.lang === 'zh-TW' ? 'AI 處理失敗：' : 'AI processing failed: ') + (res.msg || 'Unknown error'))
+                window.showAppDialog({ title: getI18n('err'), message: (APP_STATE.lang === 'zh-TW' ? 'AI 處理失敗：' : 'AI processing failed: ') + (res.msg || 'Unknown error'), kind: 'error' })
             } catch (err) {
                 console.error('AI assistant error:', err)
                 const message = err && err.name === 'AbortError'
                     ? (APP_STATE.lang === 'zh-TW' ? 'AI 處理逾時，請再試一次' : 'AI request timed out, please try again')
                     : ((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
-                alert(message)
+                window.showAppDialog({ title: getI18n('err'), message, kind: 'error' })
             } finally {
                 $aiFormatButtons.forEach(button => { button.disabled = false })
                 if ($aiEditBtn) $aiEditBtn.disabled = false
@@ -1518,11 +1653,11 @@ ${getMarkdownCss()}
                     renderPlain($previewPlain, text)
                     triggerRender($previewMd, text)
                     $textarea.dispatchEvent(new Event('input', { bubbles: true }))
-                    alert(getI18n('markdownImported'))
+                    window.showToast(getI18n('markdownImported'))
                     $importMdInput.value = ''
                 }
                 reader.onerror = () => {
-                    alert(getI18n('markdownImportFailed'))
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('markdownImportFailed'), kind: 'error' })
                     $importMdInput.value = ''
                 }
                 reader.readAsText(file, 'utf-8')
@@ -1568,13 +1703,18 @@ ${getMarkdownCss()}
             switcher.classList.toggle('is-checked', isPublished)
             switcher.classList.toggle('share-published', isPublished)
             switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
+            if ($autosaveToggle) {
+                $autosaveToggle.disabled = !isPublished
+                if (!isPublished) $autosaveToggle.checked = false
+            }
         }
 
         const publishCurrentNote = () => {
+            const wasPublished = APP_STATE.isPublished === true
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ share: true })
+                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '' })
             })
                 .then(res => {
                     if (res.err !== 0) {
@@ -1586,6 +1726,9 @@ ${getMarkdownCss()}
                         return false;
                     }
                     APP_STATE.isPublished = true;
+                    APP_STATE.autosave = wasPublished ? APP_STATE.autosave : false;
+                    savedContent = $textarea ? $textarea.value : savedContent;
+                    clearAutosaveTimer();
                     if ($shareBtn) {
                         $shareBtn.classList.add('is-checked')
                         $shareBtn.setAttribute('aria-pressed', 'true')
@@ -1594,6 +1737,7 @@ ${getMarkdownCss()}
                     recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
                     syncPublicIndexButton();
                     showShareModal(res.data);
+                    if (!wasPublished) promptEnableAutosave();
                     return true;
                 })
                 .catch(err => {
@@ -1606,6 +1750,20 @@ ${getMarkdownCss()}
                 })
         }
 
+        const confirmUnpublish = async () => {
+            if (hasUnsavedChanges()) {
+                return window.showAppDialog({
+                    title: APP_STATE.lang === 'zh-TW' ? '尚未儲存的修改' : 'Unsaved changes',
+                    message: APP_STATE.lang === 'zh-TW'
+                        ? '取消發布後這些修改不會被儲存。仍要取消發布嗎？'
+                        : 'These changes will not be saved after unpublishing. Continue?',
+                    kind: 'confirm',
+                    confirm: true,
+                })
+            }
+            return window.showAppDialog({ title: getI18n('share'), message: getI18n('unpublishConfirm'), kind: 'confirm', confirm: true })
+        }
+
         const closePublishNudge = () => {
             if ($publishNudgeModal) $publishNudgeModal.style.display = 'none';
         }
@@ -1615,6 +1773,27 @@ ${getMarkdownCss()}
             if (!$textarea || !$textarea.value.trim()) return;
             $publishNudgeModal.style.display = 'block';
             if ($publishNudgePublish) $publishNudgePublish.focus();
+        }
+
+        const promptEnableAutosave = async () => {
+            if (!APP_STATE.isEdit || !APP_STATE.isPublished || APP_STATE.autosave === true) return
+            const shouldEnable = await window.showAppDialog({
+                title: getI18n('autosaveNudgeTitle'),
+                message: getI18n('autosaveNudgeText'),
+                kind: 'confirm',
+                confirm: true,
+                cancelText: getI18n('later'),
+                confirmText: getI18n('autosaveEnable'),
+            })
+            if (!shouldEnable) return
+            try {
+                await persistSetting({ autosave: true })
+                syncShareStateUI()
+                scheduleAutosave()
+                window.showToast?.(getI18n('autosaveEnabled'))
+            } catch (error) {
+                errHandle(error.message || error)
+            }
         }
 
         if ($languageSelector) {
@@ -1664,17 +1843,20 @@ ${getMarkdownCss()}
         const $resizer = document.querySelector('.divide-line');
         if ($resizer && $textarea && ($previewMd || $previewPlain)) {
             const $preview = $previewMd || $previewPlain;
+            const $editorPane = document.querySelector('.editor-pane');
             const $previewPane = document.querySelector('.preview-pane') || $preview;
             const resetSplitPane = function() {
                 $textarea.style.removeProperty('flex');
+                $editorPane?.style.removeProperty('flex');
                 $previewPane.style.removeProperty('flex');
             };
             window.resetEditorSplitPane = resetSplitPane;
             let startPosition = 0, firstPaneSize = 0, parentSize = 0, isVertical = false;
             const mouseDownHandler = function(e) {
+                if (!$editorPane) return;
                 isVertical = document.body.classList.contains('preview-split-vertical') || window.matchMedia('(max-width: 960px)').matches;
                 startPosition = isVertical ? e.clientY : e.clientX;
-                firstPaneSize = isVertical ? $textarea.getBoundingClientRect().height : $textarea.getBoundingClientRect().width;
+                firstPaneSize = isVertical ? $editorPane.getBoundingClientRect().height : $editorPane.getBoundingClientRect().width;
                 const parentRect = $resizer.parentNode.getBoundingClientRect();
                 parentSize = isVertical ? parentRect.height : parentRect.width;
                 document.addEventListener('mousemove', mouseMoveHandler); document.addEventListener('mouseup', mouseUpHandler);
@@ -1685,7 +1867,7 @@ ${getMarkdownCss()}
                 const currentPosition = isVertical ? e.clientY : e.clientX;
                 const newFirstPercent = ((firstPaneSize + currentPosition - startPosition) * 100) / parentSize;
                 if (newFirstPercent < 10 || newFirstPercent > 90) return;
-                $textarea.style.flex = \`0 0 \${newFirstPercent}%\`;
+                $editorPane.style.flex = \`0 0 \${newFirstPercent}%\`;
                 $previewPane.style.flex = \`0 0 calc(\${100 - newFirstPercent}% - 8px)\`;
             };
             const mouseUpHandler = function() {
@@ -1722,9 +1904,9 @@ ${getMarkdownCss()}
                                         // must notify the auto-save handler or the placeholder is saved.
                                         $textarea.dispatchEvent(new Event('input', { bubbles: true }))
                                     }
-                                    else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); alert(getI18n('uploadFailed') + ': ' + res.msg) }
+                                    else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' }) }
                                 })
-                                .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']'); alert(getI18n('uploadError') + err) })
+                                .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']'); window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' }) })
                             return;
                         }
                     }
@@ -1743,23 +1925,15 @@ ${getMarkdownCss()}
                 clearPublishNudgeTimer();
                 if (publishNudgeShown || APP_STATE.isPublished || !$textarea.value.trim()) return;
                 publishNudgeTimer = setTimeout(() => {
-                    if (document.activeElement !== $textarea) return;
                     publishNudgeShown = true;
                     showPublishNudge();
-                }, 180000);
+                }, AUTOSAVE_IDLE_MS);
             }
-            $textarea.addEventListener('focus', schedulePublishNudge);
-            $textarea.addEventListener('blur', clearPublishNudgeTimer);
 
-            $textarea.oninput = throttle(function () {
-                schedulePublishNudge();
+            $textarea.addEventListener('input', () => {
+                schedulePublishNudge()
                 triggerRender($previewMd, $textarea.value)
-                $loading.style.display = 'inline-block'
-                fetchJson('', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: new URLSearchParams({ t: $textarea.value }) })
-                    .then(res => { if (res.err !== 0) { errHandle(res.msg) } })
-                    .catch(err => errHandle(err))
-                    .finally(() => { $loading.style.display = 'none' })
-            }, 1000)
+            })
         }
 
         // Password buttons
@@ -1769,7 +1943,7 @@ ${getMarkdownCss()}
                 const passwd = await openPasswordModal({ title: getI18n('enpw'), allowEmpty: true })
                 if (passwd == null) return;
                 fetchJson(window.location.pathname + '/pw', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passwd: passwd.trim(), type }) })
-                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } alert(passwd ? getI18n('pwss') : getI18n('pwrs')); location.reload() })
+                    .then(res => { if (res.err !== 0) { return errHandle(res.msg) } window.showToast(passwd ? getI18n('pwss') : getI18n('pwrs')); location.reload() })
                     .catch(err => errHandle(err))
             }}
         }
@@ -1816,7 +1990,7 @@ ${getMarkdownCss()}
                     await clipboardCopy(shareUrl); 
                     window.showToast(getI18n('copied') || 'Copied!'); 
                 } catch (e) { 
-                    alert(getI18n('copyFailed')); 
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
                 }
             });
         }
@@ -1827,7 +2001,7 @@ ${getMarkdownCss()}
                     await clipboardCopy(presentationUrl); 
                     window.showToast(getI18n('copied') || 'Copied!'); 
                 } catch (e) { 
-                    alert(getI18n('copyFailed')); 
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
                 }
             });
         }
@@ -1838,33 +2012,73 @@ ${getMarkdownCss()}
                 try {
                     await setPublicIndex(nextValue)
                     syncPublicIndexButton()
-                    alert(getI18n(nextValue ? 'publicIndexUpdatedOn' : 'publicIndexUpdatedOff'))
+                    window.showToast(getI18n(nextValue ? 'publicIndexUpdatedOn' : 'publicIndexUpdatedOff'))
                 } catch (error) {
                     errHandle(error.message || error)
                 }
             })
         }
         if ($unpublishBtn) {
-            $unpublishBtn.addEventListener('click', () => {
-                if (!confirm(getI18n('unpublishConfirm'))) return;
+            $unpublishBtn.addEventListener('click', async () => {
+                if (!await confirmUnpublish()) return
                 fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                    .then(res => { if (res.err !== 0) { return errHandle(res.msg); } window.location.reload(); }).catch(err => errHandle(err));
+                    .then(res => { if (res.err !== 0) { return errHandle(res.msg); } allowUnload = true; window.location.reload(); }).catch(err => errHandle(err));
             });
         }
         if ($sharePublishMenuBtn) {
             $sharePublishMenuBtn.addEventListener('click', publishCurrentNote)
         }
 
+        if ($saveNoteBtn) {
+            $saveNoteBtn.addEventListener('click', () => saveCurrentNote())
+        }
+
+        if ($autosaveToggle) {
+            $autosaveToggle.addEventListener('change', async () => {
+                if (!APP_STATE.isPublished) {
+                    $autosaveToggle.checked = false
+                    window.showToast?.(getSaveBlockedMessage())
+                    return
+                }
+                try {
+                    await persistSetting({ autosave: $autosaveToggle.checked })
+                    APP_STATE.autosave = $autosaveToggle.checked
+                    if (APP_STATE.autosave) scheduleAutosave()
+                    else clearAutosaveTimer()
+                } catch (error) {
+                    $autosaveToggle.checked = APP_STATE.autosave === true
+                    errHandle(error.message || error)
+                }
+            })
+        }
+
         if ($shareBtn) {
-            $shareBtn.onclick = function () {
+            $shareBtn.onclick = async function () {
                 if (APP_STATE.isPublished) {
+                    if (!await confirmUnpublish()) return
                     fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                        .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; window.location.reload(); })
+                        .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; allowUnload = true; window.location.reload(); })
                         .catch(err => errHandle(err))
                 } else {
                     publishCurrentNote();
                 }
             }
+        }
+
+        if ($textarea) {
+            $textarea.addEventListener('input', () => {
+                if (hasUnsavedChanges()) {
+                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '尚未儲存' : 'Unsaved changes')
+                    scheduleAutosave()
+                } else {
+                    clearAutosaveTimer()
+                }
+            })
+            window.addEventListener('beforeunload', event => {
+                if (allowUnload || !hasUnsavedChanges()) return
+                event.preventDefault()
+                event.returnValue = ''
+            })
         }
 
         if ($shareModal) {
@@ -2016,7 +2230,12 @@ ${getMarkdownCss()}
             
             const toast = document.createElement('div');
             toast.className = 'toast';
-            toast.innerHTML = '<span class="toast-check">✓</span> <span>' + message + '</span>';
+            const icon = document.createElement('span');
+            icon.className = 'toast-check';
+            icon.textContent = '✓';
+            const text = document.createElement('span');
+            text.textContent = String(message ?? '');
+            toast.append(icon, text);
             container.appendChild(toast);
             
             // Fade-in trigger
@@ -2348,7 +2567,7 @@ ${getMarkdownCss()}
                 content = share.innerText || share.textContent || '';
             }
 
-            if (!content || !content.trim()) { alert(getI18n('presentationUnavailable')); return; }
+            if (!content || !content.trim()) { window.showAppDialog({ title: getI18n('present'), message: getI18n('presentationUnavailable'), kind: 'error' }); return; }
 
             var container = document.getElementById('presentation-container');
             container.innerHTML = '\u003cbutton id="presentation-close-btn"\u003e✕ ' + getI18n('presentationClose') + '\u003c/button\u003e' +
@@ -2413,7 +2632,7 @@ ${getMarkdownCss()}
                 console.log('Reveal.js initialized (Slidev-Lite mode)');
             } catch(e) {
                 console.error('Presentation error:', e);
-                alert(getI18n('presentationFailed') + e);
+                window.showAppDialog({ title: getI18n('present'), message: getI18n('presentationFailed') + e, kind: 'error' });
                 window.exitPresentation();
             }
         };

@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-07-14]
+### Changed
+- **Editor Layout and Save Prompts**
+  - Fixed the draggable editor/preview divider so horizontal resizing changes pane width without leaving blank space below the editor; stacked layouts now resize the complete editor pane as well.
+  - Unpublished notes now show a save-and-publish prompt after 10 seconds of stopped input, with explicit publish/save or later choices.
+  - Newly published notes ask whether to enable per-note autosave.
+  - Markdown downloads now prefer the note title for the filename, falling back to the note path when needed.
+  - Shared-note Open Graph metadata now uses `DAVID888 WIKI` as the site name.
+- **Public-Gated Note Saving**
+  - Unpublished notes no longer persist editor content to KV.
+  - Publishing saves the current editor content and publishes the note in one operation.
+  - Published notes provide a manual Save button and a per-note Autosave option, disabled by default; enabled autosave waits 10 seconds after typing stops before saving.
+  - Leaving a page with unsaved published content triggers the browser's native leave-page warning.
+  - The UI explains that a published note can still use the View Lock when public reading should remain restricted.
+- **Unified Editor Feedback and Lock Controls**
+  - Centered toast messages and standardized editor alerts and confirmations with the same in-app dialog treatment.
+  - Moved Save beside Publish and labeled the lock controls explicitly as Edit Lock / View Lock.
+  - Replaced the standalone pencil and eye symbols with combined lock-plus-pencil and lock-plus-eye icons.
+
 ## [2026-07-13]
 ### Added
 - **Markdown Editor Toolbar**

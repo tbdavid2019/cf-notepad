@@ -32,6 +32,7 @@ import {
     saveNoteHistoryVersionIfNeeded,
 } from './note_history.mjs'
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
+import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 
 // init
 const router = Router()
@@ -716,7 +717,7 @@ async function renderSharePage(request, presentationMode = false) {
                     ogImageUrl: `${origin}/og-image.png`,
                     ogType: 'article',
                     robots: 'index,follow',
-                    siteName: false,
+                    siteName: 'DAVID888 WIKI',
                     twitterCard: 'summary',
                 },
             },
@@ -1201,6 +1202,10 @@ router.post('/api/:path', async (request) => {
     }
     updateMetadata = await ensureShareMetadata(path, updateMetadata)
 
+    if (!canPersistNoteContent(updateMetadata)) {
+        return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
+    }
+
     try {
         await persistNoteContent({
             path,
@@ -1483,7 +1488,7 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-            const { mode, share, theme, width, shareFont, previewDevice, splitDirection, publicIndex } = await request.json()
+            const { mode, share, theme, width, shareFont, previewDevice, splitDirection, publicIndex, autosave, content } = await request.json()
 
             const { value, metadata } = await queryNote(path)
             const { valid, role } = await checkAuth(cookie, path)
@@ -1502,14 +1507,31 @@ router.post('/:path/setting', async request => {
                         ...publicIndex !== undefined && { publicIndex: publicIndex === true },
                     }
 
+                    if (autosave !== undefined) {
+                        nextMetadata.autosave = autosave === true && nextMetadata.share === true
+                    }
+
                     if (share === false) {
                         nextMetadata.publicIndex = false
+                        nextMetadata.autosave = false
+                    }
+                    if (typeof content === 'string' && share === true) {
+                        nextMetadata.updateAt = dayjs().unix()
                     }
                     nextMetadata = await ensureShareMetadata(path, nextMetadata)
 
-                    await getNotesNamespace().put(path, value, {
-                        metadata: nextMetadata,
-                    })
+                    if (typeof content === 'string' && share === true) {
+                        await persistNoteContent({
+                            path,
+                            content,
+                            metadata: nextMetadata,
+                            previousContent: value,
+                        })
+                    } else {
+                        await getNotesNamespace().put(path, value, {
+                            metadata: nextMetadata,
+                        })
+                    }
 
                     if (share) {
                         await syncShareMappings(path, nextMetadata, metadata)
@@ -1546,6 +1568,10 @@ router.post('/:path', async request => {
         // OK
     } else {
         return returnJSON(10002, 'Password auth failed! Try refreshing this page if you had just set a password.')
+    }
+
+    if (!canPersistNoteContent(metadata)) {
+        return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
     }
 
     const formData = await request.formData();

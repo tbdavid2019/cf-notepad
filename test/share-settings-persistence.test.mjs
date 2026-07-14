@@ -6,7 +6,7 @@ const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'u
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 
 test('setting route persists width, share font, preview device, and split direction metadata', () => {
-    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*splitDirection,\s*publicIndex\s*\}\s*=\s*await request\.json\(\)/)
+    assert.match(indexSource, /const\s+\{\s*mode,\s*share,\s*theme,\s*width,\s*shareFont,\s*previewDevice,\s*splitDirection,\s*publicIndex,\s*autosave,\s*content\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /\.\.\.width !== undefined && \{ width \}/)
     assert.match(indexSource, /\.\.\.shareFont !== undefined && \{ shareFont \}/)
     assert.match(indexSource, /\.\.\.previewDevice !== undefined && \{ previewDevice \}/)

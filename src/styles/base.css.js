@@ -206,6 +206,64 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     border: 1px solid #d0d7de;
 }
 .password-modal-cancel:hover { background: #eef1f4; }
+.app-dialog-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    width: min(440px, calc(100vw - 32px));
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 12px;
+    padding: 22px;
+    border: 1px solid #e6dfd8;
+    border-radius: 10px;
+    background: #fff;
+    color: #24292f;
+    box-shadow: 0 18px 40px rgba(31, 35, 40, 0.22);
+}
+.app-dialog-icon {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: #f2f4f7;
+    color: #57606a;
+    font-size: 16px;
+    font-weight: 800;
+}
+.app-dialog-content[data-dialog-kind="error"] .app-dialog-icon {
+    background: #fff1f0;
+    color: #cf222e;
+}
+.app-dialog-content[data-dialog-kind="confirm"] .app-dialog-icon {
+    background: #fff8c5;
+    color: #9a6700;
+}
+.app-dialog-copy h2 {
+    margin: 0 28px 6px 0;
+    font-size: 17px;
+    line-height: 1.35;
+}
+.app-dialog-copy p {
+    margin: 0;
+    color: #57606a;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+}
+.app-dialog-actions {
+    grid-column: 2;
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 4px;
+}
+.app-dialog-cancel { background: #f6f8fa; color: #24292f; border: 1px solid #d0d7de; }
+.app-dialog-cancel:hover { background: #eef1f4; }
+.app-dialog-modal .modal-mask { z-index: 1000; }
 
 /* SVG Icon Utility */
 .svg-icon {
@@ -216,6 +274,13 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     stroke-width: 2px;
     flex-shrink: 0;
     transition: transform 0.15s ease;
+}
+.lock-combo-icon {
+    width: 18px;
+    height: 18px;
+}
+.toolbar-icon-button .lock-combo-icon {
+    margin-right: 5px;
 }
 .opt-button .svg-icon,
 .toolbar-icon-button .svg-icon,
@@ -499,14 +564,16 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 /* Toast System */
 #toast-container {
     position: fixed;
-    top: 24px;
+    top: 50%;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, -50%);
     z-index: 20000;
     display: flex;
     flex-direction: column;
     gap: 8px;
     pointer-events: none;
+    width: min(520px, calc(100vw - 32px));
+    align-items: center;
 }
 .toast {
     background: rgba(20, 20, 19, 0.95);
@@ -521,6 +588,8 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     display: flex;
     align-items: center;
     gap: 6px;
+    max-width: 100%;
+    text-align: center;
     opacity: 0;
     transform: translateY(-8px);
     transition: opacity 0.22s ease, transform 0.22s ease;
@@ -624,10 +693,10 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     display: inline-flex;
     align-items: center;
     gap: 5px;
-    padding: 2px 5px;
-    border: 1px solid var(--toolbar-border, #e6dfd8);
-    border-radius: var(--toolbar-radius, 6px);
-    background: color-mix(in srgb, var(--toolbar-bg, #faf9f5) 88%, var(--toolbar-accent, #cc785c));
+    height: var(--toolbar-height);
+    padding: 0;
+    border: 0;
+    background: transparent;
 }
 .footer-control-label {
     font-size: 10px;
@@ -635,6 +704,35 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     color: var(--toolbar-muted, #6c6a64);
     line-height: 1;
     pointer-events: none;
+}
+.save-control-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 4px;
+    border: 1px solid var(--toolbar-border, #e6dfd8);
+    border-radius: var(--toolbar-radius, 6px);
+    background: color-mix(in srgb, var(--toolbar-bg, #faf9f5) 92%, var(--toolbar-accent, #cc785c));
+}
+.autosave-toggle-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    min-height: var(--toolbar-height);
+    padding: 0 4px;
+    color: var(--toolbar-muted, #6c6a64);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+}
+.autosave-toggle-label input {
+    margin: 0;
+    accent-color: var(--toolbar-accent, #cc785c);
+}
+.autosave-toggle-label input:disabled {
+    cursor: not-allowed;
 }
 
 /* Compact two-state controls inspired by native switch rails. */
@@ -1874,6 +1972,49 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         width: 100% !important;
     }
 
+    /* Keep the editor's primary actions in one mobile row; secondary tools live under More. */
+    body:not(.share-view) .footer-section-edit {
+        min-width: 0 !important;
+    }
+    body:not(.share-view) .footer-section-edit .footer-section-body {
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        gap: 4px !important;
+        overflow: hidden !important;
+    }
+    body:not(.share-view) .footer-section-edit .footer-section-body > * {
+        display: none !important;
+    }
+    body:not(.share-view) .footer-section-edit .footer-section-body > :first-child,
+    body:not(.share-view) .footer-section-edit .footer-section-body > .save-control-group,
+    body:not(.share-view) .footer-section-edit .footer-section-body > .opt-pw,
+    body:not(.share-view) .footer-section-edit .footer-section-body > .opt-pw-view,
+    body:not(.share-view) .footer-section-edit .footer-section-body > .mobile-more-btn {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+    }
+    body:not(.share-view) .footer-section-edit .footer-section-body > :first-child {
+        min-width: 0 !important;
+    }
+    body:not(.share-view) .footer-section-edit .save-control-group {
+        gap: 2px !important;
+        padding: 1px 2px !important;
+    }
+    /* Expanding More restores every editor tool; only file inputs stay visually hidden. */
+    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body {
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body > * {
+        display: inline-flex !important;
+        flex: 0 0 auto !important;
+    }
+    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body > input.visually-hidden-file-input {
+        display: none !important;
+    }
+
     /* Padding for note container on mobile share/edit views */
     body.share-view #preview-md,
     body.share-view #preview-plain,
@@ -1887,6 +2028,10 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     body.footer-expanded .preview-pane,
     body.footer-expanded textarea.contents {
         padding-bottom: 180px !important;
+    }
+    body.footer-expanded:not(.share-view) .preview-pane,
+    body.footer-expanded:not(.share-view) textarea.contents {
+        padding-bottom: 240px !important;
     }
 
     body.share-view .footer-select {
