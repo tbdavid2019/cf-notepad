@@ -40,6 +40,8 @@ const getNotesNamespace = () => globalThis.NOTES
 const getShareNamespace = () => globalThis.SHARE
 const getImagesBucket = () => globalThis.IMAGES
 const SHARE_SLUG_LENGTH = 6
+const OG_IMAGE_VERSION = '2026-07-14-david888-wiki'
+const getOgImageUrl = origin => new URL(`/og-image.png?v=${OG_IMAGE_VERSION}`, origin).href
 const {
     AGENT_SKILL_PATH,
     AGENT_SKILLS_INDEX_PATH,
@@ -343,16 +345,22 @@ async function backupCurrentNoteBeforeRestore({
     })
 }
 
-router.get('/', ({ url }) => {
-    const newHash = genRandomStr(SLUG_LENGTH)
-    // redirect to new page
-    return Response.redirect(`${url}${newHash}`, 302)
-})
+const homePage = request => {
+    const originUrl = new URL(request.url)
+    const nextUrl = new URL(genRandomStr(SLUG_LENGTH), originUrl)
+    const canonicalUrl = new URL('/', originUrl)
+    const ogImageUrl = getOgImageUrl(originUrl)
 
-router.head('/', ({ url }) => {
-    const newHash = genRandomStr(SLUG_LENGTH)
-    return Response.redirect(`${url}${newHash}`, 302)
-})
+    return returnPage('Home', {
+        lang: getI18n(request),
+        nextUrl: nextUrl.href,
+        canonicalUrl: canonicalUrl.href,
+        ogImageUrl,
+    })
+}
+
+router.get('/', homePage)
+router.head('/', homePage)
 
 const handleAdminGet = async (request) => {
     const lang = getI18n(request)
@@ -714,11 +722,11 @@ async function renderSharePage(request, presentationMode = false) {
                 meta: {
                     canonicalUrl,
                     description,
-                    ogImageUrl: `${origin}/og-image.png`,
+                    ogImageUrl: getOgImageUrl(origin),
                     ogType: 'article',
                     robots: 'index,follow',
                     siteName: 'DAVID888 WIKI',
-                    twitterCard: 'summary',
+                    twitterCard: 'summary_large_image',
                 },
             },
             path,

@@ -18,7 +18,7 @@
 export { Edit } from './templates/edit'
 export { Share } from './templates/share'
 export { Admin } from './templates/admin'
-export { NeedPasswd, Page404 } from './templates/pages'
+export { Home, NeedPasswd, Page404 } from './templates/pages'
 
 // Also re-export shared utilities for any code that imports them from template.js
 export { FOOTER, MODAL, SWITCHER } from './templates/common'

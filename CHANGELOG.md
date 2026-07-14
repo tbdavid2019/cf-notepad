@@ -8,6 +8,12 @@
   - Newly published notes ask whether to enable per-note autosave.
   - Markdown downloads now prefer the note title for the filename, falling back to the note path when needed.
   - Shared-note Open Graph metadata now uses `DAVID888 WIKI` as the site name.
+- **Open Graph Branding and Homepage Metadata**
+  - Replaced the social-card image branding with `DAVID888 WIKI`.
+  - Added a stable, indexable homepage OG payload with title, description, canonical URL, image dimensions, and large-image Twitter metadata.
+  - Versioned the OG image URL so social crawlers do not keep serving the previous immutable image cache.
+  - Added OG image alt text, locale, theme color, JSON-LD, an HTML language attribute, and a crawlable share-page H1.
+  - Kept the root new-note workflow: browsers still open a fresh editor slug automatically, while crawlers can read the homepage metadata.
 - **Public-Gated Note Saving**
   - Unpublished notes no longer persist editor content to KV.
   - Publishing saves the current editor content and publishes the note in one operation.

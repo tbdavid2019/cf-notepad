@@ -12,6 +12,7 @@ import { AUTOSAVE_IDLE_MS } from '../save_policy.mjs'
 
 const PUBLIC_ICON_SVG_URL = '/icon.svg'
 const PUBLIC_ICON_PNG_URL = '/icon.png'
+const DEFAULT_OG_SITE_NAME = 'DAVID888 WIKI'
 
 const escapeHtml = value => String(value || '')
     .replace(/&/g, '&amp;')
@@ -43,9 +44,22 @@ const PUBLISH_NUDGE_MODAL = lang => {
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
     const initialShareFont = ext.shareFont === 'maple' ? 'maple' : 'jetbrains'
+    const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
+    const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
+    const pageDescription = ext.meta?.description || tips || title || APP_NAME
     const ogSiteNameMeta = ext.meta?.siteName === false
         ? ''
-        : `<meta property="og:site_name" content="${escapeHtml(ext.meta?.siteName || APP_NAME)}" />`
+        : `<meta property="og:site_name" content="${escapeHtml(ext.meta?.siteName || DEFAULT_OG_SITE_NAME)}" />`
+    const structuredData = ext.meta?.canonicalUrl
+        ? JSON.stringify({
+            '@context': 'https://schema.org',
+            '@type': ext.meta?.ogType === 'article' ? 'Article' : 'WebPage',
+            name: title || APP_NAME,
+            description: pageDescription,
+            url: ext.meta.canonicalUrl,
+            ...(ext.meta?.ogImageUrl ? { image: ext.meta.ogImageUrl } : {}),
+        }).replace(/</g, '\\u003c')
+        : ''
     const gaScript = gaMeasurementId ? `
     <script async src="https://www.googletagmanager.com/gtag/js?id=${escapeHtml(gaMeasurementId)}"></script>
     <script>
@@ -57,25 +71,34 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
 
     return `
 <!DOCTYPE html>
-<html>
+<html lang="${htmlLang}">
 <head>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(title)} - ${escapeHtml(APP_NAME)}</title>
-    <meta name="description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    <meta name="description" content="${escapeHtml(pageDescription)}" />
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
+    <meta name="theme-color" content="#0f172a" />
     ${ogSiteNameMeta}
+    ${ext.meta?.canonicalUrl ? `<meta property="og:locale" content="${ogLocale}" />` : ''}
     <meta property="og:type" content="${escapeHtml(ext.meta?.ogType || 'website')}" />
     <meta property="og:title" content="${escapeHtml(title || APP_NAME)}" />
-    <meta property="og:description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    <meta property="og:description" content="${escapeHtml(pageDescription)}" />
     <meta name="twitter:card" content="${escapeHtml(ext.meta?.twitterCard || 'summary')}" />
     <meta name="twitter:title" content="${escapeHtml(title || APP_NAME)}" />
-    <meta name="twitter:description" content="${escapeHtml(ext.meta?.description || tips || title || APP_NAME)}" />
+    <meta name="twitter:description" content="${escapeHtml(pageDescription)}" />
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
+    ${ext.meta?.ogImageUrl ? `<meta property="og:image:secure_url" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
+    ${ext.meta?.ogImageUrl ? '<meta property="og:image:type" content="image/png" />' : ''}
+    ${ext.meta?.ogImageUrl ? '<meta property="og:image:width" content="1200" />' : ''}
+    ${ext.meta?.ogImageUrl ? '<meta property="og:image:height" content="630" />' : ''}
+    ${ext.meta?.ogImageUrl ? `<meta property="og:image:alt" content="${escapeHtml(ext.meta?.ogImageAlt || title || APP_NAME)}" />` : ''}
     ${ext.meta?.ogImageUrl ? `<meta name="twitter:image" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
+    ${ext.meta?.ogImageUrl ? `<meta name="twitter:image:alt" content="${escapeHtml(ext.meta?.ogImageAlt || title || APP_NAME)}" />` : ''}
+    ${structuredData ? `<script type="application/ld+json">${structuredData}</script>` : ''}
     <style>
 ${getBaseCss()}
 ${getEditorCss()}
@@ -185,6 +208,7 @@ ${getMarkdownCss()}
                 <div class="layer_2">
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
+                        ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
                          <article style="display:none;" id="bot-accessible-content">${content}</article>
                         ${isEdit ? `<div class="editor-pane">
                             ${(ext.mode || 'md') === 'md' ? EDITOR_TOOLBAR(lang) : ''}

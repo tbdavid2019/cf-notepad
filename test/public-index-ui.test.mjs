@@ -5,7 +5,9 @@ import { readFileSync } from 'node:fs'
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
+const pagesTemplateSource = readFileSync(new URL('../src/templates/pages.js', import.meta.url), 'utf8')
 const constantSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
+const ogCardSource = readFileSync(new URL('../static/og-card.svg', import.meta.url), 'utf8')
 const xAiThemeSource = readFileSync(new URL('../theme/x-ai.css', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
 
@@ -32,6 +34,31 @@ test('published footer exposes public index control and removes published label 
 
 test('share pages expose the requested Open Graph site name', () => {
     assert.match(indexSource, /siteName: 'DAVID888 WIKI'/)
+})
+
+test('homepage exposes stable DAVID888 WIKI Open Graph metadata while opening a new note', () => {
+    assert.match(indexSource, /const homePage = request =>/)
+    assert.match(indexSource, /router\.get\('\/', homePage\)/)
+    assert.match(pagesTemplateSource, /<meta property="og:site_name" content="DAVID888 WIKI" \/>/)
+    assert.match(pagesTemplateSource, /window\.location\.replace\(/)
+    assert.match(pagesTemplateSource, /<link rel="canonical" href=/)
+    assert.match(pagesTemplateSource, /property="og:image:width" content="1200"/)
+})
+
+test('Open Graph images declare dimensions and use DAVID888 WIKI branding', () => {
+    assert.match(baseTemplateSource, /og:image:type.*image\/png/)
+    assert.match(baseTemplateSource, /og:image:width.*1200/)
+    assert.match(baseTemplateSource, /og:image:height.*630/)
+    assert.match(baseTemplateSource, /og:image:alt/)
+    assert.match(baseTemplateSource, /meta name="theme-color"/)
+    assert.match(baseTemplateSource, /application\/ld\+json/)
+    assert.match(baseTemplateSource, /<html lang="\$\{htmlLang\}">/)
+    assert.match(indexSource, /twitterCard: 'summary_large_image'/)
+    assert.match(indexSource, /OG_IMAGE_VERSION = '2026-07-14-david888-wiki'/)
+    assert.match(indexSource, /getOgImageUrl\(origin\)/)
+    assert.match(ogCardSource, /aria-label="DAVID888 WIKI social card"/)
+    assert.match(ogCardSource, />DAVID888 WIKI<\/text>/)
+    assert.doesNotMatch(ogCardSource, />Notepad 888<\/text>/)
 })
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
