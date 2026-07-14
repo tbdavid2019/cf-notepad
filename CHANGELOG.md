@@ -14,6 +14,9 @@
   - Versioned the OG image URL so social crawlers do not keep serving the previous immutable image cache.
   - Added OG image alt text, locale, theme color, JSON-LD, an HTML language attribute, and a crawlable share-page H1.
   - Kept the root new-note workflow: browsers still open a fresh editor slug automatically, while crawlers can read the homepage metadata.
+- **Runtime Slug Length Configuration**
+  - Fixed the homepage's random editor URL generator so `SCN_SLUG_LENGTH` is read after Cloudflare Worker runtime bindings are injected.
+  - Added a regression test covering a runtime-configured four-character slug length.
 - **Public-Gated Note Saving**
   - Unpublished notes no longer persist editor content to KV.
   - Publishing saves the current editor content and publishes the note in one operation.

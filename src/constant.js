@@ -19,7 +19,7 @@ export const getAdminPassword = () => readRuntimeVar('SCN_ADMIN_PW')
 // after the Worker module has been evaluated.
 export const ADMIN_PATH = getAdminPath()
 export const ADMIN_PW = getAdminPassword()
-export const SLUG_LENGTH = parseInt(readRuntimeVar('SCN_SLUG_LENGTH') || '3')
+export const getSlugLength = () => parseInt(readRuntimeVar('SCN_SLUG_LENGTH') || '3', 10)
 // Access R2 config at runtime instead of module load time
 export const getEnableR2 = () => readRuntimeVar('SCN_ENABLE_R2') === '1'
 export const getR2Domain = () => (typeof readRuntimeVar('SCN_R2_DOMAIN') !== 'undefined' ? readRuntimeVar('SCN_R2_DOMAIN') : '')
