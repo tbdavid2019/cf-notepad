@@ -44,6 +44,7 @@ const PUBLISH_NUDGE_MODAL = lang => {
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
     const initialShareFont = ext.shareFont === 'maple' ? 'maple' : 'jetbrains'
+    const isEmbed = ext.embed === true
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
@@ -201,7 +202,7 @@ ${getMarkdownCss()}
     <link rel="apple-touch-icon" href="${PUBLIC_ICON_PNG_URL}" />
     ${gaScript}
 </head>
-<body class="${ext.sharePath && !isEdit ? `share-view share-font-${initialShareFont}` : ''}">
+<body class="${ext.sharePath && !isEdit ? `share-view share-font-${initialShareFont}${isEmbed ? ' share-embed' : ''}` : ''}">
     <div class="note-container">
         <div class="stack">
             <div class="layer_1">
@@ -224,10 +225,24 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true })}
     </div>
-    ${ext.sharePath && !isEdit ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
+    ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
     <div id="loading"></div>
+    ${isEmbed ? `
+    <script>
+        (() => {
+            const sendEmbedHeight = () => {
+                const height = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight);
+                window.parent.postMessage({ type: 'cf-notepad:embed-resize', height }, '*');
+            };
+            if (window.ResizeObserver) new ResizeObserver(sendEmbedHeight).observe(document.body);
+            window.addEventListener('load', sendEmbedHeight);
+            window.addEventListener('resize', sendEmbedHeight);
+            sendEmbedHeight();
+        })();
+    \u003c/script\u003e
+    ` : ''}
     ${MODAL(lang, { noteHistoryEnabled: ext.noteHistoryEnabled === true && isEdit })}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
@@ -568,6 +583,7 @@ ${getMarkdownCss()}
     const APP_STATE = ${JSON.stringify({
         authPath: ext.authPath || '',
         sharePath: ext.sharePath || '',
+        embed: isEmbed,
         presentationPath: ext.presentationPath || '',
         settingPath: ext.settingPath || (path ? '/' + path + '/setting' : ''),
         path: path || '',
@@ -767,7 +783,9 @@ ${getMarkdownCss()}
 
         const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')
         const getSettingPath = () => APP_STATE.settingPath || (location.pathname + '/setting')
+        const canPersistSettings = APP_STATE.isEdit === true
         const persistSetting = async nextSettings => {
+            if (!canPersistSettings) return null
             const payload = await fetchJson(getSettingPath(), {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2001,6 +2019,11 @@ ${getMarkdownCss()}
         const $shareOpenLink = document.querySelector('#share-open-link');
         const $shareCopyBtn = document.querySelector('#copy-share-btn');
         const $copyPresentShareBtn = document.querySelector('#copy-present-share-btn');
+        const $copyEmbedCodeBtn = document.querySelector('#copy-embed-code-btn');
+        const $embedModal = document.querySelector('.embed-modal');
+        const $embedModalCode = $embedModal?.querySelector('.embed-modal-code');
+        const $embedModalCopyBtn = $embedModal?.querySelector('.embed-modal-copy-btn');
+        const $embedModalCloseBtn = $embedModal?.querySelector('.embed-modal-close');
         const $publicIndexBtn = document.querySelector('#public-index-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         const $sharePublishMenuBtn = document.querySelector('.share-publish-menu-btn');
@@ -2028,6 +2051,31 @@ ${getMarkdownCss()}
                     window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
                 }
             });
+        }
+        if ($copyEmbedCodeBtn && $embedModal && $embedModalCode) {
+            const getEmbedCode = () => {
+                const embedUrl = new URL(window.location.href);
+                embedUrl.searchParams.set('embed', '1');
+                embedUrl.hash = '';
+                return '<iframe src="' + embedUrl.toString() + '" title="' + (APP_STATE.title || 'Shared note') + '" width="100%" height="600" frameborder="0" loading="lazy"></iframe>';
+            };
+            const closeEmbedModal = () => { $embedModal.style.display = 'none'; };
+            $copyEmbedCodeBtn.addEventListener('click', () => {
+                $embedModalCode.value = getEmbedCode();
+                $embedModal.style.display = 'block';
+                $embedModalCode.focus();
+                $embedModalCode.select();
+            });
+            $embedModalCopyBtn?.addEventListener('click', async () => {
+                try {
+                    await clipboardCopy($embedModalCode.value);
+                    window.showToast(getI18n('copied') || 'Copied!');
+                } catch (e) {
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
+                }
+            });
+            $embedModalCloseBtn?.addEventListener('click', closeEmbedModal);
+            $embedModal.querySelector('.modal-mask')?.addEventListener('click', closeEmbedModal);
         }
         if ($publicIndexBtn) {
             syncPublicIndexButton();
@@ -2354,7 +2402,7 @@ ${getMarkdownCss()}
             setRailSwitchState(shareFontSelector, shareFont === 'jetbrains');
         }
 
-        const savedPreviewWidth = window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY);
+        const savedPreviewWidth = canPersistSettings ? window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY) : '';
         const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || '100%';
         applyPreviewWidth(initialPreviewWidth);
 
@@ -2418,7 +2466,7 @@ ${getMarkdownCss()}
         setupEditorViewShortcuts();
 
         if (shareViewBody.classList.contains('share-view') || shareFontSelector) {
-            const savedShareFont = window.localStorage.getItem(SHARE_FONT_STORAGE_KEY);
+            const savedShareFont = canPersistSettings ? window.localStorage.getItem(SHARE_FONT_STORAGE_KEY) : '';
             const initialShareFont = APP_STATE.noteSettings.shareFont
                 || (savedShareFont === 'maple' || savedShareFont === 'true'
                 ? 'maple'
@@ -2430,8 +2478,10 @@ ${getMarkdownCss()}
             previewWidthSelector.addEventListener('change', function() {
                 const width = this.value;
                 applyPreviewWidth(width);
-                window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
-                persistSetting({ width }).catch(err => errHandle(err.message || err));
+                if (canPersistSettings) {
+                    window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
+                    persistSetting({ width }).catch(err => errHandle(err.message || err));
+                }
             });
         }
 
@@ -2445,8 +2495,10 @@ ${getMarkdownCss()}
                 const current = this.getAttribute('aria-pressed') === 'true' ? 'jetbrains' : 'maple';
                 const shareFont = current === 'jetbrains' ? 'maple' : 'jetbrains';
                 applyShareFont(shareFont);
-                window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
-                persistSetting({ shareFont }).catch(err => errHandle(err.message || err));
+                if (canPersistSettings) {
+                    window.localStorage.setItem(SHARE_FONT_STORAGE_KEY, shareFont);
+                    persistSetting({ shareFont }).catch(err => errHandle(err.message || err));
+                }
             });
         }
 
@@ -2456,7 +2508,7 @@ ${getMarkdownCss()}
                 const theme = this.value;
                 themeStyleNode.textContent = THEMES[theme];
                 this.title = this.options[this.selectedIndex]?.textContent || '';
-                persistSetting({ theme }).catch(err => errHandle(err.message || err));
+                if (canPersistSettings) persistSetting({ theme }).catch(err => errHandle(err.message || err));
             });
         }
 

@@ -657,6 +657,7 @@ router.post('/share/:shareId/auth', async request => {
 async function renderSharePage(request, presentationMode = false) {
     const lang = getI18n(request)
     const { shareId } = request.params
+    const embedMode = new URL(request.url).searchParams.get('embed') === '1'
     const path = await getShareNamespace().get(shareId)
     const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
@@ -711,6 +712,7 @@ async function renderSharePage(request, presentationMode = false) {
             lang,
             title,
             content: value,
+            shareId,
             ext: {
                 ...metadata,
                 ...(metadata.pw || metadata.vpw ? { authPath } : {}),
@@ -719,6 +721,7 @@ async function renderSharePage(request, presentationMode = false) {
                 gaMeasurementId,
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
+                embed: embedMode,
                 meta: {
                     canonicalUrl,
                     description,

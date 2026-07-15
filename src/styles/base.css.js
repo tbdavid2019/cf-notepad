@@ -77,6 +77,10 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .modal { display: none; }
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
 .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
+.embed-modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel-bg, #fff); color: var(--text-color, #222); padding: 24px; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,0.22); z-index: 1001; width: min(620px, calc(100vw - 32px)); box-sizing: border-box; }
+.embed-modal-content h2 { margin: 0 0 8px; }
+.embed-modal-content p { margin: 0 0 14px; }
+.embed-modal-code { width: 100%; min-height: 110px; box-sizing: border-box; resize: vertical; margin-bottom: 12px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
 .modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
 .share-index-prompt {

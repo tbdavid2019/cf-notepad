@@ -11,11 +11,11 @@ const ogCardSource = readFileSync(new URL('../static/og-card.svg', import.meta.u
 const xAiThemeSource = readFileSync(new URL('../theme/x-ai.css', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
 
-test('x-ai theme keeps every heading level visible on the white preview canvas', () => {
-    assert.match(xAiThemeSource, /#bm-md h6 \{\s*color: #202124;\s*-webkit-text-fill-color: currentColor;/s)
+test('x-ai theme keeps every heading level visible on the dark preview canvas', () => {
+    assert.match(xAiThemeSource, /#bm-md h1,[\s\S]*#bm-md h6 \{\s*color: #e8eaed;\s*-webkit-text-fill-color: currentColor;/s)
     assert.match(xAiThemeSource, /#bm-md h1 \{[\s\S]*background: #151515;[\s\S]*color: #ffffff;/)
-    assert.match(xAiThemeSource, /#bm-md h2 \{[\s\S]*color: #16181b;/)
-    assert.match(xAiThemeSource, /#bm-md h3 \{[\s\S]*color: #8a3b00;/)
+    assert.match(xAiThemeSource, /#bm-md h2 \{[\s\S]*color: #ffffff;/)
+    assert.match(xAiThemeSource, /#bm-md h3 \{[\s\S]*color: #ff7a17;/)
     assert.match(xAiThemeSource, /#bm-md h6 a \{[\s\S]*color: inherit;/)
 })
 

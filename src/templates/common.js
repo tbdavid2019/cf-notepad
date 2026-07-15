@@ -222,17 +222,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
                         </button>
                         ${showNoteHistory ? `
-                            <div class="dropdown-container history-dropdown">
-                                <button type="button" class="toolbar-icon-button dropdown-trigger" title="${t.historyTitle}" aria-label="${t.historyTitle}">
-                                    ${SVG_ICONS.history}
-                                    <span class="toolbar-button-label">${lang === 'zh-TW' ? '歷史' : 'History'}</span>
-                                </button>
-                                <div class="dropdown-menu">
-                                    <button type="button" id="note-history-btn" class="dropdown-item note-history-trigger" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}">
-                                        ${SVG_ICONS.history} <span>${t.historyTitle}</span>
-                                    </button>
-                                </div>
-                            </div>
+                            <button type="button" id="note-history-btn" class="toolbar-icon-button note-history-trigger" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}" aria-label="${t.historyTitle}">
+                                ${SVG_ICONS.history}
+                                <span class="sr-only">${t.historyTitle}</span>
+                            </button>
                         ` : ''}
                         <button type="button" id="ai-format-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}">
                             ${SVG_ICONS.sparkles}
@@ -245,7 +238,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
                         <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
                             ${SVG_ICONS.shareHistory}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '分享' : 'Shares'}</span>
+                            <span class="sr-only">${t.recentSharesTitle}</span>
                         </button>
                         <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
                             <div class="footer-preview-group footer-control-group">
@@ -307,6 +300,12 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
                         </button>
+                        ${sharePath && shareId ? `
+                        <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
+                            ${SVG_ICONS.link}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
+                        </button>
+                        ` : ''}
                         <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
@@ -456,6 +455,16 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
         <div class="share-history-list" data-share-history-list></div>
 </div>
+</div>
+<div class="modal embed-modal" role="dialog" aria-modal="true" aria-labelledby="embed-modal-title">
+    <div class="modal-mask"></div>
+    <div class="embed-modal-content">
+        <button type="button" class="close-btn embed-modal-close" aria-label="${t.later}">x</button>
+        <h2 id="embed-modal-title">${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}</h2>
+        <p>${lang === 'zh-TW' ? '將以下 iframe 程式碼貼到你的網站即可嵌入此分享頁。' : 'Copy this iframe code into your website to embed this shared page.'}</p>
+        <textarea class="embed-modal-code" readonly spellcheck="false" aria-label="${lang === 'zh-TW' ? '嵌入程式碼' : 'Embed code'}"></textarea>
+        <button type="button" class="opt-button opt-button-accent embed-modal-copy-btn">${t.copy}</button>
+    </div>
 </div>
 <div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
     <div class="modal-mask"></div>

@@ -17,7 +17,15 @@ test('base template initializes note-specific appearance from metadata before lo
     assert.match(baseTemplateSource, /const initialPreviewWidth = .*APP_STATE\.noteSettings\.width.*savedPreviewWidth.*'100%'/)
     assert.match(baseTemplateSource, /const initialPreviewDevice = .*APP_STATE\.noteSettings\.previewDevice.*savedPreviewDevice.*'desktop'/)
     assert.match(baseTemplateSource, /const initialSplitDirection = APP_STATE\.noteSettings\.splitDirection === 'vertical' \? 'vertical' : 'horizontal'/)
-    assert.match(baseTemplateSource, /const savedShareFont = window\.localStorage\.getItem\(SHARE_FONT_STORAGE_KEY\);/)
+    assert.match(baseTemplateSource, /const savedShareFont = canPersistSettings \? window\.localStorage\.getItem\(SHARE_FONT_STORAGE_KEY\) : '';/)
     assert.match(baseTemplateSource, /const initialShareFont = APP_STATE\.noteSettings\.shareFont/)
     assert.match(baseTemplateSource, /savedShareFont === 'maple' \|\| savedShareFont === 'true'/)
+})
+
+test('share appearance changes stay local and only edit pages persist settings', () => {
+    assert.match(baseTemplateSource, /const canPersistSettings = APP_STATE\.isEdit === true/)
+    assert.match(baseTemplateSource, /if \(!canPersistSettings\) return null/)
+    assert.match(baseTemplateSource, /if \(canPersistSettings\) \{\s*window\.localStorage\.setItem\(PREVIEW_WIDTH_STORAGE_KEY/s)
+    assert.match(baseTemplateSource, /if \(canPersistSettings\) \{\s*window\.localStorage\.setItem\(SHARE_FONT_STORAGE_KEY/s)
+    assert.match(baseTemplateSource, /if \(canPersistSettings\) persistSetting\(\{ theme \}\)/)
 })
