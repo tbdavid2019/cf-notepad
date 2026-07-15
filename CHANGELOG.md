@@ -6,6 +6,7 @@
   - Added safe preview detection for PDF, YouTube, video, and audio links in editor and share previews.
   - YouTube links use `youtube-nocookie.com` embeds; native media previews retain a fallback link.
   - Set YouTube previews to a responsive 16:9 player instead of the browser's default short iframe height.
+  - Removed the fixed minimum height so the player scales correctly on narrow mobile layouts.
   - Kept the Markdown parser unchanged and apply preview decoration after DOMPurify sanitization.
 
 ### Fixed
