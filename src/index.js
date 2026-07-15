@@ -677,6 +677,7 @@ async function renderSharePage(request, presentationMode = false) {
                 return returnPage('NeedPasswd', {
                     lang,
                     title: 'Password Protected',
+                    shareId,
                     path,
                     ext: {
                         authPath,

@@ -81,6 +81,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="description" content="${escapeHtml(pageDescription)}" />
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
     <meta name="theme-color" content="#0f172a" />
+    ${ext.sharePath && shareId && !isEdit ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
     ${ogSiteNameMeta}
     ${ext.meta?.canonicalUrl ? `<meta property="og:locale" content="${ogLocale}" />` : ''}
     <meta property="og:type" content="${escapeHtml(ext.meta?.ogType || 'website')}" />

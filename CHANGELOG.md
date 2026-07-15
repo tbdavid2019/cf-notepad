@@ -9,6 +9,8 @@
   - Removed the fixed minimum height so the player scales correctly on narrow mobile layouts.
   - Copying rendered content now uses the sanitized HTML snapshot from before media preview decoration, keeping iframe previews out of Jira, Confluence, and similar editors.
   - Kept the Markdown parser unchanged and apply preview decoration after DOMPurify sanitization.
+- **WebTalk Page Identity**
+  - Added `meta[name="webtalk-page-id"]` to share and password-protected share pages using the existing share ID.
 
 ### Fixed
 - **Share Embed and Viewer Settings**
