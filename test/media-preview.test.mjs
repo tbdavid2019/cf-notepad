@@ -46,4 +46,5 @@ test('renderer loads media decoration after sanitizing Markdown HTML', () => {
     assert.match(baseTemplateSource, /import \{ decorateMediaPreviews \} from '\/js\/media-preview\.mjs'/)
     assert.match(baseTemplateSource, /node\.innerHTML = clean;[\s\S]*decorateMediaPreviews\(node\)/)
     assert.match(markdownCssSource, /\.media-preview/)
+    assert.match(markdownCssSource, /\.media-preview-youtube[\s\S]*aspect-ratio: 16 \/ 9/)
 })

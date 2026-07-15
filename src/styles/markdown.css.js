@@ -30,6 +30,8 @@ export const getMarkdownCss = () => `
 .markdown-body img { max-width: 100%; box-sizing: content-box; }
 .markdown-body .media-preview { margin: 20px 0; padding: 12px; border: 1px solid rgba(127, 127, 127, 0.28); border-radius: 8px; background: rgba(127, 127, 127, 0.06); }
 .markdown-body .media-preview-player { display: block; width: 100%; max-width: 100%; border: 0; border-radius: 4px; }
+.markdown-body .media-preview-youtube { padding: 0; overflow: hidden; }
+.markdown-body .media-preview-youtube .media-preview-player { aspect-ratio: 16 / 9; height: auto; min-height: 360px; background: #000; }
 .markdown-body .media-preview-pdf .media-preview-player { min-height: min(75vh, 760px); background: #fff; }
 .markdown-body .media-preview-video .media-preview-player { max-height: min(75vh, 720px); background: #000; }
 .markdown-body .media-preview-audio .media-preview-player { min-height: 42px; }
