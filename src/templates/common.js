@@ -322,7 +322,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-appearance">
                 <div class="footer-section-body">
                     ${(sharePath || isEdit) ? `
-                        <div class="footer-control-group">
+                        <div class="footer-control-group footer-toggle-control-group">
                             <div id="share-font-selector" class="share-font-toggle" role="group" aria-label="${shareFontAriaLabel}">
                                 ${RAIL_SWITCH({
                                     className: 'share-font-switch',
@@ -338,7 +338,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             </div>
                         </div>
                     ` : ''}
-                    <div class="footer-control-group">
+                    <div class="footer-control-group footer-toggle-control-group">
                         <div id="language-selector">
                             ${RAIL_SWITCH({
                                 checked: lang === 'zh-TW',

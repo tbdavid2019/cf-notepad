@@ -689,6 +689,17 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     align-items: center;
     gap: 1px;
 }
+.footer-toggle-control-group {
+    height: var(--toolbar-height);
+    justify-content: center;
+}
+#language-selector,
+#share-font-selector {
+    display: inline-flex;
+    align-items: center;
+    height: var(--toolbar-height);
+    line-height: 0;
+}
 .footer-view-settings-group {
     display: inline-flex;
     align-items: center;

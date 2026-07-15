@@ -129,7 +129,11 @@ const SHORTCUTS = {
     k: 'link',
 }
 
-const BOX_UPLOAD_ENDPOINT = 'https://box.glsoft.ai/api.php?action=upload'
+const BOX_UPLOAD_ENDPOINTS = [
+    'https://box.david888.com/api.php?action=upload',
+    'https://box.aiurl.tw/api.php?action=upload',
+    'https://box.glsoft.ai/api.php?action=upload',
+]
 
 const normalizeEditorState = state => ({
     value: String(state?.value || ''),
@@ -277,16 +281,25 @@ export const initMarkdownToolbar = (root = document) => {
         if (file.type?.startsWith('image/')) {
             throw new Error('Images still use the R2 image uploader')
         }
-        const formData = new FormData()
-        formData.append('file', file)
-        formData.append('title', file.name || 'attachment')
-        const response = await fetch(BOX_UPLOAD_ENDPOINT, { method: 'POST', body: formData })
-        const payload = await response.json()
-        const url = payload?.data?.url
-        if (!response.ok || payload?.result !== 'success' || !url) {
-            throw new Error(payload?.message || 'Attachment upload failed')
+        let lastError
+        for (const endpoint of BOX_UPLOAD_ENDPOINTS) {
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
+                formData.append('title', file.name || 'attachment')
+                const response = await fetch(endpoint, { method: 'POST', body: formData })
+                const payload = await response.json()
+                const url = payload?.data?.url
+                if (response.ok && payload?.result === 'success' && url) {
+                    insertUploadedAsset(url, file, start, end)
+                    return
+                }
+                lastError = new Error(payload?.message || 'Attachment upload failed')
+            } catch (error) {
+                lastError = error
+            }
         }
-        insertUploadedAsset(url, file, start, end)
+        throw lastError || new Error('Attachment upload failed')
     }
 
     const toggleFullscreen = () => {
