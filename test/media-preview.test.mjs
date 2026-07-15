@@ -44,7 +44,8 @@ test('rejects unsafe URLs and unrelated links', () => {
 
 test('renderer loads media decoration after sanitizing Markdown HTML', () => {
     assert.match(baseTemplateSource, /import \{ decorateMediaPreviews \} from '\/js\/media-preview\.mjs'/)
-    assert.match(baseTemplateSource, /node\.innerHTML = clean;[\s\S]*decorateMediaPreviews\(node\)/)
+    assert.match(baseTemplateSource, /node\.innerHTML = clean;[\s\S]*decorateHeadingAnchors\(node\);[\s\S]*node\.dataset\.copyHtml = node\.innerHTML;[\s\S]*decorateMediaPreviews\(node\)/)
+    assert.match(baseTemplateSource, /return preview \? preview\.dataset\.copyHtml \|\| preview\.innerHTML \|\| '' : ''/)
     assert.match(markdownCssSource, /\.media-preview/)
     assert.match(markdownCssSource, /\.media-preview-youtube[\s\S]*aspect-ratio: 16 \/ 9[\s\S]*min-height: 0/)
 })

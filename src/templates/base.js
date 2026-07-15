@@ -563,6 +563,7 @@ ${getMarkdownCss()}
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
                 decorateHeadingAnchors(node);
+                node.dataset.copyHtml = node.innerHTML;
                 decorateMediaPreviews(node);
                 openShareContentLinksInNewTab(node);
                 initDiagrams();
@@ -1494,7 +1495,7 @@ ${getMarkdownCss()}
 
         const getCurrentHtmlForCopy = () => {
             const preview = $previewMd || $previewPlain
-            return preview ? preview.innerHTML || '' : ''
+            return preview ? preview.dataset.copyHtml || preview.innerHTML || '' : ''
         }
 
         let copyResetTimer = null
