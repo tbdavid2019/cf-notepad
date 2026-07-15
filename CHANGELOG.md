@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-07-15]
+### Added
+- **Media URL Previews**
+  - Added safe preview detection for PDF, YouTube, video, and audio links in editor and share previews.
+  - YouTube links use `youtube-nocookie.com` embeds; native media previews retain a fallback link.
+  - Kept the Markdown parser unchanged and apply preview decoration after DOMPurify sanitization.
+
+### Fixed
+- **Share Embed and Viewer Settings**
+  - Restored the share-page Embed button, iframe code modal, `?embed=1` route, and iframe height messaging.
+  - Share-only theme, width, and font changes now stay local to the current viewer; edit pages remain persistent.
+- **Attachment Upload Fallbacks**
+  - Uploads now prefer `box.david888.com`, followed by `box.aiurl.tw` and `box.glsoft.ai`.
+
 ## [2026-07-14]
 ### Changed
 - **Editor Layout and Save Prompts**

@@ -28,6 +28,13 @@ export const getMarkdownCss = () => `
 .markdown-body a { color: #0366d6; text-decoration: none; }
 .markdown-body a:hover { text-decoration: underline; }
 .markdown-body img { max-width: 100%; box-sizing: content-box; }
+.markdown-body .media-preview { margin: 20px 0; padding: 12px; border: 1px solid rgba(127, 127, 127, 0.28); border-radius: 8px; background: rgba(127, 127, 127, 0.06); }
+.markdown-body .media-preview-player { display: block; width: 100%; max-width: 100%; border: 0; border-radius: 4px; }
+.markdown-body .media-preview-pdf .media-preview-player { min-height: min(75vh, 760px); background: #fff; }
+.markdown-body .media-preview-video .media-preview-player { max-height: min(75vh, 720px); background: #000; }
+.markdown-body .media-preview-audio .media-preview-player { min-height: 42px; }
+.markdown-body .media-preview figcaption { margin-top: 8px; font-size: 0.82em; overflow-wrap: anywhere; }
+.markdown-body .media-preview-fallback { color: inherit; }
 
 /* Apache ECharts code fences */
 .diagram-echarts-render {

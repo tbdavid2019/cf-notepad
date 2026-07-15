@@ -262,6 +262,7 @@ ${getMarkdownCss()}
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
         import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
+        import { decorateMediaPreviews } from '/js/media-preview.mjs';
 
         // GitHub Alerts Plugin
         function remarkGithubAlerts() {
@@ -562,6 +563,7 @@ ${getMarkdownCss()}
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
                 decorateHeadingAnchors(node);
+                decorateMediaPreviews(node);
                 openShareContentLinksInNewTab(node);
                 initDiagrams();
                 scheduleHashScroll();
