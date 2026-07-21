@@ -29,3 +29,13 @@ test('share appearance changes stay local and only edit pages persist settings',
     assert.match(baseTemplateSource, /if \(canPersistSettings\) \{\s*window\.localStorage\.setItem\(SHARE_FONT_STORAGE_KEY/s)
     assert.match(baseTemplateSource, /if \(canPersistSettings\) persistSetting\(\{ theme \}\)/)
 })
+
+test('editor persists default preview width to APP_STATE and server when publishing or changing selector', () => {
+    assert.match(baseTemplateSource, /APP_STATE\.noteSettings\.width = initialPreviewWidth/)
+    assert.match(baseTemplateSource, /publishCurrentNote[\s\S]*width:\s*currentWidth/)
+    assert.match(baseTemplateSource, /previewWidthSelector\.addEventListener\('wa-change'/)
+    assert.match(baseTemplateSource, /function initUiTheme/)
+    assert.match(baseTemplateSource, /document\.getElementById\('ui-theme-toggle-btn'\)/)
+})
+
+

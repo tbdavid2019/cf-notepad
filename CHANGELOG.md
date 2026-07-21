@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-07-21]
+### Added
+- **UI Dark Mode (Toolbars & Footer)**
+  - Added a dark mode toggle button (`ui-theme-toggle-btn`) in the footer info bar next to the GitHub link, with Sun/Moon SVG icons.
+  - Automatically detects system OS dark mode preference (`prefers-color-scheme: dark`) and persists user preference to `localStorage`.
+  - Added zero-FOUC inline script in `<head>` and dark mode theme variables for `.markdown-editor-toolbar`, `.footer`, `.footer-select`, `.footer-rail-switch`, `.dropdown-menu`, and `.bottom-sheet`.
+
+### Fixed
+- **Preview Width Persistence & Cloudflare KV Quota Optimization**
+  - Included `width` in the publish payload (`publishCurrentNote()`) so published/shared notes reliably keep the editor's selected preview width (1200px / 960px / 1440px / 100%).
+  - Removed automatic page-load KV write requests when initializing 1200px width in memory, eliminating redundant KV write calls and protecting Cloudflare Free Tier quota.
+  - Pre-selected the `value="${effectiveWidth}"` attribute on `<wa-select id="preview-width-selector">` in SSR HTML.
+  - Supported `width` parameter in Headless API (`POST /api/:path`) via query parameters, JSON body, and multipart form-data.
+
 ## [2026-07-17]
 ### Fixed
 - **Compact Editor Toolbar and Plain Edit Mode**

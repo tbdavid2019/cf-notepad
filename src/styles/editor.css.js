@@ -32,6 +32,7 @@ export const getEditorCss = () => `
     background: var(--toolbar-bg, rgba(250, 249, 245, 0.96));
     color: var(--toolbar-text, #3d3a36);
     scrollbar-width: thin;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
 .markdown-toolbar-button {

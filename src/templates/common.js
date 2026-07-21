@@ -48,7 +48,9 @@ const SVG_ICONS = {
     sparkles: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m0-12.728l.707.707m11.314 11.314l.707-.707M12 5a7 7 0 1 0 0 14 7 7 0 0 0 0-14z"></path></svg>`,
     magic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11.5 12.5 9-9M16 3l5 5M6.5 17.5l-4 4M2 17h5M2 22v-5M12.5 18.5l-.5-2.5-2.5-.5 2.5-.5.5-2.5.5 2.5 2.5.5-2.5.5zM5 8.5 4.5 6 2 5.5 4.5 5 5 2.5 5.5 5 8 5.5 5.5 6z"></path></svg>`,
     apiDocs: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13l3 3-3 3M16 19h-3"></path></svg>`,
-    clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`
+    clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+    sun: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
+    moon: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -354,11 +356,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     </div>
                     ${!isEdit || mode === 'md' ? `
                         <div class="footer-control-group">
-                            <wa-select id="preview-width-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${t.width}">
-                                <wa-option value="100%">${t.width}: ${t.full}</wa-option>
-                                <wa-option value="960px">${t.width}: 960</wa-option>
-                                <wa-option value="1200px">${t.width}: 1200</wa-option>
-                                <wa-option value="1440px">${t.width}: 1440</wa-option>
+                            <wa-select id="preview-width-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${t.width}" value="${effectiveWidth}">
+                                <wa-option value="100%" ${effectiveWidth === '100%' ? 'selected' : ''}>${t.width}: ${t.full}</wa-option>
+                                <wa-option value="960px" ${effectiveWidth === '960px' ? 'selected' : ''}>${t.width}: 960</wa-option>
+                                <wa-option value="1200px" ${effectiveWidth === '1200px' ? 'selected' : ''}>${t.width}: 1200</wa-option>
+                                <wa-option value="1440px" ${effectiveWidth === '1440px' ? 'selected' : ''}>${t.width}: 1440</wa-option>
                             </wa-select>
                         </div>
                         <div class="footer-control-group">
@@ -377,6 +379,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <svg viewBox="64 64 896 896" focusable="false" data-icon="github" width="1.25em" height="1.25em" fill="currentColor" aria-hidden="true"><path d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9a127.5 127.5 0 0138.1 91v112.5c.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.3z"></path></svg>
                         <span class="toolbar-button-label">GitHub</span>
                     </a>
+                    <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
+                        <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
+                        <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '模式' : 'Theme'}</span>
+                    </button>
                     <a class="toolbar-icon-link" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
                         ${SVG_ICONS.sparkles}
                         <span class="toolbar-button-label">Skill</span>

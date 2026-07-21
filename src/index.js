@@ -1133,6 +1133,9 @@ router.post('/api/:path', async (request) => {
         const theme = url.searchParams.get('theme')
         if (theme !== null) reqBody.theme = theme
 
+        const widthParam = url.searchParams.get('width')
+        if (widthParam !== null) reqBody.width = widthParam
+
         const bodyPw = url.searchParams.get('pw')
         if (bodyPw !== null) reqBody.pw = bodyPw
 
@@ -1166,6 +1169,9 @@ router.post('/api/:path', async (request) => {
 
         const theme = readStringField(formData.get('theme'))
         if (theme !== undefined) reqBody.theme = theme
+
+        const widthField = readStringField(formData.get('width'))
+        if (widthField !== undefined) reqBody.width = widthField
 
         const pwField = readStringField(formData.get('pw'))
         if (pwField !== undefined) reqBody.pw = pwField
@@ -1205,6 +1211,10 @@ router.post('/api/:path', async (request) => {
 
     if (reqBody.theme !== undefined) {
         updateMetadata.theme = reqBody.theme
+    }
+
+    if (reqBody.width !== undefined) {
+        updateMetadata.width = reqBody.width
     }
 
     if (reqBody.publicIndex !== undefined) {

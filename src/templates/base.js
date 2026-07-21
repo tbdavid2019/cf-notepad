@@ -82,7 +82,20 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     return `
 <!DOCTYPE html>
 <html lang="${htmlLang}">
-<head>
+    <script>
+        (function() {
+            try {
+                var t = localStorage.getItem('cf-notepad-ui-theme') || 'auto';
+                if (t === 'dark' || (t === 'auto' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                    document.documentElement.setAttribute('data-ui-theme', 'dark');
+                } else if (t === 'light') {
+                    document.documentElement.setAttribute('data-ui-theme', 'light');
+                } else {
+                    document.documentElement.setAttribute('data-ui-theme', 'auto');
+                }
+            } catch(e) {}
+        })();
+    </script>
     <meta charset="utf-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -1784,10 +1797,11 @@ ${getMarkdownCss()}
 
         const publishCurrentNote = () => {
             const wasPublished = APP_STATE.isPublished === true
+            const currentWidth = APP_STATE.noteSettings.width || (previewWidthSelector ? previewWidthSelector.value : '') || (APP_STATE.isEdit ? '1200px' : '100%')
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '' })
+                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '', width: currentWidth })
             })
                 .then(res => {
                     if (res.err !== 0) {
@@ -2491,6 +2505,7 @@ ${getMarkdownCss()}
 
         const savedPreviewWidth = canPersistSettings ? window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY) : '';
         const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || (APP_STATE.isEdit ? '1200px' : '100%');
+        APP_STATE.noteSettings.width = initialPreviewWidth;
         applyPreviewWidth(initialPreviewWidth);
 
         if (previewDeviceSelector) {
@@ -2562,14 +2577,18 @@ ${getMarkdownCss()}
         }
 
         if (previewWidthSelector) {
-            previewWidthSelector.addEventListener('change', function() {
+            const handleWidthChange = function() {
                 const width = this.value;
+                if (!width) return;
+                APP_STATE.noteSettings.width = width;
                 applyPreviewWidth(width);
                 if (canPersistSettings) {
                     window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
                     persistSetting({ width }).catch(err => errHandle(err.message || err));
                 }
-            });
+            };
+            previewWidthSelector.addEventListener('change', handleWidthChange);
+            previewWidthSelector.addEventListener('wa-change', handleWidthChange);
         }
 
         if (languageSelector) {
@@ -2607,6 +2626,61 @@ ${getMarkdownCss()}
             }).catch(() => {});
         }
 
+        const UI_THEME_STORAGE_KEY = 'cf-notepad-ui-theme';
+        function initUiTheme() {
+            const $themeBtn = document.getElementById('ui-theme-toggle-btn');
+            const root = document.documentElement;
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+
+            function getSavedTheme() {
+                try { return localStorage.getItem(UI_THEME_STORAGE_KEY) || 'auto'; } catch(e) { return 'auto'; }
+            }
+
+            function applyTheme(theme) {
+                if (theme === 'dark') {
+                    root.setAttribute('data-ui-theme', 'dark');
+                } else if (theme === 'light') {
+                    root.setAttribute('data-ui-theme', 'light');
+                } else {
+                    root.setAttribute('data-ui-theme', 'auto');
+                }
+                updateIcon(theme);
+            }
+
+            function updateIcon(theme) {
+                if (!$themeBtn) return;
+                const isDark = theme === 'dark' || (theme === 'auto' && mediaQuery.matches);
+                $themeBtn.classList.toggle('is-dark', isDark);
+                const label = isDark
+                    ? (APP_STATE.lang === 'zh-TW' ? '深色' : 'Dark')
+                    : (APP_STATE.lang === 'zh-TW' ? '淺色' : 'Light');
+                const textSpan = $themeBtn.querySelector('.toolbar-button-label');
+                if (textSpan) textSpan.textContent = label;
+            }
+
+            const currentTheme = getSavedTheme();
+            applyTheme(currentTheme);
+
+            if ($themeBtn) {
+                $themeBtn.addEventListener('click', () => {
+                    const nowIsDark = root.getAttribute('data-ui-theme') === 'dark' ||
+                        (root.getAttribute('data-ui-theme') === 'auto' && mediaQuery.matches);
+                    const nextTheme = nowIsDark ? 'light' : 'dark';
+                    try { localStorage.setItem(UI_THEME_STORAGE_KEY, nextTheme); } catch(e) {}
+                    applyTheme(nextTheme);
+                });
+            }
+
+            if (typeof mediaQuery.addEventListener === 'function') {
+                mediaQuery.addEventListener('change', () => {
+                    if (getSavedTheme() === 'auto') {
+                        updateIcon('auto');
+                    }
+                });
+            }
+        }
+
+        initUiTheme();
         initWebMcp()
     </script>
     <div id="presentation-container"></div>

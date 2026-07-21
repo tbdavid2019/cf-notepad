@@ -12,7 +12,7 @@ test('appearance selectors use Web Awesome custom elements', () => {
     assert.match(commonTemplateSource, /<wa-select id="theme-selector"/)
     assert.match(commonTemplateSource, /<wa-select id="preview-width-selector"[^>]*size="s"/)
     assert.match(commonTemplateSource, /<wa-select id="theme-selector"[^>]*size="s"/)
-    assert.match(commonTemplateSource, /<wa-option value="1200px">/)
+    assert.match(commonTemplateSource, /<wa-option value="1200px"/)
     assert.match(commonTemplateSource, /<wa-option value="\$\{themeName\}"/)
     assert.match(baseTemplateSource, /webawesome\.css/)
     assert.match(baseTemplateSource, /webawesome\.loader\.js/)
