@@ -325,6 +325,15 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     flex-direction: column;
     animation: dropdownFadeIn 0.15s cubic-bezier(0.16, 1, 0.3, 1);
 }
+.share-menu-published,
+.share-menu-unpublished {
+    display: flex;
+    flex-direction: column;
+}
+.share-menu-published[hidden],
+.share-menu-unpublished[hidden] {
+    display: none;
+}
 .dropdown-container.show .dropdown-menu {
     display: flex;
 }
@@ -661,22 +670,32 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     flex-wrap: nowrap;
 }
 .footer-select {
-    height: var(--toolbar-height);
-    padding: 0 24px 0 9px;
-    border-radius: var(--toolbar-radius);
-    border: 1px solid var(--toolbar-border);
+    display: inline-block;
+    width: auto;
     font-size: 12px;
+    vertical-align: middle;
+    --wa-input-border-radius: var(--toolbar-radius);
+}
+.footer-select::part(combobox) {
+    height: var(--toolbar-height);
+    min-height: var(--toolbar-height);
+    border-color: var(--toolbar-border);
+    border-radius: var(--toolbar-radius);
     background: #fff;
     color: #24292f;
-    line-height: var(--toolbar-height);
-    cursor: pointer;
-    appearance: none;
-    -webkit-appearance: none;
-    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' fill='none' stroke='%2357606a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M1 1l4 4 4-4'/></svg>");
-    background-repeat: no-repeat;
-    background-position: right 8px center;
-    background-size: 10px 6.5px;
     transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.footer-select::part(display-input) {
+    font-size: 12px;
+}
+.footer-select::part(listbox) {
+    width: min(360px, calc(100vw - 16px));
+    max-width: calc(100vw - 16px);
+    overflow-x: hidden;
+}
+.footer-select::part(combobox):hover {
+    background-color: var(--toolbar-bg-hover);
+    border-color: var(--toolbar-accent);
 }
 #preview-width-selector {
     width: 112px;
@@ -874,8 +893,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     transform: translateX(42px);
 }
 .footer-select:hover {
-    background-color: var(--toolbar-bg-hover);
-    border-color: var(--toolbar-accent);
+    cursor: pointer;
 }
 .footer-select:focus-visible {
     outline: 2px solid var(--toolbar-accent);

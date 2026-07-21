@@ -13,6 +13,7 @@ import { AUTOSAVE_IDLE_MS } from '../save_policy.mjs'
 const PUBLIC_ICON_SVG_URL = '/icon.svg'
 const PUBLIC_ICON_PNG_URL = '/icon.png'
 const DEFAULT_OG_SITE_NAME = 'DAVID888 WIKI'
+const WEB_AWESOME_VERSION = '3.10.0'
 
 const escapeHtml = value => String(value || '')
     .replace(/&/g, '&amp;')
@@ -69,6 +70,14 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
         gtag('js', new Date());
         gtag('config', ${JSON.stringify(gaMeasurementId)});
     </script>` : ''
+    const webtalkScript = ext.webtalk?.enabled && ext.sharePath && shareId && !isEdit ? `
+    <script
+        defer
+        src="${escapeHtml(ext.webtalk.scriptUrl)}"
+        data-webtalk-scope="${escapeHtml(ext.webtalk.scope)}"
+        data-webtalk-site-id="${escapeHtml(ext.webtalk.siteId)}"
+        data-webtalk-ai-endpoint="${escapeHtml(ext.webtalk.aiEndpoint)}">
+    </script>` : ''
 
     return `
 <!DOCTYPE html>
@@ -82,6 +91,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
     <meta name="theme-color" content="#0f172a" />
     ${ext.sharePath && shareId && !isEdit ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
+    ${webtalkScript}
     ${ogSiteNameMeta}
     ${ext.meta?.canonicalUrl ? `<meta property="og:locale" content="${ogLocale}" />` : ''}
     <meta property="og:type" content="${escapeHtml(ext.meta?.ogType || 'website')}" />
@@ -90,6 +100,8 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="twitter:card" content="${escapeHtml(ext.meta?.twitterCard || 'summary')}" />
     <meta name="twitter:title" content="${escapeHtml(title || APP_NAME)}" />
     <meta name="twitter:description" content="${escapeHtml(pageDescription)}" />
+    <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/styles/webawesome.css" />
+    <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.ogImageUrl ? `<meta property="og:image" content="${escapeHtml(ext.meta.ogImageUrl)}" />` : ''}
@@ -213,7 +225,7 @@ ${getMarkdownCss()}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
                          <article style="display:none;" id="bot-accessible-content">${content}</article>
                         ${isEdit ? `<div class="editor-pane">
-                            ${(ext.mode || 'md') === 'md' ? EDITOR_TOOLBAR(lang) : ''}
+                            ${EDITOR_TOOLBAR(lang)}
                             <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                         </div>` : '<textarea id="contents" class="contents hide" spellcheck="false">' + content + '</textarea>'}
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
@@ -1742,6 +1754,20 @@ ${getMarkdownCss()}
             button.setAttribute('aria-label', label)
         }
 
+        function syncShareMenuUI() {
+            const publishedMenu = document.querySelector('.share-menu-published')
+            const unpublishedMenu = document.querySelector('.share-menu-unpublished')
+            const isPublished = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId)
+
+            if (publishedMenu) publishedMenu.hidden = !isPublished
+            if (unpublishedMenu) unpublishedMenu.hidden = isPublished
+
+            const shareOpenLink = document.querySelector('#share-open-link')
+            if (shareOpenLink && APP_STATE.shareId) {
+                shareOpenLink.href = '/share/' + encodeURIComponent(APP_STATE.shareId)
+            }
+        }
+
         function syncShareStateUI() {
             const switcher = document.querySelector('.share-state-switcher')
             if (!switcher) return
@@ -1749,6 +1775,7 @@ ${getMarkdownCss()}
             switcher.classList.toggle('is-checked', isPublished)
             switcher.classList.toggle('share-published', isPublished)
             switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
+            syncShareMenuUI()
             if ($autosaveToggle) {
                 $autosaveToggle.disabled = !isPublished
                 if (!isPublished) $autosaveToggle.checked = false
@@ -1772,6 +1799,7 @@ ${getMarkdownCss()}
                         return false;
                     }
                     APP_STATE.isPublished = true;
+                    APP_STATE.shareId = res.data;
                     APP_STATE.autosave = wasPublished ? APP_STATE.autosave : false;
                     savedContent = $textarea ? $textarea.value : savedContent;
                     clearAutosaveTimer();
@@ -2230,17 +2258,33 @@ ${getMarkdownCss()}
         // --- Custom Dropdown Menus Logic ---
         const setupDropdowns = () => {
             document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
+                const container = trigger.closest('.dropdown-container')
+                const menu = container?.querySelector('.dropdown-menu')
+                if (!container || !menu) return
+
+                const getItems = () => Array.from(menu.querySelectorAll('.dropdown-item, .dropdown-item-toggle button'))
+                    .filter(item => !item.closest('[hidden]'))
+                const setOpen = (open, { focusFirst = false } = {}) => {
+                    container.classList.toggle('show', open)
+                    trigger.setAttribute('aria-expanded', open ? 'true' : 'false')
+                    if (open && focusFirst) getItems()[0]?.focus()
+                }
+
+                menu.setAttribute('role', 'menu')
+                getItems().forEach(item => item.setAttribute('role', 'menuitem'))
                 trigger.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    const container = trigger.closest('.dropdown-container');
                     const isShown = container.classList.contains('show');
                     
                     // Close other dropdowns
                     document.querySelectorAll('.dropdown-container').forEach(c => {
-                        if (c !== container) c.classList.remove('show');
+                        if (c !== container) {
+                            c.classList.remove('show')
+                            c.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false')
+                        }
                     });
                     
-                    container.classList.toggle('show', !isShown);
+                    setOpen(!isShown);
 
                     // Dynamic viewport boundary detection (prevent clipping on top edge)
                     if (!isShown) {
@@ -2256,6 +2300,34 @@ ${getMarkdownCss()}
                         }
                     }
                 });
+                trigger.addEventListener('keydown', e => {
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault()
+                        setOpen(true, { focusFirst: e.key === 'ArrowDown' })
+                        const items = getItems()
+                        if (e.key === 'ArrowUp') items[items.length - 1]?.focus()
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault()
+                        setOpen(false)
+                    }
+                })
+                menu.addEventListener('keydown', e => {
+                    const items = getItems()
+                    const currentIndex = items.indexOf(document.activeElement)
+                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+                        e.preventDefault()
+                        if (!items.length) return
+                        const delta = e.key === 'ArrowDown' ? 1 : -1
+                        items[(currentIndex + delta + items.length) % items.length].focus()
+                    } else if (e.key === 'Home' || e.key === 'End') {
+                        e.preventDefault()
+                        ;(e.key === 'Home' ? items[0] : items[items.length - 1])?.focus()
+                    } else if (e.key === 'Escape') {
+                        e.preventDefault()
+                        setOpen(false)
+                        trigger.focus()
+                    }
+                })
             });
         }
         setupDropdowns();
@@ -2263,7 +2335,10 @@ ${getMarkdownCss()}
         // Close dropdowns on clicking outside (Guaranteed single registration)
         if (!window.__dropdownListenerBound) {
             document.addEventListener('click', () => {
-                document.querySelectorAll('.dropdown-container').forEach(c => c.classList.remove('show'));
+                document.querySelectorAll('.dropdown-container').forEach(c => {
+                    c.classList.remove('show')
+                    c.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false')
+                })
             });
             window.__dropdownListenerBound = true;
         }
@@ -2327,7 +2402,7 @@ ${getMarkdownCss()}
 </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
-    ${isEdit && (ext.mode || 'md') === 'md' ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
 
     <script>
@@ -2351,6 +2426,14 @@ ${getMarkdownCss()}
             if (previewWidthSelector && previewWidthSelector.value !== width) {
                 previewWidthSelector.value = width;
             }
+        }
+
+        function syncThemeSelectorTitle() {
+            if (!themeSelector) return;
+            const theme = themeSelector.value || themeSelector.getAttribute('value') || 'catppuccin-macchiato';
+            const option = Array.from(themeSelector.querySelectorAll('wa-option'))
+                .find(item => item.value === theme);
+            themeSelector.title = option?.textContent?.trim() || theme;
         }
 
         function setSegmentedActive(selector, dataAttribute, activeValue) {
@@ -2407,7 +2490,7 @@ ${getMarkdownCss()}
         }
 
         const savedPreviewWidth = canPersistSettings ? window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY) : '';
-        const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || '100%';
+        const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || (APP_STATE.isEdit ? '1200px' : '100%');
         applyPreviewWidth(initialPreviewWidth);
 
         if (previewDeviceSelector) {
@@ -2507,13 +2590,21 @@ ${getMarkdownCss()}
         }
 
         if (themeSelector) {
-            themeSelector.title = themeSelector.options[themeSelector.selectedIndex]?.textContent || '';
+            syncThemeSelectorTitle();
             themeSelector.addEventListener('change', function() {
                 const theme = this.value;
                 themeStyleNode.textContent = THEMES[theme];
-                this.title = this.options[this.selectedIndex]?.textContent || '';
+                syncThemeSelectorTitle();
                 if (canPersistSettings) persistSetting({ theme }).catch(err => errHandle(err.message || err));
             });
+        }
+
+        // Web Awesome loads asynchronously. Re-apply values after the custom element upgrades.
+        if (window.customElements?.whenDefined) {
+            window.customElements.whenDefined('wa-select').then(() => {
+                applyPreviewWidth(initialPreviewWidth);
+                syncThemeSelectorTitle();
+            }).catch(() => {});
         }
 
         initWebMcp()

@@ -4,7 +4,22 @@ import { readFileSync } from 'node:fs'
 
 const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
+const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const toolbarSource = readFileSync(new URL('../static/js/markdown-toolbar.mjs', import.meta.url), 'utf8')
+
+test('appearance selectors use Web Awesome custom elements', () => {
+    assert.match(commonTemplateSource, /<wa-select id="preview-width-selector"/)
+    assert.match(commonTemplateSource, /<wa-select id="theme-selector"/)
+    assert.match(commonTemplateSource, /<wa-select id="preview-width-selector"[^>]*size="s"/)
+    assert.match(commonTemplateSource, /<wa-select id="theme-selector"[^>]*size="s"/)
+    assert.match(commonTemplateSource, /<wa-option value="1200px">/)
+    assert.match(commonTemplateSource, /<wa-option value="\$\{themeName\}"/)
+    assert.match(baseTemplateSource, /webawesome\.css/)
+    assert.match(baseTemplateSource, /webawesome\.loader\.js/)
+    assert.match(baseTemplateSource, /previewWidthSelector\.addEventListener\('change'/)
+    assert.match(baseCssSource, /\.footer-select::part\(listbox\)/)
+    assert.match(baseCssSource, /width:\s*min\(360px,\s*calc\(100vw - 16px\)\)/)
+})
 
 test('share font and language controls use the same aligned toggle group', () => {
     assert.match(commonTemplateSource, /class="footer-control-group footer-toggle-control-group"[\s\S]*id="share-font-selector"/)

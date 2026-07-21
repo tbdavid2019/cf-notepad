@@ -154,11 +154,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     uncheckedText: lang === 'zh-TW' ? '待發布' : 'Draft',
                                     ariaLabel: t.shareLinkTitle,
                                 })}
-                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}">
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-haspopup="menu" aria-expanded="false">
                                     ${SVG_ICONS.more}
                                 </button>
-                                <div class="dropdown-menu">
-                                    ${share && shareId ? `
+                                <div class="dropdown-menu" role="menu">
+                                    <div class="share-menu-published" ${share && shareId ? '' : 'hidden'}>
                                     <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
                                         ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
                                     </a>
@@ -177,11 +177,12 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
                                         ${SVG_ICONS.close} <span>${unpublishTitle}</span>
                                     </button>
-                                    ` : `
+                                    </div>
+                                    <div class="share-menu-unpublished" ${share && shareId ? 'hidden' : ''}>
                                     <button type="button" class="dropdown-item share-publish-menu-btn">
                                         ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '發布並建立分享連結' : 'Publish and create share link'}</span>
                                     </button>
-                                    `}
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -353,17 +354,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     </div>
                     ${!isEdit || mode === 'md' ? `
                         <div class="footer-control-group">
-                            <select id="preview-width-selector" class="footer-select">
-                                <option value="100%">${t.width}: ${t.full}</option>
-                                <option value="960px">${t.width}: 960</option>
-                                <option value="1200px">${t.width}: 1200</option>
-                                <option value="1440px">${t.width}: 1440</option>
-                            </select>
+                            <wa-select id="preview-width-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${t.width}">
+                                <wa-option value="100%">${t.width}: ${t.full}</wa-option>
+                                <wa-option value="960px">${t.width}: 960</wa-option>
+                                <wa-option value="1200px">${t.width}: 1200</wa-option>
+                                <wa-option value="1440px">${t.width}: 1440</wa-option>
+                            </wa-select>
                         </div>
                         <div class="footer-control-group">
-                            <select id="theme-selector" class="footer-select">
-                                ${Object.keys(THEMES).map(themeName => `<option value="${themeName}" title="${getThemeLabel(themeName)}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${getThemeLabel(themeName)}</option>`).join('')}
-                            </select>
+                            <wa-select id="theme-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${lang === 'zh-TW' ? '主題' : 'Theme'}" value="${theme || 'catppuccin-macchiato'}">
+                                ${Object.keys(THEMES).map(themeName => `<wa-option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${getThemeLabel(themeName)}</wa-option>`).join('')}
+                            </wa-select>
                         </div>
                     ` : ''}
                     ${sharePath ? '<div id="share-analytics-hook"></div>' : ''}

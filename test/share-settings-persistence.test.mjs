@@ -14,7 +14,7 @@ test('setting route persists width, share font, preview device, and split direct
 })
 
 test('base template initializes note-specific appearance from metadata before local storage', () => {
-    assert.match(baseTemplateSource, /const initialPreviewWidth = .*APP_STATE\.noteSettings\.width.*savedPreviewWidth.*'100%'/)
+    assert.match(baseTemplateSource, /const initialPreviewWidth = APP_STATE\.noteSettings\.width \|\| savedPreviewWidth \|\| \(APP_STATE\.isEdit \? '1200px' : '100%'\)/)
     assert.match(baseTemplateSource, /const initialPreviewDevice = .*APP_STATE\.noteSettings\.previewDevice.*savedPreviewDevice.*'desktop'/)
     assert.match(baseTemplateSource, /const initialSplitDirection = APP_STATE\.noteSettings\.splitDirection === 'vertical' \? 'vertical' : 'horizontal'/)
     assert.match(baseTemplateSource, /const savedShareFont = canPersistSettings \? window\.localStorage\.getItem\(SHARE_FONT_STORAGE_KEY\) : '';/)

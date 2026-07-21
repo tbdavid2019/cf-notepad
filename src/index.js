@@ -3,7 +3,7 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
-import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getSecret } from './constant'
+import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
@@ -684,6 +684,7 @@ async function renderSharePage(request, presentationMode = false) {
                         sharePath,
                         presentationPath,
                         gaMeasurementId,
+                        webtalk: getWebtalkConfig(),
                         presentationEntry: presentationMode,
                         autoPresent: false,
                     },
@@ -720,6 +721,7 @@ async function renderSharePage(request, presentationMode = false) {
                 sharePath,
                 presentationPath,
                 gaMeasurementId,
+                webtalk: getWebtalkConfig(),
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
                 embed: embedMode,

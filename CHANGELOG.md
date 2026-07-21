@@ -1,5 +1,24 @@
 # Changelog
 
+## [2026-07-17]
+### Fixed
+- **Compact Editor Toolbar and Plain Edit Mode**
+  - Compressed toolbar button sizes, spacing, and padding after responsive wrapping.
+  - The Markdown toolbar now remains available when preview mode is turned off; only the preview pane and splitter are removed.
+- **Responsive Markdown Toolbar**
+  - Narrow editor widths now wrap toolbar buttons onto additional rows instead of showing a horizontal scrollbar.
+  - Very small screens use compact toolbar buttons and remove separators to keep the layout readable.
+- **Web Awesome Appearance Selectors**
+  - Replaced the footer's native width and theme selectors with Web Awesome `wa-select` and `wa-option` components.
+  - Pinned Web Awesome to 3.10.0 and styled its exposed CSS parts to match the existing toolbar.
+  - Re-applies the edit preview width after the custom element finishes loading, preserving the 1200px default.
+- **Publish Menu State Sync**
+  - The share menu now switches from `發布並建立分享連結` to the published share actions immediately after publishing, without requiring a page reload.
+  - The newly returned share ID is applied to the open, copy, and presentation share actions in the live editor.
+  - Added keyboard navigation, Escape-to-close behavior, and expanded-state ARIA attributes to the share dropdown.
+- **Editor Preview Width**
+  - New edit pages now default to a 1200px preview width when no note-specific or browser-saved width preference exists.
+
 ## [2026-07-15]
 ### Added
 - **Media URL Previews**

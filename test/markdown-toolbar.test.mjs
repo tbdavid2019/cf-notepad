@@ -11,6 +11,7 @@ import {
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const commonTemplate = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
+const editorCss = readFileSync(new URL('../src/styles/editor.css.js', import.meta.url), 'utf8')
 
 const apply = (text, command, start = text.length, end = start, lang) =>
     applyMarkdownCommand(text, start, end, command, lang)
@@ -91,9 +92,8 @@ test('inserts task list, code block, table, and image snippets', () => {
     assert.deepEqual([image.selectionStart, image.selectionEnd], [8, 37])
 })
 
-test('renders the toolbar only for editable Markdown pages', () => {
-    assert.match(baseTemplate, /EDITOR_TOOLBAR\(lang\)/)
-    assert.match(baseTemplate, /isEdit && \(ext\.mode \|\| 'md'\) === 'md'/)
+test('renders the toolbar for editable pages', () => {
+    assert.match(baseTemplate, /<div class="editor-pane">\s*\$\{EDITOR_TOOLBAR\(lang\)\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
     assert.match(commonTemplate, /data-command="\$\{item\.command\}"/)
     assert.match(commonTemplate, /glyph: '&lt;\/&gt;'/)
@@ -106,6 +106,17 @@ test('renders the toolbar only for editable Markdown pages', () => {
     assert.match(commonTemplate, /command: 'redo'/)
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
+})
+
+test('keeps the Markdown toolbar when preview mode is turned off', () => {
+    assert.match(baseTemplate, /\$\{isEdit \? '<script type="module" src="\/js\/markdown-toolbar\.mjs"><\/script>' : ''\}/)
+    assert.match(baseTemplate, /divide-line/)
+})
+
+test('toolbar wraps instead of forcing horizontal scrolling on narrow screens', () => {
+    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*flex-wrap:\s*wrap;/)
+    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*overflow-x:\s*hidden;/)
+    assert.match(editorCss, /@media \(max-width: 640px\)[\s\S]*\.markdown-toolbar-separator\s*\{[\s\S]*display:\s*none;/)
 })
 
 test('creates Markdown for uploaded 888box assets by media type', () => {

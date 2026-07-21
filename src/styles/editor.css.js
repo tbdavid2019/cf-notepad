@@ -23,11 +23,11 @@ export const getEditorCss = () => `
     flex: 0 0 auto;
     display: flex;
     align-items: center;
-    gap: 3px;
-    min-height: 42px;
-    padding: 5px 10px;
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
+    flex-wrap: wrap;
+    gap: 2px;
+    min-height: 36px;
+    padding: 3px 6px;
+    overflow-x: hidden;
     border-bottom: 1px solid var(--toolbar-border, #e6dfd8);
     background: var(--toolbar-bg, rgba(250, 249, 245, 0.96));
     color: var(--toolbar-text, #3d3a36);
@@ -35,9 +35,9 @@ export const getEditorCss = () => `
 }
 
 .markdown-toolbar-button {
-    flex: 0 0 32px;
-    width: 32px;
-    height: 32px;
+    flex: 0 0 28px;
+    width: 28px;
+    height: 28px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -88,8 +88,8 @@ export const getEditorCss = () => `
 .markdown-toolbar-separator {
     flex: 0 0 1px;
     width: 1px;
-    height: 22px;
-    margin: 0 4px;
+    height: 20px;
+    margin: 0 2px;
     background: var(--toolbar-border, #e6dfd8);
 }
 
@@ -136,8 +136,25 @@ textarea#contents {
     }
 
     .markdown-editor-toolbar {
-        min-height: 40px;
-        padding: 4px 8px;
+        min-height: 34px;
+        padding: 3px 5px;
+    }
+}
+
+@media (max-width: 640px) {
+    .markdown-editor-toolbar {
+        justify-content: center;
+        gap: 1px;
+    }
+
+    .markdown-toolbar-button {
+        flex-basis: 26px;
+        width: 26px;
+        height: 26px;
+    }
+
+    .markdown-toolbar-separator {
+        display: none;
     }
 }
 

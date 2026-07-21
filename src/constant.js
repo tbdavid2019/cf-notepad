@@ -24,6 +24,35 @@ export const getSlugLength = () => parseInt(readRuntimeVar('SCN_SLUG_LENGTH') ||
 export const getEnableR2 = () => readRuntimeVar('SCN_ENABLE_R2') === '1'
 export const getR2Domain = () => (typeof readRuntimeVar('SCN_R2_DOMAIN') !== 'undefined' ? readRuntimeVar('SCN_R2_DOMAIN') : '')
 export const getGaMeasurementId = () => (typeof readRuntimeVar('SCN_GA_MEASUREMENT_ID') !== 'undefined' ? String(readRuntimeVar('SCN_GA_MEASUREMENT_ID') || '').trim() : '')
+const WEBTALK_DEFAULTS = {
+    scriptUrl: 'https://webtalk-nine.vercel.app/webtalk.js',
+    scope: 'meta',
+    siteId: 'david888-wiki',
+    aiEndpoint: 'https://webtalk-nine.vercel.app/api/webtalk/ai',
+}
+const getHttpUrl = value => {
+    try {
+        const url = new URL(String(value || '').trim())
+        return url.protocol === 'https:' || url.protocol === 'http:' ? url.href : ''
+    } catch {
+        return ''
+    }
+}
+export const getWebtalkConfig = () => {
+    if (readRuntimeVar('SCN_ENABLE_WEBTALK') !== '1') return { enabled: false }
+
+    const scriptUrl = getHttpUrl(readRuntimeVar('SCN_WEBTALK_SCRIPT_URL') ?? WEBTALK_DEFAULTS.scriptUrl)
+    const aiEndpoint = getHttpUrl(readRuntimeVar('SCN_WEBTALK_AI_ENDPOINT') ?? WEBTALK_DEFAULTS.aiEndpoint)
+    if (!scriptUrl || !aiEndpoint) return { enabled: false }
+
+    return {
+        enabled: true,
+        scriptUrl,
+        scope: String(readRuntimeVar('SCN_WEBTALK_SCOPE') ?? WEBTALK_DEFAULTS.scope).trim(),
+        siteId: String(readRuntimeVar('SCN_WEBTALK_SITE_ID') ?? WEBTALK_DEFAULTS.siteId).trim(),
+        aiEndpoint,
+    }
+}
 export const APP_NAME = (typeof readRuntimeVar('SCN_APP_NAME') !== 'undefined') ? readRuntimeVar('SCN_APP_NAME') : 'david888 wiki'
 
 // supported language
