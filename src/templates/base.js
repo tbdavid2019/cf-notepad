@@ -2276,7 +2276,19 @@ ${getMarkdownCss()}
                 const setOpen = (open, { focusFirst = false } = {}) => {
                     container.classList.toggle('show', open)
                     trigger.setAttribute('aria-expanded', open ? 'true' : 'false')
-                    if (open && focusFirst) getItems()[0]?.focus()
+                    if (open) {
+                        const triggerRect = trigger.getBoundingClientRect();
+                        menu.style.position = 'fixed';
+                        menu.style.left = triggerRect.left + 'px';
+                        menu.style.bottom = (window.innerHeight - triggerRect.top + 8) + 'px';
+                        menu.style.top = 'auto';
+                        if (focusFirst) getItems()[0]?.focus();
+                    } else {
+                        menu.style.position = '';
+                        menu.style.left = '';
+                        menu.style.bottom = '';
+                        menu.style.top = '';
+                    }
                 }
 
                 menu.setAttribute('role', 'menu')
@@ -2294,20 +2306,6 @@ ${getMarkdownCss()}
                     });
                     
                     setOpen(!isShown);
-
-                    // Dynamic viewport boundary detection (prevent clipping on top edge)
-                    if (!isShown) {
-                        const menu = container.querySelector('.dropdown-menu');
-                        if (menu) {
-                            menu.style.bottom = '';
-                            menu.style.top = '';
-                            const rect = menu.getBoundingClientRect();
-                            if (rect.top < 0) {
-                                menu.style.bottom = 'auto';
-                                menu.style.top = 'calc(100% + 8px)';
-                            }
-                        }
-                    }
                 });
                 trigger.addEventListener('keydown', e => {
                     if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
@@ -2352,19 +2350,66 @@ ${getMarkdownCss()}
             window.__dropdownListenerBound = true;
         }
 
-        // --- Mobile Footer Collapse/Expand Toggle ---
-        const setupMobileFooterToggle = () => {
-            const mobileMoreBtn = document.getElementById('mobile-more-btn');
+        // --- Scroll Indicators Setup ---
+        const setupScrollIndicators = () => {
+            const createIndicator = (container, isFooter) => {
+                const indicator = document.createElement('div');
+                indicator.className = 'scroll-indicator-arrow';
+                indicator.innerHTML = '<div class="scroll-indicator-arrow-icon"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg></div>';
+                
+                if (isFooter) {
+                    document.body.appendChild(indicator);
+                    const updatePos = () => {
+                        const rect = container.getBoundingClientRect();
+                        indicator.style.position = 'fixed';
+                        indicator.style.left = (rect.right - 32) + 'px';
+                        indicator.style.top = (rect.top + (rect.height - 24) / 2) + 'px';
+                        indicator.style.zIndex = '130';
+                    };
+                    updatePos();
+                    window.addEventListener('resize', updatePos);
+                    window.addEventListener('scroll', updatePos);
+                } else {
+                    const wrap = container.parentElement;
+                    if (wrap) {
+                        wrap.style.position = 'relative';
+                        wrap.appendChild(indicator);
+                        indicator.style.position = 'absolute';
+                        indicator.style.right = '8px';
+                        indicator.style.top = '50%';
+                        indicator.style.transform = 'translateY(-50%)';
+                        indicator.style.zIndex = '10';
+                    }
+                }
+
+                const checkScroll = () => {
+                    const isScrollable = container.scrollWidth > container.clientWidth;
+                    const isScrolledToEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 12;
+                    if (isScrollable && !isScrolledToEnd) {
+                        indicator.classList.add('show');
+                    } else {
+                        indicator.classList.remove('show');
+                    }
+                };
+
+                container.addEventListener('scroll', () => {
+                    indicator.classList.add('user-scrolled');
+                }, { passive: true });
+
+                setTimeout(checkScroll, 300);
+                window.addEventListener('resize', checkScroll);
+                const observer = new MutationObserver(checkScroll);
+                observer.observe(container, { childList: true, subtree: true });
+            };
+
+            const toolbar = document.querySelector('.markdown-editor-toolbar');
+            if (toolbar) createIndicator(toolbar, false);
+
             const footer = document.querySelector('.footer');
-            if (mobileMoreBtn && footer) {
-                mobileMoreBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isExpanded = footer.classList.toggle('footer-expanded');
-                    document.body.classList.toggle('footer-expanded', isExpanded);
-                });
-            }
-        }
-        setupMobileFooterToggle();
+            if (footer) createIndicator(footer, true);
+        };
+        setupScrollIndicators();
+
 
         // --- Keyboard Viewport Adjuster for Mobile Input ---
         const setupKeyboardViewport = () => {

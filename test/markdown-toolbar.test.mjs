@@ -113,9 +113,9 @@ test('keeps the Markdown toolbar when preview mode is turned off', () => {
     assert.match(baseTemplate, /divide-line/)
 })
 
-test('toolbar wraps instead of forcing horizontal scrolling on narrow screens', () => {
-    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*flex-wrap:\s*wrap;/)
-    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*overflow-x:\s*hidden;/)
+test('toolbar uses horizontal scrolling instead of wrapping', () => {
+    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*flex-wrap:\s*nowrap;/)
+    assert.match(editorCss, /\.markdown-editor-toolbar\s*\{[\s\S]*overflow-x:\s*auto;/)
     assert.match(editorCss, /@media \(max-width: 640px\)[\s\S]*\.markdown-toolbar-separator\s*\{[\s\S]*display:\s*none;/)
 })
 

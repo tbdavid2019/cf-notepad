@@ -664,8 +664,13 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     padding: 0 12px;
     font-size: 13px;
     color: var(--footer-text, #5c5a54);
-    overflow: visible;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
     transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.footer::-webkit-scrollbar {
+    display: none;
 }
 .footer-sections {
     min-height: 48px;
@@ -826,7 +831,10 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     color: #5c5a54;
     cursor: pointer;
     overflow: hidden;
-    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
+}
+.footer-rail-switch:active {
+    transform: scale(0.96);
 }
 .footer-rail-switch:hover {
     border-color: var(--toolbar-accent);
@@ -1008,7 +1016,11 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     font-weight: 650;
     line-height: 1;
     text-decoration: none;
-    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+    transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.08s ease;
+}
+.opt-button:active,
+.toolbar-icon-button:active {
+    transform: scale(0.95);
 }
 .opt-button:hover,
 .toolbar-icon-button:hover {
@@ -1975,9 +1987,14 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
         backdrop-filter: blur(8px) !important;
         -webkit-backdrop-filter: blur(8px) !important;
         padding: 8px 12px calc(8px + env(safe-area-inset-bottom)) !important;
-        overflow: visible !important;
+        overflow-x: auto !important;
+        scrollbar-width: none !important;
         display: block !important;
         transition: transform 0.24s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.24s ease;
+    }
+
+    .footer::-webkit-scrollbar {
+        display: none !important;
     }
 
     .footer.footer-hidden {
@@ -1987,119 +2004,72 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     }
 
     .footer-sections {
-        width: 100% !important;
+        width: max-content !important;
         display: flex !important;
-        flex-direction: column !important;
-        gap: 8px !important;
-        align-items: stretch !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 10px !important;
+        align-items: center !important;
         min-height: 0 !important;
         padding: 0 !important;
     }
 
     .footer-section {
-        border-right: 0 !important;
-        border-bottom: 1px solid var(--toolbar-border, #e6dfd8) !important;
-        padding: 6px 0 !important;
+        border-right: 1px solid var(--footer-border, #e6dfd8) !important;
+        border-bottom: 0 !important;
+        padding: 4px 10px 4px 0 !important;
         margin: 0 !important;
-        width: 100% !important;
+        width: auto !important;
         display: flex !important;
         align-items: center !important;
-        justify-content: center !important;
         background: transparent !important;
     }
     .footer-section:last-child {
-        border-bottom: 0 !important;
-        padding-bottom: 0 !important;
+        border-right: 0 !important;
     }
 
     .footer-section-edit,
     .footer-section-appearance,
     .footer-section-info {
-        flex: none !important;
-        width: 100% !important;
-    }
-
-    /* Hide info section completely on mobile */
-    .footer-section-info {
-        display: none !important;
-    }
-
-    /* Hide appearance section by default on mobile, show only when expanded */
-    .footer:not(.footer-expanded) .footer-section-appearance {
-        display: none !important;
-    }
-    .footer.footer-expanded .footer-section-appearance {
+        flex: 0 0 auto !important;
+        width: auto !important;
         display: flex !important;
     }
-    /* Style section bottom border based on expansion state */
-    .footer:not(.footer-expanded) .footer-section-edit {
-        border-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
-    .footer.footer-expanded .footer-section-appearance {
-        border-bottom: 0 !important;
-        padding-bottom: 0 !important;
-    }
 
-    /* Highlight more button when active/expanded */
-    .footer.footer-expanded .mobile-more-btn {
-        background: var(--toolbar-bg-hover, rgba(0, 0, 0, 0.05)) !important;
-        border-color: var(--toolbar-accent, #cc785c) !important;
-        color: var(--toolbar-accent, #cc785c) !important;
+    .mobile-more-btn {
+        display: none !important;
     }
 
     .footer-section-edit .footer-section-body,
     .footer-section-appearance .footer-section-body,
     .footer-section-info .footer-section-body {
         display: flex !important;
-        flex-wrap: wrap !important;
+        flex-wrap: nowrap !important;
         gap: 8px !important;
-        justify-content: center !important;
+        justify-content: flex-start !important;
         align-items: center !important;
-        width: 100% !important;
+        width: auto !important;
     }
 
-    /* Keep the editor's primary actions in one mobile row; secondary tools live under More. */
     body:not(.share-view) .footer-section-edit {
         min-width: 0 !important;
     }
     body:not(.share-view) .footer-section-edit .footer-section-body {
         flex-wrap: nowrap !important;
-        justify-content: space-between !important;
-        gap: 4px !important;
-        overflow: hidden !important;
-    }
-    body:not(.share-view) .footer-section-edit .footer-section-body > * {
-        display: none !important;
-    }
-    body:not(.share-view) .footer-section-edit .footer-section-body > :first-child,
-    body:not(.share-view) .footer-section-edit .footer-section-body > .save-control-group,
-    body:not(.share-view) .footer-section-edit .footer-section-body > .opt-pw,
-    body:not(.share-view) .footer-section-edit .footer-section-body > .opt-pw-view,
-    body:not(.share-view) .footer-section-edit .footer-section-body > .mobile-more-btn {
-        display: inline-flex !important;
-        flex: 0 0 auto !important;
-    }
-    body:not(.share-view) .footer-section-edit .footer-section-body > :first-child {
-        min-width: 0 !important;
-    }
-    body:not(.share-view) .footer-section-edit .save-control-group {
-        gap: 2px !important;
-        padding: 1px 2px !important;
-    }
-    /* Expanding More restores every editor tool; only file inputs stay visually hidden. */
-    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body {
-        flex-wrap: wrap !important;
-        justify-content: center !important;
-        gap: 8px !important;
+        justify-content: flex-start !important;
+        gap: 6px !important;
         overflow: visible !important;
     }
-    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body > * {
+    body:not(.share-view) .footer-section-edit .footer-section-body > * {
         display: inline-flex !important;
         flex: 0 0 auto !important;
     }
-    body:not(.share-view) .footer.footer-expanded .footer-section-edit .footer-section-body > input.visually-hidden-file-input {
+    body:not(.share-view) .footer-section-edit .footer-section-body > input.visually-hidden-file-input {
         display: none !important;
+    }
+    body:not(.share-view) .footer-section-edit .save-control-group {
+        gap: 4px !important;
+        padding: 2px 4px !important;
     }
 
     /* Padding for note container on mobile share/edit views */
@@ -2109,16 +2079,6 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     textarea.contents {
         padding-bottom: 72px !important;
         transition: padding-bottom 0.2s ease;
-    }
-    body.footer-expanded.share-view #preview-md,
-    body.footer-expanded.share-view #preview-plain,
-    body.footer-expanded .preview-pane,
-    body.footer-expanded textarea.contents {
-        padding-bottom: 180px !important;
-    }
-    body.footer-expanded:not(.share-view) .preview-pane,
-    body.footer-expanded:not(.share-view) textarea.contents {
-        padding-bottom: 240px !important;
     }
 
     body.share-view .footer-select {
@@ -2174,6 +2134,41 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     body.share-view .mobile-ascii-diagram {
         margin-bottom: 16px;
     }
+}
+
+/* Scroll Indicator Arrow */
+.scroll-indicator-arrow {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: var(--toolbar-bg-hover, rgba(0, 0, 0, 0.08));
+    color: var(--toolbar-accent, #cc785c);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.scroll-indicator-arrow.show:not(.user-scrolled) {
+    opacity: 0.9;
+}
+
+.scroll-indicator-arrow-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.scroll-indicator-arrow.show:not(.user-scrolled) .scroll-indicator-arrow-icon {
+    animation: wiggle-right-icon 1.6s ease-in-out infinite;
+}
+
+@keyframes wiggle-right-icon {
+    0%, 100% { transform: translate3d(0, 0, 0); }
+    50% { transform: translate3d(4px, 0, 0); }
 }
 
 @media print {

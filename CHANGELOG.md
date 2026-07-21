@@ -2,6 +2,13 @@
 
 ## [2026-07-21]
 ### Added
+- **Single-Row Horizontal Scrollable Toolbar & Footer with Visual Wiggle Indicators (PC & Mobile)**
+  - Replaced editor toolbar buttons wrapping with a clean, single-row horizontally scrollable layout (`overflow-x: auto; flex-wrap: nowrap;`) on both PC and mobile viewports.
+  - Implemented the same horizontal touch-scroll behavior (`overflow-x: auto; flex-wrap: nowrap;`) for the bottom footer on all viewport sizes, including mobile and desktop, showing all edit, appearance, and sitemap/info elements inline.
+  - Added dynamically positioned, floating wiggling scroll indicators (arrow icons with `wiggle-right-icon` CSS animation) to prompt the user that horizontal scrolling is available. The indicators auto-fade out immediately once the user starts scrolling.
+  - Positioned footer dropdowns using fixed positioning (`position: fixed`) relative to their triggers to prevent clipping inside the scrollable footer.
+  - Added micro-interaction tactile feedback with a scale-down effect (`transform: scale(...)`) on active states (`:active`) for all toolbar buttons and footer switches.
+  - Retained the classic box-style 4px border-radius switches as requested.
 - **UI Dark Mode (Toolbars & Footer)**
   - Added a dark mode toggle button (`ui-theme-toggle-btn`) in the footer info bar next to the GitHub link, with Sun/Moon SVG icons.
   - Automatically detects system OS dark mode preference (`prefers-color-scheme: dark`) and persists user preference to `localStorage`.
