@@ -2647,23 +2647,32 @@ ${getMarkdownCss()}
                 if (!$themeBtn) return;
                 const isDark = theme === 'dark' || (theme === 'auto' && mediaQuery.matches);
                 $themeBtn.classList.toggle('is-dark', isDark);
-                const label = isDark
-                    ? (APP_STATE.lang === 'zh-TW' ? '深色' : 'Dark')
-                    : (APP_STATE.lang === 'zh-TW' ? '淺色' : 'Light');
+                const titleText = isDark
+                    ? (APP_STATE.lang === 'zh-TW' ? '當前：深色介面 (點擊切換淺色)' : 'Current: Dark UI (Click for Light)')
+                    : (APP_STATE.lang === 'zh-TW' ? '當前：淺色介面 (點擊切換深色)' : 'Current: Light UI (Click for Dark)');
+                $themeBtn.title = titleText;
+                $themeBtn.setAttribute('aria-label', titleText);
                 const textSpan = $themeBtn.querySelector('.toolbar-button-label');
-                if (textSpan) textSpan.textContent = label;
+                if (textSpan) textSpan.textContent = APP_STATE.lang === 'zh-TW' ? '深淺' : 'Theme';
             }
 
             const currentTheme = getSavedTheme();
             applyTheme(currentTheme);
 
             if ($themeBtn) {
-                $themeBtn.addEventListener('click', () => {
+                $themeBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
                     const nowIsDark = root.getAttribute('data-ui-theme') === 'dark' ||
                         (root.getAttribute('data-ui-theme') === 'auto' && mediaQuery.matches);
                     const nextTheme = nowIsDark ? 'light' : 'dark';
                     try { localStorage.setItem(UI_THEME_STORAGE_KEY, nextTheme); } catch(e) {}
                     applyTheme(nextTheme);
+                    if (typeof window.showToast === 'function') {
+                        const msg = nextTheme === 'dark'
+                            ? (APP_STATE.lang === 'zh-TW' ? '已切換為深色介面' : 'Switched to Dark UI')
+                            : (APP_STATE.lang === 'zh-TW' ? '已切換為淺色介面' : 'Switched to Light UI');
+                        window.showToast(msg);
+                    }
                 });
             }
 

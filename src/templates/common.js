@@ -383,7 +383,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
                         <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
                         <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
-                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '模式' : 'Theme'}</span>
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '深淺' : 'Theme'}</span>
                     </button>
                     <a class="toolbar-icon-link" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
                         ${SVG_ICONS.sparkles}
