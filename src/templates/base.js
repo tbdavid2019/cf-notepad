@@ -2644,6 +2644,7 @@ ${getMarkdownCss()}
                 if (!$themeBtn) return;
                 const isDark = theme === 'dark' || (theme === 'auto' && mediaQuery.matches);
                 $themeBtn.classList.toggle('is-dark', isDark);
+                root.classList.toggle('wa-theme-dark', isDark);
                 const titleText = isDark
                     ? (APP_STATE.lang === 'zh-TW' ? '當前：深色介面 (點擊切換淺色)' : 'Current: Dark UI (Click for Light)')
                     : (APP_STATE.lang === 'zh-TW' ? '當前：淺色介面 (點擊切換深色)' : 'Current: Light UI (Click for Dark)');

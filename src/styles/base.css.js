@@ -724,6 +724,10 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 }
 .footer-select::part(display-input) {
     font-size: 12px;
+    color: var(--toolbar-text);
+}
+.footer-select::part(icon) {
+    color: var(--toolbar-text);
 }
 .footer-select::part(listbox) {
     width: min(360px, calc(100vw - 16px));
