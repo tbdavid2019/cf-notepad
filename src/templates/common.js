@@ -124,8 +124,9 @@ export const SWITCHER = (text, open, className = '') => `
 <span class="footer-control-label">${text}</span>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave }) => {
     const t = getLangText(lang)
+    const effectiveWidth = width || (isEdit ? '1200px' : '100%')
     const showNoteHistory = noteHistoryEnabled === true && isEdit
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
     const jetbrainsTitle = lang === 'zh-TW' ? '切換為 JetBrains Mono' : 'Switch to JetBrains Mono'
