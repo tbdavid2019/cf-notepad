@@ -8,6 +8,8 @@
   - Added zero-FOUC inline script in `<head>` and dark mode theme variables for `.markdown-editor-toolbar`, `.footer`, `.footer-select`, `.footer-rail-switch`, `.dropdown-menu`, and `.bottom-sheet`.
 
 ### Fixed
+- **Critical Template Syntax Error**
+  - Fixed an orphaned `catch` block in the autosave initialization logic that caused a syntax error in the generated client-side script, breaking Markdown rendering, share mode, and UI interactions.
 - **Preview Width Persistence & Cloudflare KV Quota Optimization**
   - Included `width` in the publish payload (`publishCurrentNote()`) so published/shared notes reliably keep the editor's selected preview width (1200px / 960px / 1440px / 100%).
   - Removed automatic page-load KV write requests when initializing 1200px width in memory, eliminating redundant KV write calls and protecting Cloudflare Free Tier quota.

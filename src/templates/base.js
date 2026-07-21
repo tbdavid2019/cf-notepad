@@ -2,9 +2,9 @@
  * src/templates/base.js
  * HTML wrapper function (base page structure for editor/share pages)
  */
-import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant'
-import { THEMES } from '../theme_data'
-import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common'
+import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant.js'
+import { THEMES } from '../theme_data.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -2158,13 +2158,10 @@ ${getMarkdownCss()}
                     $autosaveToggle.checked = false
                     return
                 }
-                    APP_STATE.autosave = $autosaveToggle.checked
-                    if (APP_STATE.autosave) scheduleAutosave()
-                    else clearAutosaveTimer()
-                } catch (error) {
-                    $autosaveToggle.checked = APP_STATE.autosave === true
-                    errHandle(error.message || error)
-                }
+                APP_STATE.autosave = $autosaveToggle.checked
+                if (APP_STATE.autosave) scheduleAutosave()
+                else clearAutosaveTimer()
+                try { window.localStorage.setItem('cf-notepad-autosave', APP_STATE.autosave ? 'true' : 'false') } catch(e) {}
             })
         }
 
