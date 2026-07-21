@@ -2440,7 +2440,7 @@ ${getMarkdownCss()}
 
         function syncThemeSelectorTitle() {
             if (!themeSelector) return;
-            const theme = themeSelector.value || themeSelector.getAttribute('value') || 'catppuccin-macchiato';
+            const theme = themeSelector.value || themeSelector.getAttribute('value') || 'claude-canvas';
             const option = Array.from(themeSelector.querySelectorAll('wa-option'))
                 .find(item => item.value === theme);
             themeSelector.title = option?.textContent?.trim() || theme;

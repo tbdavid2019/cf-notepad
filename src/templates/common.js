@@ -3,8 +3,8 @@
  * Shared template components: SWITCHER, FOOTER, MODAL
  */
 import dayjs from 'dayjs'
-import { SUPPORTED_LANG } from '../constant'
-import { THEMES } from '../theme_data'
+import { SUPPORTED_LANG } from '../constant.js'
+import { THEMES } from '../theme_data.js'
 
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
@@ -365,8 +365,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             </wa-select>
                         </div>
                         <div class="footer-control-group">
-                            <wa-select id="theme-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${lang === 'zh-TW' ? '主題' : 'Theme'}" value="${theme || 'catppuccin-macchiato'}">
-                                ${Object.keys(THEMES).map(themeName => `<wa-option value="${themeName}" ${themeName === (theme || 'catppuccin-macchiato') ? 'selected' : ''}>${getThemeLabel(themeName)}</wa-option>`).join('')}
+                            <wa-select id="theme-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${lang === 'zh-TW' ? '主題' : 'Theme'}" value="${theme || 'claude-canvas'}">
+                                ${Object.keys(THEMES).map(themeName => `<wa-option value="${themeName}" ${themeName === (theme || 'claude-canvas') ? 'selected' : ''}>${getThemeLabel(themeName)}</wa-option>`).join('')}
                             </wa-select>
                         </div>
                     ` : ''}

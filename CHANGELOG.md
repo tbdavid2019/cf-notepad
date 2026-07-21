@@ -11,8 +11,12 @@
 - **Critical Template Syntax Error**
   - Fixed an orphaned `catch` block in the autosave initialization logic that caused a syntax error in the generated client-side script, breaking Markdown rendering, share mode, and UI interactions.
 - **Dark Mode UI Adjustments**
+  - Updated the default dark mode palette to use Pantone 19-4052 Classic Blue (`#0f4c81`) as requested.
+  - Set the footer text to `font-weight: bold` by default to improve readability.
   - Fixed Web Awesome `wa-select` components (Width and Theme dropdowns) being unreadable in dark mode by explicitly passing `--toolbar-text` color to the `display-input` and `icon` parts.
   - Automatically toggles the `wa-theme-dark` class on the root element so Web Awesome components properly match the UI dark mode preference.
+- **Default Theme Correction**
+  - Fixed an issue where the frontend UI components would incorrectly fall back to `catppuccin-macchiato` instead of `claude-canvas` when no theme was saved.
 - **Preview Width Persistence & Cloudflare KV Quota Optimization**
   - Included `width` in the publish payload (`publishCurrentNote()`) so published/shared notes reliably keep the editor's selected preview width (1200px / 960px / 1440px / 100%).
   - Removed automatic page-load KV write requests when initializing 1200px width in memory, eliminating redundant KV write calls and protecting Cloudflare Free Tier quota.

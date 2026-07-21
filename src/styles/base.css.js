@@ -43,16 +43,16 @@ export const getBaseCss = () => `
 
 html[data-ui-theme="dark"],
 html[data-ui-theme="dark"] body {
-    --toolbar-border: #2d323f;
-    --toolbar-bg: #1c1f26;
-    --toolbar-bg-hover: #2a2f3a;
+    --toolbar-border: #165b99;
+    --toolbar-bg: #0f4c81;
+    --toolbar-bg-hover: #1a65a7;
     --toolbar-bg-active: #cc785c;
-    --toolbar-text: #e2e8f0;
-    --toolbar-muted: #94a3b8;
+    --toolbar-text: #ffffff;
+    --toolbar-muted: #93bde1;
     --toolbar-accent: #e07a5f;
-    --footer-bg: #16181d;
-    --footer-border: #2d323f;
-    --footer-text: #cbd5e1;
+    --footer-bg: #0f4c81;
+    --footer-border: #165b99;
+    --footer-text: #ffffff;
     color-scheme: dark;
 }
 
@@ -61,16 +61,16 @@ html[data-ui-theme="dark"] body {
     html[data-ui-theme="auto"] body,
     html:not([data-ui-theme]),
     html:not([data-ui-theme]) body {
-        --toolbar-border: #2d323f;
-        --toolbar-bg: #1c1f26;
-        --toolbar-bg-hover: #2a2f3a;
+        --toolbar-border: #165b99;
+        --toolbar-bg: #0f4c81;
+        --toolbar-bg-hover: #1a65a7;
         --toolbar-bg-active: #cc785c;
-        --toolbar-text: #e2e8f0;
-        --toolbar-muted: #94a3b8;
+        --toolbar-text: #ffffff;
+        --toolbar-muted: #93bde1;
         --toolbar-accent: #e07a5f;
-        --footer-bg: #16181d;
-        --footer-border: #2d323f;
-        --footer-text: #cbd5e1;
+        --footer-bg: #0f4c81;
+        --footer-border: #165b99;
+        --footer-text: #ffffff;
         color-scheme: dark;
     }
 }
@@ -656,6 +656,7 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 
 /* Footer */
 .footer {
+    font-weight: bold;
     min-height: 48px;
     background: var(--footer-bg, #faf9f5);
     border-top: 1px solid var(--footer-border, #e6dfd8);
