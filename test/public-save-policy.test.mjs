@@ -54,7 +54,7 @@ test('publishing asks whether to enable autosave and persists an affirmative cho
     assert.match(baseTemplateSource, /const promptEnableAutosave = async \(\) =>/)
     assert.match(baseTemplateSource, /autosaveNudgeTitle/)
     assert.match(baseTemplateSource, /await window\.showAppDialog\(\{[\s\S]*confirm: true/)
-    assert.match(baseTemplateSource, /persistSetting\(\{ autosave: true \}\)/)
+    assert.match(baseTemplateSource, /localStorage\.setItem\('cf-notepad-autosave', 'true'\)/)
     assert.match(baseTemplateSource, /if \(!wasPublished\) promptEnableAutosave\(\)/)
 })
 
@@ -64,7 +64,7 @@ test('markdown export prefers the note title for the downloaded filename', () =>
 
 test('publishing can persist the current editor content in the same request', () => {
     assert.match(baseTemplateSource, /body: JSON\.stringify\(\{ share: true, content:/)
-    assert.match(indexSource, /const \{ mode, share, theme, width, shareFont, previewDevice, splitDirection, publicIndex, autosave, content \}/)
+    assert.match(indexSource, /const \{ share, theme, width, shareFont, publicIndex, content \}/)
     assert.match(indexSource, /typeof content === 'string'/)
 })
 

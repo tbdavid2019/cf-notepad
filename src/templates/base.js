@@ -1875,7 +1875,8 @@ ${getMarkdownCss()}
             })
             if (!shouldEnable) return
             try {
-                await persistSetting({ autosave: true })
+                APP_STATE.autosave = true
+                try { window.localStorage.setItem('cf-notepad-autosave', 'true') } catch(e) {}
                 syncShareStateUI()
                 scheduleAutosave()
                 window.showToast?.(getI18n('autosaveEnabled'))
@@ -2152,14 +2153,11 @@ ${getMarkdownCss()}
         }
 
         if ($autosaveToggle) {
-            $autosaveToggle.addEventListener('change', async () => {
+            $autosaveToggle.addEventListener('change', () => {
                 if (!APP_STATE.isPublished) {
                     $autosaveToggle.checked = false
-                    window.showToast?.(getSaveBlockedMessage())
                     return
                 }
-                try {
-                    await persistSetting({ autosave: $autosaveToggle.checked })
                     APP_STATE.autosave = $autosaveToggle.checked
                     if (APP_STATE.autosave) scheduleAutosave()
                     else clearAutosaveTimer()
@@ -2423,6 +2421,7 @@ ${getMarkdownCss()}
         const THEMES = ${JSON.stringify(THEMES)};
         const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
         const PREVIEW_DEVICE_STORAGE_KEY = 'cf-notepad-preview-device';
+        const PREVIEW_SPLIT_STORAGE_KEY = 'cf-notepad-split-direction';
         const SHARE_FONT_STORAGE_KEY = 'cf-notepad-share-font';
         const themeStyleNode = document.getElementById('theme-style');
         const themeSelector = document.getElementById('theme-selector');
@@ -2510,27 +2509,27 @@ ${getMarkdownCss()}
 
         if (previewDeviceSelector) {
             const savedPreviewDevice = window.localStorage.getItem(PREVIEW_DEVICE_STORAGE_KEY);
-            const initialPreviewDevice = APP_STATE.noteSettings.previewDevice || savedPreviewDevice || 'desktop';
+            const initialPreviewDevice = savedPreviewDevice || 'desktop';
             applyPreviewDevice(initialPreviewDevice);
             const previewDeviceSwitch = getRailSwitch(previewDeviceSelector)
             if (previewDeviceSwitch) previewDeviceSwitch.addEventListener('click', function() {
                 const current = this.getAttribute('aria-pressed') === 'true' ? 'desktop' : 'mobile';
                 const device = current === 'desktop' ? 'mobile' : 'desktop';
                 applyPreviewDevice(device);
-                window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device);
-                persistSetting({ previewDevice: device }).catch(err => errHandle(err.message || err));
+                try { window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, device); } catch(e) {}
             });
         }
 
         if (splitDirectionSelector) {
-            const initialSplitDirection = APP_STATE.noteSettings.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
+            const savedSplitDirection = window.localStorage.getItem(PREVIEW_SPLIT_STORAGE_KEY);
+            const initialSplitDirection = savedSplitDirection === 'vertical' ? 'vertical' : 'horizontal';
             applySplitDirection(initialSplitDirection);
             const splitDirectionSwitch = getRailSwitch(splitDirectionSelector)
             if (splitDirectionSwitch) splitDirectionSwitch.addEventListener('click', function() {
                 const current = this.getAttribute('aria-pressed') === 'true' ? 'horizontal' : 'vertical';
                 const direction = current === 'horizontal' ? 'vertical' : 'horizontal';
                 applySplitDirection(direction);
-                persistSetting({ splitDirection: direction }).catch(err => errHandle(err.message || err));
+                try { window.localStorage.setItem(PREVIEW_SPLIT_STORAGE_KEY, direction); } catch(e) {}
             });
         }
 
@@ -2551,16 +2550,13 @@ ${getMarkdownCss()}
                 }
 
                 const splitDirection = action.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
-                try {
-                    await persistSetting({ previewDevice: 'desktop', splitDirection });
-                    if (currentMode === 'md') {
-                        applyPreviewDevice('desktop');
-                        applySplitDirection(splitDirection);
-                    } else {
-                        modeSwitch.click();
-                    }
-                } catch (error) {
-                    errHandle(error.message || error);
+                try { window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, 'desktop'); } catch(e) {}
+                try { window.localStorage.setItem(PREVIEW_SPLIT_STORAGE_KEY, splitDirection); } catch(e) {}
+                if (currentMode === 'md') {
+                    applyPreviewDevice('desktop');
+                    applySplitDirection(splitDirection);
+                } else {
+                    modeSwitch.click();
                 }
             });
         };

@@ -11,6 +11,7 @@
 - **Preview Width Persistence & Cloudflare KV Quota Optimization**
   - Included `width` in the publish payload (`publishCurrentNote()`) so published/shared notes reliably keep the editor's selected preview width (1200px / 960px / 1440px / 100%).
   - Removed automatic page-load KV write requests when initializing 1200px width in memory, eliminating redundant KV write calls and protecting Cloudflare Free Tier quota.
+  - Refactored local editor preferences (`splitDirection`, `previewDevice`, `mode`, `autosave`) to be managed entirely via browser `localStorage` without sending KV API writes.
   - Pre-selected the `value="${effectiveWidth}"` attribute on `<wa-select id="preview-width-selector">` in SSR HTML.
   - Supported `width` parameter in Headless API (`POST /api/:path`) via query parameters, JSON body, and multipart form-data.
 
