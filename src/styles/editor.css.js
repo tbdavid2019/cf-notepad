@@ -29,8 +29,7 @@ export const getEditorCss = () => `
     padding: 3px 6px;
     position: relative;
     z-index: 100;
-    overflow-x: auto;
-    overflow-y: visible;
+    overflow: visible;
     border-bottom: 1px solid var(--toolbar-border, #e2dacd);
     background: var(--toolbar-bg, #f4f0e8);
     color: var(--toolbar-text, #2c2a29);
