@@ -1512,6 +1512,7 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+            const { mode } = await request.clone().json()
             const { share, theme, width, shareFont, publicIndex, content } = await request.json()
 
             const { value, metadata } = await queryNote(path)
@@ -1526,6 +1527,7 @@ router.post('/:path/setting', async request => {
                         ...width !== undefined && { width },
                         ...shareFont !== undefined && { shareFont },
                         ...publicIndex !== undefined && { publicIndex: publicIndex === true },
+                        ...mode !== undefined && { mode },
                     }
 
                     if (share === false) {

@@ -24,13 +24,13 @@ export const getEditorCss = () => `
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    gap: 4px;
-    min-height: 38px;
-    padding: 4px 8px;
+    gap: 2px;
+    min-height: 32px;
+    padding: 3px 6px;
     overflow-x: auto;
-    border-bottom: 1px solid var(--toolbar-border, #e6dfd8);
-    background: var(--toolbar-bg, rgba(250, 249, 245, 0.96));
-    color: var(--toolbar-text, #3d3a36);
+    border-bottom: 1px solid var(--toolbar-border, #e2dacd);
+    background: var(--toolbar-bg, #f4f0e8);
+    color: var(--toolbar-text, #2c2a29);
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -41,9 +41,9 @@ export const getEditorCss = () => `
 }
 
 .markdown-toolbar-button {
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
+    flex: 0 0 24px;
+    width: 24px;
+    height: 24px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -53,6 +53,7 @@ export const getEditorCss = () => `
     color: inherit;
     cursor: pointer;
     font: inherit;
+    padding: 0;
     transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease, transform 0.08s ease;
 }
 
@@ -62,13 +63,19 @@ export const getEditorCss = () => `
 
 .markdown-toolbar-button:hover,
 .markdown-toolbar-button:focus-visible {
-    border-color: var(--toolbar-border, #d0d7de);
-    background: var(--toolbar-bg-hover, rgba(0, 0, 0, 0.06));
-    color: var(--toolbar-accent, #cc785c);
+    border-color: var(--toolbar-border, #e2dacd);
+    background: var(--toolbar-bg-hover, #eae3d5);
+    color: var(--toolbar-accent, #c8654b);
+}
+
+.markdown-toolbar-button.is-active {
+    border-color: var(--toolbar-border, #e2dacd);
+    background: var(--toolbar-bg-active, #f0e6d8);
+    color: var(--toolbar-accent, #c8654b);
 }
 
 .markdown-toolbar-button:focus-visible {
-    outline: 2px solid var(--toolbar-accent, #cc785c);
+    outline: 2px solid var(--toolbar-accent, #c8654b);
     outline-offset: 1px;
 }
 
@@ -77,12 +84,22 @@ export const getEditorCss = () => `
     cursor: default;
 }
 
+.markdown-toolbar-button {
+    position: relative;
+}
+
+.markdown-toolbar-button .svg-icon {
+    width: 14px;
+    height: 14px;
+    stroke-width: 2.2;
+}
+
 .markdown-toolbar-glyph {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 22px;
-    font-size: 14px;
+    min-width: 14px;
+    font-size: 13px;
     line-height: 1;
     white-space: nowrap;
 }
@@ -93,14 +110,14 @@ export const getEditorCss = () => `
 .markdown-toolbar-glyph.is-code { font-family: var(--editor-font-family); font-size: 11px; }
 .markdown-toolbar-glyph.is-table,
 .markdown-toolbar-glyph.is-image,
-.markdown-toolbar-glyph.is-ai { font-size: 18px; }
+.markdown-toolbar-glyph.is-ai { font-size: 16px; }
 
 .markdown-toolbar-separator {
     flex: 0 0 1px;
     width: 1px;
-    height: 20px;
-    margin: 0 2px;
-    background: var(--toolbar-border, #e6dfd8);
+    height: 16px;
+    margin: 0 1px;
+    background: var(--toolbar-border, #e2dacd);
 }
 
 .editor-pane:fullscreen,
@@ -156,8 +173,8 @@ textarea#contents {
         flex-wrap: nowrap !important;
         overflow-x: auto !important;
         justify-content: flex-start !important;
-        gap: 4px !important;
-        padding: 4px 8px !important;
+        gap: 2px !important;
+        padding: 3px 5px !important;
         scrollbar-width: none; /* Firefox */
         -webkit-overflow-scrolling: touch;
     }
@@ -165,9 +182,9 @@ textarea#contents {
         display: none; /* Safari and Chrome */
     }
     .markdown-toolbar-button {
-        flex: 0 0 30px !important;
-        width: 30px !important;
-        height: 30px !important;
+        flex: 0 0 24px !important;
+        width: 24px !important;
+        height: 24px !important;
     }
     .markdown-toolbar-separator {
         display: none;

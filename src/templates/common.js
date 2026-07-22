@@ -49,13 +49,33 @@ const SVG_ICONS = {
     magic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m11.5 12.5 9-9M16 3l5 5M6.5 17.5l-4 4M2 17h5M2 22v-5M12.5 18.5l-.5-2.5-2.5-.5 2.5-.5.5-2.5.5 2.5 2.5.5-2.5.5zM5 8.5 4.5 6 2 5.5 4.5 5 5 2.5 5.5 5 8 5.5 5.5 6z"></path></svg>`,
     apiDocs: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><path d="M8 13l3 3-3 3M16 19h-3"></path></svg>`,
     clock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>`,
+    undo: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5a5.5 5.5 0 0 1-5.5 5.5H11"/></svg>`,
+    redo: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 14 5-5-5-5"/><path d="M20 9H9.5A5.5 5.5 0 0 0 4 14.5A5.5 5.5 0 0 0 9.5 20H13"/></svg>`,
+    quote: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21c3 0 7-1 7-8V5c0-1.25-.756-2.017-2-2H4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/><path d="M15 21c3 0 7-1 7-8V5c0-1.25-.757-2.017-2-2h-4c-1.25 0-2 .75-2 1.972V11c0 1.25.75 2 2 2 1 0 1 0 1 1v1c0 1-1 2-2 2s-1 .008-1 1.031V20c0 1 0 1 1 1z"/></svg>`,
+    bullet: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="9" y1="6" x2="21" y2="6"/><line x1="9" y1="12" x2="21" y2="12"/><line x1="9" y1="18" x2="21" y2="18"/><circle cx="4" cy="6" r="2" fill="currentColor"/><circle cx="4" cy="12" r="2" fill="currentColor"/><circle cx="4" cy="18" r="2" fill="currentColor"/></svg>`,
+    task: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="m9 12 2 2 4-4"/></svg>`,
+    rule: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>`,
+    table: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M3 12h18"/><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`,
+    image: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>`,
+    asset: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57a4 4 0 1 1 5.66 5.66l-8.59 8.58a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>`,
+    fullscreen: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/></svg>`,
     sun: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>`,
-    moon: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`
+    moon: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>`,
+    eye: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0z"/><circle cx="12" cy="12" r="3"/></svg>`,
+    eyeOff: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499A10.75 10.75 0 0 1 2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.168-4.49"/><line x1="2" y1="2" x2="22" y2="22"/></svg>`,
+    columns: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 3v18"/></svg>`,
+    rows: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 12h18"/></svg>`,
+    monitor: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+    mobile: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="14" height="20" x="5" y="2" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>`,
+    globe: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>`,
+    save: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
+    type: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+    languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
-    { command: 'undo', glyph: '↶', zh: '復原', en: 'Undo' },
-    { command: 'redo', glyph: '↷', zh: '重做', en: 'Redo' },
+    { command: 'undo', glyph: SVG_ICONS.undo, zh: '復原', en: 'Undo' },
+    { command: 'redo', glyph: SVG_ICONS.redo, zh: '重做', en: 'Redo' },
     { separator: true },
     { command: 'heading1', glyph: 'H1', zh: '一級標題', en: 'Heading 1' },
     { command: 'heading2', glyph: 'H2', zh: '二級標題', en: 'Heading 2' },
@@ -64,21 +84,21 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'bold', glyph: 'B', glyphClass: 'is-bold', zh: '粗體', en: 'Bold' },
     { command: 'italic', glyph: 'I', glyphClass: 'is-italic', zh: '斜體', en: 'Italic' },
     { command: 'strike', glyph: 'S', glyphClass: 'is-strike', zh: '刪除線', en: 'Strikethrough' },
-    { command: 'link', glyph: '↗', zh: '連結', en: 'Link' },
+    { command: 'link', glyph: SVG_ICONS.link, zh: '連結', en: 'Link' },
     { separator: true },
-    { command: 'quote', glyph: '❝', zh: '引用', en: 'Quote' },
-    { command: 'bullet', glyph: '☷', zh: '無序清單', en: 'Bullet list' },
+    { command: 'quote', glyph: SVG_ICONS.quote, zh: '引用', en: 'Quote' },
+    { command: 'bullet', glyph: SVG_ICONS.bullet, zh: '無序清單', en: 'Bullet list' },
     { command: 'ordered', glyph: '1.', zh: '有序清單', en: 'Numbered list' },
-    { command: 'task', glyph: '☑', zh: '待辦清單', en: 'Task list' },
+    { command: 'task', glyph: SVG_ICONS.task, zh: '待辦清單', en: 'Task list' },
     { separator: true },
     { command: 'inlineCode', glyph: '&lt;/&gt;', glyphClass: 'is-code', zh: '行內程式碼', en: 'Inline code' },
     { command: 'codeBlock', glyph: '{ }', glyphClass: 'is-code', zh: '程式碼區塊', en: 'Code block' },
-    { command: 'rule', glyph: '―', zh: '分隔線', en: 'Horizontal rule' },
-    { command: 'table', glyph: '▦', glyphClass: 'is-table', zh: '插入表格', en: 'Insert table' },
-    { command: 'image', glyph: '▧', glyphClass: 'is-image', zh: '上傳圖片', en: 'Upload image' },
-    { command: 'asset', glyph: '⇧', glyphClass: 'is-asset', zh: '上傳附件', en: 'Upload attachment' },
+    { command: 'rule', glyph: SVG_ICONS.rule, zh: '分隔線', en: 'Horizontal rule' },
+    { command: 'table', glyph: SVG_ICONS.table, glyphClass: 'is-table', zh: '插入表格', en: 'Insert table' },
+    { command: 'image', glyph: SVG_ICONS.image, glyphClass: 'is-image', zh: '上傳圖片', en: 'Upload image' },
+    { command: 'asset', glyph: SVG_ICONS.asset, glyphClass: 'is-asset', zh: '上傳附件', en: 'Upload attachment' },
     { separator: true },
-    { command: 'fullscreen', glyph: '⛶', zh: '全螢幕編輯', en: 'Fullscreen editor' },
+    { command: 'fullscreen', glyph: SVG_ICONS.fullscreen, zh: '全螢幕編輯', en: 'Fullscreen editor' },
 ]
 
 export const EDITOR_TOOLBAR = lang => {
@@ -89,10 +109,10 @@ export const EDITOR_TOOLBAR = lang => {
     <div class="markdown-editor-toolbar" data-markdown-toolbar data-language="${lang}" role="toolbar" aria-label="${label}">
         ${EDITOR_TOOLBAR_COMMANDS.map(item => item.separator
             ? '<span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>'
-            : `<button type="button" class="markdown-toolbar-button" data-command="${item.command}" title="${isZh ? item.zh : item.en}" aria-label="${isZh ? item.zh : item.en}"><span class="markdown-toolbar-glyph ${item.glyphClass || ''}" aria-hidden="true">${item.glyph}</span></button>`
+            : `<button type="button" class="markdown-toolbar-button" data-command="${item.command}" data-tooltip="${isZh ? item.zh : item.en}" title="${isZh ? item.zh : item.en}" aria-label="${isZh ? item.zh : item.en}"><span class="markdown-toolbar-glyph ${item.glyphClass || ''}" aria-hidden="true">${item.glyph}</span></button>`
         ).join('')}
         <span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>
-        <button type="button" id="editor-ai-format-btn" class="markdown-toolbar-button" data-ai-action="format" title="${isZh ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${isZh ? 'AI 格式化排版' : 'AI Format Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">✦</span></button>
+        <button type="button" id="editor-ai-format-btn" class="markdown-toolbar-button" data-ai-action="format" data-tooltip="${isZh ? 'AI 格式化排版' : 'AI Format Document'}" title="${isZh ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${isZh ? 'AI 格式化排版' : 'AI Format Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">${SVG_ICONS.sparkles}</span></button>
     </div>
     <input id="markdown-toolbar-image-input" class="visually-hidden-file-input" type="file" accept="image/*" aria-label="${isZh ? '選擇要上傳的圖片' : 'Choose an image to upload'}">
     <input id="markdown-toolbar-asset-input" class="visually-hidden-file-input" type="file" accept="video/*,audio/*,application/pdf,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.md,.zip,.rar,.7z" aria-label="${isZh ? '選擇要上傳的附件' : 'Choose an attachment to upload'}">
@@ -100,20 +120,28 @@ export const EDITOR_TOOLBAR = lang => {
     `
 }
 
-export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue }) => `
+export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue, checkedIcon = '', uncheckedIcon = '' }) => `
 <button
   type="button"
   class="footer-rail-switch ${className} ${checked ? 'is-checked' : ''}"
   aria-label="${ariaLabel}"
   aria-pressed="${checked ? 'true' : 'false'}"
+  data-tooltip="${ariaLabel}"
+  title="${ariaLabel}"
   ${checkedValue ? `data-rail-checked-value="${checkedValue}"` : ''}
   ${uncheckedValue ? `data-rail-unchecked-value="${uncheckedValue}"` : ''}
 >
-  <span class="footer-rail-text footer-rail-text-checked"><span class="footer-rail-caption">${checkedTitle}</span><span class="footer-rail-value">${checkedText}</span></span>
-  <span class="footer-rail-text footer-rail-text-unchecked"><span class="footer-rail-caption">${uncheckedTitle}</span><span class="footer-rail-value">${uncheckedText}</span></span>
-  <span class="footer-rail-thumb" aria-hidden="true"></span>
+  <span class="btn-flip-front" aria-hidden="true">
+    ${uncheckedIcon ? `<span class="footer-rail-icon">${uncheckedIcon}</span>` : ''}
+    <span class="footer-rail-value">${uncheckedText}</span>
+  </span>
+  <span class="btn-flip-back" aria-hidden="true">
+    ${checkedIcon ? `<span class="footer-rail-icon">${checkedIcon}</span>` : ''}
+    <span class="footer-rail-value">${checkedText}</span>
+  </span>
 </button>
 `
+
 
 // Keep the legacy export available for callers outside the footer template.
 export const SWITCHER = (text, open, className = '') => `
@@ -183,15 +211,15 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     </div>
                                     <div class="share-menu-unpublished" ${share && shareId ? 'hidden' : ''}>
                                     <button type="button" class="dropdown-item share-publish-menu-btn">
-                                        ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '發布並建立分享連結' : 'Publish and create share link'}</span>
+                                        ${SVG_ICONS.globe} <span>${lang === 'zh-TW' ? '發布並建立分享連結' : 'Publish and create share link'}</span>
                                     </button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         <div class="save-control-group" aria-label="${lang === 'zh-TW' ? '儲存設定' : 'Save settings'}">
-                            <button type="button" id="save-note-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" aria-label="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}">
-                                ${SVG_ICONS.check}
+                            <button type="button" id="save-note-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" title="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" aria-label="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}">
+                                ${SVG_ICONS.save}
                                 <span class="toolbar-button-label">${lang === 'zh-TW' ? '儲存' : 'Save'}</span>
                             </button>
                             <label class="autosave-toggle-label" title="${share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave')}" aria-label="${lang === 'zh-TW' ? '啟用文章自動儲存' : 'Enable note autosave'}">
@@ -199,48 +227,48 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <span>${lang === 'zh-TW' ? '自動儲存' : 'Autosave'}</span>
                             </label>
                         </div>
-                        <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
+                        <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" data-tooltip="${t.editLockTitle}" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
                             <span class="toolbar-button-label">${t.editLockTitle}</span>
                         </button>
-                        <button class="toolbar-icon-button opt-pw-view ${vpw ? 'toolbar-active-button' : ''}" data-type="view" title="${t.readLockTitle}" aria-label="${t.readLockTitle}">
+                        <button class="toolbar-icon-button opt-pw-view ${vpw ? 'toolbar-active-button' : ''}" data-type="view" data-tooltip="${t.readLockTitle}" title="${t.readLockTitle}" aria-label="${t.readLockTitle}">
                             ${SVG_ICONS.readLock}
                             <span class="toolbar-button-label">${t.readLockTitle}</span>
                         </button>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
-                        <button type="button" id="import-md-btn" class="toolbar-icon-button" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
+                        <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
                         </button>
-                        <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
+                        <button type="button" id="export-md-btn" class="toolbar-icon-button" data-tooltip="${t.exportMarkdown}" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
                             ${SVG_ICONS.export}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
                         </button>
-                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
+                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" data-tooltip="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
                             <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
                         </button>
-                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
+                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
                         </button>
                         ${showNoteHistory ? `
-                            <button type="button" id="note-history-btn" class="toolbar-icon-button note-history-trigger" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}" aria-label="${t.historyTitle}">
+                            <button type="button" id="note-history-btn" class="toolbar-icon-button note-history-trigger" data-tooltip="${t.historyTitle}" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}" aria-label="${t.historyTitle}">
                                 ${SVG_ICONS.history}
                                 <span class="sr-only">${t.historyTitle}</span>
                             </button>
                         ` : ''}
-                        <button type="button" id="ai-format-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}">
+                        <button type="button" id="ai-format-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" title="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}">
                             ${SVG_ICONS.sparkles}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI排版' : 'Format'}</span>
                         </button>
-                        <button type="button" id="ai-edit-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}">
+                        <button type="button" id="ai-edit-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" title="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}">
                             ${SVG_ICONS.magic}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI編輯' : 'AI Edit'}</span>
                         </button>
-                        ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
-                        <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
+                        ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" data-tooltip="${t.presentTitle}" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
+                        <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
                             ${SVG_ICONS.shareHistory}
                             <span class="sr-only">${t.recentSharesTitle}</span>
                         </button>
@@ -256,6 +284,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     ariaLabel: t.preview,
                                     checkedValue: 'md',
                                     uncheckedValue: 'plain',
+                                    checkedIcon: SVG_ICONS.eye,
+                                    uncheckedIcon: SVG_ICONS.eyeOff,
                                 })}
                             </div>
                             ${mode === 'md' ? `
@@ -270,6 +300,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                             ariaLabel: lang === 'zh-TW' ? '編輯預覽排列' : 'Editor preview layout',
                                             checkedValue: 'horizontal',
                                             uncheckedValue: 'vertical',
+                                            checkedIcon: SVG_ICONS.columns,
+                                            uncheckedIcon: SVG_ICONS.rows,
                                         })}
                                     </div>
                                 </div>
@@ -285,6 +317,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                             ariaLabel: t.previewDevice,
                                             checkedValue: 'desktop',
                                             uncheckedValue: 'mobile',
+                                            checkedIcon: SVG_ICONS.monitor,
+                                            uncheckedIcon: SVG_ICONS.mobile,
                                         })}
                                     </div>
                                 </div>
@@ -293,7 +327,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     ` : (path ? `
                         ${authPath
                             ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
-                            : `<a href="/${path}" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
+                            : `<a href="/${path}" class="toolbar-icon-button readonly-edit-link" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
                         }
                         <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
                             ${SVG_ICONS.export}
@@ -337,6 +371,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     ariaLabel: shareFontAriaLabel,
                                     checkedValue: 'jetbrains',
                                     uncheckedValue: 'maple',
+                                    checkedIcon: SVG_ICONS.type,
+                                    uncheckedIcon: SVG_ICONS.type,
                                 })}
                             </div>
                         </div>
@@ -352,6 +388,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 ariaLabel: t.language,
                                 checkedValue: 'zh-TW',
                                 uncheckedValue: 'en-US',
+                                checkedIcon: SVG_ICONS.languages,
+                                uncheckedIcon: SVG_ICONS.languages,
                             })}
                         </div>
                     </div>
@@ -376,20 +414,20 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 
             <div class="footer-section footer-section-info">
                 <div class="footer-section-body">
-                    <a class="toolbar-icon-link" title="Github" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
+                    <a class="toolbar-icon-link" data-tooltip="GitHub" title="GitHub" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
                         <svg viewBox="64 64 896 896" focusable="false" data-icon="github" width="1.25em" height="1.25em" fill="currentColor" aria-hidden="true"><path d="M511.6 76.3C264.3 76.2 64 276.4 64 523.5 64 718.9 189.3 885 363.8 946c23.5 5.9 19.9-10.8 19.9-22.2v-77.5c-135.7 15.9-141.2-73.9-150.3-88.9C215 726 171.5 718 184.5 703c30.9-15.9 62.4 4 98.9 57.9 26.4 39.1 77.9 32.5 104 26 5.7-23.5 17.9-44.5 34.7-60.8-140.6-25.2-199.2-111-199.2-213 0-49.5 16.3-95 48.3-131.7-20.4-60.5 1.9-112.3 4.9-120 58.1-5.2 118.5 41.6 123.2 45.3 33-8.9 70.7-13.6 112.9-13.6 42.4 0 80.2 4.9 113.5 13.9 11.3-8.6 67.3-48.8 121.3-43.9 2.9 7.7 24.7 58.3 5.5 118 32.4 36.8 48.9 82.7 48.9 132.3 0 102.2-59 188.1-200 212.9a127.5 127.5 0 0138.1 91v112.5c.8 9 0 17.9 15 17.9 177.1-59.7 304.6-227 304.6-424.1 0-247.2-200.4-447.3-447.3z"></path></svg>
                         <span class="toolbar-button-label">GitHub</span>
                     </a>
-                    <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
+                    <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" data-tooltip="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
                         <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
                         <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
                         <span class="toolbar-button-label">${lang === 'zh-TW' ? '深淺' : 'Theme'}</span>
                     </button>
-                    <a class="toolbar-icon-link" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
+                    <a class="toolbar-icon-link" data-tooltip="${t.skillTitle}" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
                         ${SVG_ICONS.sparkles}
                         <span class="toolbar-button-label">Skill</span>
                     </a>
-                    <a class="toolbar-icon-link" title="${t.apiDocTitle}" aria-label="${t.apiDocTitle}" target="_blank" href="/docs/api" rel="noreferrer">
+                    <a class="toolbar-icon-link" data-tooltip="${t.apiDocTitle}" title="${t.apiDocTitle}" aria-label="${t.apiDocTitle}" target="_blank" href="/docs/api" rel="noreferrer">
                         ${SVG_ICONS.apiDocs}
                         <span class="toolbar-button-label">API</span>
                     </a>

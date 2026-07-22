@@ -82,7 +82,7 @@ test('footer uses native-style rails for the requested two-state controls', () =
     assert.match(commonTemplateSource, /checkedText: t\.desktop/)
     assert.match(baseTemplateSource, /const \$modeBtn = document\.querySelector\('\.opt-mode'\)/)
     assert.match(baseTemplateSource, /function setRailSwitchState\(selector, checked\)/)
-    assert.match(baseCssSource, /\.toolbar-button-label \{\s*font-size: 10px;/)
+    assert.match(baseCssSource, /\.toolbar-button-label \{\s*display: none !important;/)
 })
 
 test('share modal prompts for public index approval after publish', () => {

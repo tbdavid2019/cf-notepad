@@ -634,6 +634,24 @@ ${getMarkdownCss()}
         title: title || '',
         i18n: getLangText(lang),
     })}
+    if (APP_STATE.isEdit && APP_STATE.isPublished) {
+        let isFromShare = false
+        try {
+            if (window.sessionStorage.getItem('cf-notepad-from-share') === 'true') {
+                isFromShare = true
+                window.sessionStorage.removeItem('cf-notepad-from-share')
+            } else if (document.referrer && (document.referrer.includes('/share/') || document.referrer.includes('/auth'))) {
+                isFromShare = true
+            }
+        } catch(e) {}
+
+        if (isFromShare) {
+            APP_STATE.autosave = true
+            try { window.localStorage.setItem('cf-notepad-autosave', 'true') } catch(e) {}
+        } else {
+            APP_STATE.autosave = false
+        }
+    }
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
     const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
@@ -911,6 +929,7 @@ ${getMarkdownCss()}
     })
 
     const passwdPrompt = async () => {
+        try { window.sessionStorage.setItem('cf-notepad-from-share', 'true') } catch(e) {}
         const passwd = await openPasswordModal({ title: getI18n('pepw') })
         if (passwd == null) return;
         const normalizedPasswd = passwd.trim()
@@ -1365,6 +1384,9 @@ ${getMarkdownCss()}
         const $exportPdfBtn = document.querySelector('#export-pdf-btn')
         const $saveNoteBtn = document.querySelector('#save-note-btn')
         const $autosaveToggle = document.querySelector('#autosave-toggle')
+        if ($autosaveToggle) {
+            $autosaveToggle.checked = APP_STATE.autosave
+        }
 
         const AUTOSAVE_IDLE_MS = ${AUTOSAVE_IDLE_MS}
         let savedContent = $textarea ? $textarea.value : ''
@@ -2222,6 +2244,12 @@ ${getMarkdownCss()}
 
         if ($readonlyEditBtn) {
             $readonlyEditBtn.addEventListener('click', () => passwdPrompt())
+        }
+        const $readonlyEditLink = document.querySelector('.readonly-edit-link')
+        if ($readonlyEditLink) {
+            $readonlyEditLink.addEventListener('click', () => {
+                try { window.sessionStorage.setItem('cf-notepad-from-share', 'true') } catch(e) {}
+            })
         }
 
         const setupMobileShareFooter = () => {

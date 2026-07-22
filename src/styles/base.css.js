@@ -25,20 +25,20 @@ export const getBaseCss = () => `
     --share-font-jetbrains-family: "JetBrains Mono", "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono NL", "Roboto Mono", "Consolas", "Menlo", monospace;
     --share-font-maple-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
     --preview-max-width: 100%;
-    --toolbar-height: 30px;
+    --toolbar-height: 28px;
     --toolbar-radius: 4px;
-    --toolbar-border: #e6dfd8;
-    --toolbar-bg: #ffffff;
-    --toolbar-bg-hover: #f5f0e8;
-    --toolbar-bg-active: #cc785c;
-    --toolbar-text: #141413;
-    --toolbar-muted: #6c6a64;
-    --toolbar-accent: #cc785c;
+    --toolbar-border: #e2dacd;
+    --toolbar-bg: #f4f0e8;
+    --toolbar-bg-hover: #eae3d5;
+    --toolbar-bg-active: #f0e6d8;
+    --toolbar-text: #2c2a29;
+    --toolbar-muted: #706c66;
+    --toolbar-accent: #c8654b;
     --toolbar-success: #5db8a6;
     --toolbar-danger: #c64545;
-    --footer-bg: #faf9f5;
-    --footer-border: #e6dfd8;
-    --footer-text: #5c5a54;
+    --footer-bg: #f4f0e8;
+    --footer-border: #e2dacd;
+    --footer-text: #4a4640;
 }
 
 html[data-ui-theme="dark"],
@@ -76,7 +76,7 @@ html[data-ui-theme="dark"] body {
 }
 
 /* Reset & Base */
-body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; height: 100dvh; overflow: hidden; }
+body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #333; height: 100vh; height: 100dvh; overflow: hidden; }
 * { box-sizing: border-box; }
 
 /* Scrollbar */
@@ -773,11 +773,33 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
 .footer-view-settings-group {
     display: inline-flex;
     align-items: center;
-    gap: 5px;
+    gap: 0; /* Primer button group collapses gap */
     height: var(--toolbar-height);
     padding: 0;
     border: 0;
     background: transparent;
+}
+.footer-view-settings-group .footer-control-group {
+    display: inline-flex;
+    gap: 0;
+}
+.footer-view-settings-group .footer-rail-switch {
+    border-radius: 0;
+    margin-right: -1px;
+}
+.footer-view-settings-group > :first-child .footer-rail-switch {
+    border-top-left-radius: 4px;
+    border-bottom-left-radius: 4px;
+}
+.footer-view-settings-group > :last-child .footer-rail-switch {
+    border-top-right-radius: 4px;
+    border-bottom-right-radius: 4px;
+    margin-right: 0;
+}
+.footer-view-settings-group .footer-rail-switch:hover,
+.footer-view-settings-group .footer-rail-switch:focus-visible,
+.footer-view-settings-group .footer-rail-switch.is-checked {
+    z-index: 1;
 }
 .footer-control-label {
     font-size: 10px;
@@ -816,110 +838,137 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     cursor: not-allowed;
 }
 
-/* Compact two-state controls inspired by native switch rails. */
+/* Thumb-free 3D Flip Card Toggle Switch */
 .footer-rail-switch {
-    --rail-checked-bg: var(--toolbar-accent);
+    perspective: 400px;
     position: relative;
     display: inline-flex;
     align-items: center;
-    width: 64px;
+    justify-content: center;
+    min-width: var(--toolbar-height);
     height: var(--toolbar-height);
     padding: 0;
-    border: 1px solid var(--toolbar-border);
+    border: 1px solid var(--toolbar-border, #e2dacd);
     border-radius: 4px;
-    background: #d8dee4;
-    color: #5c5a54;
+    background: transparent;
+    color: var(--toolbar-text, #2c2a29);
     cursor: pointer;
-    overflow: hidden;
-    transition: background-color 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, transform 0.1s ease;
-}
-.footer-rail-switch:active {
-    transform: scale(0.96);
-}
-.footer-rail-switch:hover {
-    border-color: var(--toolbar-accent);
+    box-sizing: border-box;
 }
 .footer-rail-switch:focus-visible {
-    outline: 2px solid var(--toolbar-accent);
-    outline-offset: 2px;
+    outline: 2px solid var(--toolbar-accent, #c8654b);
+    outline-offset: 1px;
 }
-.footer-rail-switch.is-checked {
-    background: var(--rail-checked-bg);
-    color: #fff;
-}
-.footer-rail-text {
-    position: absolute;
-    top: 0;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
+
+.footer-rail-switch .btn-flip-front,
+.footer-rail-switch .btn-flip-back {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
     height: 100%;
-    padding: 0 7px;
-    line-height: 1;
-    white-space: nowrap;
-    pointer-events: none;
-    transition: opacity 0.12s ease;
+    backface-visibility: hidden;
+    transition: transform 0.24s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+    border-radius: inherit;
+    padding: 0 8px;
+    gap: 4px;
+    background: var(--toolbar-bg-hover, #eae3d5);
+    box-sizing: border-box;
 }
-.footer-rail-caption,
-.footer-rail-value {
-    display: block;
+
+.footer-rail-switch .btn-flip-front {
+    position: relative;
+    transform: rotateY(0deg);
 }
-.footer-rail-caption {
-    font-size: 8px;
-    font-weight: 650;
-    line-height: 1;
-    opacity: 0.82;
+
+.footer-rail-switch .btn-flip-back {
+    position: absolute;
+    inset: 0;
+    background: var(--toolbar-accent, #c8654b);
+    color: #ffffff;
+    transform: rotateY(-180deg);
 }
-.footer-rail-value {
-    margin-top: 2px;
-    font-size: 10px;
+
+.footer-rail-switch.is-checked .btn-flip-front {
+    transform: rotateY(180deg);
+    opacity: 0;
+}
+.footer-rail-switch.is-checked .btn-flip-back {
+    transform: rotateY(0deg);
+    opacity: 1;
+}
+
+.footer-rail-switch .footer-rail-value {
+    font-size: 11px;
     font-weight: 700;
     line-height: 1;
+    white-space: nowrap;
 }
-.footer-rail-text-checked {
-    left: 0;
-    right: 24px;
-    padding-left: 5px;
-    padding-right: 2px;
-    overflow: hidden;
-    opacity: 0;
+.footer-rail-switch .footer-rail-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
-.footer-rail-text-unchecked {
-    left: 24px;
-    right: 0;
-    padding-left: 2px;
-    padding-right: 5px;
-    overflow: hidden;
-    opacity: 1;
+.footer-rail-switch .svg-icon {
+    width: 13px;
+    height: 13px;
+    stroke-width: 2.2;
 }
-.footer-rail-switch.is-checked .footer-rail-text-checked {
-    opacity: 1;
+
+
+/* Instant 0ms Custom CSS Floating Tooltip Badge (Full Text, Zero Delay, No Truncation) */
+[data-tooltip] {
+    position: relative;
 }
-.footer-rail-switch.is-checked .footer-rail-text-unchecked {
-    opacity: 0;
-}
-.footer-rail-thumb {
+[data-tooltip]::before {
+    content: attr(data-tooltip);
     position: absolute;
-    left: 3px;
-    z-index: 2;
-    width: 22px;
-    height: 22px;
-    border-radius: 4px;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(31, 35, 40, 0.28);
-    transition: transform 0.16s ease;
+    bottom: calc(100% + 7px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px) scale(0.95);
+    z-index: 10000;
+    padding: 4px 8px;
+    background: var(--tooltip-bg, #2c2a29);
+    color: var(--tooltip-text, #f9f6f0);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    border-radius: 5px;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s ease, transform 0.1s ease, visibility 0.1s ease;
 }
-.footer-rail-switch.is-checked .footer-rail-thumb {
-    transform: translateX(36px);
+[data-tooltip]::after {
+    content: '';
+    position: absolute;
+    bottom: calc(100% + 2px);
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    z-index: 10000;
+    border-width: 5px 5px 0 5px;
+    border-style: solid;
+    border-color: var(--tooltip-bg, #2c2a29) transparent transparent transparent;
+    pointer-events: none;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.1s ease, transform 0.1s ease, visibility 0.1s ease;
 }
-#language-selector .footer-rail-switch {
-    width: 48px;
+[data-tooltip]:hover::before,
+[data-tooltip]:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0) scale(1);
 }
-#language-selector .footer-rail-switch.is-checked .footer-rail-thumb {
-    transform: translateX(20px);
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
 }
+
 .share-font-toggle {
     display: inline-flex;
     align-items: center;
@@ -1043,35 +1092,26 @@ body { padding: 0; margin: 0; background: #f0f2f5; font-family: -apple-system, B
     padding: 0;
     font-size: 14px;
 }
-.toolbar-icon-button {
+.toolbar-icon-button,
+.toolbar-icon-link {
     display: inline-flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
     height: var(--toolbar-height);
-    width: auto;
+    width: var(--toolbar-height);
     min-width: var(--toolbar-height);
-    padding: 1px 7px;
-    gap: 1px;
+    padding: 0;
     font-size: 14px;
     box-sizing: border-box;
+    border-radius: 4px;
+    background: transparent;
+    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.1s ease;
 }
+
 .toolbar-button-label {
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--toolbar-muted, #6c6a64);
-    line-height: 1;
-    display: block;
-    pointer-events: none;
-    margin-top: 1px;
-    transition: color 0.12s ease;
+    display: none !important;
 }
-.toolbar-icon-button:hover .toolbar-button-label {
-    color: var(--toolbar-accent, #cc785c);
-}
-.toolbar-icon-button.toolbar-active-button .toolbar-button-label {
-    color: var(--toolbar-accent, #cc785c);
-}
+
 .copy-button-icon {
     display: inline-flex;
     align-items: center;
@@ -1689,6 +1729,16 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     word-break: break-word !important;
 }
 
+body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > pre,
+body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table,
+body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-preview {
+    margin-left: -18px !important;
+    margin-right: -18px !important;
+    border-radius: 0 !important;
+    width: calc(100% + 36px) !important;
+    max-width: calc(100% + 36px) !important;
+}
+
 .mobile-ascii-diagram {
     width: 100%;
     overflow: hidden;
@@ -1966,6 +2016,20 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
     body:not(.share-view) .preview-pane {
         height: 50% !important;
         min-height: 0 !important;
+    }
+
+    /* Polaris Bleed-inspired full-width tables & code blocks on mobile */
+    body.share-view #preview-md.markdown-body > pre,
+    body.share-view #preview-md.markdown-body > table,
+    body.share-view #preview-md.markdown-body > .media-preview,
+    body:not(.share-view) #preview-md.markdown-body > pre,
+    body:not(.share-view) #preview-md.markdown-body > table,
+    body:not(.share-view) #preview-md.markdown-body > .media-preview {
+        margin-left: -30px !important;
+        margin-right: -30px !important;
+        border-radius: 0 !important;
+        width: calc(100% + 60px) !important;
+        max-width: calc(100% + 60px) !important;
     }
 
     .footer {
