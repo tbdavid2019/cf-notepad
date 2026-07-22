@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-07-22]
+### Added / Improved
+- **Instant 0ms Floating Tooltip Badge System (Zero-Lag Hover Text Labels)**
+  - Replaced native delayed `title` hover tooltips and experimental layout-shifting flip cards with a **Custom 0ms Instant Floating Tooltip Badge** (`[data-tooltip]`).
+  - Dark floating badges (`#2c2a29`) with crisp white text instantly appear on hover/focus across both top Markdown editor toolbar and bottom footer controls without any JavaScript `setTimeout` lag.
+  - Implemented directional popups: Top toolbar buttons pop DOWN (`top: calc(100% + 6px)`), and Footer buttons pop UP (`bottom: calc(100% + 7px)`), ensuring badges are never clipped by screen edges.
+- **Full Container Unclipping (`overflow: visible` & Elevated `z-index`)**
+  - Resolved container clipping issues by setting `overflow: visible` and `z-index: 100` on `.footer` and `.markdown-editor-toolbar`.
+  - Floating tooltip badges now float freely over the editor and preview panes without being cut off by W3C CSS `overflow-x: auto` computed boundary rules.
+- **Enhanced Light Mode Icon Contrast**
+  - Updated single-icon buttons (`.toolbar-icon-button`, `.toolbar-icon-link`) in Light Mode to use dark charcoal strokes (`#2c2a29`) and crisp borders (`#e2dacd`).
+  - Added terracotta hover states (`#c8654b`) for visual feedback.
+- **Thumb-Free 3D Flip Card Toggle Switch (Segmented Control Fix)**
+  - Transformed legacy sliding rail switches (Publish/Draft, Font, Language, Device) into **Thumb-Free 3D Flip Card Toggles**.
+  - Enabled auto-resizing text containers (`position: relative` on front face) to prevent long text labels from being obscured by sliding thumbs.
+
 ## [2026-07-21]
 ### Added
 - **Single-Row Horizontal Scrollable Toolbar & Footer with Visual Wiggle Indicators (PC & Mobile)**
