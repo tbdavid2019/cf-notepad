@@ -425,14 +425,13 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     min-width: 220px;
 }
 
-/* Share button: always show label even on mobile */
+/* Share button: icon control */
 .footer-section-publish .toolbar-button-label {
-    display: inline !important;
+    display: none !important;
 }
 .footer-section-publish .toolbar-icon-button {
-    width: auto !important;
-    padding: 0 8px !important;
-    gap: 4px;
+    width: var(--toolbar-height) !important;
+    padding: 0 !important;
 }
 
 /* Share dropdown: direct link + menu trigger */
@@ -664,7 +663,9 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     padding: 0 12px;
     font-size: 13px;
     color: var(--footer-text, #5c5a54);
-    overflow-x: auto;
+    position: relative;
+    z-index: 100;
+    overflow: visible;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -680,6 +681,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     flex-wrap: nowrap;
     white-space: nowrap;
     padding: 5px 0 6px;
+    overflow: visible;
 }
 .footer-section {
     display: flex;
@@ -688,6 +690,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     padding: 4px 10px 4px 0;
     border-right: 1px solid var(--footer-border, #e6dfd8);
     background: transparent;
+    overflow: visible;
 }
 .footer-section:last-child {
     border-right: 0;
@@ -1047,8 +1050,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     white-space: nowrap;
     margin-right: 4px;
 }
-.opt-button,
-.toolbar-icon-button {
+.opt-button {
     height: var(--toolbar-height);
     min-width: var(--toolbar-height);
     display: inline-flex;
@@ -1969,22 +1971,6 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 @media (max-width: 960px) {
     .desktop-split-control {
         display: none !important;
-    }
-    .toolbar-button-label {
-        display: block !important;
-        font-size: 10px !important;
-        margin-top: 1px !important;
-    }
-    .toolbar-icon-button {
-        display: inline-flex !important;
-        flex-direction: column !important;
-        align-items: center !important;
-        justify-content: center !important;
-        height: 38px !important;
-        width: auto !important;
-        min-width: 38px !important;
-        padding: 2px 6px !important;
-        gap: 2px !important;
     }
     /* Show mobile more button */
     .mobile-more-btn {
