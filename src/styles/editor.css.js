@@ -27,13 +27,38 @@ export const getEditorCss = () => `
     gap: 2px;
     min-height: 32px;
     padding: 3px 6px;
+    position: relative;
+    z-index: 100;
     overflow-x: auto;
+    overflow-y: visible;
     border-bottom: 1px solid var(--toolbar-border, #e2dacd);
     background: var(--toolbar-bg, #f4f0e8);
     color: var(--toolbar-text, #2c2a29);
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* Tooltips for top toolbar buttons float DOWN so they are never clipped by top window edge */
+.markdown-editor-toolbar [data-tooltip]::before {
+    bottom: auto;
+    top: calc(100% + 6px);
+    transform: translateX(-50%) translateY(-4px) scale(0.95);
+}
+.markdown-editor-toolbar [data-tooltip]::after {
+    bottom: auto;
+    top: calc(100% + 2px);
+    border-width: 0 4px 5px 4px;
+    border-color: transparent transparent var(--tooltip-bg, #2c2a29) transparent;
+    transform: translateX(-50%) translateY(-4px);
+}
+.markdown-editor-toolbar [data-tooltip]:hover::before,
+.markdown-editor-toolbar [data-tooltip]:focus-visible::before {
+    transform: translateX(-50%) translateY(0) scale(1);
+}
+.markdown-editor-toolbar [data-tooltip]:hover::after,
+.markdown-editor-toolbar [data-tooltip]:focus-visible::after {
+    transform: translateX(-50%) translateY(0);
 }
 
 .markdown-editor-toolbar::-webkit-scrollbar {

@@ -1107,7 +1107,15 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     box-sizing: border-box;
     border-radius: 4px;
     background: transparent;
-    transition: background-color 0.16s ease, border-color 0.16s ease, transform 0.1s ease;
+    border: 1px solid var(--toolbar-border, #e2dacd);
+    color: var(--toolbar-text, #2c2a29);
+    transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease, transform 0.1s ease;
+}
+.toolbar-icon-button:hover,
+.toolbar-icon-link:hover {
+    background: var(--toolbar-bg-hover, #eae3d5);
+    color: var(--toolbar-accent, #c8654b);
+    border-color: var(--toolbar-accent, #c8654b);
 }
 
 .toolbar-button-label {
