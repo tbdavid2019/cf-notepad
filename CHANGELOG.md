@@ -3,6 +3,7 @@
 ## [2026-07-23]
 ### Fixed
 - **Mobile Publish, Share Link, and Autosave State Synchronization**
+  - Fixed a page-startup `ReferenceError` caused by initializing the shared URL helper after the first UI synchronization. The failure had stopped both Markdown-to-HTML rendering and mobile share-action event binding on published Edit pages.
   - Fixed `複製分享連結` returning `/share/null` after publishing from mobile Edit mode. Open Share, Copy Share Link, and Copy Presentation Link now derive their URL from the current live `shareId` at click time instead of retaining the draft page's initial link.
   - Added a guard that rejects a publish response without a valid share ID, preventing the editor from displaying a false published state or exposing invalid share actions.
   - Fixed the post-publish `開啟自動儲存` confirmation appearing to do nothing. The choice is now persisted in note metadata before the toggle, autosave timer, and success message are updated.

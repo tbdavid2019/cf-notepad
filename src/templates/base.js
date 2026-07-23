@@ -1449,6 +1449,11 @@ ${getMarkdownCss()}
             }, AUTOSAVE_IDLE_MS)
         }
 
+        function getCurrentShareUrl() {
+            if (!APP_STATE.shareId) return ''
+            return new URL('/share/' + encodeURIComponent(APP_STATE.shareId), window.location.origin).toString()
+        }
+
         setupShareHistory()
         syncShareStateUI()
         setupNoteHistory({
@@ -1768,11 +1773,6 @@ ${getMarkdownCss()}
             const label = enabled ? getI18n('publicIndexDisable') : getI18n('publicIndexEnable')
             button.title = label
             button.setAttribute('aria-label', label)
-        }
-
-        const getCurrentShareUrl = () => {
-            if (!APP_STATE.shareId) return ''
-            return new URL('/share/' + encodeURIComponent(APP_STATE.shareId), window.location.origin).toString()
         }
 
         function syncShareMenuUI() {

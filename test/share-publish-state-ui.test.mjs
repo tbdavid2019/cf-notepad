@@ -22,11 +22,20 @@ test('publishing synchronizes the live share id and menu state', () => {
 })
 
 test('share actions derive URLs from the current share id instead of a stale page-load link', () => {
-    assert.match(baseTemplateSource, /const getCurrentShareUrl = \(\) =>/)
+    assert.match(baseTemplateSource, /function getCurrentShareUrl\(\)/)
     assert.match(baseTemplateSource, /if \(!APP_STATE\.shareId\) return ''/)
     assert.match(baseTemplateSource, /encodeURIComponent\(APP_STATE\.shareId\)/)
     assert.match(baseTemplateSource, /const shareUrl = getCurrentShareUrl\(\)/)
     assert.match(baseTemplateSource, /const presentationUrl = getCurrentShareUrl\(\)/)
     assert.doesNotMatch(baseTemplateSource, /const shareUrl = new URL\(\$shareOpenLink\.getAttribute/)
     assert.doesNotMatch(commonTemplateSource, /href="\/share\/\$\{shareId\}"/)
+})
+
+test('share URL helper is hoisted before initial UI synchronization and Markdown rendering', () => {
+    const helperIndex = baseTemplateSource.indexOf('function getCurrentShareUrl()')
+    const startupSyncIndex = baseTemplateSource.indexOf('setupShareHistory()\n        syncShareStateUI()')
+
+    assert.notEqual(helperIndex, -1)
+    assert.notEqual(startupSyncIndex, -1)
+    assert.ok(helperIndex < startupSyncIndex)
 })
