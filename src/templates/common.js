@@ -3,7 +3,7 @@
  * Shared template components: SWITCHER, FOOTER, MODAL
  */
 import dayjs from 'dayjs'
-import { SUPPORTED_LANG } from '../constant.js'
+import { DEFAULT_PREVIEW_WIDTH, SUPPORTED_LANG } from '../constant.js'
 import { THEMES } from '../theme_data.js'
 
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
@@ -154,7 +154,7 @@ export const SWITCHER = (text, open, className = '') => `
 
 export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave }) => {
     const t = getLangText(lang)
-    const effectiveWidth = width || (isEdit ? '1200px' : '100%')
+    const effectiveWidth = width || DEFAULT_PREVIEW_WIDTH
     const showNoteHistory = noteHistoryEnabled === true && isEdit
     const shareFontAriaLabel = lang === 'zh-TW' ? '分享頁字型' : 'Share font'
     const jetbrainsTitle = lang === 'zh-TW' ? '切換為 JetBrains Mono' : 'Switch to JetBrains Mono'

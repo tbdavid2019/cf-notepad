@@ -72,7 +72,7 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
   -F "theme=retro"
 ```
 
-Use form fields `append`, `public`, `share`, `theme`, `pw`, and `vpw` when needed.
+Use form fields `append`, `public`, `share`, `publicIndex`, `theme`, `width`, `pw`, and `vpw` when needed. Supported widths are `100%`, `960px`, `1200px`, and `1440px`; if omitted, a note without a stored width defaults to `1200px`.
 
 ### 2.3 Available Themes
 Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
@@ -107,7 +107,7 @@ curl -X POST "https://wiki.david888.com/<path>/setting" \
 Important:
 - This route uses the normal edit-session cookie flow, not the note API password flow.
 - Use it when an agent is operating inside the authenticated editor/browser context.
-- For headless publishing, prefer `POST /api/<path>` first, then only use `/:path/setting` if you truly need persisted UI settings such as width or share font.
+- For headless publishing, prefer `POST /api/<path>` first. It can persist `width` directly; use `/:path/setting` only when you need browser/editor settings such as share font.
 
 Supported JSON fields on `POST /:path/setting`:
 - `mode`: note mode metadata

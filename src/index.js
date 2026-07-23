@@ -3,7 +3,7 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
-import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret } from './constant'
+import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { extractNoteDescription, extractNoteTitle } from './note_meta'
@@ -283,11 +283,11 @@ async function requireApiEditAccess(request, metadata, bodyPassword) {
 
     const providedPw = readApiPassword(request, bodyPassword)
     if (!providedPw) {
-        return { ok: false, response: returnJSON(401, 'Unauthorized: Password required to edit') }
+        return { ok: false, response: returnJSON(401, 'Unauthorized: Password required to edit', { status: 401 }) }
     }
 
     if ((await getPasswordRole(providedPw, metadata)) !== 'edit') {
-        return { ok: false, response: returnJSON(403, 'Forbidden: Incorrect edit password') }
+        return { ok: false, response: returnJSON(403, 'Forbidden: Incorrect edit password', { status: 403 }) }
     }
 
     return { ok: true }
@@ -1213,9 +1213,9 @@ router.post('/api/:path', async (request) => {
         updateMetadata.theme = reqBody.theme
     }
 
-    if (reqBody.width !== undefined) {
-        updateMetadata.width = reqBody.width
-    }
+    const normalizedWidth = normalizePreviewWidth(reqBody.width, updateMetadata.width || DEFAULT_PREVIEW_WIDTH)
+    if (normalizedWidth === null) return returnJSON(400, 'Invalid width: use 100%, 960px, 1200px, or 1440px')
+    updateMetadata.width = normalizedWidth
 
     if (reqBody.publicIndex !== undefined) {
         updateMetadata.publicIndex = reqBody.publicIndex === true
@@ -1520,11 +1520,17 @@ router.post('/:path/setting', async request => {
 
             if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
                 try {
+                    const normalizedWidth = width === undefined
+                        ? undefined
+                        : normalizePreviewWidth(width, metadata.width || DEFAULT_PREVIEW_WIDTH)
+                    if (width !== undefined && normalizedWidth === null) {
+                        return returnJSON(400, 'Invalid width: use 100%, 960px, 1200px, or 1440px')
+                    }
                     let nextMetadata = {
                         ...metadata,
                         ...share !== undefined && { share },
                         ...theme !== undefined && { theme },
-                        ...width !== undefined && { width },
+                        ...normalizedWidth !== undefined && { width: normalizedWidth },
                         ...shareFont !== undefined && { shareFont },
                         ...publicIndex !== undefined && { publicIndex: publicIndex === true },
                         ...autosave !== undefined && { autosave: autosave === true },

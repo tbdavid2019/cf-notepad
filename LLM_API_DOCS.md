@@ -74,6 +74,7 @@ When you successfully write or create a post via this API, it will return both `
 | `public` | boolean | (Optional) Defaults to `true` unconditionally for API creations. Set to `false` to keep it private. (`share` is an accepted alias). |
 | `publicIndex` | boolean | (Optional) Controls whether the share should be included in `/sitemap.xml`. Only relevant when the note is shared. |
 | `theme` | string | (Optional) Choose a visual theme: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`. |
+| `width` | string | (Optional) Persist the preview/share width: `100%`, `960px`, `1200px`, or `1440px`. Defaults to `1200px` when the note has no stored width. |
 
 **Recommended for LLM + curl when you already have a `.md` file:**
 
@@ -96,7 +97,7 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 
 In multipart mode, use these form fields:
 - `file`, `markdown`, or `text`: the markdown content to save
-- `append`, `public`, `share`, `publicIndex`, `theme`, `pw`, `vpw`: same meaning as the JSON fields
+- `append`, `public`, `share`, `publicIndex`, `theme`, `width`, `pw`, `vpw`: same meaning as the JSON fields
 
 **Important Note for Appending Context:**
 If you only need to add an update section, DO NOT read the whole page and overwrite. Simply send `{"text": "\n\n## Update\n...", "append": true}` to automatically stick it at the bottom.
@@ -153,14 +154,15 @@ Practical rule:
 - If sharing is disabled, `publicIndex` is effectively meaningless and is forced off by the app
 
 ### 2.3 Persisted Appearance Metadata on the API
-`POST /api/<path>` can persist some note metadata directly:
+`POST /api/<path>` can persist note metadata directly:
 - `theme`
+- `width`
 - `publicIndex`
 - `share` / `public`
 - `pw`
 - `vpw`
 
-However, the API does **not** currently expose all editor appearance fields in the same route. Width, share font, and preview device are handled by the browser/editor settings route below.
+The API does not currently persist `shareFont` or `previewDevice`; those remain browser/editor settings. Width is supported directly because it controls the rendered share layout.
 
 ### 2.4 Appearance Values Used by the App
 When you need to preserve note appearance, the app uses these values:
@@ -174,7 +176,7 @@ When you need to preserve note appearance, the app uses these values:
 
 If the human did not specify appearance details, the safest defaults are:
 - `theme`: omit unless needed
-- `width`: `100%`
+- `width`: `1200px`
 - `shareFont`: `jetbrains`
 - `previewDevice`: `desktop`
 

@@ -55,6 +55,19 @@ export const getWebtalkConfig = () => {
 }
 export const APP_NAME = (typeof readRuntimeVar('SCN_APP_NAME') !== 'undefined') ? readRuntimeVar('SCN_APP_NAME') : 'david888 wiki'
 
+// Persisted preview/share widths. Keep the API default aligned with the
+// editor's initial desktop preview so a newly published API note renders the
+// same way in edit and share views.
+export const PREVIEW_WIDTH_VALUES = Object.freeze(['100%', '960px', '1200px', '1440px'])
+export const DEFAULT_PREVIEW_WIDTH = '1200px'
+export const normalizePreviewWidth = (value, fallback = DEFAULT_PREVIEW_WIDTH) => {
+    const safeFallback = PREVIEW_WIDTH_VALUES.includes(fallback) ? fallback : DEFAULT_PREVIEW_WIDTH
+    if (value === undefined || value === null || value === '') return safeFallback
+
+    const normalized = String(value).trim()
+    return PREVIEW_WIDTH_VALUES.includes(normalized) ? normalized : null
+}
+
 // supported language
 export const SUPPORTED_LANG = {
     'en-US': {

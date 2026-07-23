@@ -170,6 +170,42 @@ export function buildOpenApiDocument(origin) {
         servers: [
             { url: origin },
         ],
+        components: {
+            schemas: {
+                NoteWriteRequest: {
+                    type: 'object',
+                    description: 'JSON body for creating, overwriting, or appending a markdown note.',
+                    properties: {
+                        text: { type: 'string', description: 'Markdown content to write.' },
+                        content: { type: 'string', description: 'Alias for text.' },
+                        append: { type: 'boolean', default: false },
+                        share: { type: 'boolean', description: 'Whether the note has a public share link.' },
+                        public: { type: 'boolean', description: 'Alias for share.' },
+                        publicIndex: { type: 'boolean', description: 'Whether the share appears in sitemap.xml.' },
+                        theme: { type: 'string' },
+                        width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], default: '1200px' },
+                        pw: { type: 'string', description: 'Edit password or existing edit password.' },
+                        vpw: { type: 'string', description: 'View password.' },
+                    },
+                },
+                NoteWriteData: {
+                    type: 'object',
+                    properties: {
+                        msg: { type: 'string' },
+                        url: { type: 'string', format: 'uri' },
+                        shareUrl: { type: 'string', format: 'uri' },
+                    },
+                },
+                NoteWriteResponse: {
+                    type: 'object',
+                    properties: {
+                        err: { type: 'integer', const: 0 },
+                        msg: { type: 'string' },
+                        data: { $ref: '#/components/schemas/NoteWriteData' },
+                    },
+                },
+            },
+        },
         paths: {
             '/api/{path}': {
                 get: {
@@ -198,9 +234,46 @@ export function buildOpenApiDocument(origin) {
                             schema: { type: 'string' },
                         },
                     ],
+                    requestBody: {
+                        required: true,
+                        content: {
+                            'application/json': {
+                                schema: { $ref: '#/components/schemas/NoteWriteRequest' },
+                            },
+                            'text/markdown': {
+                                schema: { type: 'string', format: 'binary' },
+                            },
+                            'text/plain': {
+                                schema: { type: 'string' },
+                            },
+                            'multipart/form-data': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        file: { type: 'string', format: 'binary' },
+                                        markdown: { type: 'string', format: 'binary' },
+                                        text: { type: 'string' },
+                                        append: { type: 'string' },
+                                        share: { type: 'string' },
+                                        public: { type: 'string' },
+                                        publicIndex: { type: 'string' },
+                                        theme: { type: 'string' },
+                                        width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'] },
+                                        pw: { type: 'string' },
+                                        vpw: { type: 'string' },
+                                    },
+                                },
+                            },
+                        },
+                    },
                     responses: {
                         '200': {
                             description: 'Save result with edit and share URLs.',
+                            content: {
+                                'application/json': {
+                                    schema: { $ref: '#/components/schemas/NoteWriteResponse' },
+                                },
+                            },
                         },
                     },
                 },

@@ -12,6 +12,7 @@ import {
     buildApiCatalog,
     buildRobotsTxt,
     buildSitemapXml,
+    buildOpenApiDocument,
     requestAcceptsMarkdown,
 } from '../src/discovery.mjs'
 
@@ -61,6 +62,20 @@ test('api catalog includes required API discovery relations', () => {
     assert.equal(entry['service-desc'][0].href, 'https://example.com/openapi.json')
     assert.equal(entry['service-doc'][0].href, 'https://example.com/docs/api')
     assert.equal(entry.status[0].href, 'https://example.com/api/health')
+})
+
+test('OpenAPI describes the complete note write contract', () => {
+    const document = buildOpenApiDocument('https://example.com')
+    const operation = document.paths['/api/{path}'].post
+    const schema = document.components.schemas.NoteWriteRequest
+
+    assert.equal(operation.requestBody.required, true)
+    assert.ok(operation.requestBody.content['application/json'])
+    assert.ok(operation.requestBody.content['text/markdown'])
+    assert.ok(operation.requestBody.content['multipart/form-data'])
+    assert.equal(schema.properties.width.enum.includes('1200px'), true)
+    assert.equal(schema.properties.publicIndex.type, 'boolean')
+    assert.equal(schema.properties.vpw.type, 'string')
 })
 
 test('agent skills index uses v0.2.0 schema and sha256 digests', async () => {

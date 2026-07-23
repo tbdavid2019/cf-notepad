@@ -2,7 +2,7 @@
  * src/templates/base.js
  * HTML wrapper function (base page structure for editor/share pages)
  */
-import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME } from '../constant.js'
+import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
 import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
@@ -2417,6 +2417,7 @@ ${getMarkdownCss()}
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};
+        const DEFAULT_PREVIEW_WIDTH = ${JSON.stringify(DEFAULT_PREVIEW_WIDTH)};
         const PREVIEW_WIDTH_STORAGE_KEY = 'cf-notepad-preview-width';
         const PREVIEW_DEVICE_STORAGE_KEY = 'cf-notepad-preview-device';
         const PREVIEW_SPLIT_STORAGE_KEY = 'cf-notepad-split-direction';
@@ -2432,7 +2433,7 @@ ${getMarkdownCss()}
         const shareViewBody = document.body;
 
         function applyPreviewWidth(value) {
-            const width = value || '100%';
+            const width = value || DEFAULT_PREVIEW_WIDTH;
             previewWidthRoot.style.setProperty('--preview-max-width', width);
             if (previewWidthSelector && previewWidthSelector.value !== width) {
                 previewWidthSelector.value = width;
@@ -2501,7 +2502,7 @@ ${getMarkdownCss()}
         }
 
         const savedPreviewWidth = canPersistSettings ? window.localStorage.getItem(PREVIEW_WIDTH_STORAGE_KEY) : '';
-        const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || (APP_STATE.isEdit ? '1200px' : '100%');
+        const initialPreviewWidth = APP_STATE.noteSettings.width || savedPreviewWidth || DEFAULT_PREVIEW_WIDTH;
         APP_STATE.noteSettings.width = initialPreviewWidth;
         applyPreviewWidth(initialPreviewWidth);
 

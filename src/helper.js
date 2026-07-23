@@ -35,6 +35,7 @@ export function returnPage(type, data, headers = {}) {
 }
 
 export function returnJSON(code, data, headers = {}) {
+    const { status: requestedStatus, ...responseHeaders } = headers
     const successTempl = {
         err: 0,
         msg: 'ok',
@@ -45,10 +46,18 @@ export function returnJSON(code, data, headers = {}) {
         msg: JSON.stringify(data),
     }
     const ret = code ? errTempl : successTempl
+    let fallbackStatus = 400
+    if (code === 0) fallbackStatus = 200
+    else if (code >= 400 && code < 600) fallbackStatus = code
+    else if (code >= 50000) fallbackStatus = 500
+    const responseStatus = Number.isInteger(requestedStatus) && requestedStatus >= 200 && requestedStatus <= 599
+        ? requestedStatus
+        : fallbackStatus
     return new Response(JSON.stringify(ret), {
+        status: responseStatus,
         headers: {
             'content-type': 'application/json;charset=UTF-8',
-            ...headers,
+            ...responseHeaders,
         },
     })
 }

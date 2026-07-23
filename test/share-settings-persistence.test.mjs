@@ -1,13 +1,30 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import {
+    DEFAULT_PREVIEW_WIDTH,
+    normalizePreviewWidth,
+} from '../src/constant.js'
 
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 
+test('preview width uses the editor default and rejects unsupported values', () => {
+    assert.equal(DEFAULT_PREVIEW_WIDTH, '1200px')
+    assert.equal(normalizePreviewWidth(undefined), '1200px')
+    assert.equal(normalizePreviewWidth('1440px'), '1440px')
+    assert.equal(normalizePreviewWidth('1200'), null)
+})
+
+test('API writes persist a validated width and default it when omitted', () => {
+    assert.match(indexSource, /normalizePreviewWidth\(reqBody\.width, updateMetadata\.width \|\| DEFAULT_PREVIEW_WIDTH\)/)
+    assert.match(indexSource, /if \(normalizedWidth === null\) return returnJSON\(400, 'Invalid width:/)
+    assert.match(indexSource, /updateMetadata\.width = normalizedWidth/)
+})
+
 test('setting route persists share, theme, width, share font, publicIndex, and autosave metadata', () => {
     assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content,\s*autosave\s*\}\s*=\s*await request\.json\(\)/)
-    assert.match(indexSource, /\.\.\.width !== undefined && \{ width \}/)
+    assert.match(indexSource, /\.\.\.normalizedWidth !== undefined && \{ width: normalizedWidth \}/)
     assert.match(indexSource, /\.\.\.shareFont !== undefined && \{ shareFont \}/)
     assert.match(indexSource, /\.\.\.autosave !== undefined && \{ autosave: autosave === true \}/)
     assert.doesNotMatch(indexSource, /\.\.\.splitDirection !== undefined/)
@@ -15,7 +32,8 @@ test('setting route persists share, theme, width, share font, publicIndex, and a
 })
 
 test('base template initializes reader appearance from metadata and local editor preferences from localStorage', () => {
-    assert.match(baseTemplateSource, /const initialPreviewWidth = APP_STATE\.noteSettings\.width \|\| savedPreviewWidth \|\| \(APP_STATE\.isEdit \? '1200px' : '100%'\)/)
+    assert.match(baseTemplateSource, /const DEFAULT_PREVIEW_WIDTH = \$\{JSON\.stringify\(DEFAULT_PREVIEW_WIDTH\)\}/)
+    assert.match(baseTemplateSource, /const initialPreviewWidth = APP_STATE\.noteSettings\.width \|\| savedPreviewWidth \|\| DEFAULT_PREVIEW_WIDTH/)
     assert.match(baseTemplateSource, /const initialPreviewDevice = savedPreviewDevice \|\| 'desktop'/)
     assert.match(baseTemplateSource, /const initialSplitDirection = savedSplitDirection === 'vertical' \? 'vertical' : 'horizontal'/)
     assert.match(baseTemplateSource, /const savedShareFont = canPersistSettings \? window\.localStorage\.getItem\(SHARE_FONT_STORAGE_KEY\) : '';/)
@@ -38,4 +56,3 @@ test('editor persists default preview width to APP_STATE and server when publish
     assert.match(baseTemplateSource, /function initUiTheme/)
     assert.match(baseTemplateSource, /document\.getElementById\('ui-theme-toggle-btn'\)/)
 })
-
