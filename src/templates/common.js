@@ -185,7 +185,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     uncheckedText: lang === 'zh-TW' ? '待發布' : 'Draft',
                                     ariaLabel: t.shareLinkTitle,
                                 })}
-                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-haspopup="menu" aria-expanded="false">
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" data-tooltip="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-haspopup="menu" aria-expanded="false">
                                     ${SVG_ICONS.more}
                                 </button>
                                 <div class="dropdown-menu" role="menu">
@@ -326,30 +326,30 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                     ` : (path ? `
                         ${authPath
-                            ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
-                            : `<a href="/${path}" class="toolbar-icon-button readonly-edit-link" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
+                            ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
+                            : `<a href="/${path}" class="toolbar-icon-button readonly-edit-link" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
                         }
-                        <button type="button" id="export-md-btn" class="toolbar-icon-button" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
+                        <button type="button" id="export-md-btn" class="toolbar-icon-button" data-tooltip="${t.exportMarkdown}" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
                             ${SVG_ICONS.export}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
                         </button>
-                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
+                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" data-tooltip="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
                             <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
                         </button>
                         ${sharePath && shareId ? `
-                        <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
+                        <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
                             ${SVG_ICONS.link}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
                         </button>
                         ` : ''}
-                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" title="${t.exportPdf}" aria-label="${t.exportPdf}">
+                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
                         </button>
                     ` : '')}
-                    <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
+                    <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" data-tooltip="${moreToolsTitle}" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
                         ${SVG_ICONS.more}
                         <span class="toolbar-button-label">${lang === 'zh-TW' ? '更多' : 'More'}</span>
                     </button>

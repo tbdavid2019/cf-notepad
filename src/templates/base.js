@@ -2292,92 +2292,6 @@ ${getMarkdownCss()}
         }
         setupMobileShareFooter();
 
-        // --- Custom Dropdown Menus Logic ---
-        const setupDropdowns = () => {
-            document.querySelectorAll('.dropdown-trigger').forEach(trigger => {
-                const container = trigger.closest('.dropdown-container')
-                const menu = container?.querySelector('.dropdown-menu')
-                if (!container || !menu) return
-
-                const getItems = () => Array.from(menu.querySelectorAll('.dropdown-item, .dropdown-item-toggle button'))
-                    .filter(item => !item.closest('[hidden]'))
-                const setOpen = (open, { focusFirst = false } = {}) => {
-                    container.classList.toggle('show', open)
-                    trigger.setAttribute('aria-expanded', open ? 'true' : 'false')
-                    if (open) {
-                        const triggerRect = trigger.getBoundingClientRect();
-                        menu.style.position = 'fixed';
-                        menu.style.left = triggerRect.left + 'px';
-                        menu.style.bottom = (window.innerHeight - triggerRect.top + 8) + 'px';
-                        menu.style.top = 'auto';
-                        if (focusFirst) getItems()[0]?.focus();
-                    } else {
-                        menu.style.position = '';
-                        menu.style.left = '';
-                        menu.style.bottom = '';
-                        menu.style.top = '';
-                    }
-                }
-
-                menu.setAttribute('role', 'menu')
-                getItems().forEach(item => item.setAttribute('role', 'menuitem'))
-                trigger.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const isShown = container.classList.contains('show');
-                    
-                    // Close other dropdowns
-                    document.querySelectorAll('.dropdown-container').forEach(c => {
-                        if (c !== container) {
-                            c.classList.remove('show')
-                            c.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false')
-                        }
-                    });
-                    
-                    setOpen(!isShown);
-                });
-                trigger.addEventListener('keydown', e => {
-                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                        e.preventDefault()
-                        setOpen(true, { focusFirst: e.key === 'ArrowDown' })
-                        const items = getItems()
-                        if (e.key === 'ArrowUp') items[items.length - 1]?.focus()
-                    } else if (e.key === 'Escape') {
-                        e.preventDefault()
-                        setOpen(false)
-                    }
-                })
-                menu.addEventListener('keydown', e => {
-                    const items = getItems()
-                    const currentIndex = items.indexOf(document.activeElement)
-                    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-                        e.preventDefault()
-                        if (!items.length) return
-                        const delta = e.key === 'ArrowDown' ? 1 : -1
-                        items[(currentIndex + delta + items.length) % items.length].focus()
-                    } else if (e.key === 'Home' || e.key === 'End') {
-                        e.preventDefault()
-                        ;(e.key === 'Home' ? items[0] : items[items.length - 1])?.focus()
-                    } else if (e.key === 'Escape') {
-                        e.preventDefault()
-                        setOpen(false)
-                        trigger.focus()
-                    }
-                })
-            });
-        }
-        setupDropdowns();
-
-        // Close dropdowns on clicking outside (Guaranteed single registration)
-        if (!window.__dropdownListenerBound) {
-            document.addEventListener('click', () => {
-                document.querySelectorAll('.dropdown-container').forEach(c => {
-                    c.classList.remove('show')
-                    c.querySelector('.dropdown-trigger')?.setAttribute('aria-expanded', 'false')
-                })
-            });
-            window.__dropdownListenerBound = true;
-        }
-
         // --- Scroll Indicators Setup ---
         const setupScrollIndicators = () => {
             const createIndicator = (container, isFooter) => {
@@ -2486,6 +2400,7 @@ ${getMarkdownCss()}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
+    <script type="module" src="/js/floating-controls.mjs"></script>
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};

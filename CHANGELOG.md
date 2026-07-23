@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-07-23]
+### Fixed
+- **Complete Floating Tooltips Across Editor and Share Views**
+  - Added localized floating tooltip text to every icon-only Share action on desktop and mobile, including Edit, Export, Copy, Embed, Print, More, and the editor Share options trigger.
+  - Replaced container-bound pseudo-element tooltips with a shared body-level floating layer so tooltips remain visible outside horizontally scrollable toolbars and footers.
+  - Added touch, pointer, and keyboard-focus support while retaining instant display and viewport-edge positioning.
+- **Mobile Published Share Menu**
+  - Fixed the `...` button beside the published state in mobile Edit mode opening its menu outside the visible viewport.
+  - The share dropdown is now portaled to the document body while open, avoiding clipping and incorrect fixed positioning caused by the mobile footer's scrolling and backdrop filter.
+  - Restored horizontal scrolling for the Markdown toolbar and footer without sacrificing tooltip or dropdown visibility.
+
 ## [2026-07-22]
 ### Added / Improved
 - **Instant 0ms Floating Tooltip Badge System (Zero-Lag Hover Text Labels)**

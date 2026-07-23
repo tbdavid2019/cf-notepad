@@ -48,7 +48,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 
 ### 🚀 1. 寫作與編輯體驗 (Writing & Editing)
 - **精美字體與佈局**：編輯與預覽區預設使用 `Maple Mono` 與 `JetBrains Mono` 字體，提升程式碼與長文閱讀質感。Footer 內建寬度切換（Full / 960 / 1200 / 1440）與 20+ 款精美 CSS 預覽主題（預設為 `claude-canvas` 人文風格），且版面支援拖曳分割，雙擊可快速重設 50/50。
-- **Footer 與工具列控制**：採用 Lucide / GitHub Octicons 精緻筆劃型 SVG 微圖示，配合 **0ms 極速漂浮氣泡標籤**（Hover/Focus 時即時浮現，不干擾排版與版面跳動）；發布、字型、語言與裝置切換採用無滑塊 **3D 翻轉卡片開關 (3D Flip Card Toggle)**，寬度自動自適應。提示訊息與確認視窗統一置中顯示。
+- **Footer 與工具列控制**：採用 Lucide / GitHub Octicons 精緻筆劃型 SVG 微圖示，配合掛載於頁面最上層的 **0ms 極速漂浮氣泡標籤**（Hover、Touch、Focus 時即時浮現，不受橫向捲動容器裁切）；編輯頁與分享頁的圖示按鈕皆提供繁中／英文提示。發布、字型、語言與裝置切換採用無滑塊 **3D 翻轉卡片開關 (3D Flip Card Toggle)**，寬度自動自適應。提示訊息與確認視窗統一置中顯示。
 - **儲存策略**：未發布文章不會寫入內容；發布時會同步儲存目前編輯內容。發布後可使用「儲存」按鈕，或逐篇開啟 Autosave，停止輸入 10 秒後才會儲存；若不想開放公開閱讀，可搭配閱讀鎖。
 - **編輯器視圖設定**：`預覽`、`排列` 與 `裝置` 會集中在同一個視圖設定群組，方便快速調整編輯器佈局。
 - **複製內容**：Footer 的 Markdown `匯出` 右側提供 `複製`，會同時寫入 rich HTML 與 Markdown/plain-text fallback；rich HTML 使用媒體 preview 建立前的安全 HTML，不會把 YouTube／PDF iframe 貼進 Jira、Confluence 或其他編輯器；成功後顯示勾勾動畫與複製提示。
@@ -83,7 +83,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 }
 ```
 - **極致行動適應性**：
-  - **摺疊工具列選單**：手機版底部工具列統一採用「Icon在上、說明字在下」雙行設計。預設僅展示第一排常用編輯按鈕與 `...` 按鈕，點選 `...` 會以平滑過場動畫向上展開外觀設定（含語系與主題切換）。隱藏了行動版不需要的資訊欄（GitHub/Skill/API）。
+  - **單列橫向工具列**：手機版的編輯與分享 Footer 維持單列排列並支援觸控橫向捲動；所有圖示控制都有即時繁中／英文浮動提示，發布狀態旁的 `...` 分享選單會浮在 Footer 外，不會被裁切。
   - **行動自適應閱讀**：手機版表格支援自動換行與防溢出；長網頁滾動時會出現 `＾` 回到頂部按鈕。
 
 我們來看看編輯與預覽的實際版面：
@@ -201,7 +201,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 ### 🚀 1. Writing & Editing Experience
 - **Typography & Layout**: Replaces default fonts with `Maple Mono` and `JetBrains Mono` for a unified coding and reading experience. Features a `Width` selector (Full / 960 / 1200 / 1440), 20+ polished CSS themes (defaulting to the humanist `claude-canvas`), and a draggable pane layout (double-click to reset 50/50).
-- **Compact Footer Controls**: Preview, publishing, saving, lock, font, language, layout, and device controls use square-corner two-state rails with the control name and current value inside the control. Width options include their own context so the footer stays compact. Toasts and confirmations use a centered in-app treatment.
+- **Compact Footer Controls**: Preview, publishing, saving, lock, font, language, layout, and device controls use compact icon and two-state controls. Editor and Share actions expose localized instant floating tooltips on hover, touch, and keyboard focus; the body-level tooltip layer stays visible outside horizontal scrollers. Width options include their own context so the footer stays compact. Toasts and confirmations use a centered in-app treatment.
 - **Save Policy**: Unpublished note content is not persisted. Publishing saves the current editor content in the same operation; published notes offer a manual Save button and optional per-note Autosave that waits 10 seconds after typing stops. Use the View Lock when a published note should not be openly readable.
 - **Editor View Settings**: Preview, layout, and device controls are grouped together as one editor view-settings group for faster layout adjustments.
 - **Copy Rendered Content**: The Footer places Copy beside Markdown Export and writes rich HTML plus Markdown/plain-text fallback for editors such as Notion and Jira. Rich HTML comes from the sanitized snapshot before media preview decoration, so YouTube/PDF iframes are not pasted into external editors. A check animation confirms successful copying.
@@ -235,7 +235,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
   }]
 }
 ```
-- **Responsive Mobile Layout**: Redesigns the mobile footer with "Icon-on-Top, Text-on-Bottom" styling. Shows only the primary edit row by default alongside a `...` (More) toggle which reveals appearance settings. Unnecessary developer/info links (GitHub/Skill/API) are hidden on mobile.
+- **Responsive Mobile Layout**: Keeps Edit and Share footers in one touch-scrollable row. Every icon control has an instant localized floating tooltip, and the published-state `...` menu floats outside the footer instead of being clipped by it.
 - **Mobile-Friendly Reading**: Tables wrap cell texts and code snippets safely; long pages feature a smooth `＾` back-to-top button.
 
 See the real editor and preview interface here:

@@ -374,6 +374,10 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .dropdown-container.show .dropdown-menu {
     display: flex;
 }
+.dropdown-menu.floating-menu-open {
+    display: flex;
+    z-index: 20020;
+}
 .dropdown-item {
     display: flex;
     align-items: center;
@@ -665,7 +669,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     color: var(--footer-text, #5c5a54);
     position: relative;
     z-index: 100;
-    overflow: visible;
+    overflow-x: auto;
     scrollbar-width: none;
     -webkit-overflow-scrolling: touch;
     transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -681,7 +685,6 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     flex-wrap: nowrap;
     white-space: nowrap;
     padding: 5px 0 6px;
-    overflow: visible;
 }
 .footer-section {
     display: flex;
@@ -690,7 +693,6 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     padding: 4px 10px 4px 0;
     border-right: 1px solid var(--footer-border, #e6dfd8);
     background: transparent;
-    overflow: visible;
 }
 .footer-section:last-child {
     border-right: 0;
@@ -919,17 +921,11 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 }
 
 
-/* Instant 0ms Custom CSS Floating Tooltip Badge (Full Text, Zero Delay, No Truncation) */
-[data-tooltip] {
-    position: relative;
-}
-[data-tooltip]::before {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: calc(100% + 7px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px) scale(0.95);
-    z-index: 10000;
+/* Body-level floating tooltip: remains visible outside horizontal scrollers. */
+.floating-tooltip {
+    position: fixed;
+    z-index: 20030;
+    max-width: calc(100vw - 16px);
     padding: 4px 8px;
     background: var(--tooltip-bg, #2c2a29);
     color: var(--tooltip-text, #f9f6f0);
@@ -940,36 +936,14 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     border-radius: 5px;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
     pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.1s ease, transform 0.1s ease, visibility 0.1s ease;
+    animation: floatingTooltipIn 0.1s ease-out;
 }
-[data-tooltip]::after {
-    content: '';
-    position: absolute;
-    bottom: calc(100% + 2px);
-    left: 50%;
-    transform: translateX(-50%) translateY(4px);
-    z-index: 10000;
-    border-width: 5px 5px 0 5px;
-    border-style: solid;
-    border-color: var(--tooltip-bg, #2c2a29) transparent transparent transparent;
-    pointer-events: none;
-    opacity: 0;
-    visibility: hidden;
-    transition: opacity 0.1s ease, transform 0.1s ease, visibility 0.1s ease;
+.floating-tooltip[hidden] {
+    display: none;
 }
-[data-tooltip]:hover::before,
-[data-tooltip]:focus-visible::before {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0) scale(1);
-}
-[data-tooltip]:hover::after,
-[data-tooltip]:focus-visible::after {
-    opacity: 1;
-    visibility: visible;
-    transform: translateX(-50%) translateY(0);
+@keyframes floatingTooltipIn {
+    from { opacity: 0; transform: translateY(3px) scale(0.96); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 .share-font-toggle {
