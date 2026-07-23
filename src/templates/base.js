@@ -48,6 +48,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const isEmbed = ext.embed === true
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
+    const isSharePage = Boolean(shareId && !isEdit)
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
     const ogSiteNameMeta = ext.meta?.siteName === false
         ? ''
@@ -70,13 +71,12 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
         gtag('js', new Date());
         gtag('config', ${JSON.stringify(gaMeasurementId)});
     </script>` : ''
-    const webtalkScript = ext.webtalk?.enabled && ext.sharePath && shareId && !isEdit ? `
+    const webtalkScript = isSharePage ? `
     <script
-        defer
-        src="${escapeHtml(ext.webtalk.scriptUrl)}"
-        data-webtalk-scope="${escapeHtml(ext.webtalk.scope)}"
-        data-webtalk-site-id="${escapeHtml(ext.webtalk.siteId)}"
-        data-webtalk-ai-endpoint="${escapeHtml(ext.webtalk.aiEndpoint)}">
+        async
+        src="https://webtalk-nine.vercel.app/webtalk.js"
+        data-webtalk-scope="origin"
+        data-webtalk-ai-endpoint="https://webtalk-nine.vercel.app/api/webtalk/ai">
     </script>` : ''
 
     return `
@@ -103,7 +103,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="description" content="${escapeHtml(pageDescription)}" />
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
     <meta name="theme-color" content="#0f172a" />
-    ${ext.sharePath && shareId && !isEdit ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
+    ${isSharePage ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
     ${webtalkScript}
     ${ogSiteNameMeta}
     ${ext.meta?.canonicalUrl ? `<meta property="og:locale" content="${ogLocale}" />` : ''}
