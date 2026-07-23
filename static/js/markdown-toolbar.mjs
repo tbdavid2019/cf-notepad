@@ -1,11 +1,13 @@
 const TOOLBAR_TEXT = {
     'zh-TW': {
         bold: '粗體文字', italic: '斜體文字', strike: '刪除線文字', inlineCode: '程式碼',
-        link: '連結文字', codeBlock: '程式碼', table: '| 欄位 | 內容 |\n| --- | --- |\n| 項目 | 說明 |', imageAlt: '圖片說明',
+        link: '連結文字', codeBlock: '程式碼', table: '| 欄位 1 | 欄位 2 | 欄位 3 |\n| --- | --- | --- |\n| 文字 | 文字 | 文字 |', imageAlt: '圖片說明',
+        citationName: '引用來源', citationContent: '引用內容', citationTitle: '來源標題',
     },
     'en-US': {
         bold: 'bold text', italic: 'italic text', strike: 'strikethrough text', inlineCode: 'code',
-        link: 'link text', codeBlock: 'code', table: '| Field | Content |\n| --- | --- |\n| Item | Description |', imageAlt: 'image description',
+        link: 'link text', codeBlock: 'code', table: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text | Text | Text |', imageAlt: 'image description',
+        citationName: 'Source', citationContent: 'Quoted text', citationTitle: 'Source title',
     },
 }
 
@@ -84,6 +86,22 @@ const replaceSnippet = (text, start, end, snippet, selectionStart, selectionEnd)
     selectionEnd: start + selectionEnd,
 })
 
+const formatCitationTime = now => new Intl.DateTimeFormat('en-US', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
+}).format(now)
+
+export const createCitationMarkdown = (content, lang = 'zh-TW', now = new Date()) => {
+    const labels = getToolbarText(lang)
+    const quote = String(content || labels.citationContent).replace(/\n/g, '\n> ')
+    const prefix = `> [name=${labels.citationName}]\n> [time=${formatCitationTime(now)}]\n> [color=#bc2b39]\n>\n> `
+    const suffix = `\n>\n> [reference]: https://example.com "${labels.citationTitle}"`
+    return { text: prefix + quote + suffix, selectionStart: prefix.length, selectionEnd: prefix.length + quote.length }
+}
+
+export const createLineNumbers = text => String(text || '').split('\n')
+    .map((_, index) => String(index + 1))
+    .join('\n')
+
 export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') => {
     const source = String(text || '')
     const safeStart = Math.max(0, Math.min(Number(start) || 0, source.length))
@@ -113,6 +131,10 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
     }
     if (command === 'table') {
         return replaceSnippet(source, safeStart, safeEnd, labels.table, 2, 4)
+    }
+    if (command === 'citation') {
+        const citation = createCitationMarkdown(source.slice(safeStart, safeEnd), lang)
+        return replaceSnippet(source, safeStart, safeEnd, citation.text, citation.selectionStart, citation.selectionEnd)
     }
     if (command === 'image') {
         const snippet = `![${labels.imageAlt}](https://example.com/image.png)`
@@ -202,6 +224,7 @@ export const initMarkdownToolbar = (root = document) => {
     const textarea = root.querySelector('#contents')
     const imageInput = root.querySelector('#markdown-toolbar-image-input')
     const assetInput = root.querySelector('#markdown-toolbar-asset-input')
+    const lineNumbers = root.querySelector('#editor-line-numbers')
     if (!toolbar || !textarea) return false
     const lang = toolbar.dataset.language || 'zh-TW'
     const history = createEditorHistory({
@@ -210,6 +233,14 @@ export const initMarkdownToolbar = (root = document) => {
         selectionEnd: textarea.selectionEnd,
     })
     let isRestoringHistory = false
+
+    const updateLineNumbers = () => {
+        if (lineNumbers) lineNumbers.textContent = createLineNumbers(textarea.value)
+    }
+
+    const syncLineNumbers = () => {
+        if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop
+    }
 
     const getEditorState = () => ({
         value: textarea.value,
@@ -238,8 +269,11 @@ export const initMarkdownToolbar = (root = document) => {
 
     textarea.addEventListener('input', () => {
         if (!isRestoringHistory) history.record(getEditorState())
+        updateLineNumbers()
         updateHistoryButtons()
     })
+    textarea.addEventListener('scroll', syncLineNumbers, { passive: true })
+    updateLineNumbers()
 
     const runCommand = command => {
         const result = applyMarkdownCommand(textarea.value, textarea.selectionStart, textarea.selectionEnd, command, lang)

@@ -87,6 +87,7 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'link', glyph: SVG_ICONS.link, zh: '連結', en: 'Link' },
     { separator: true },
     { command: 'quote', glyph: SVG_ICONS.quote, zh: '引用', en: 'Quote' },
+    { command: 'citation', glyph: '❞', glyphClass: 'is-citation', zh: '插入來源引用', en: 'Insert citation' },
     { command: 'bullet', glyph: SVG_ICONS.bullet, zh: '無序清單', en: 'Bullet list' },
     { command: 'ordered', glyph: '1.', zh: '有序清單', en: 'Numbered list' },
     { command: 'task', glyph: SVG_ICONS.task, zh: '待辦清單', en: 'Task list' },

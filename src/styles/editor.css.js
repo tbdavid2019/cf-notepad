@@ -14,9 +14,36 @@ export const getEditorCss = () => `
     overflow: hidden;
 }
 
-.editor-pane > textarea.contents {
+.editor-code-shell {
+    flex: 1;
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    overflow: hidden;
+    background: #282a36;
+}
+
+.editor-code-shell > textarea.contents {
     width: 100%;
     min-height: 0;
+}
+
+.editor-line-numbers {
+    flex: 0 0 42px;
+    min-width: 42px;
+    box-sizing: border-box;
+    padding: 20px 8px 20px 6px;
+    overflow: hidden;
+    border-right: 1px solid rgba(248, 248, 242, 0.12);
+    background: #282a36;
+    color: #8b8da8;
+    font-family: var(--editor-font-family);
+    font-size: 16px;
+    line-height: 1.6;
+    text-align: right;
+    white-space: pre;
+    user-select: none;
+    pointer-events: none;
 }
 
 .markdown-editor-toolbar {
@@ -161,6 +188,7 @@ export const getEditorCss = () => `
 
 /* Editor Specific (Dark Mode) */
 textarea#contents {
+    flex: 1;
     background-color: #282a36;
     color: #f8f8f2;
     resize: none;
@@ -212,6 +240,12 @@ textarea#contents {
     }
     .markdown-toolbar-separator {
         display: none;
+    }
+    .editor-line-numbers {
+        flex-basis: 36px;
+        min-width: 36px;
+        padding-right: 6px;
+        font-size: 14px;
     }
 }
 

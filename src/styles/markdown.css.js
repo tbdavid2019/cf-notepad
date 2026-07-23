@@ -16,6 +16,11 @@ export const getMarkdownCss = () => `
 .markdown-body h4 { font-size: 1em; }
 .markdown-body p { margin-top: 0; margin-bottom: 16px; }
 .markdown-body blockquote { margin: 0; padding: 0 1em; color: #6a737d; border-left: 0.25em solid #dfe2e5; }
+.markdown-body .markdown-citation { margin: 20px 0; padding: 4px 0 4px 16px; color: inherit; border-left: 1px solid var(--citation-color, #bc2b39); }
+.markdown-body .markdown-citation > :last-child { margin-bottom: 0; }
+.markdown-citation-meta { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; color: var(--citation-color, #bc2b39); font-size: 0.9em; font-weight: 650; }
+.markdown-citation-time { color: inherit; font-weight: 500; }
+.markdown-citation-reference { margin-top: 12px; font-size: 0.9em; }
 .markdown-body ul, .markdown-body ol { padding-left: 2em; margin-top: 0; margin-bottom: 16px; }
 .markdown-body table { display: block; width: 100%; overflow: auto; margin-top: 0; margin-bottom: 16px; border-spacing: 0; border-collapse: collapse; }
 .markdown-body table tr { border-top: 1px solid #c6cbd1; }

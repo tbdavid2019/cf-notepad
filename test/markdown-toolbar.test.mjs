@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 
 import {
     applyMarkdownCommand,
+    createLineNumbers,
     createEditorHistory,
     createUploadedAssetMarkdown,
     getImageAltText,
@@ -12,6 +13,8 @@ import {
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const commonTemplate = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const editorCss = readFileSync(new URL('../src/styles/editor.css.js', import.meta.url), 'utf8')
+const markdownCss = readFileSync(new URL('../src/styles/markdown.css.js', import.meta.url), 'utf8')
+const toolbarSource = readFileSync(new URL('../static/js/markdown-toolbar.mjs', import.meta.url), 'utf8')
 
 const apply = (text, command, start = text.length, end = start, lang) =>
     applyMarkdownCommand(text, start, end, command, lang)
@@ -86,10 +89,21 @@ test('changes an existing heading level instead of stacking markers', () => {
 test('inserts task list, code block, table, and image snippets', () => {
     assert.match(apply('item', 'task', 0, 4).text, /^- \[ \] item$/)
     assert.match(apply('code', 'codeBlock', 0, 4).text, /^```\ncode\n```$/)
-    assert.match(apply('', 'table').text, /^\| 欄位 \| 內容 \|\n\| --- \| --- \|/)
+    assert.match(apply('', 'table').text, /^\| 欄位 1 \| 欄位 2 \| 欄位 3 \|\n\| --- \| --- \| --- \|/)
     const image = apply('', 'image')
     assert.match(image.text, /^!\[圖片說明\]\(https:\/\/example\.com\/image\.png\)$/)
     assert.deepEqual([image.selectionStart, image.selectionEnd], [8, 37])
+})
+
+test('inserts a HackMD-style citation template around selected text', () => {
+    const citation = apply('引用內容', 'citation', 0, 4)
+
+    assert.match(citation.text, /^> \[name=引用來源\]\n> \[time=.+\]\n> \[color=#bc2b39\]\n>\n> 引用內容\n>\n> \[reference\]: https:\/\/example\.com "來源標題"$/)
+    assert.equal(citation.text.slice(citation.selectionStart, citation.selectionEnd), '引用內容')
+})
+
+test('creates one line number per editor line', () => {
+    assert.equal(createLineNumbers('第一行\n第二行\n'), '1\n2\n3')
 })
 
 test('renders the toolbar for editable pages', () => {
@@ -106,12 +120,18 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /markdown-toolbar-image-input/)
     assert.match(commonTemplate, /markdown-toolbar-asset-input/)
     assert.match(commonTemplate, /command: 'asset'/)
+    assert.match(commonTemplate, /command: 'citation'/)
     assert.match(commonTemplate, /accept="video\/\*,audio\/\*,application\/pdf/)
     assert.match(commonTemplate, /command: 'fullscreen'/)
     assert.match(commonTemplate, /command: 'undo'/)
     assert.match(commonTemplate, /command: 'redo'/)
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
+    assert.match(baseTemplate, /id="editor-line-numbers"/)
+    assert.match(baseTemplate, /function remarkHackmdCitation\(\)/)
+    assert.match(markdownCss, /\.markdown-citation/)
+    assert.match(editorCss, /\.editor-line-numbers/)
+    assert.match(toolbarSource, /textarea\.addEventListener\('scroll', syncLineNumbers, \{ passive: true \}\)/)
 })
 
 test('top AI edit control reuses the document AI editing workflow', () => {

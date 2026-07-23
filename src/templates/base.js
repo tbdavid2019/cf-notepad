@@ -239,7 +239,10 @@ ${getMarkdownCss()}
                          <article style="display:none;" id="bot-accessible-content">${content}</article>
                         ${isEdit ? `<div class="editor-pane">
                             ${EDITOR_TOOLBAR(lang)}
-                            <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                            <div class="editor-code-shell">
+                                <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
+                                <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                            </div>
                         </div>` : '<textarea id="contents" class="contents hide" spellcheck="false">' + content + '</textarea>'}
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
@@ -320,6 +323,58 @@ ${getMarkdownCss()}
             };
         }
 
+        function remarkHackmdCitation() {
+            const escapeCitationHtml = value => String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+            const isSafeCitationUrl = value => /^https?:\\/\\//i.test(String(value || ''));
+
+            return (tree) => {
+                visit(tree, 'blockquote', node => {
+                    const paragraph = node.children[0];
+                    if (!paragraph || paragraph.type !== 'paragraph') return;
+
+                    const metadataText = paragraph.children
+                        .filter(child => child.type === 'text')
+                        .map(child => child.value)
+                        .join('');
+                    const metadata = {};
+                    metadataText.split('\\n').forEach(line => {
+                        const match = line.trim().match(/^\\[(name|time|color)=([^\\]]+)\\]$/i);
+                        if (match) metadata[match[1].toLowerCase()] = match[2].trim();
+                    });
+                    if (!metadata.name) return;
+
+                    const color = /^#[0-9a-f]{3,8}$/i.test(metadata.color || '') ? metadata.color : '#bc2b39';
+                    node.children.shift();
+                    node.data = node.data || {};
+                    node.data.hProperties = {
+                        ...(node.data.hProperties || {}),
+                        className: ['markdown-citation'],
+                        style: '--citation-color: ' + color,
+                    };
+                    node.children.unshift({
+                        type: 'html',
+                        value: '<div class="markdown-citation-meta"><span class="markdown-citation-name">' + escapeCitationHtml(metadata.name) + '</span>'
+                            + (metadata.time ? '<time class="markdown-citation-time">' + escapeCitationHtml(metadata.time) + '</time>' : '')
+                            + '</div>',
+                    });
+
+                    const referenceIndex = node.children.findIndex(child => child.type === 'definition' && child.identifier === 'reference');
+                    if (referenceIndex === -1) return;
+                    const reference = node.children.splice(referenceIndex, 1)[0];
+                    if (!isSafeCitationUrl(reference.url)) return;
+                    node.children.push({
+                        type: 'html',
+                        value: '<footer class="markdown-citation-reference"><a href="' + escapeCitationHtml(reference.url) + '">' + escapeCitationHtml(reference.title || 'Reference') + '</a></footer>',
+                    });
+                });
+            };
+        }
+
         // Diagram Detection Plugin
         function remarkDiagramPlugin() {
             return (tree) => {
@@ -349,6 +404,7 @@ ${getMarkdownCss()}
         const processor = unified()
             .use(remarkParse)
             .use(remarkGithubAlerts)
+            .use(remarkHackmdCitation)
             .use(remarkDiagramPlugin)
             .use(remarkGfm)
             .use(remarkMath)
