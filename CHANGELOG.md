@@ -2,6 +2,14 @@
 
 ## [2026-07-23]
 ### Fixed
+- **Mobile Publish, Share Link, and Autosave State Synchronization**
+  - Fixed `複製分享連結` returning `/share/null` after publishing from mobile Edit mode. Open Share, Copy Share Link, and Copy Presentation Link now derive their URL from the current live `shareId` at click time instead of retaining the draft page's initial link.
+  - Added a guard that rejects a publish response without a valid share ID, preventing the editor from displaying a false published state or exposing invalid share actions.
+  - Fixed the post-publish `開啟自動儲存` confirmation appearing to do nothing. The choice is now persisted in note metadata before the toggle, autosave timer, and success message are updated.
+  - Restored saved autosave state when reopening a published Edit page and removed the page-load logic that silently reset autosave depending on navigation history.
+  - Sequenced the autosave confirmation before the share modal so overlapping dialogs cannot swallow mobile input.
+  - Unified PC and mobile published actions around the same `APP_STATE.shareId`, publication state, and autosave metadata instead of mixing live state with page-load DOM values and browser-only storage.
+  - Added regression coverage for draft-to-published menu synchronization, null/stale share URLs, presentation URLs, autosave persistence, and mobile floating share controls.
 - **Complete Floating Tooltips Across Editor and Share Views**
   - Added localized floating tooltip text to every icon-only Share action on desktop and mobile, including Edit, Export, Copy, Embed, Print, More, and the editor Share options trigger.
   - Replaced container-bound pseudo-element tooltips with a shared body-level floating layer so tooltips remain visible outside horizontally scrollable toolbars and footers.

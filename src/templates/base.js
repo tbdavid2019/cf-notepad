@@ -634,24 +634,6 @@ ${getMarkdownCss()}
         title: title || '',
         i18n: getLangText(lang),
     })}
-    if (APP_STATE.isEdit && APP_STATE.isPublished) {
-        let isFromShare = false
-        try {
-            if (window.sessionStorage.getItem('cf-notepad-from-share') === 'true') {
-                isFromShare = true
-                window.sessionStorage.removeItem('cf-notepad-from-share')
-            } else if (document.referrer && (document.referrer.includes('/share/') || document.referrer.includes('/auth'))) {
-                isFromShare = true
-            }
-        } catch(e) {}
-
-        if (isFromShare) {
-            APP_STATE.autosave = true
-            try { window.localStorage.setItem('cf-notepad-autosave', 'true') } catch(e) {}
-        } else {
-            APP_STATE.autosave = false
-        }
-    }
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
     const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
 
@@ -929,7 +911,6 @@ ${getMarkdownCss()}
     })
 
     const passwdPrompt = async () => {
-        try { window.sessionStorage.setItem('cf-notepad-from-share', 'true') } catch(e) {}
         const passwd = await openPasswordModal({ title: getI18n('pepw') })
         if (passwd == null) return;
         const normalizedPasswd = passwd.trim()
@@ -1789,6 +1770,11 @@ ${getMarkdownCss()}
             button.setAttribute('aria-label', label)
         }
 
+        const getCurrentShareUrl = () => {
+            if (!APP_STATE.shareId) return ''
+            return new URL('/share/' + encodeURIComponent(APP_STATE.shareId), window.location.origin).toString()
+        }
+
         function syncShareMenuUI() {
             const publishedMenu = document.querySelector('.share-menu-published')
             const unpublishedMenu = document.querySelector('.share-menu-unpublished')
@@ -1798,8 +1784,8 @@ ${getMarkdownCss()}
             if (unpublishedMenu) unpublishedMenu.hidden = isPublished
 
             const shareOpenLink = document.querySelector('#share-open-link')
-            if (shareOpenLink && APP_STATE.shareId) {
-                shareOpenLink.href = '/share/' + encodeURIComponent(APP_STATE.shareId)
+            if (shareOpenLink) {
+                shareOpenLink.href = getCurrentShareUrl() || '#'
             }
         }
 
@@ -1813,7 +1799,7 @@ ${getMarkdownCss()}
             syncShareMenuUI()
             if ($autosaveToggle) {
                 $autosaveToggle.disabled = !isPublished
-                if (!isPublished) $autosaveToggle.checked = false
+                $autosaveToggle.checked = APP_STATE.autosave === true && isPublished
             }
         }
 
@@ -1825,7 +1811,7 @@ ${getMarkdownCss()}
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '', width: currentWidth })
             })
-                .then(res => {
+                .then(async res => {
                     if (res.err !== 0) {
                         if ($shareBtn) {
                             $shareBtn.classList.remove('is-checked')
@@ -1834,8 +1820,13 @@ ${getMarkdownCss()}
                         errHandle(res.msg);
                         return false;
                     }
+                    const nextShareId = typeof res.data === 'string' ? res.data.trim() : ''
+                    if (!nextShareId) {
+                        errHandle(APP_STATE.lang === 'zh-TW' ? '發布失敗：伺服器未回傳分享連結' : 'Publish failed: the server did not return a share link')
+                        return false
+                    }
                     APP_STATE.isPublished = true;
-                    APP_STATE.shareId = res.data;
+                    APP_STATE.shareId = nextShareId;
                     APP_STATE.autosave = wasPublished ? APP_STATE.autosave : false;
                     savedContent = $textarea ? $textarea.value : savedContent;
                     clearAutosaveTimer();
@@ -1844,10 +1835,10 @@ ${getMarkdownCss()}
                         $shareBtn.setAttribute('aria-pressed', 'true')
                     }
                     syncShareStateUI();
-                    recordShareHistory('created', window.location.origin + '/share/' + res.data, APP_STATE.title);
+                    recordShareHistory('created', getCurrentShareUrl(), APP_STATE.title);
                     syncPublicIndexButton();
-                    showShareModal(res.data);
-                    if (!wasPublished) promptEnableAutosave();
+                    if (!wasPublished) await promptEnableAutosave();
+                    showShareModal(nextShareId);
                     return true;
                 })
                 .catch(err => {
@@ -1897,7 +1888,7 @@ ${getMarkdownCss()}
             })
             if (!shouldEnable) return
             try {
-                APP_STATE.autosave = true
+                await persistSetting({ autosave: true })
                 try { window.localStorage.setItem('cf-notepad-autosave', 'true') } catch(e) {}
                 syncShareStateUI()
                 scheduleAutosave()
@@ -2097,11 +2088,27 @@ ${getMarkdownCss()}
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         const $sharePublishMenuBtn = document.querySelector('.share-publish-menu-btn');
         const $readonlyEditBtn = document.querySelector('#readonly-edit-btn');
-        if ($shareOpenLink && $shareCopyBtn) {
-            const shareUrl = new URL($shareOpenLink.getAttribute('href') || '', window.location.origin).toString()
-            $shareOpenLink.href = shareUrl
-            recordShareHistory('created', shareUrl, APP_STATE.title);
+        const initialShareUrl = getCurrentShareUrl()
+        if ($shareOpenLink) {
+            $shareOpenLink.href = initialShareUrl || '#'
+            $shareOpenLink.addEventListener('click', event => {
+                const shareUrl = getCurrentShareUrl()
+                if (!shareUrl) {
+                    event.preventDefault()
+                    errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
+                    return
+                }
+                $shareOpenLink.href = shareUrl
+            })
+        }
+        if (initialShareUrl) recordShareHistory('created', initialShareUrl, APP_STATE.title);
+        if ($shareCopyBtn) {
             $shareCopyBtn.addEventListener('click', async () => {
+                const shareUrl = getCurrentShareUrl()
+                if (!shareUrl) {
+                    errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
+                    return
+                }
                 try { 
                     await clipboardCopy(shareUrl); 
                     window.showToast(getI18n('copied') || 'Copied!'); 
@@ -2110,11 +2117,15 @@ ${getMarkdownCss()}
                 }
             });
         }
-        if ($shareOpenLink && $copyPresentShareBtn) {
+        if ($copyPresentShareBtn) {
             $copyPresentShareBtn.addEventListener('click', async () => {
-                const presentationUrl = new URL(($shareOpenLink.getAttribute('href') || '') + '/present', window.location.origin).toString();
+                const presentationUrl = getCurrentShareUrl()
+                if (!presentationUrl) {
+                    errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
+                    return
+                }
                 try { 
-                    await clipboardCopy(presentationUrl); 
+                    await clipboardCopy(presentationUrl + '/present');
                     window.showToast(getI18n('copied') || 'Copied!'); 
                 } catch (e) { 
                     window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
@@ -2175,15 +2186,24 @@ ${getMarkdownCss()}
         }
 
         if ($autosaveToggle) {
-            $autosaveToggle.addEventListener('change', () => {
+            $autosaveToggle.addEventListener('change', async () => {
                 if (!APP_STATE.isPublished) {
                     $autosaveToggle.checked = false
                     return
                 }
-                APP_STATE.autosave = $autosaveToggle.checked
-                if (APP_STATE.autosave) scheduleAutosave()
-                else clearAutosaveTimer()
-                try { window.localStorage.setItem('cf-notepad-autosave', APP_STATE.autosave ? 'true' : 'false') } catch(e) {}
+                const previousValue = APP_STATE.autosave === true
+                const nextValue = $autosaveToggle.checked
+                try {
+                    await persistSetting({ autosave: nextValue })
+                    syncShareStateUI()
+                    if (APP_STATE.autosave) scheduleAutosave()
+                    else clearAutosaveTimer()
+                    try { window.localStorage.setItem('cf-notepad-autosave', APP_STATE.autosave ? 'true' : 'false') } catch(e) {}
+                } catch (error) {
+                    APP_STATE.autosave = previousValue
+                    syncShareStateUI()
+                    errHandle(error.message || error)
+                }
             })
         }
 
@@ -2245,13 +2265,6 @@ ${getMarkdownCss()}
         if ($readonlyEditBtn) {
             $readonlyEditBtn.addEventListener('click', () => passwdPrompt())
         }
-        const $readonlyEditLink = document.querySelector('.readonly-edit-link')
-        if ($readonlyEditLink) {
-            $readonlyEditLink.addEventListener('click', () => {
-                try { window.sessionStorage.setItem('cf-notepad-from-share', 'true') } catch(e) {}
-            })
-        }
-
         const setupMobileShareFooter = () => {
             const footer = document.querySelector('.footer');
             const scrollTarget = $previewMd || $previewPlain;

@@ -20,7 +20,7 @@ test('x-ai theme keeps every heading level visible on the dark preview canvas', 
 })
 
 test('setting route persists publicIndex metadata and clears it on unpublish', () => {
-    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content\s*\}\s*=\s*await request\.json\(\)/)
+    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content,\s*autosave\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /publicIndex !== undefined && \{ publicIndex: publicIndex === true \}/)
     assert.match(indexSource, /if \(share === false\) \{\s*nextMetadata\.publicIndex = false/s)
 })
@@ -140,7 +140,7 @@ test('edit footer uses icon locks and share link opens in a new tab', () => {
     assert.match(commonTemplateSource, /id="share-open-link"/)
     assert.match(commonTemplateSource, /target="_blank"/)
     assert.match(baseTemplateSource, /const \$shareOpenLink = document\.querySelector\('#share-open-link'\);/)
-    assert.match(baseTemplateSource, /recordShareHistory\('created', shareUrl, APP_STATE\.title\);/)
+    assert.match(baseTemplateSource, /recordShareHistory\('created', getCurrentShareUrl\(\), APP_STATE\.title\);/)
     assert.match(constantSource, /shareLinkTitle: 'Open shared page in a new tab'/)
     assert.match(constantSource, /editLockTitle: 'Edit lock'/)
     assert.match(constantSource, /readLockTitle: 'View lock'/)

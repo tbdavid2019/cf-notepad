@@ -5,10 +5,11 @@ import { readFileSync } from 'node:fs'
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 
-test('setting route persists share, theme, width, share font, and publicIndex metadata', () => {
-    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content\s*\}\s*=\s*await request\.json\(\)/)
+test('setting route persists share, theme, width, share font, publicIndex, and autosave metadata', () => {
+    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content,\s*autosave\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /\.\.\.width !== undefined && \{ width \}/)
     assert.match(indexSource, /\.\.\.shareFont !== undefined && \{ shareFont \}/)
+    assert.match(indexSource, /\.\.\.autosave !== undefined && \{ autosave: autosave === true \}/)
     assert.doesNotMatch(indexSource, /\.\.\.splitDirection !== undefined/)
     assert.doesNotMatch(indexSource, /\.\.\.previewDevice !== undefined/)
 })
@@ -37,5 +38,4 @@ test('editor persists default preview width to APP_STATE and server when publish
     assert.match(baseTemplateSource, /function initUiTheme/)
     assert.match(baseTemplateSource, /document\.getElementById\('ui-theme-toggle-btn'\)/)
 })
-
 

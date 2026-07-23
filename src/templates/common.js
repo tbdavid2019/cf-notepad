@@ -190,7 +190,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 </button>
                                 <div class="dropdown-menu" role="menu">
                                     <div class="share-menu-published" ${share && shareId ? '' : 'hidden'}>
-                                    <a id="share-open-link" class="dropdown-item" href="/share/${shareId}" target="_blank" rel="noreferrer">
+                                    <a id="share-open-link" class="dropdown-item" href="${shareId ? '/share/' + encodeURIComponent(shareId) : '#'}" target="_blank" rel="noreferrer">
                                         ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
                                     </a>
                                     <button type="button" id="copy-share-btn" class="dropdown-item" title="${copyShareTitle}">

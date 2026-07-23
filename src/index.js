@@ -1513,7 +1513,7 @@ router.post('/:path/setting', async request => {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
             const { mode } = await request.clone().json()
-            const { share, theme, width, shareFont, publicIndex, content } = await request.json()
+            const { share, theme, width, shareFont, publicIndex, content, autosave } = await request.json()
 
             const { value, metadata } = await queryNote(path)
             const { valid, role } = await checkAuth(cookie, path)
@@ -1527,11 +1527,15 @@ router.post('/:path/setting', async request => {
                         ...width !== undefined && { width },
                         ...shareFont !== undefined && { shareFont },
                         ...publicIndex !== undefined && { publicIndex: publicIndex === true },
+                        ...autosave !== undefined && { autosave: autosave === true },
                         ...mode !== undefined && { mode },
                     }
 
                     if (share === false) {
                         nextMetadata.publicIndex = false
+                    }
+                    if (nextMetadata.share !== true) {
+                        nextMetadata.autosave = false
                     }
                     if (typeof content === 'string' && share === true) {
                         nextMetadata.updateAt = dayjs().unix()
