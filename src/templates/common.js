@@ -107,6 +107,8 @@ export const EDITOR_TOOLBAR = lang => {
     return `
     <div class="markdown-editor-toolbar-wrap">
     <div class="markdown-editor-toolbar" data-markdown-toolbar data-language="${lang}" role="toolbar" aria-label="${label}">
+        <button type="button" id="editor-ai-edit-btn" class="markdown-toolbar-button markdown-toolbar-ai-edit" data-ai-action="edit" data-tooltip="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}" title="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">${SVG_ICONS.magic}</span><span class="markdown-toolbar-ai-label">${isZh ? 'AI 編輯' : 'AI Edit'}</span></button>
+        <span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>
         ${EDITOR_TOOLBAR_COMMANDS.map(item => item.separator
             ? '<span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>'
             : `<button type="button" class="markdown-toolbar-button" data-command="${item.command}" data-tooltip="${isZh ? item.zh : item.en}" title="${isZh ? item.zh : item.en}" aria-label="${isZh ? item.zh : item.en}"><span class="markdown-toolbar-glyph ${item.glyphClass || ''}" aria-hidden="true">${item.glyph}</span></button>`
@@ -259,14 +261,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <span class="sr-only">${t.historyTitle}</span>
                             </button>
                         ` : ''}
-                        <button type="button" id="ai-format-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" title="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}" aria-label="${lang === 'zh-TW' ? 'AI 格式化排版' : 'AI Format Document'}">
-                            ${SVG_ICONS.sparkles}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI排版' : 'Format'}</span>
-                        </button>
-                        <button type="button" id="ai-edit-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" title="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${lang === 'zh-TW' ? 'AI 輔助編輯' : 'AI Edit Document'}">
-                            ${SVG_ICONS.magic}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? 'AI編輯' : 'AI Edit'}</span>
-                        </button>
                         ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" data-tooltip="${t.presentTitle}" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
                         <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
                             ${SVG_ICONS.shareHistory}

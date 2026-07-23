@@ -169,14 +169,15 @@ test('share routes support short slugs while keeping legacy md5 compatibility', 
     assert.match(indexSource, /router\.post\('\/share\/:shareId\/auth'/)
 })
 
-test('footer exposes AI format and edit controls for whole-note assistance', () => {
-    assert.match(commonTemplateSource, /id="ai-format-btn"/)
+test('editor toolbar exposes AI controls without duplicating them in the footer', () => {
     assert.match(commonTemplateSource, /id="editor-ai-format-btn"/)
-    assert.match(commonTemplateSource, /id="ai-edit-btn"/)
-    assert.match(baseTemplateSource, /const \$aiFormatBtn = document\.querySelector\('#ai-format-btn'\)/)
+    assert.match(commonTemplateSource, /id="editor-ai-edit-btn"/)
+    assert.doesNotMatch(commonTemplateSource, /id="ai-format-btn"/)
+    assert.doesNotMatch(commonTemplateSource, /id="ai-edit-btn"/)
     assert.match(baseTemplateSource, /const \$editorAiFormatBtn = document\.querySelector\('#editor-ai-format-btn'\)/)
     assert.match(baseTemplateSource, /\$editorAiFormatBtn\.addEventListener\('click', \(\) => runAiAssistant\('format'\)\)/)
-    assert.match(baseTemplateSource, /const \$aiEditBtn = document\.querySelector\('#ai-edit-btn'\)/)
+    assert.match(baseTemplateSource, /const \$editorAiEditBtn = document\.querySelector\('#editor-ai-edit-btn'\)/)
+    assert.match(baseTemplateSource, /\$editorAiEditBtn\.addEventListener\('click', \(\) => runAiAssistant\('edit'\)\)/)
     assert.match(baseTemplateSource, /const runAiAssistant = async mode =>/)
     assert.match(baseTemplateSource, /window\.prompt\(instructionPrompt, ''\)/)
     assert.match(baseTemplateSource, /const selectionStart = isEdit \? \$textarea\.selectionStart : 0/)

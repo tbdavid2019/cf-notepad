@@ -95,6 +95,12 @@ test('inserts task list, code block, table, and image snippets', () => {
 test('renders the toolbar for editable pages', () => {
     assert.match(baseTemplate, /<div class="editor-pane">\s*\$\{EDITOR_TOOLBAR\(lang\)\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
+    assert.match(
+        commonTemplate,
+        /data-language="\$\{lang\}" role="toolbar"[^>]*>\s*<button type="button" id="editor-ai-edit-btn"/
+    )
+    assert.match(commonTemplate, /id="editor-ai-edit-btn"[^>]*data-ai-action="edit"/)
+    assert.match(commonTemplate, /markdown-toolbar-ai-label/)
     assert.match(commonTemplate, /data-command="\$\{item\.command\}"/)
     assert.match(commonTemplate, /glyph: '&lt;\/&gt;'/)
     assert.match(commonTemplate, /markdown-toolbar-image-input/)
@@ -106,6 +112,13 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /command: 'redo'/)
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
+})
+
+test('top AI edit control reuses the document AI editing workflow', () => {
+    assert.match(baseTemplate, /const \$editorAiEditBtn = document\.querySelector\('#editor-ai-edit-btn'\)/)
+    assert.match(baseTemplate, /\$editorAiEditBtn\.disabled = true/)
+    assert.match(baseTemplate, /\$editorAiEditBtn\.disabled = false/)
+    assert.match(baseTemplate, /\$editorAiEditBtn\.addEventListener\('click', \(\) => runAiAssistant\('edit'\)\)/)
 })
 
 test('keeps the Markdown toolbar when preview mode is turned off', () => {

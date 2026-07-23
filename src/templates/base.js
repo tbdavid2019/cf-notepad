@@ -1595,10 +1595,8 @@ ${getMarkdownCss()}
             })
         }
 
-        const $aiFormatBtn = document.querySelector('#ai-format-btn')
         const $editorAiFormatBtn = document.querySelector('#editor-ai-format-btn')
-        const $aiEditBtn = document.querySelector('#ai-edit-btn')
-        const $aiFormatButtons = [$aiFormatBtn, $editorAiFormatBtn].filter(Boolean)
+        const $editorAiEditBtn = document.querySelector('#editor-ai-edit-btn')
 
         const runAiAssistant = async mode => {
             if (!$textarea) return;
@@ -1634,8 +1632,8 @@ ${getMarkdownCss()}
             const loadingMsg = APP_STATE.lang === 'zh-TW' ? 'AI 正在處理中，請稍候...' : 'AI processing, please wait...'
             window.showToast(loadingMsg)
 
-            $aiFormatButtons.forEach(button => { button.disabled = true })
-            if ($aiEditBtn) $aiEditBtn.disabled = true
+            if ($editorAiFormatBtn) $editorAiFormatBtn.disabled = true
+            if ($editorAiEditBtn) $editorAiEditBtn.disabled = true
 
             try {
                 const res = await fetchJson('/' + encodeURIComponent(APP_STATE.path || '') + '/ai-format', {
@@ -1667,19 +1665,16 @@ ${getMarkdownCss()}
                     : ((APP_STATE.lang === 'zh-TW' ? 'AI 處理錯誤：' : 'AI processing error: ') + err.message)
                 window.showAppDialog({ title: getI18n('err'), message, kind: 'error' })
             } finally {
-                $aiFormatButtons.forEach(button => { button.disabled = false })
-                if ($aiEditBtn) $aiEditBtn.disabled = false
+                if ($editorAiFormatBtn) $editorAiFormatBtn.disabled = false
+                if ($editorAiEditBtn) $editorAiEditBtn.disabled = false
             }
         }
 
-        if ($aiFormatBtn) {
-            $aiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
-        }
         if ($editorAiFormatBtn) {
             $editorAiFormatBtn.addEventListener('click', () => runAiAssistant('format'))
         }
-        if ($aiEditBtn) {
-            $aiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
+        if ($editorAiEditBtn) {
+            $editorAiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
         }
 
         if ($textarea) {
