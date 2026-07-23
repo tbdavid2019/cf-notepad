@@ -5,6 +5,7 @@ import { HTML } from '../src/templates/base.js'
 
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
+const helperSource = readFileSync(new URL('../src/helper.js', import.meta.url), 'utf8')
 
 test('share pages expose the WebTalk page ID without changing editor pages', () => {
     assert.match(indexSource, /return returnPage\('NeedPasswd', \{[\s\S]*shareId,/)
@@ -37,4 +38,8 @@ test('path-based share rendering keeps WebTalk metadata and script', () => {
     assert.match(shareHtml, /<script\n\s+async\n\s+src="https:\/\/webtalk-nine\.vercel\.app\/webtalk\.js"/)
     assert.doesNotMatch(editHtml, /meta name="webtalk-page-id"/)
     assert.doesNotMatch(editHtml, /webtalk-nine\.vercel\.app\/webtalk\.js/)
+})
+
+test('dynamic HTML responses are not cached across deployments', () => {
+    assert.match(helperSource, /'Cache-Control': 'no-store'/)
 })
