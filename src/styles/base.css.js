@@ -2037,10 +2037,6 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         border-top: 1px solid #e1e4e8 !important;
         border-bottom: 1px solid #e1e4e8 !important;
     }
-    body:not(.share-view) textarea.contents {
-        height: 50% !important;
-        min-height: 0 !important;
-    }
     body:not(.share-view) .preview-pane {
         height: 50% !important;
         min-height: 0 !important;
