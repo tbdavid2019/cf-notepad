@@ -118,6 +118,12 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
     if (command === 'table') {
         return replaceSnippet(source, safeStart, safeEnd, labels.table, 2, 4)
     }
+    if (command === 'toc') {
+        const prefix = safeStart > 0 && source[safeStart - 1] !== '\n' ? '\n' : ''
+        const suffix = safeEnd < source.length && source[safeEnd] !== '\n' ? '\n' : ''
+        const toc = prefix + '[TOC]' + suffix
+        return replaceSnippet(source, safeStart, safeEnd, toc, prefix.length, prefix.length + 5)
+    }
     if (command === 'image') {
         const snippet = `![${labels.imageAlt}](https://example.com/image.png)`
         const urlStart = 8

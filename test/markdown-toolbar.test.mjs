@@ -95,6 +95,19 @@ test('inserts task list, code block, table, and image snippets', () => {
     assert.deepEqual([image.selectionStart, image.selectionEnd], [8, 37])
 })
 
+test('inserts a standalone TOC placeholder at the cursor', () => {
+    assert.deepEqual(apply('', 'toc'), {
+        text: '[TOC]',
+        selectionStart: 0,
+        selectionEnd: 5,
+    })
+    assert.deepEqual(apply('前言', 'toc', 2, 2), {
+        text: '前言\n[TOC]',
+        selectionStart: 3,
+        selectionEnd: 8,
+    })
+})
+
 test('creates one line number per editor line', () => {
     assert.equal(createLineNumbers('第一行\n第二行\n'), '1\n2\n3')
 })
@@ -113,6 +126,7 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /markdown-toolbar-image-input/)
     assert.match(commonTemplate, /markdown-toolbar-asset-input/)
     assert.match(commonTemplate, /command: 'asset'/)
+    assert.match(commonTemplate, /command: 'toc'/)
     assert.doesNotMatch(commonTemplate, /command: 'citation'/)
     assert.match(commonTemplate, /accept="video\/\*,audio\/\*,application\/pdf/)
     assert.match(commonTemplate, /command: 'fullscreen'/)
