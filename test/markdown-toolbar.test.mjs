@@ -95,13 +95,6 @@ test('inserts task list, code block, table, and image snippets', () => {
     assert.deepEqual([image.selectionStart, image.selectionEnd], [8, 37])
 })
 
-test('inserts a HackMD-style citation template around selected text', () => {
-    const citation = apply('引用內容', 'citation', 0, 4)
-
-    assert.match(citation.text, /^> \[name=引用來源\]\n> \[time=.+\]\n> \[color=#bc2b39\]\n>\n> 引用內容\n>\n> \[reference\]: https:\/\/example\.com "來源標題"$/)
-    assert.equal(citation.text.slice(citation.selectionStart, citation.selectionEnd), '引用內容')
-})
-
 test('creates one line number per editor line', () => {
     assert.equal(createLineNumbers('第一行\n第二行\n'), '1\n2\n3')
 })
@@ -120,7 +113,7 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /markdown-toolbar-image-input/)
     assert.match(commonTemplate, /markdown-toolbar-asset-input/)
     assert.match(commonTemplate, /command: 'asset'/)
-    assert.match(commonTemplate, /command: 'citation'/)
+    assert.doesNotMatch(commonTemplate, /command: 'citation'/)
     assert.match(commonTemplate, /accept="video\/\*,audio\/\*,application\/pdf/)
     assert.match(commonTemplate, /command: 'fullscreen'/)
     assert.match(commonTemplate, /command: 'undo'/)
@@ -128,10 +121,19 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
     assert.match(baseTemplate, /id="editor-line-numbers"/)
-    assert.match(baseTemplate, /function remarkHackmdCitation\(\)/)
-    assert.match(markdownCss, /\.markdown-citation/)
+    assert.doesNotMatch(baseTemplate, /remarkHackmdCitation/)
+    assert.doesNotMatch(markdownCss, /\.markdown-citation/)
     assert.match(editorCss, /\.editor-line-numbers/)
     assert.match(toolbarSource, /textarea\.addEventListener\('scroll', syncLineNumbers, \{ passive: true \}\)/)
+})
+
+test('renders a TOC placeholder from resolved Markdown heading anchors', () => {
+    assert.match(baseTemplate, /const renderTableOfContents = node =>/)
+    assert.match(baseTemplate, /paragraph\.textContent\.trim\(\)\.toUpperCase\(\) === '\[TOC\]'/)
+    assert.match(baseTemplate, /heading\.tagName\.slice\(1\)/)
+    assert.match(baseTemplate, /anchor\.href = '#' \+ heading\.id/)
+    assert.match(baseTemplate, /decorateHeadingAnchors\(node\);\s*renderTableOfContents\(node\);/)
+    assert.match(markdownCss, /\.markdown-toc/)
 })
 
 test('top AI edit control reuses the document AI editing workflow', () => {

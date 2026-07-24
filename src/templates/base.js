@@ -323,58 +323,6 @@ ${getMarkdownCss()}
             };
         }
 
-        function remarkHackmdCitation() {
-            const escapeCitationHtml = value => String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
-            const isSafeCitationUrl = value => /^https?:\\/\\//i.test(String(value || ''));
-
-            return (tree) => {
-                visit(tree, 'blockquote', node => {
-                    const paragraph = node.children[0];
-                    if (!paragraph || paragraph.type !== 'paragraph') return;
-
-                    const metadataText = paragraph.children
-                        .filter(child => child.type === 'text')
-                        .map(child => child.value)
-                        .join('');
-                    const metadata = {};
-                    metadataText.split('\\n').forEach(line => {
-                        const match = line.trim().match(/^\\[(name|time|color)=([^\\]]+)\\]$/i);
-                        if (match) metadata[match[1].toLowerCase()] = match[2].trim();
-                    });
-                    if (!metadata.name) return;
-
-                    const color = /^#[0-9a-f]{3,8}$/i.test(metadata.color || '') ? metadata.color : '#bc2b39';
-                    node.children.shift();
-                    node.data = node.data || {};
-                    node.data.hProperties = {
-                        ...(node.data.hProperties || {}),
-                        className: ['markdown-citation'],
-                        style: '--citation-color: ' + color,
-                    };
-                    node.children.unshift({
-                        type: 'html',
-                        value: '<div class="markdown-citation-meta"><span class="markdown-citation-name">' + escapeCitationHtml(metadata.name) + '</span>'
-                            + (metadata.time ? '<time class="markdown-citation-time">' + escapeCitationHtml(metadata.time) + '</time>' : '')
-                            + '</div>',
-                    });
-
-                    const referenceIndex = node.children.findIndex(child => child.type === 'definition' && child.identifier === 'reference');
-                    if (referenceIndex === -1) return;
-                    const reference = node.children.splice(referenceIndex, 1)[0];
-                    if (!isSafeCitationUrl(reference.url)) return;
-                    node.children.push({
-                        type: 'html',
-                        value: '<footer class="markdown-citation-reference"><a href="' + escapeCitationHtml(reference.url) + '">' + escapeCitationHtml(reference.title || 'Reference') + '</a></footer>',
-                    });
-                });
-            };
-        }
-
         // Diagram Detection Plugin
         function remarkDiagramPlugin() {
             return (tree) => {
@@ -404,7 +352,6 @@ ${getMarkdownCss()}
         const processor = unified()
             .use(remarkParse)
             .use(remarkGithubAlerts)
-            .use(remarkHackmdCitation)
             .use(remarkDiagramPlugin)
             .use(remarkGfm)
             .use(remarkMath)
@@ -464,6 +411,56 @@ ${getMarkdownCss()}
                     anchor.setAttribute('aria-hidden', 'true');
                     heading.parentNode.insertBefore(anchor, heading);
                 });
+            });
+        };
+
+        const renderTableOfContents = node => {
+            if (!node) return;
+            const placeholders = Array.from(node.querySelectorAll('p')).filter(paragraph =>
+                paragraph.textContent.trim().toUpperCase() === '[TOC]'
+            );
+            if (!placeholders.length) return;
+
+            const headings = Array.from(node.querySelectorAll('h1, h2, h3, h4, h5, h6'))
+                .filter(heading => heading.id);
+            if (!headings.length) return;
+
+            placeholders.forEach(paragraph => {
+                const toc = document.createElement('nav');
+                toc.className = 'markdown-toc';
+                toc.setAttribute('aria-label', 'Table of contents');
+
+                const rootList = document.createElement('ol');
+                rootList.className = 'markdown-toc-list';
+                toc.append(rootList);
+
+                const baseLevel = Math.min(...headings.map(heading => Number(heading.tagName.slice(1))));
+                const stack = [{ level: baseLevel, list: rootList, lastItem: null }];
+
+                headings.forEach(heading => {
+                    const level = Number(heading.tagName.slice(1));
+                    while (stack.length > 1 && level < stack[stack.length - 1].level) stack.pop();
+
+                    const current = stack[stack.length - 1];
+                    if (level > current.level && current.lastItem) {
+                        const nestedList = document.createElement('ol');
+                        nestedList.className = 'markdown-toc-list';
+                        current.lastItem.append(nestedList);
+                        stack.push({ level, list: nestedList, lastItem: null });
+                    }
+
+                    const target = stack[stack.length - 1];
+                    const item = document.createElement('li');
+                    const anchor = document.createElement('a');
+                    anchor.className = 'markdown-toc-link';
+                    anchor.href = '#' + heading.id;
+                    anchor.textContent = heading.textContent;
+                    item.append(anchor);
+                    target.list.append(item);
+                    target.lastItem = item;
+                });
+
+                paragraph.replaceWith(toc);
             });
         };
 
@@ -645,6 +642,7 @@ ${getMarkdownCss()}
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
                 decorateHeadingAnchors(node);
+                renderTableOfContents(node);
                 node.dataset.copyHtml = node.innerHTML;
                 decorateMediaPreviews(node);
                 openShareContentLinksInNewTab(node);
