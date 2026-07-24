@@ -73,7 +73,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     </script>` : ''
     const webtalkScript = isSharePage ? `
     <script
-        async
+        defer
         src="https://webtalk-nine.vercel.app/webtalk.js"
         data-webtalk-scope="origin"
         data-webtalk-ai-endpoint="https://webtalk-nine.vercel.app/api/webtalk/ai">
