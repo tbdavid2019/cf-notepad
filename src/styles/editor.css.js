@@ -28,6 +28,20 @@ export const getEditorCss = () => `
     min-height: 0;
 }
 
+.editor-status {
+    flex: 0 0 auto;
+    min-height: 24px;
+    padding: 4px 10px;
+    overflow: hidden;
+    border-top: 1px solid rgba(248, 248, 242, 0.12);
+    background: #20212b;
+    color: #a7a9bf;
+    font-family: var(--editor-font-family);
+    font-size: 11px;
+    line-height: 16px;
+    white-space: nowrap;
+}
+
 .editor-line-numbers {
     flex: 0 0 42px;
     min-width: 42px;

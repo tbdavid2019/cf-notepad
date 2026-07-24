@@ -20,10 +20,19 @@ export const getBaseCss = () => `
     font-display: swap;
 }
 
+@font-face {
+    font-family: "GenJyuu Gothic CJK";
+    src: url("/fonts/GenJyuuGothic-Medium.woff2") format("woff2");
+    font-style: normal;
+    font-weight: 500;
+    font-display: swap;
+    unicode-range: U+3000-303F, U+3040-30FF, U+3100-312F, U+31A0-31BF, U+3400-4DBF, U+4E00-9FFF, U+F900-FAFF, U+FF00-FFEF, U+20000-2EBEF;
+}
+
 :root {
-    --editor-font-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
-    --share-font-jetbrains-family: "JetBrains Mono", "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono NL", "Roboto Mono", "Consolas", "Menlo", monospace;
-    --share-font-maple-family: "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
+    --editor-font-family: "GenJyuu Gothic CJK", "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
+    --share-font-jetbrains-family: "GenJyuu Gothic CJK", "JetBrains Mono", "SF Mono", "Monaco", "Cascadia Code", "Fira Code", "JetBrains Mono NL", "Roboto Mono", "Consolas", "Menlo", monospace;
+    --share-font-maple-family: "GenJyuu Gothic CJK", "Maple Mono", "Menlo", "Monaco", "Courier New", monospace;
     --preview-max-width: 100%;
     --toolbar-height: 28px;
     --toolbar-radius: 4px;
@@ -1613,6 +1622,57 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 
 .preview-pane > .contents {
     width: 100%;
+}
+
+.reading-progress-host { position: relative; }
+.reading-progress {
+    position: absolute;
+    top: 18px;
+    left: 8px;
+    z-index: 15;
+    display: grid;
+    justify-items: center;
+    gap: 5px;
+    color: rgba(87, 96, 106, 0.82);
+    opacity: 0.72;
+    transition: opacity 0.16s ease;
+}
+.reading-progress:hover,
+.reading-progress:focus-within { opacity: 1; }
+.reading-progress.is-hidden { display: none; }
+.reading-progress-track {
+    position: relative;
+    width: 16px;
+    height: 96px;
+    padding: 0;
+    border: 0;
+    border-radius: 999px;
+    background: rgba(87, 96, 106, 0.16);
+    cursor: pointer;
+}
+.reading-progress-track:focus-visible { outline: 2px solid #0969da; outline-offset: 2px; }
+.reading-progress-indicator {
+    position: absolute;
+    top: var(--reading-progress, 0%);
+    left: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.8);
+    transform: translate(-50%, -50%);
+}
+.reading-progress-value {
+    min-width: 28px;
+    color: inherit;
+    font: 10px/1 var(--editor-font-family);
+    text-align: center;
+}
+body.share-view .reading-progress { position: fixed; top: 88px; }
+
+@media (max-width: 640px) {
+    .reading-progress { top: 10px; left: 4px; }
+    .reading-progress-track { height: 72px; }
 }
 
 @media (min-width: 961px) {

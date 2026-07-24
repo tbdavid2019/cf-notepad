@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs'
 
 import {
     applyMarkdownCommand,
+    getEditorCursorStatus,
     createLineNumbers,
     createEditorHistory,
     createUploadedAssetMarkdown,
@@ -112,6 +113,11 @@ test('creates one line number per editor line', () => {
     assert.equal(createLineNumbers('第一行\n第二行\n'), '1\n2\n3')
 })
 
+test('reports the cursor line, column, and total editor length', () => {
+    assert.equal(getEditorCursorStatus('第一行\n第二行', 4, 'zh-TW'), '第 2 行・第 1 欄・總長度 7')
+    assert.equal(getEditorCursorStatus('one\ntwo', 6, 'en-US'), 'Line 2, Column 3, Length 7')
+})
+
 test('renders the toolbar for editable pages', () => {
     assert.match(baseTemplate, /<div class="editor-pane">\s*\$\{EDITOR_TOOLBAR\(lang\)\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
@@ -135,9 +141,11 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /id="editor-ai-format-btn"/)
     assert.match(baseTemplate, /src="\/js\/markdown-toolbar\.mjs"/)
     assert.match(baseTemplate, /id="editor-line-numbers"/)
+    assert.match(baseTemplate, /id="editor-status"/)
     assert.doesNotMatch(baseTemplate, /remarkHackmdCitation/)
     assert.doesNotMatch(markdownCss, /\.markdown-citation/)
     assert.match(editorCss, /\.editor-line-numbers/)
+    assert.match(editorCss, /\.editor-status/)
     assert.match(toolbarSource, /textarea\.addEventListener\('scroll', syncLineNumbers, \{ passive: true \}\)/)
 })
 

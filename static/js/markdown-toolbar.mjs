@@ -88,6 +88,16 @@ export const createLineNumbers = text => String(text || '').split('\n')
     .map((_, index) => String(index + 1))
     .join('\n')
 
+export const getEditorCursorStatus = (text, selectionStart = 0, lang = 'zh-TW') => {
+    const source = String(text || '')
+    const cursor = Math.max(0, Math.min(Number(selectionStart) || 0, source.length))
+    const line = source.slice(0, cursor).split('\n').length
+    const column = cursor - source.lastIndexOf('\n', Math.max(0, cursor - 1))
+
+    if (lang === 'zh-TW') return `第 ${line} 行・第 ${column} 欄・總長度 ${source.length}`
+    return `Line ${line}, Column ${column}, Length ${source.length}`
+}
+
 export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') => {
     const source = String(text || '')
     const safeStart = Math.max(0, Math.min(Number(start) || 0, source.length))
@@ -213,6 +223,7 @@ export const initMarkdownToolbar = (root = document) => {
     const imageInput = root.querySelector('#markdown-toolbar-image-input')
     const assetInput = root.querySelector('#markdown-toolbar-asset-input')
     const lineNumbers = root.querySelector('#editor-line-numbers')
+    const editorStatus = root.querySelector('#editor-status')
     if (!toolbar || !textarea) return false
     const lang = toolbar.dataset.language || 'zh-TW'
     const history = createEditorHistory({
@@ -228,6 +239,10 @@ export const initMarkdownToolbar = (root = document) => {
 
     const syncLineNumbers = () => {
         if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop
+    }
+
+    const updateEditorStatus = () => {
+        if (editorStatus) editorStatus.textContent = getEditorCursorStatus(textarea.value, textarea.selectionStart, lang)
     }
 
     const getEditorState = () => ({
@@ -258,10 +273,13 @@ export const initMarkdownToolbar = (root = document) => {
     textarea.addEventListener('input', () => {
         if (!isRestoringHistory) history.record(getEditorState())
         updateLineNumbers()
+        updateEditorStatus()
         updateHistoryButtons()
     })
     textarea.addEventListener('scroll', syncLineNumbers, { passive: true })
+    ;['click', 'focus', 'keyup', 'select'].forEach(eventName => textarea.addEventListener(eventName, updateEditorStatus))
     updateLineNumbers()
+    updateEditorStatus()
 
     const runCommand = command => {
         const result = applyMarkdownCommand(textarea.value, textarea.selectionStart, textarea.selectionEnd, command, lang)

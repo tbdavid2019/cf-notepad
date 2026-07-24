@@ -243,6 +243,7 @@ ${getMarkdownCss()}
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                             </div>
+                            <div id="editor-status" class="editor-status" aria-live="polite"></div>
                         </div>` : '<textarea id="contents" class="contents hide" spellcheck="false">' + content + '</textarea>'}
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
@@ -2462,6 +2463,7 @@ ${getMarkdownCss()}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
+    <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
 
     <script>
