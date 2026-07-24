@@ -47,10 +47,11 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 ## ✨ 整合功能特色
 
 ### 🚀 1. 寫作與編輯體驗 (Writing & Editing)
-- **精美字體與佈局**：編輯與預覽區預設使用 `Maple Mono` 與 `JetBrains Mono` 字體，提升程式碼與長文閱讀質感。Footer 內建寬度切換（Full / 960 / 1200 / 1440）與 20+ 款精美 CSS 預覽主題（預設為 `claude-canvas` 人文風格），且版面支援拖曳分割，雙擊可快速重設 50/50。
+- **精美字體與佈局**：中文預設使用 `GenJyuu Gothic`，英文字母與程式碼仍維持 `Maple Mono`／`JetBrains Mono`，兼顧中文字形與既有英文閱讀感。Footer 內建寬度切換（Full / 960 / 1200 / 1440）與 20+ 款精美 CSS 預覽主題（預設為 `claude-canvas` 人文風格），且版面支援拖曳分割，雙擊可快速重設 50/50。
 - **Footer 與工具列控制**：採用 Lucide / GitHub Octicons 精緻筆劃型 SVG 微圖示，配合掛載於頁面最上層的 **0ms 極速漂浮氣泡標籤**（Hover、Touch、Focus 時即時浮現，不受橫向捲動容器裁切）；編輯頁與分享頁的圖示按鈕皆提供繁中／英文提示。發布、字型、語言與裝置切換採用無滑塊 **3D 翻轉卡片開關 (3D Flip Card Toggle)**，寬度自動自適應。提示訊息與確認視窗統一置中顯示。
 - **儲存策略**：未發布文章不會寫入內容；發布時會同步儲存目前編輯內容。發布後可使用「儲存」按鈕，或逐篇開啟 Autosave，停止輸入 10 秒後才會儲存；若不想開放公開閱讀，可搭配閱讀鎖。
 - **編輯器視圖設定**：`預覽`、`排列` 與 `裝置` 會集中在同一個視圖設定群組，方便快速調整編輯器佈局。
+- **閱讀進度與編輯狀態**：預覽／分享頁左側會顯示可點擊的垂直閱讀進度尺，讓讀者知道目前閱讀位置與文章長度；編輯區左下角則即時顯示第幾行、第幾欄與全文總長度。
 - **複製內容**：Footer 的 Markdown `匯出` 右側提供 `複製`，會同時寫入 rich HTML 與 Markdown/plain-text fallback；rich HTML 使用媒體 preview 建立前的安全 HTML，不會把 YouTube／PDF iframe 貼進 Jira、Confluence 或其他編輯器；成功後顯示勾勾動畫與複製提示。
 - **Theme 特色說明**：主題選單保留完整名稱，並依介面語言顯示繁中或英文風格描述，方便使用者依視覺特色挑選主題。
 - **動態空白頁歡迎提示**：當新建或清空編輯器時，會自動載入一首隨機的泰戈爾詩歌，以及 `static/data/editor-tips.json` 中的一則雙語小訣竅；兩者會在漂鳥集下方以同步的**打字機動畫效果**出現。
@@ -59,7 +60,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
   - **編輯器 AI 排版**：AI 排版除了位於 Footer，也可直接從上方 Markdown 工具列啟動。
   - **AI 編輯與生成**：採用 `gpt-oss-120b` 模型，提供指令式的段落插入、部分改寫或整篇筆記內容生成。
   - **選取文字 AI 捷徑**：在編輯器中選取任意文字時，會自動彈出「AI編輯」捷徑按鈕，可僅針對選取的特定區塊進行指令式修改，其餘內容原封不動。
-- **Markdown 編輯工具列**：編輯區上方提供標題、粗體、斜體、刪除線、連結、引用、清單、行內程式碼、程式碼區塊、分隔線、表格、圖片、全螢幕、Undo / Redo 與 AI 排版。工具列會依目前語言顯示 placeholder 與提示文字。
+- **Markdown 編輯工具列**：編輯區上方提供標題、粗體、斜體、刪除線、連結、引用、清單、行內程式碼、程式碼區塊、分隔線、三欄表格、圖片、全螢幕、Undo / Redo、AI 排版與「製作目錄」。目錄按鈕會插入獨立的 `[TOC]`，預覽時自動依 `#`、`##`、`###` 等標題產生可跳轉的索引。工具列會依目前語言顯示 placeholder 與提示文字。
 - **圖片插入**：啟用 R2 後，可從工具列選擇圖片上傳，系統會自動插入 Markdown 圖片連結；未啟用 R2 時則插入可手動修改網址的圖片範本。
 - **888box 附件上傳**：工具列提供附件按鈕，可將影片、音訊、文件、壓縮檔與一般檔案直接上傳到 `box.david888.com`；失敗時依序 fallback 到 `box.aiurl.tw`、`box.glsoft.ai`，並依檔案類型插入 `<video>`、`<audio>` 或 Markdown 連結。圖片仍維持使用內建 R2。
 - **媒體 URL 預覽**：預覽區會辨識 PDF、YouTube、影片與音訊連結，分別顯示 PDF iframe、privacy-enhanced YouTube iframe，或原生 video/audio player；每個 preview 都保留原始連結作為 fallback。
@@ -200,10 +201,11 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 ## ✨ Integrated Features
 
 ### 🚀 1. Writing & Editing Experience
-- **Typography & Layout**: Replaces default fonts with `Maple Mono` and `JetBrains Mono` for a unified coding and reading experience. Features a `Width` selector (Full / 960 / 1200 / 1440), 20+ polished CSS themes (defaulting to the humanist `claude-canvas`), and a draggable pane layout (double-click to reset 50/50).
+- **Typography & Layout**: Chinese text defaults to `GenJyuu Gothic`, while Latin text and code retain `Maple Mono` / `JetBrains Mono` for the existing English reading experience. Features a `Width` selector (Full / 960 / 1200 / 1440), 20+ polished CSS themes (defaulting to the humanist `claude-canvas`), and a draggable pane layout (double-click to reset 50/50).
 - **Compact Footer Controls**: Preview, publishing, saving, lock, font, language, layout, and device controls use compact icon and two-state controls. Editor and Share actions expose localized instant floating tooltips on hover, touch, and keyboard focus; the body-level tooltip layer stays visible outside horizontal scrollers. Width options include their own context so the footer stays compact. Toasts and confirmations use a centered in-app treatment.
 - **Save Policy**: Unpublished note content is not persisted. Publishing saves the current editor content in the same operation; published notes offer a manual Save button and optional per-note Autosave that waits 10 seconds after typing stops. Use the View Lock when a published note should not be openly readable.
 - **Editor View Settings**: Preview, layout, and device controls are grouped together as one editor view-settings group for faster layout adjustments.
+- **Reading Progress & Editor Status**: A clickable vertical progress rail at the left of Preview and Share pages shows the reader's position through a long article. The editor's bottom-left status bar reports the current line, column, and total text length.
 - **Copy Rendered Content**: The Footer places Copy beside Markdown Export and writes rich HTML plus Markdown/plain-text fallback for editors such as Notion and Jira. Rich HTML comes from the sanitized snapshot before media preview decoration, so YouTube/PDF iframes are not pasted into external editors. A check animation confirms successful copying.
 - **Theme Descriptions**: Theme names remain complete and are paired with localized Traditional Chinese or English descriptions, with the selected theme's full description available through its tooltip.
 - **Dynamic Welcome Tips**: On each new or empty editor load, a random bilingual tip from `static/data/editor-tips.json` is typed below the Tagore poem with the same synchronized **typewriter animation**.
@@ -212,7 +214,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
   - **Editor Toolbar AI Formatting**: The same AI formatting flow is also available from the top Markdown toolbar, while the footer button remains available.
   - **AI Editing & Generation**: Integrated "AI Edit" button leveraging the `gpt-oss-120b` model, allowing instruction-based section insertion, partial rewriting, or full-note copy refinement and content generation.
   - **Contextual Selection Shortcut**: Selecting text inside the editor triggers a floating "AI Edit" shortcut. Instruct the AI to modify or translate only the highlighted selection while keeping the rest of your note completely untouched.
-- **Markdown Editor Toolbar**: Editable Markdown notes include headings, emphasis, strikethrough, links, quotes, lists, task lists, inline code, code blocks, horizontal rules, tables, image insertion, attachment upload, fullscreen editing, Undo / Redo, and AI formatting. Labels and placeholders follow the selected interface language.
+- **Markdown Editor Toolbar**: Editable Markdown notes include headings, emphasis, strikethrough, links, quotes, lists, task lists, inline code, code blocks, horizontal rules, a three-column table template, image insertion, attachment upload, fullscreen editing, Undo / Redo, AI formatting, and a Table of Contents action. The Table of Contents action inserts a standalone `[TOC]`, which renders a linked outline from `#`, `##`, `###`, and deeper headings. Labels and placeholders follow the selected interface language.
 - **Image Insertion**: With R2 enabled, choose an image from the toolbar to upload it and insert a Markdown image link automatically. Without R2, the toolbar inserts an editable Markdown image placeholder.
 - **888box Attachment Uploads**: Use the toolbar attachment button to upload videos, audio, documents, archives, and generic files to `box.david888.com`, falling back to `box.aiurl.tw` and then `box.glsoft.ai`. The editor inserts `<video>` for videos, `<audio>` for audio, and Markdown links for files. Images continue to use the built-in R2 upload flow.
 - **Media URL Previews**: The preview pane detects PDF, YouTube, video, and audio links, rendering PDF and privacy-enhanced YouTube iframes or native video/audio players while retaining the original link as a fallback.

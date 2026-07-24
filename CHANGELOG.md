@@ -1,5 +1,26 @@
 # Changelog
 
+## [2026-07-24]
+### Added
+- **Reading Progress and Editor Status**
+  - Added a compact, clickable vertical reading-progress rail to the left edge of Preview and Share pages. It reports reading percentage and lets readers jump through long articles.
+  - Added an editor status bar at bottom left that updates the current line, column, and total document length as the cursor moves.
+- **Markdown Navigation and Editing Helpers**
+  - Added standalone `[TOC]` rendering. It creates a linked, nested table of contents from Markdown headings, including `#`, `##`, `###`, and deeper levels.
+  - Added a `製作目錄` / Table of Contents toolbar button immediately after Quote; it inserts `[TOC]` at the cursor.
+  - Added a three-column Markdown table template and editor line numbers.
+
+### Changed
+- **Chinese Typography**
+  - Bundled `GenJyuuGothic-Medium.woff2` and made it the default for Chinese glyphs in the editor, preview, and share views.
+  - Preserved the existing Maple Mono and JetBrains Mono font choices for Latin text and code.
+
+### Removed
+- Removed the source-citation toolbar action after confirming that it did not match the desired Table of Contents workflow.
+
+### Documentation
+- Updated the README in Traditional Chinese and English with the reading-progress rail, editor status, `[TOC]` usage, table template, and Chinese font behavior.
+
 ## [2026-07-23]
 ### Fixed
 - **Mobile Publish, Share Link, and Autosave State Synchronization**
