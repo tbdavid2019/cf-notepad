@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-07-28]
+### Fixed
+- **Fullscreen Presentation Mode Entry Restored in Share Views**
+  - Added `打開簡報頁面` (Open Presentation Page: `/share/:shareId/present`) back to the published Share Dropdown Menu in the editor.
+  - Restored the `演示` (Present) button to the read-only Share Page (`/share/:shareId`) footer controls, allowing readers to launch full-screen Reveal.js/Slidev presentations directly.
+  - Synchronized `share-present-open-link` dynamically upon publishing or share state updates.
+  - Added unit test coverage in `test/share-presentation-ui.test.mjs`.
+
 ## [2026-07-24]
 ### Added
 - **Reading Progress and Editor Status**

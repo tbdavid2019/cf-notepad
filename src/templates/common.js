@@ -196,6 +196,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     <a id="share-open-link" class="dropdown-item" href="${shareId ? '/share/' + encodeURIComponent(shareId) : '#'}" target="_blank" rel="noreferrer">
                                         ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
                                     </a>
+                                    <a id="share-present-open-link" class="dropdown-item" href="${shareId ? '/share/' + encodeURIComponent(shareId) + '/present' : '#'}" target="_blank" rel="noreferrer">
+                                        ${SVG_ICONS.play} <span>${lang === 'zh-TW' ? '打開簡報頁面' : 'Open presentation'}</span>
+                                    </a>
                                     <button type="button" id="copy-share-btn" class="dropdown-item" title="${copyShareTitle}">
                                         ${SVG_ICONS.copy} <span>${copyShareTitle}</span>
                                     </button>
@@ -332,6 +335,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
+                        </button>
+                        <button type="button" id="present-btn" class="toolbar-icon-button" data-tooltip="${t.presentTitle}" title="${t.presentTitle}" aria-label="${t.presentTitle}">
+                            ${SVG_ICONS.play}
+                            <span class="toolbar-button-label">${t.present}</span>
                         </button>
                         ${sharePath && shareId ? `
                         <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
