@@ -1,6 +1,12 @@
 # Changelog
 
 ## [2026-07-28]
+### Changed
+- **Bounded 16:9 Presentation Canvas**
+  - Replaced the 1000×700 presentation stage with a bordered 1280×720 canvas and consistent internal safe areas.
+  - Preserved a readable 22px authoring minimum; slides that still overflow become scrollable and show an editor-only split-slide warning instead of silently clipping content.
+  - Added wrapping for long URLs and code, readable table overflow, media height constraints, and a portrait-phone prompt to rotate into landscape.
+
 ### Fixed
 - **Fullscreen Presentation Mode Entry Restored in Share Views**
   - Added `打開簡報頁面` (Open Presentation Page: `/share/:shareId/present`) back to the published Share Dropdown Menu in the editor.

@@ -258,7 +258,7 @@ Keep agent-facing guidance synchronized as well: update `skills/SKILL.md` for th
 ### 🔐 2. Privacy, Versioning & Secure Sharing
 - **Access Control Separation**: Distinct "Edit Lock" and "View Lock" policies use Salted MD5 hashes and in-page password modals. An Edit Lock restricts writing; a View Lock restricts reading; with only a View Lock it is also the sole owner/edit credential, while with both locks the View Lock is read-only and the Edit Lock is required to write.
 - **D1 Snapshot History**: Automatically saves content snapshots to Cloudflare D1 with a 5-minute cooldown and a max limit of 10 versions. Editors can preview, restore, or copy text from historical versions.
-- **Presentation Mode & PDF Export**: Splice slides using standard `---` page breaks for fullscreen Slidev-like presentations. Custom `@media print` CSS hides controls, overrides page heights, and prevents text clipping during PDF exports.
+- **Presentation Mode & PDF Export**: Splice slides using standard `---` page breaks for fullscreen Slidev-like presentations. Presentations use a bordered 16:9 canvas with safe content margins, readable overflow handling, and a landscape prompt on portrait phones. Custom `@media print` CSS hides controls, overrides page heights, and prevents text clipping during PDF exports.
 - **Public Index Sitemap**: Opt-in public indexing allows you to choose which shared pages appear in `sitemap.xml`. Shared pages emit server-rendered Open Graph / Twitter metadata and prefer stronger human-readable titles when available.
 
 This is the integrated diagram of our access control model:

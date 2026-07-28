@@ -2814,11 +2814,16 @@ ${getMarkdownCss()}
                 table.style.transform = '';
                 wrapper.style.width = '';
                 wrapper.style.height = '';
+                wrapper.classList.remove('presentation-table-overflow');
 
                 var sectionWidth = section.clientWidth || 1000;
                 var sectionHeight = section.clientHeight || 700;
-                var availableWidth = Math.max(120, sectionWidth - 24);
-                var availableHeight = Math.max(90, sectionHeight - wrapper.offsetTop - 24);
+                var sectionStyle = window.getComputedStyle(section);
+                var paddingLeft = parseFloat(sectionStyle.paddingLeft) || 0;
+                var paddingRight = parseFloat(sectionStyle.paddingRight) || 0;
+                var paddingBottom = parseFloat(sectionStyle.paddingBottom) || 0;
+                var availableWidth = Math.max(240, sectionWidth - paddingLeft - paddingRight);
+                var availableHeight = Math.max(140, sectionHeight - wrapper.offsetTop - paddingBottom);
                 var tableWidth = table.scrollWidth || table.offsetWidth;
                 var tableHeight = table.scrollHeight || table.offsetHeight;
 
@@ -2826,7 +2831,15 @@ ${getMarkdownCss()}
 
                 var scale = Math.min(1, availableWidth / tableWidth, availableHeight / tableHeight);
                 if (!Number.isFinite(scale) || scale <= 0) scale = 1;
-                scale = Math.max(0.18, Math.min(1, scale));
+                var requiresReadableOverflow = scale < 0.55;
+
+                if (requiresReadableOverflow) {
+                    wrapper.style.width = availableWidth + 'px';
+                    wrapper.style.height = tableHeight + 'px';
+                    wrapper.classList.add('presentation-table-overflow');
+                    wrapper.classList.add('presentation-table-scaled');
+                    return;
+                }
 
                 table.style.transform = 'scale(' + scale + ')';
                 wrapper.style.width = (tableWidth * scale) + 'px';
@@ -2839,28 +2852,35 @@ ${getMarkdownCss()}
             var reveal = container.querySelector('.reveal');
             if (!reveal) return;
 
-            var availableWidth = 960;
-            var availableHeight = 600;
-            var baseFontSize = 28;
-            var minimumFontSize = 13;
+            var baseFontSize = 30;
+            var minimumFontSize = 22;
+            var overflowLabel = APP_STATE.lang === 'zh-TW'
+                ? '內容過多，建議拆頁'
+                : 'Too much content — split this slide';
 
             reveal.querySelectorAll('.slides section').forEach(function(section) {
                 section.style.fontSize = baseFontSize + 'px';
+                section.classList.remove('presentation-slide-scaled', 'presentation-slide-overflow');
+                section.setAttribute('data-overflow-label', overflowLabel);
             });
 
             fitPresentationTables(container);
 
             reveal.querySelectorAll('.slides section').forEach(function(section) {
-                var contentWidth = Math.max(section.scrollWidth, section.offsetWidth);
-                var contentHeight = section.scrollHeight;
-                if (!contentWidth || !contentHeight) return;
+                var fittedFontSize = baseFontSize;
+                var isOverflowing = function() {
+                    return section.scrollHeight > section.clientHeight + 1 ||
+                        section.scrollWidth > section.clientWidth + 1;
+                };
 
-                var scale = Math.min(1, availableWidth / contentWidth, availableHeight / contentHeight);
-                if (!Number.isFinite(scale) || scale <= 0) scale = 1;
+                while (fittedFontSize > minimumFontSize && isOverflowing()) {
+                    fittedFontSize -= 1;
+                    section.style.fontSize = fittedFontSize + 'px';
+                }
 
-                var fittedFontSize = Math.max(minimumFontSize, Math.floor(baseFontSize * scale));
                 section.style.fontSize = fittedFontSize + 'px';
                 section.classList.toggle('presentation-slide-scaled', fittedFontSize < baseFontSize);
+                section.classList.toggle('presentation-slide-overflow', isOverflowing());
             });
 
             fitPresentationTables(container);
@@ -2889,7 +2909,12 @@ ${getMarkdownCss()}
             if (!content || !content.trim()) { window.showAppDialog({ title: getI18n('present'), message: getI18n('presentationUnavailable'), kind: 'error' }); return; }
 
             var container = document.getElementById('presentation-container');
-            container.innerHTML = '\u003cbutton id="presentation-close-btn"\u003e✕ ' + getI18n('presentationClose') + '\u003c/button\u003e' +
+            var orientationHint = APP_STATE.lang === 'zh-TW'
+                ? '請將裝置旋轉為橫向，以清楚檢視 16:9 投影片'
+                : 'Rotate your device to landscape to view the 16:9 slides';
+            container.classList.toggle('presentation-authoring', !!(edit && !edit.classList.contains('hide')));
+            container.innerHTML = '\u003cbutton type="button" id="presentation-close-btn"\u003e✕ ' + getI18n('presentationClose') + '\u003c/button\u003e' +
+                                 '\u003cdiv class="presentation-orientation-hint" role="status"\u003e' + orientationHint + '\u003c/div\u003e' +
                                  '\u003cdiv class="reveal"\u003e\u003cdiv class="slides"\u003e\u003c/div\u003e\u003c/div\u003e';
             
             document.getElementById('presentation-close-btn').onclick = window.exitPresentation;
@@ -2935,7 +2960,8 @@ ${getMarkdownCss()}
                 _reveal = new Reveal(container.querySelector('.reveal'), {
                     plugins: [RevealMarkdown],
                     center: false, hash: true, transition: 'fade',
-                    width: 1000, height: 700, margin: 0.1,
+                    width: 1280, height: 720, margin: 0.035,
+                    minScale: 0.2, maxScale: 2,
                     controls: true, progress: true, slideNumber: true
                 });
                 if (_reveal.on) {
@@ -2944,6 +2970,14 @@ ${getMarkdownCss()}
                     _reveal.on('resize', function() { schedulePresentationFit(container); });
                 }
                 await _reveal.initialize();
+                container.querySelectorAll('.slides img, .slides video, .slides iframe').forEach(function(media) {
+                    if (media.tagName === 'IMG' && media.complete) return;
+                    media.addEventListener('load', function() { schedulePresentationFit(container); }, { once: true });
+                    media.addEventListener('error', function() { schedulePresentationFit(container); }, { once: true });
+                });
+                if (document.fonts && document.fonts.ready) {
+                    document.fonts.ready.then(function() { schedulePresentationFit(container); });
+                }
                 if (_tableResizeHandler) window.removeEventListener('resize', _tableResizeHandler);
                 _tableResizeHandler = function() { schedulePresentationFit(container); };
                 window.addEventListener('resize', _tableResizeHandler);
@@ -2960,6 +2994,7 @@ ${getMarkdownCss()}
             var c = document.getElementById('presentation-container');
             var shouldReturnToShare = APP_STATE.autoPresent && APP_STATE.sharePath && window.location.pathname === APP_STATE.presentationPath;
             c.classList.remove('active');
+            c.classList.remove('presentation-authoring');
             if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
             if (_tableResizeHandler) {
                 window.removeEventListener('resize', _tableResizeHandler);

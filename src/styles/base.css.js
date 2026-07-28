@@ -1822,13 +1822,15 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 
 /* Presentation Mode Overlay */
 #presentation-container {
+    --presentation-safe-inline: 76px;
+    --presentation-safe-top: 64px;
+    --presentation-safe-bottom: 72px;
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
+    inset: 0;
     z-index: 10000;
-    background: #1a1a2e;
+    width: 100vw;
+    height: 100dvh;
+    background: #070b12;
     display: none;
 }
 #presentation-container.active {
@@ -1836,14 +1838,18 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 }
 #presentation-close-btn {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: max(14px, env(safe-area-inset-top));
+    right: max(14px, env(safe-area-inset-right));
     z-index: 10001;
-    background: rgba(255, 255, 255, 0.15);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 40px;
+    background: rgba(7, 11, 18, 0.78);
     color: white;
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    padding: 8px 16px;
-    border-radius: 20px;
+    border: 1px solid rgba(226, 232, 240, 0.38);
+    padding: 8px 14px;
+    border-radius: 999px;
     cursor: pointer;
     font-size: 14px;
     backdrop-filter: blur(10px);
@@ -1856,25 +1862,77 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 #presentation-container .reveal {
     width: 100%;
     height: 100%;
-    font-size: 28px;
+    font-size: 30px;
+    color: #e2e8f0;
 }
 
 /* Slidev-Lite Theme Extensions */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Roboto+Mono&display=swap');
-
 #presentation-container.active {
-    font-family: 'Inter', sans-serif;
-    background: radial-gradient(circle at 50% 50%, #1e293b 0%, #0f172a 100%);
+    font-family: "GenJyuu Gothic CJK", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(circle at 50% 42%, rgba(30, 41, 59, 0.7) 0%, rgba(7, 11, 18, 0) 58%),
+        #070b12;
+}
+
+#presentation-container .reveal .slides {
+    box-sizing: border-box;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.34);
+    border-radius: 12px;
+    background: linear-gradient(145deg, #172236 0%, #111a2c 100%);
+    box-shadow:
+        0 28px 70px rgba(0, 0, 0, 0.38),
+        0 0 0 1px rgba(255, 255, 255, 0.025) inset;
 }
 
 #presentation-container .reveal .slides section {
+    width: 100%;
+    height: 100%;
     text-align: left;
-    font-family: 'Inter', sans-serif;
+    font-family: "GenJyuu Gothic CJK", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     color: #e2e8f0;
     line-height: 1.45;
     box-sizing: border-box;
-    padding-bottom: 56px !important;
+    padding:
+        var(--presentation-safe-top)
+        var(--presentation-safe-inline)
+        var(--presentation-safe-bottom) !important;
     overflow: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(103, 232, 249, 0.6) transparent;
+}
+
+#presentation-container .reveal .slides section.presentation-slide-overflow {
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding-bottom: calc(var(--presentation-safe-bottom) + 36px) !important;
+}
+
+#presentation-container.presentation-authoring .reveal .slides section.presentation-slide-overflow::after {
+    content: attr(data-overflow-label);
+    position: sticky;
+    left: 0;
+    bottom: -24px;
+    display: table;
+    margin: 18px 0 0 auto;
+    padding: 6px 10px;
+    border: 1px solid rgba(251, 191, 36, 0.55);
+    border-radius: 999px;
+    background: rgba(120, 53, 15, 0.9);
+    color: #fef3c7;
+    font-size: 14px;
+    line-height: 1.2;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.22);
+}
+
+#presentation-container .reveal .slides section p,
+#presentation-container .reveal .slides section li,
+#presentation-container .reveal .slides section a,
+#presentation-container .reveal .slides section code,
+#presentation-container .reveal .slides section th,
+#presentation-container .reveal .slides section td {
+    overflow-wrap: anywhere;
+    word-break: break-word;
 }
 
 #presentation-container .reveal blockquote {
@@ -1940,7 +1998,11 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     font-size: 1.12em;
 }
 
-.reveal pre {
+#presentation-container .reveal pre {
+    max-width: 100%;
+    max-height: 330px;
+    overflow: auto;
+    white-space: pre-wrap;
     background: #0f172a;
     border: 1px solid #334155;
     border-radius: 8px;
@@ -1948,10 +2010,21 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     padding: 1em;
 }
 
-.reveal code {
-    font-family: 'Roboto Mono', monospace;
+#presentation-container .reveal code {
+    font-family: "JetBrains Mono", "Maple Mono", monospace;
     font-size: 0.85em;
     color: #94a3b8;
+}
+
+#presentation-container .reveal section img,
+#presentation-container .reveal section video,
+#presentation-container .reveal section iframe,
+#presentation-container .reveal section svg:not(.controls-arrow) {
+    display: block;
+    max-width: 100%;
+    max-height: 380px;
+    margin-inline: auto;
+    object-fit: contain;
 }
 
 #presentation-container .reveal table {
@@ -1970,8 +2043,14 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 
 .presentation-table-fit {
     display: block;
+    max-width: 100%;
     overflow: visible;
     transform-origin: top left;
+}
+
+.presentation-table-fit.presentation-table-overflow {
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
 .presentation-table-fit table {
@@ -1989,7 +2068,12 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 }
 
 .col-left, .col-right {
+    min-width: 0;
     width: 100%;
+}
+
+.presentation-orientation-hint {
+    display: none;
 }
 
 .reveal .fragment.v-click {
@@ -1997,6 +2081,27 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 }
 .reveal .fragment.v-click.visible {
     visibility: visible;
+}
+
+@media (orientation: portrait) and (max-width: 720px) {
+    #presentation-container .reveal {
+        opacity: 0.08;
+        pointer-events: none;
+    }
+
+    #presentation-container .presentation-orientation-hint {
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 72px 28px;
+        color: #f8fafc;
+        font-size: 18px;
+        line-height: 1.55;
+        text-align: center;
+    }
 }
 
 /* Tablets and smaller screens text labels hiding */
