@@ -1840,7 +1840,7 @@ ${getMarkdownCss()}
             const sharePresentOpenLink = document.querySelector('#share-present-open-link')
             if (sharePresentOpenLink) {
                 const currentShare = getCurrentShareUrl()
-                sharePresentOpenLink.href = currentShare ? `${currentShare}/present` : '#'
+                sharePresentOpenLink.href = currentShare ? currentShare + '/present' : '#'
             }
         }
 
@@ -2158,7 +2158,7 @@ ${getMarkdownCss()}
         }
         const $sharePresentOpenLink = document.querySelector('#share-present-open-link');
         if ($sharePresentOpenLink) {
-            $sharePresentOpenLink.href = initialShareUrl ? `${initialShareUrl}/present` : '#'
+            $sharePresentOpenLink.href = initialShareUrl ? initialShareUrl + '/present' : '#'
             $sharePresentOpenLink.addEventListener('click', event => {
                 const shareUrl = getCurrentShareUrl()
                 if (!shareUrl) {
@@ -2166,7 +2166,7 @@ ${getMarkdownCss()}
                     errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
                     return
                 }
-                $sharePresentOpenLink.href = `${shareUrl}/present`
+                $sharePresentOpenLink.href = shareUrl + '/present'
             })
         }
         if (initialShareUrl) recordShareHistory('created', initialShareUrl, APP_STATE.title);
