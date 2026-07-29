@@ -28,6 +28,10 @@
   - Replaced the invalid footer GitHub SVG path with a browser-safe 24px icon, removed the presentation engine's production debug log, and placed the password input in a proper submit form.
 
 ### Fixed
+- **Unique Share Views Per Device**
+  - Share view totals now increase only once per browser/device for each article; reloading the same Share page no longer increases the count.
+  - Added a one-year, secure, HTTP-only anonymous device cookie and stores only its SHA-256 hash in D1.
+  - Preserved existing view totals while applying the new unique-view rule to future visits.
 - **Selection-Only AI Translation**
   - The floating selection toolbar now snapshots the textarea range before its button receives focus, so Format, AI Edit, and Translate keep the intended fragment.
   - Selection translation sends only the highlighted Markdown to Workers AI; surrounding paragraphs are no longer included as model context and cannot be translated accidentally.

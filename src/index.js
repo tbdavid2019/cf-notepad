@@ -34,7 +34,7 @@ import {
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
-import { getNoteStatsDb, getNoteViewCount, incrementNoteViewCount, shouldCountShareView } from './note_stats.mjs'
+import { getNoteStatsDb, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import { computeSourceRevision, decodeAnnotationCursor, getAnnotationDb, listAnnotationThreads } from './annotation_data.mjs'
 
 // init
@@ -715,6 +715,7 @@ async function renderSharePage(request, presentationMode = false, execution = {}
         }
 
         let viewCount = null
+        let viewDeviceCookie = null
         if (shouldCountShareView({
             method: request.method,
             presentationMode,
@@ -724,13 +725,19 @@ async function renderSharePage(request, presentationMode = false, execution = {}
             const statsDb = getNoteStatsDb()
             if (statsDb) {
                 try {
-                    viewCount = (await getNoteViewCount(statsDb, path)) + 1
-                    const incrementPromise = incrementNoteViewCount(statsDb, path)
-                        .catch(error => console.error('Share view increment failed:', error))
-                    if (typeof execution.waitUntil === 'function') {
-                        execution.waitUntil(incrementPromise)
-                    } else {
-                        await incrementPromise
+                    const { deviceId, isNew } = resolveViewDeviceId(cookie.cn_device)
+                    const deviceHash = await hashViewDeviceId(deviceId)
+                    const recordedView = await recordUniqueNoteView(statsDb, path, deviceHash)
+                    viewCount = recordedView.viewCount
+
+                    if (isNew) {
+                        viewDeviceCookie = Cookies.serialize('cn_device', deviceId, {
+                            path: '/',
+                            maxAge: 365 * 24 * 60 * 60,
+                            httpOnly: true,
+                            secure: true,
+                            sameSite: 'lax',
+                        })
                     }
                 } catch (error) {
                     console.error('Share view count failed:', error)
@@ -766,7 +773,7 @@ async function renderSharePage(request, presentationMode = false, execution = {}
                 },
             },
             path,
-        })
+        }, viewDeviceCookie ? { 'Set-Cookie': viewDeviceCookie } : {})
     }
 
     return returnPage('Page404', { lang, title: '404' })
