@@ -35,6 +35,7 @@ import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNot
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 import { getNoteStatsDb, getNoteViewCount, incrementNoteViewCount, shouldCountShareView } from './note_stats.mjs'
+import { computeSourceRevision, decodeAnnotationCursor, getAnnotationDb, listAnnotationThreads } from './annotation_data.mjs'
 
 // init
 const router = Router()
@@ -785,6 +786,60 @@ router.get('/share/:shareId/present', async (request, execution) => {
 
 router.head('/share/:shareId/present', async (request, execution) => {
     return renderSharePage(request, true, execution)
+})
+
+router.get('/api/shares/:shareId/annotations', async request => {
+    const { shareId } = request.params
+    const path = await getShareNamespace().get(shareId)
+    if (!path) return returnJSON(404, 'Share not found', { status: 404 })
+
+    const { value, metadata } = await queryNote(path)
+    if (metadata.share !== true) return returnJSON(404, 'Share not found', { status: 404 })
+
+    if (metadata.vpw) {
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+        const { valid } = await checkAuth(cookie, path)
+        if (!valid) return returnJSON(401, 'Share password required', { status: 401 })
+    }
+
+    if (metadata.annotationsEnabled !== true) {
+        return returnJSON(0, {
+            enabled: false,
+            sourceRevision: null,
+            threads: [],
+            nextCursor: null,
+        }, { 'Cache-Control': 'no-store' })
+    }
+
+    const db = getAnnotationDb()
+    if (!db) return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+
+    const url = new URL(request.url)
+    const cursor = url.searchParams.get('cursor')
+    if (cursor && !decodeAnnotationCursor(cursor)) {
+        return returnJSON(400, 'Invalid annotation cursor', { status: 400 })
+    }
+
+    const requestedLimit = url.searchParams.get('limit')
+    if (requestedLimit !== null && (!/^\d+$/.test(requestedLimit) || Number(requestedLimit) < 1)) {
+        return returnJSON(400, 'Invalid annotation limit', { status: 400 })
+    }
+
+    try {
+        const sourceRevision = await computeSourceRevision(value)
+        const result = await listAnnotationThreads(db, path, {
+            cursor,
+            limit: requestedLimit,
+        })
+        return returnJSON(0, {
+            enabled: true,
+            sourceRevision,
+            ...result,
+        }, { 'Cache-Control': 'no-store' })
+    } catch (error) {
+        console.error('Annotation List Error:', error)
+        return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+    }
 })
 
 router.get('/icon.svg', iconSvgResponse)

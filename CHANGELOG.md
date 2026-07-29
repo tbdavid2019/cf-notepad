@@ -10,6 +10,10 @@
   - Added an author-only `段落註解` / Paragraph annotations switch to the published Share menu.
   - Existing notes default to closed; the choice is persisted in KV note metadata and restored on reload.
   - Unpublishing closes annotations without deleting any annotation records.
+- **D1 Annotation Read Model**
+  - Added independent D1 thread and message tables that retain the selected quote, surrounding context, source offsets, and source revision even when the article changes.
+  - Added a paginated Share annotation read API with opaque cursors and bounded thread/message results.
+  - When an author closes annotations, retained discussions are hidden rather than deleted.
 - **Dedicated AI Translation and Bilingual Output**
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 

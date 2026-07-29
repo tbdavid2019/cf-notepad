@@ -38,8 +38,8 @@ SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS = "300"
 # binding = "NOTE_HISTORY_DB"
 # database_name = "cloud-notepad-history"
 # database_id = "<YOUR_D1_DATABASE_ID>"
-# The same D1 binding can store note history and share view counts.
-# Apply schema/note_history.sql and schema/note_stats.sql as needed.
+# The same D1 binding can store note history, share view counts, and annotations.
+# Apply schema/note_history.sql, schema/note_stats.sql, and schema/note_annotations.sql as needed.
 
 # Cron trigger: Daily cleanup at 9 AM Taiwan time (1 AM UTC)
 [triggers]
