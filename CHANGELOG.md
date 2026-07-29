@@ -6,6 +6,10 @@
   - Added a per-note D1 view counter to normal HTML Share pages and displayed the total in the Share footer.
   - Excluded HEAD requests, Markdown responses, embeds, and presentation pages from view counting.
   - Kept article delivery resilient: missing or unavailable D1 stats do not block a Share page from loading.
+- **Per-Note Paragraph Annotation Control**
+  - Added an author-only `段落註解` / Paragraph annotations switch to the published Share menu.
+  - Existing notes default to closed; the choice is persisted in KV note metadata and restored on reload.
+  - Unpublishing closes annotations without deleting any annotation records.
 - **Dedicated AI Translation and Bilingual Output**
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 

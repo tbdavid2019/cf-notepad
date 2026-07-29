@@ -696,6 +696,7 @@ ${getMarkdownCss()}
         autosave: ext.autosave === true && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
         publicIndex: ext.publicIndex === true,
+        annotationsEnabled: ext.annotationsEnabled === true,
         noteSettings: {
             width: ext.width || '',
             shareFont: ext.shareFont || '',
@@ -896,6 +897,9 @@ ${getMarkdownCss()}
             APP_STATE.noteSettings = { ...APP_STATE.noteSettings, ...nextSettings }
             if (Object.prototype.hasOwnProperty.call(nextSettings, 'autosave')) {
                 APP_STATE.autosave = nextSettings.autosave === true && APP_STATE.isPublished === true
+            }
+            if (Object.prototype.hasOwnProperty.call(nextSettings, 'annotationsEnabled')) {
+                APP_STATE.annotationsEnabled = nextSettings.annotationsEnabled === true
             }
             return payload
         }
@@ -1912,6 +1916,19 @@ ${getMarkdownCss()}
             button.setAttribute('aria-label', label)
         }
 
+        const syncAnnotationsEnabledButton = () => {
+            const button = document.querySelector('#annotations-enabled-btn')
+            if (!button) return
+            const enabled = APP_STATE.annotationsEnabled === true
+            button.dataset.annotationsEnabled = enabled ? 'true' : 'false'
+            button.textContent = getI18n(enabled ? 'annotationsOn' : 'annotationsOff')
+            button.classList.toggle('opt-button-accent', enabled)
+            button.setAttribute('aria-pressed', enabled ? 'true' : 'false')
+            const label = getI18n(enabled ? 'annotationsDisable' : 'annotationsEnable')
+            button.title = label
+            button.setAttribute('aria-label', label)
+        }
+
         function syncShareMenuUI() {
             const publishedMenu = document.querySelector('.share-menu-published')
             const unpublishedMenu = document.querySelector('.share-menu-unpublished')
@@ -1979,6 +1996,7 @@ ${getMarkdownCss()}
                     syncShareStateUI();
                     recordShareHistory('created', getCurrentShareUrl(), APP_STATE.title);
                     syncPublicIndexButton();
+                    syncAnnotationsEnabledButton();
                     if (!wasPublished) await promptEnableAutosave();
                     showShareModal(nextShareId);
                     return true;
@@ -2227,6 +2245,7 @@ ${getMarkdownCss()}
         const $embedModalCopyBtn = $embedModal?.querySelector('.embed-modal-copy-btn');
         const $embedModalCloseBtn = $embedModal?.querySelector('.embed-modal-close');
         const $publicIndexBtn = document.querySelector('#public-index-btn');
+        const $annotationsEnabledBtn = document.querySelector('#annotations-enabled-btn');
         const $unpublishBtn = document.querySelector('.unpublish-btn');
         const $sharePublishMenuBtn = document.querySelector('.share-publish-menu-btn');
         const $readonlyEditBtn = document.querySelector('#readonly-edit-btn');
@@ -2322,6 +2341,22 @@ ${getMarkdownCss()}
                     window.showToast(getI18n(nextValue ? 'publicIndexUpdatedOn' : 'publicIndexUpdatedOff'))
                 } catch (error) {
                     errHandle(error.message || error)
+                }
+            })
+        }
+        if ($annotationsEnabledBtn) {
+            syncAnnotationsEnabledButton()
+            $annotationsEnabledBtn.addEventListener('click', async () => {
+                const nextValue = APP_STATE.annotationsEnabled !== true
+                $annotationsEnabledBtn.disabled = true
+                try {
+                    await persistSetting({ annotationsEnabled: nextValue })
+                    syncAnnotationsEnabledButton()
+                    window.showToast(getI18n(nextValue ? 'annotationsUpdatedOn' : 'annotationsUpdatedOff'))
+                } catch (error) {
+                    errHandle(error.message || error)
+                } finally {
+                    $annotationsEnabledBtn.disabled = false
                 }
             })
         }

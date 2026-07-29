@@ -22,11 +22,12 @@ test('API writes persist a validated width and default it when omitted', () => {
     assert.match(indexSource, /updateMetadata\.width = normalizedWidth/)
 })
 
-test('setting route persists share, theme, width, share font, publicIndex, and autosave metadata', () => {
-    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content,\s*autosave\s*\}\s*=\s*await request\.json\(\)/)
+test('setting route persists share, theme, width, share font, publicIndex, autosave, and annotation metadata', () => {
+    assert.match(indexSource, /const\s+\{\s*share,\s*theme,\s*width,\s*shareFont,\s*publicIndex,\s*content,\s*autosave,\s*annotationsEnabled\s*\}\s*=\s*await request\.json\(\)/)
     assert.match(indexSource, /\.\.\.normalizedWidth !== undefined && \{ width: normalizedWidth \}/)
     assert.match(indexSource, /\.\.\.shareFont !== undefined && \{ shareFont \}/)
     assert.match(indexSource, /\.\.\.autosave !== undefined && \{ autosave: autosave === true \}/)
+    assert.match(indexSource, /\.\.\.annotationsEnabled !== undefined && \{ annotationsEnabled: annotationsEnabled === true \}/)
     assert.doesNotMatch(indexSource, /\.\.\.splitDirection !== undefined/)
     assert.doesNotMatch(indexSource, /\.\.\.previewDevice !== undefined/)
 })

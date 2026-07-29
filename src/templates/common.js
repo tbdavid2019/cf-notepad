@@ -156,7 +156,7 @@ export const SWITCHER = (text, open, className = '') => `
 <span class="footer-control-label">${text}</span>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount, annotationsEnabled }) => {
     const t = getLangText(lang)
     const effectiveWidth = width || DEFAULT_PREVIEW_WIDTH
     const showNoteHistory = noteHistoryEnabled === true && isEdit
@@ -215,6 +215,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     <div class="dropdown-item-toggle">
                                         <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
                                         <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
+                                    </div>
+                                    <div class="dropdown-item-toggle">
+                                        <span>${t.annotations}</span>
+                                        <button
+                                            type="button"
+                                            id="annotations-enabled-btn"
+                                            class="opt-button annotations-enabled-btn ${annotationsEnabled === true ? 'opt-button-accent' : ''}"
+                                            data-annotations-enabled="${annotationsEnabled === true ? 'true' : 'false'}"
+                                            aria-pressed="${annotationsEnabled === true ? 'true' : 'false'}"
+                                            title="${annotationsEnabled === true ? t.annotationsDisable : t.annotationsEnable}"
+                                        >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
                                     </div>
                                     <div class="dropdown-divider"></div>
                                     <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
