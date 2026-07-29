@@ -1652,6 +1652,7 @@ ${getMarkdownCss()}
 
         const $editorAiFormatBtn = document.querySelector('#editor-ai-format-btn')
         const $editorAiEditBtn = document.querySelector('#editor-ai-edit-btn')
+        const $editorAiTranslateBtn = document.querySelector('#editor-ai-translate-btn')
 
         const runAiAssistant = async mode => {
             if (!$textarea) return;
@@ -1663,9 +1664,22 @@ ${getMarkdownCss()}
             }
 
             const isEdit = mode === 'edit'
+            const isTranslate = mode === 'translate'
             const selectionStart = isEdit ? $textarea.selectionStart : 0
             const selectionEnd = isEdit ? $textarea.selectionEnd : 0
             const hasSelection = isEdit && selectionEnd > selectionStart
+            let targetLanguage = ''
+            let bilingual = false
+            if (isTranslate) {
+                const targetPrompt = APP_STATE.lang === 'zh-TW'
+                    ? '請輸入目標語言，例如：繁體中文、英文、日文'
+                    : 'Enter the target language, for example: Traditional Chinese, English, or Japanese'
+                targetLanguage = window.prompt(targetPrompt, APP_STATE.lang === 'zh-TW' ? '繁體中文' : 'English')
+                if (targetLanguage === null || !targetLanguage.trim()) return;
+                bilingual = window.confirm(APP_STATE.lang === 'zh-TW'
+                    ? '要保留原文並產生雙語版本嗎？\n選擇「確定」＝雙語；「取消」＝只翻譯。'
+                    : 'Keep the original and create a bilingual version?\nOK = bilingual; Cancel = translation only.')
+            }
             const instructionPrompt = isEdit
                 ? (APP_STATE.lang === 'zh-TW'
                     ? (hasSelection
@@ -1689,12 +1703,13 @@ ${getMarkdownCss()}
 
             if ($editorAiFormatBtn) $editorAiFormatBtn.disabled = true
             if ($editorAiEditBtn) $editorAiEditBtn.disabled = true
+            if ($editorAiTranslateBtn) $editorAiTranslateBtn.disabled = true
 
             try {
                 const res = await fetchJson('/' + encodeURIComponent(APP_STATE.path || '') + '/ai-format', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: rawText, mode, instruction, selectionStart, selectionEnd })
+                    body: JSON.stringify({ text: rawText, mode, instruction, selectionStart, selectionEnd, targetLanguage, bilingual })
                 }, 130000)
 
                 if (res.err === 0 && res.data?.result) {
@@ -1722,6 +1737,7 @@ ${getMarkdownCss()}
             } finally {
                 if ($editorAiFormatBtn) $editorAiFormatBtn.disabled = false
                 if ($editorAiEditBtn) $editorAiEditBtn.disabled = false
+                if ($editorAiTranslateBtn) $editorAiTranslateBtn.disabled = false
             }
         }
 
@@ -1730,6 +1746,9 @@ ${getMarkdownCss()}
         }
         if ($editorAiEditBtn) {
             $editorAiEditBtn.addEventListener('click', () => runAiAssistant('edit'))
+        }
+        if ($editorAiTranslateBtn) {
+            $editorAiTranslateBtn.addEventListener('click', () => runAiAssistant('translate'))
         }
 
         if ($textarea) {

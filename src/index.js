@@ -33,6 +33,7 @@ import {
 } from './note_history.mjs'
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
+import { AI_FORMAT_SYSTEM_PROMPT, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 
 // init
 const router = Router()
@@ -1650,7 +1651,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(40001, 'Invalid JSON body', { status: 400 })
     }
 
-    const { text, mode, instruction, selectionStart, selectionEnd } = json
+    const { text, mode, instruction, selectionStart, selectionEnd, targetLanguage, bilingual } = json
     if (!text || typeof text !== 'string') {
         return returnJSON(40002, 'Text content is required', { status: 400 })
     }
@@ -1658,12 +1659,17 @@ router.post('/:path/ai-format', async (request, { env }) => {
     const normalizedText = typeof text === 'string' ? text.replace(/\u0000/g, '') : ''
     const userInstruction = typeof instruction === 'string' ? instruction.replace(/\u0000/g, '').trim() : ''
 
-    if (mode !== 'format' && mode !== 'edit') {
+    if (mode !== 'format' && mode !== 'edit' && mode !== 'translate') {
         return returnJSON(40003, 'Unsupported AI mode', { status: 400 })
     }
 
     if (mode === 'edit' && !userInstruction) {
         return returnJSON(40004, 'Editing instructions are required', { status: 400 })
+    }
+
+    const translationTargetLanguage = normalizeTranslationTargetLanguage(targetLanguage)
+    if (mode === 'translate' && !translationTargetLanguage) {
+        return returnJSON(40005, 'A target language is required for translation', { status: 400 })
     }
 
     const hasSelection = mode === 'edit'
@@ -1672,7 +1678,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         && selectionStart >= 0
         && selectionEnd > selectionStart
         && selectionEnd <= normalizedText.length
-    const model = mode === 'edit' ? '@cf/openai/gpt-oss-120b' : '@cf/openai/gpt-oss-20b'
+    const model = mode === 'format' ? '@cf/openai/gpt-oss-20b' : '@cf/openai/gpt-oss-120b'
     const messages = [
         {
             role: 'system',
@@ -1680,7 +1686,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
                 ? 'You are a careful Markdown editing assistant. Rewrite only the selected text according to the user requirements. Use the surrounding text only as context. Return only the replacement text for the selection, with no markers, explanations, quotes, or unchanged surrounding text.'
                 : mode === 'edit'
                 ? 'You are a careful Markdown editing assistant. Apply the user requirements precisely, whether they request inserting a passage, editing part of the note, or refining the full note. Preserve all untouched content, facts, links, Markdown structure, and the original language unless explicitly asked otherwise. Return the complete edited note, not a summary or patch. Output only the final Markdown with no explanations.'
-                : 'You are a Markdown formatting assistant. Rewrite the full note into clean, readable Markdown. Preserve the original meaning and original language. Output only the final Markdown with no explanations.'
+                : mode === 'translate'
+                ? buildTranslationSystemPrompt({ targetLanguage: translationTargetLanguage, bilingual: bilingual === true })
+                : AI_FORMAT_SYSTEM_PROMPT
         },
         {
             role: 'user',
@@ -1697,8 +1705,10 @@ router.post('/:path/ai-format', async (request, { env }) => {
                 'Text after selection (context only):',
                 normalizedText.slice(selectionEnd),
             ].join('\n') : [
-                mode === 'edit' ? 'Task: edit this full note.' : 'Task: format this full note.',
-                userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: add headings, improve structure, clean paragraphs, and use lists when helpful.',
+                mode === 'edit' ? 'Task: edit this full note.' : mode === 'translate' ? 'Task: translate this full note.' : 'Task: format this full note only.',
+                mode === 'translate'
+                    ? `Target language: ${translationTargetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`
+                    : userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: improve Markdown structure only; do not alter prose or language.',
                 '',
                 'Full note:',
                 normalizedText,
@@ -1720,6 +1730,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
         console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
         const resultText = extractAiText(aiResponse)
         if (resultText) {
+            if (mode === 'format' && !preservesFormatLanguage(normalizedText, resultText)) {
+                return returnJSON(40006, 'AI formatting changed the document language. The original content was kept unchanged.', { status: 422 })
+            }
             return returnJSON(0, { result: resultText, scope: hasSelection ? 'selection' : 'document', modelUsed: model })
         }
         return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)

@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-07-29]
+### Added
+- **Dedicated AI Translation and Bilingual Output**
+  - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
+
+### Changed
+- **Format-Only AI Formatting**
+  - AI formatting now has an explicit format-only policy: it may improve Markdown structure, whitespace, headings, and lists, but must preserve the source language, prose, links, code, and meaning.
+  - Pure-English documents reject a formatting response that introduces Chinese characters, keeping the original text unchanged instead of applying an unintended translation.
+
+### Documentation
+- Updated the Traditional Chinese and English README descriptions for the separated formatting and translation workflows.
+
 ## [2026-07-28]
 ### Changed
 - **Bounded 16:9 Presentation Canvas**

@@ -109,6 +109,7 @@ export const EDITOR_TOOLBAR = lang => {
     <div class="markdown-editor-toolbar-wrap">
     <div class="markdown-editor-toolbar" data-markdown-toolbar data-language="${lang}" role="toolbar" aria-label="${label}">
         <button type="button" id="editor-ai-edit-btn" class="markdown-toolbar-button markdown-toolbar-ai-edit" data-ai-action="edit" data-tooltip="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}" title="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}" aria-label="${isZh ? 'AI 輔助編輯' : 'AI Edit Document'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">${SVG_ICONS.magic}</span><span class="markdown-toolbar-ai-label">${isZh ? 'AI 編輯' : 'AI Edit'}</span></button>
+        <button type="button" id="editor-ai-translate-btn" class="markdown-toolbar-button markdown-toolbar-ai-edit" data-ai-action="translate" data-tooltip="${isZh ? 'AI 翻譯／雙語' : 'AI Translate / Bilingual'}" title="${isZh ? 'AI 翻譯／雙語' : 'AI Translate / Bilingual'}" aria-label="${isZh ? 'AI 翻譯／雙語' : 'AI Translate / Bilingual'}"><span class="markdown-toolbar-glyph is-ai" aria-hidden="true">${SVG_ICONS.languages}</span><span class="markdown-toolbar-ai-label">${isZh ? 'AI 翻譯' : 'AI Translate'}</span></button>
         <span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>
         ${EDITOR_TOOLBAR_COMMANDS.map(item => item.separator
             ? '<span class="markdown-toolbar-separator" role="separator" aria-hidden="true"></span>'
