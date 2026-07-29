@@ -44,9 +44,12 @@ test('auth helpers read secret and salt at runtime instead of import time', () =
 test('readonly direct note footer opens password prompt for edit lock', () => {
     assert.match(commonTemplateSource, /id="readonly-edit-btn"/)
     assert.match(commonTemplateSource, /class="modal password-modal"/)
+    assert.match(commonTemplateSource, /<form class="password-modal-form"/)
     assert.match(commonTemplateSource, /<input type="password" class="password-modal-input"/)
     assert.match(commonTemplateSource, /authPath\s*\? `<button type="button" id="readonly-edit-btn"/)
     assert.match(baseTemplateSource, /const openPasswordModal = \(\{ title, initialValue = '', allowEmpty = false \} = \{\}\) => new Promise/)
+    assert.match(baseTemplateSource, /password-modal-form/)
+    assert.match(baseTemplateSource, /form\.addEventListener\('submit', onSubmit\)/)
     assert.match(baseTemplateSource, /\$readonlyEditBtn\.addEventListener\('click', \(\) => passwdPrompt\(\)\)/)
     assert.match(baseTemplateSource, /res\.data\.role === 'edit' && APP_STATE\.sharePath/)
 })

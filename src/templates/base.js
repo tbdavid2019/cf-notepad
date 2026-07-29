@@ -919,6 +919,7 @@ ${getMarkdownCss()}
 
     const openPasswordModal = ({ title, initialValue = '', allowEmpty = false } = {}) => new Promise(resolve => {
         const modal = document.querySelector('.password-modal')
+        const form = modal ? modal.querySelector('.password-modal-form') : null
         const input = modal ? modal.querySelector('.password-modal-input') : null
         const titleNode = modal ? modal.querySelector('#password-modal-title') : null
         const messageNode = modal ? modal.querySelector('.password-modal-message') : null
@@ -927,7 +928,7 @@ ${getMarkdownCss()}
         const closeBtn = modal ? modal.querySelector('.password-modal-close') : null
         const mask = modal ? modal.querySelector('.modal-mask') : null
 
-        if (!modal || !input || !titleNode || !confirmBtn || !cancelBtn || !closeBtn || !mask) {
+        if (!modal || !form || !input || !titleNode || !confirmBtn || !cancelBtn || !closeBtn || !mask) {
             resolve(window.prompt(title || getI18n('pepw')))
             return
         }
@@ -939,7 +940,7 @@ ${getMarkdownCss()}
             modal.style.display = 'none'
             input.value = ''
             input.removeEventListener('keydown', onKeyDown)
-            confirmBtn.removeEventListener('click', onConfirm)
+            form.removeEventListener('submit', onSubmit)
             cancelBtn.removeEventListener('click', onCancel)
             closeBtn.removeEventListener('click', onCancel)
             mask.removeEventListener('click', onCancel)
@@ -957,6 +958,10 @@ ${getMarkdownCss()}
         }
 
         const onCancel = () => cleanup(null)
+        const onSubmit = event => {
+            event.preventDefault()
+            onConfirm()
+        }
         const onKeyDown = event => {
             if (event.key === 'Enter') {
                 event.preventDefault()
@@ -975,7 +980,7 @@ ${getMarkdownCss()}
         input.value = initialValue
         modal.style.display = 'block'
         input.addEventListener('keydown', onKeyDown)
-        confirmBtn.addEventListener('click', onConfirm)
+        form.addEventListener('submit', onSubmit)
         cancelBtn.addEventListener('click', onCancel)
         closeBtn.addEventListener('click', onCancel)
         mask.addEventListener('click', onCancel)
@@ -2822,7 +2827,6 @@ ${getMarkdownCss()}
     \u003cscript\u003e
     // --- Presentation Mode Engine (Final Robust Version) ---
     (function() {
-        console.log('Presentation Engine Loading...');
         var _loaded = false;
         var _reveal = null;
         var _autoStarted = false;

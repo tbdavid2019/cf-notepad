@@ -30,6 +30,10 @@ test('presentation uses a bounded 16:9 canvas with an internal safe area', () =>
     assert.match(baseCssSource, /#presentation-container \.reveal \.slides \{[\s\S]*border: 1px solid/)
 })
 
+test('presentation engine does not leave a production debug log in the console', () => {
+    assert.doesNotMatch(baseTemplateSource, /Presentation Engine Loading/)
+})
+
 test('presentation preserves readable text and marks content that still overflows', () => {
     assert.match(baseTemplateSource, /var minimumFontSize = 22/)
     assert.match(baseTemplateSource, /presentation-slide-overflow/)

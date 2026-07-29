@@ -519,14 +519,16 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
 <div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
     <div class="modal-mask"></div>
     <div class="password-modal-content">
-        <button type="button" class="close-btn password-modal-close" aria-label="${t.passwordCancel}">x</button>
-        <h2 id="password-modal-title"></h2>
-        <p class="password-modal-message"></p>
-        <input type="password" class="password-modal-input" autocomplete="current-password" />
-        <div class="password-modal-actions">
-            <button type="button" class="opt-button password-modal-cancel">${t.passwordCancel}</button>
-            <button type="button" class="opt-button opt-button-accent password-modal-confirm">${t.passwordConfirm}</button>
-        </div>
+        <form class="password-modal-form" novalidate>
+            <button type="button" class="close-btn password-modal-close" aria-label="${t.passwordCancel}">x</button>
+            <h2 id="password-modal-title"></h2>
+            <p class="password-modal-message"></p>
+            <input type="password" class="password-modal-input" autocomplete="current-password" />
+            <div class="password-modal-actions">
+                <button type="button" class="opt-button password-modal-cancel">${t.passwordCancel}</button>
+                <button type="submit" class="opt-button opt-button-accent password-modal-confirm">${t.passwordConfirm}</button>
+            </div>
+        </form>
     </div>
 </div>
 <div class="modal app-dialog-modal" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message">
