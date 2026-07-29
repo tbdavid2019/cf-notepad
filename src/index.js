@@ -35,7 +35,16 @@ import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNot
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 import { getNoteStatsDb, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
-import { computeSourceRevision, decodeAnnotationCursor, getAnnotationDb, listAnnotationThreads } from './annotation_data.mjs'
+import {
+    addAnnotationMessage,
+    computeSourceRevision,
+    createAnnotationThread,
+    decodeAnnotationCursor,
+    getAnnotationDb,
+    listAnnotationThreads,
+    validateAnnotationDraft,
+    validateAnnotationMessage,
+} from './annotation_data.mjs'
 
 // init
 const router = Router()
@@ -845,6 +854,123 @@ router.get('/api/shares/:shareId/annotations', async request => {
         }, { 'Cache-Control': 'no-store' })
     } catch (error) {
         console.error('Annotation List Error:', error)
+        return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+    }
+})
+
+async function getWritableAnnotationContext(request) {
+    const requestOrigin = new URL(request.url).origin
+    if (request.headers.get('Origin') !== requestOrigin) {
+        return {
+            response: returnJSON(403, 'Annotation write origin rejected', { status: 403 }),
+        }
+    }
+
+    const { shareId } = request.params
+    const path = await getShareNamespace().get(shareId)
+    if (!path) {
+        return {
+            response: returnJSON(404, 'Share not found', { status: 404 }),
+        }
+    }
+
+    const { value, metadata } = await queryNote(path)
+    if (metadata.share !== true) {
+        return {
+            response: returnJSON(404, 'Share not found', { status: 404 }),
+        }
+    }
+
+    if (metadata.vpw) {
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+        const { valid } = await checkAuth(cookie, path)
+        if (!valid) {
+            return {
+                response: returnJSON(401, 'Share password required', { status: 401 }),
+            }
+        }
+    }
+
+    if (metadata.annotationsEnabled !== true) {
+        return {
+            response: returnJSON(403, 'Annotations are closed', { status: 403 }),
+        }
+    }
+
+    const db = getAnnotationDb()
+    if (!db) {
+        return {
+            response: returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 }),
+        }
+    }
+
+    return { db, metadata, path, value }
+}
+
+async function readAnnotationJson(request) {
+    const contentType = request.headers.get('Content-Type') || ''
+    if (!contentType.toLowerCase().startsWith('application/json')) return null
+
+    try {
+        return await request.json()
+    } catch {
+        return null
+    }
+}
+
+router.post('/api/shares/:shareId/annotations', async request => {
+    const context = await getWritableAnnotationContext(request)
+    if (context.response) return context.response
+
+    const input = await readAnnotationJson(request)
+    const draft = validateAnnotationDraft(input)
+    if (!draft) return returnJSON(400, 'Invalid annotation', { status: 400 })
+
+    const currentRevision = await computeSourceRevision(context.value)
+    if (draft.anchor.sourceRevision !== currentRevision) {
+        return returnJSON(409, 'Source revision changed', { status: 409 })
+    }
+
+    try {
+        const thread = await createAnnotationThread(context.db, context.path, draft)
+        if (!thread) return returnJSON(400, 'Invalid annotation', { status: 400 })
+
+        return returnJSON(0, { thread }, {
+            status: 201,
+            'Cache-Control': 'no-store',
+        })
+    } catch (error) {
+        console.error('Annotation Create Error:', error)
+        return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+    }
+})
+
+router.post('/api/shares/:shareId/annotations/:threadId/messages', async request => {
+    const context = await getWritableAnnotationContext(request)
+    if (context.response) return context.response
+
+    const input = await readAnnotationJson(request)
+    const reply = validateAnnotationMessage(input)
+    if (!reply) return returnJSON(400, 'Invalid annotation reply', { status: 400 })
+
+    try {
+        const message = await addAnnotationMessage(
+            context.db,
+            context.path,
+            request.params.threadId,
+            reply,
+        )
+        if (!message) return returnJSON(404, 'Annotation thread not found', { status: 404 })
+
+        return returnJSON(0, {
+            threadId: request.params.threadId,
+            message,
+        }, {
+            status: 201,
+            'Cache-Control': 'no-store',
+        })
+    } catch (error) {
+        console.error('Annotation Reply Error:', error)
         return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
     }
 })

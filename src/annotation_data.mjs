@@ -1,6 +1,10 @@
 const DEFAULT_ANNOTATION_PAGE_SIZE = 20
 const MAX_ANNOTATION_PAGE_SIZE = 25
 const MAX_ANNOTATION_MESSAGES_PER_THREAD = 50
+const MAX_ANNOTATION_AUTHOR_LENGTH = 40
+const MAX_ANNOTATION_BODY_LENGTH = 2000
+const MAX_ANNOTATION_QUOTE_LENGTH = 1000
+const MAX_ANNOTATION_CONTEXT_LENGTH = 160
 
 export function getAnnotationDb() {
     return globalThis?.APP_DB || globalThis?.NOTE_HISTORY_DB || null
@@ -75,6 +79,180 @@ function presentThread(row, messages, messageCount) {
         messageCount,
         hasMoreMessages: messageCount > messages.length,
         messages,
+    }
+}
+
+function normalizeAnnotationMessageInput(input) {
+    const authorName = typeof input?.authorName === 'string' ? input.authorName.trim() : ''
+    const body = typeof input?.body === 'string' ? input.body.trim() : ''
+
+    if (
+        authorName.length < 1
+        || authorName.length > MAX_ANNOTATION_AUTHOR_LENGTH
+        || body.length < 1
+        || body.length > MAX_ANNOTATION_BODY_LENGTH
+    ) {
+        return null
+    }
+
+    return { authorName, body }
+}
+
+export function validateAnnotationMessage(input) {
+    return normalizeAnnotationMessageInput(input)
+}
+
+export function validateAnnotationDraft(input) {
+    const message = normalizeAnnotationMessageInput(input)
+    const anchor = input?.anchor
+    if (!message || !anchor) return null
+
+    const exact = typeof anchor.exact === 'string' ? anchor.exact : ''
+    const prefix = typeof anchor.prefix === 'string' ? anchor.prefix : ''
+    const suffix = typeof anchor.suffix === 'string' ? anchor.suffix : ''
+    const startOffset = anchor.startOffset
+    const endOffset = anchor.endOffset
+    const sourceRevision = typeof anchor.sourceRevision === 'string' ? anchor.sourceRevision : ''
+
+    if (
+        exact.trim().length < 1
+        || exact.length > MAX_ANNOTATION_QUOTE_LENGTH
+        || prefix.length > MAX_ANNOTATION_CONTEXT_LENGTH
+        || suffix.length > MAX_ANNOTATION_CONTEXT_LENGTH
+        || !Number.isSafeInteger(startOffset)
+        || !Number.isSafeInteger(endOffset)
+        || startOffset < 0
+        || endOffset <= startOffset
+        || endOffset - startOffset !== exact.length
+        || !/^[a-f0-9]{64}$/.test(sourceRevision)
+    ) {
+        return null
+    }
+
+    return {
+        anchor: {
+            exact,
+            prefix,
+            suffix,
+            startOffset,
+            endOffset,
+            sourceRevision,
+        },
+        ...message,
+    }
+}
+
+export async function createAnnotationThread(db, path, draft, {
+    nowSeconds = Math.floor(Date.now() / 1000),
+    createId = () => crypto.randomUUID(),
+} = {}) {
+    if (!db || typeof db.batch !== 'function' || typeof path !== 'string' || !path || !draft?.anchor) return null
+
+    const threadId = createId()
+    const messageId = createId()
+    const { anchor, authorName, body } = draft
+    await db.batch([
+        db.prepare(`
+            INSERT INTO annotation_threads (
+                id,
+                path,
+                quote_exact,
+                quote_prefix,
+                quote_suffix,
+                start_offset,
+                end_offset,
+                source_revision,
+                created_at,
+                updated_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `).bind(
+            threadId,
+            path,
+            anchor.exact,
+            anchor.prefix,
+            anchor.suffix,
+            anchor.startOffset,
+            anchor.endOffset,
+            anchor.sourceRevision,
+            nowSeconds,
+            nowSeconds,
+        ),
+        db.prepare(`
+            INSERT INTO annotation_messages (id, thread_id, author_name, body, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        `).bind(messageId, threadId, authorName, body, nowSeconds),
+    ])
+
+    const message = {
+        id: messageId,
+        authorName,
+        body,
+        createdAt: nowSeconds,
+    }
+
+    return {
+        id: threadId,
+        anchor,
+        isResolved: false,
+        createdAt: nowSeconds,
+        updatedAt: nowSeconds,
+        messageCount: 1,
+        hasMoreMessages: false,
+        messages: [message],
+    }
+}
+
+export async function addAnnotationMessage(db, path, threadId, input, {
+    nowSeconds = Math.floor(Date.now() / 1000),
+    createId = () => crypto.randomUUID(),
+} = {}) {
+    const message = normalizeAnnotationMessageInput(input)
+    if (
+        !db
+        || typeof db.batch !== 'function'
+        || typeof path !== 'string'
+        || !path
+        || typeof threadId !== 'string'
+        || !/^[A-Za-z0-9_-]{1,80}$/.test(threadId)
+        || !message
+    ) {
+        return null
+    }
+
+    const messageId = createId()
+    const results = await db.batch([
+        db.prepare(`
+            INSERT INTO annotation_messages (id, thread_id, author_name, body, created_at)
+            SELECT ?, id, ?, ?, ?
+            FROM annotation_threads
+            WHERE id = ?
+              AND path = ?
+              AND is_resolved = 0
+        `).bind(
+            messageId,
+            message.authorName,
+            message.body,
+            nowSeconds,
+            threadId,
+            path,
+        ),
+        db.prepare(`
+            UPDATE annotation_threads
+            SET updated_at = ?
+            WHERE id = ?
+              AND path = ?
+              AND changes() = 1
+        `).bind(nowSeconds, threadId, path),
+    ])
+
+    if (Number(results?.[0]?.meta?.changes ?? 0) !== 1) return null
+
+    return {
+        id: messageId,
+        authorName: message.authorName,
+        body: message.body,
+        createdAt: nowSeconds,
     }
 }
 
@@ -165,6 +343,10 @@ export async function listAnnotationThreads(db, path, { cursor = null, limit } =
 
 export {
     DEFAULT_ANNOTATION_PAGE_SIZE,
+    MAX_ANNOTATION_AUTHOR_LENGTH,
+    MAX_ANNOTATION_BODY_LENGTH,
+    MAX_ANNOTATION_CONTEXT_LENGTH,
     MAX_ANNOTATION_MESSAGES_PER_THREAD,
     MAX_ANNOTATION_PAGE_SIZE,
+    MAX_ANNOTATION_QUOTE_LENGTH,
 }

@@ -14,6 +14,10 @@
   - Added independent D1 thread and message tables that retain the selected quote, surrounding context, source offsets, and source revision even when the article changes.
   - Added a paginated Share annotation read API with opaque cursors and bounded thread/message results.
   - When an author closes annotations, retained discussions are hidden rather than deleted.
+- **Paragraph Annotation Write API**
+  - Added same-origin Share APIs for creating a text-anchored discussion and replying to an existing thread.
+  - Enforced author, comment, quote, context, offset, and source-revision validation before writing parameterized D1 transactions.
+  - Preserved Share view-password checks and rejected new threads when the article changed after text selection.
 - **Dedicated AI Translation and Bilingual Output**
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 
