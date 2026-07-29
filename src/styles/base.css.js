@@ -504,22 +504,32 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     min-width: auto;
 }
 
-.selection-ai-button {
+.selection-ai-menu {
     position: fixed;
     z-index: 20010;
     display: none;
-    padding: 7px 11px;
+    align-items: center;
+    gap: 5px;
+    padding: 4px;
     border: 1px solid #b95f42;
-    border-radius: 7px;
+    border-radius: 8px;
     background: #24221f;
-    color: #fff;
     box-shadow: 0 8px 24px rgba(37, 35, 32, 0.24);
+}
+.selection-ai-menu.visible {
+    display: inline-flex;
+}
+.selection-ai-button {
+    appearance: none;
+    border: 0;
+    padding: 7px 11px;
+    border-radius: 5px;
+    background: transparent;
+    color: #fff;
     font-size: 12px;
     font-weight: 700;
+    line-height: 1;
     cursor: pointer;
-}
-.selection-ai-button.visible {
-    display: block;
 }
 .selection-ai-button:hover {
     background: #cc785c;

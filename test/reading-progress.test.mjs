@@ -34,6 +34,11 @@ test('uses GenJyuu Gothic for Chinese while preserving the existing Latin font s
     assert.match(baseCss, /--editor-font-family: "GenJyuu Gothic CJK", "Maple Mono"/)
 })
 
+test('keeps the editor preview on the CJK-aware font stack after a theme is applied', () => {
+    assert.match(baseTemplate, /body:not\(\.share-view\) #preview-md\.markdown-body,[\s\S]*font-family: var\(--editor-font-family\);/)
+    assert.match(baseTemplate, /body:not\(\.share-view\) #preview-md\.markdown-body :is\([\s\S]*font-family: var\(--editor-font-family\);/)
+})
+
 test('updates the rendered reading progress widget as the preview scrolls', () => {
     const dom = new JSDOM('<html lang="zh-Hant-TW"><body><div class="preview-pane"><div id="preview-md"></div></div></body></html>')
     const preview = dom.window.document.querySelector('#preview-md')

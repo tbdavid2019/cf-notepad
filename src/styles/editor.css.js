@@ -133,32 +133,19 @@ export const getEditorCss = () => `
 }
 
 .markdown-toolbar-button .svg-icon {
-    width: 14px;
-    height: 14px;
+    display: block;
+    flex: 0 0 16px;
+    width: 16px;
+    height: 16px;
     stroke-width: 2.2;
-}
-
-.markdown-toolbar-ai-edit {
-    flex-basis: auto;
-    width: auto;
-    min-width: 68px;
-    gap: 4px;
-    padding: 0 7px;
-    color: var(--toolbar-accent, #c8654b);
-}
-
-.markdown-toolbar-ai-label {
-    font-size: 11px;
-    font-weight: 700;
-    line-height: 1;
-    white-space: nowrap;
 }
 
 .markdown-toolbar-glyph {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 14px;
+    min-width: 16px;
+    min-height: 16px;
     font-size: 13px;
     line-height: 1;
     white-space: nowrap;
@@ -246,11 +233,6 @@ textarea#contents {
         flex: 0 0 24px !important;
         width: 24px !important;
         height: 24px !important;
-    }
-    .markdown-toolbar-ai-edit {
-        flex-basis: auto !important;
-        width: auto !important;
-        min-width: 68px;
     }
     .markdown-toolbar-separator {
         display: none;

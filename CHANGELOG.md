@@ -10,6 +10,10 @@
   - AI formatting now has an explicit format-only policy: it may improve Markdown structure, whitespace, headings, and lists, but must preserve the source language, prose, links, code, and meaning.
   - Pure-English documents reject a formatting response that introduces Chinese characters, keeping the original text unchanged instead of applying an unintended translation.
   - Fixed an editor-script syntax error that had stopped Markdown previews from rendering. The three AI controls are now adjacent icon-only buttons, and formatting or translation applies only to a selected fragment when one is selected.
+  - The selection shortcut now exposes `排版` / Format, `AI 編輯` / AI Edit, and `翻譯` / Translate, all scoped to the selected fragment. Removed a stale wide-button style so the three toolbar icons use consistent sizing and spacing.
+- **Edit Preview Typography and Icon Safety**
+  - The edit preview reapplies the CJK-aware GenJyuu/Maple font stack after a theme stylesheet loads, so Chinese preview text no longer falls back to a theme font.
+  - Replaced the invalid footer GitHub SVG path with a browser-safe 24px icon.
 
 ### Documentation
 - Updated the Traditional Chinese and English README descriptions for the separated formatting and translation workflows.

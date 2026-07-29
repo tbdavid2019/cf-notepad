@@ -107,6 +107,12 @@ test('footer skill link points to the built-in well-known skill endpoint', () =>
     assert.doesNotMatch(commonTemplateSource, /github\.com\/tbdavid2019\/cf-notepad\/blob\/main\/skills\/SKILL\.md/)
 })
 
+test('footer uses the shared, browser-safe GitHub SVG icon', () => {
+    assert.match(commonTemplateSource, /github: `<svg class="svg-icon" viewBox="0 0 24 24"/)
+    assert.match(commonTemplateSource, /\$\{SVG_ICONS\.github\}/)
+    assert.doesNotMatch(commonTemplateSource, /447\.3-447\.3z/)
+})
+
 test('footer uses full theme labels and descriptive width options', () => {
     assert.match(commonTemplateSource, /THEME_OPTION_LABELS/)
     assert.match(commonTemplateSource, /'catppuccin-macchiato': \{ 'zh-TW': '柔和暗色', 'en-US': 'Soft dark' \}/)
@@ -199,9 +205,13 @@ test('editor toolbar exposes AI controls without duplicating them in the footer'
     assert.match(indexSource, /const hasSelection = \(mode === 'format' \|\| mode === 'edit' \|\| mode === 'translate'\)/)
     assert.match(indexSource, /preservesFormatLanguage\(formatSource, resultText\)/)
     assert.match(baseTemplateSource, /rawText\.slice\(0, selectionStart\) \+ res\.data\.result \+ rawText\.slice\(selectionEnd\)/)
-    assert.match(baseTemplateSource, /selectionAiButton\.className = 'selection-ai-button'/)
-    assert.match(baseTemplateSource, /\$textarea\.addEventListener\('mouseup', showSelectionAiButton\)/)
-    assert.match(baseTemplateSource, /runAiAssistant\('edit'\)/)
+    assert.match(baseTemplateSource, /const selectionAiActions = \[/)
+    assert.match(baseTemplateSource, /mode: 'format'/)
+    assert.match(baseTemplateSource, /mode: 'edit'/)
+    assert.match(baseTemplateSource, /mode: 'translate'/)
+    assert.match(baseTemplateSource, /selectionAiMenu\.className = 'selection-ai-menu'/)
+    assert.match(baseTemplateSource, /\$textarea\.addEventListener\('mouseup', showSelectionAiMenu\)/)
+    assert.match(baseTemplateSource, /runAiAssistant\(mode\)/)
     assert.match(indexSource, /reasoning_effort: 'low'/)
     assert.match(indexSource, /max_completion_tokens: 8192/)
     assert.match(indexSource, /\}, 120000\)/)

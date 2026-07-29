@@ -141,6 +141,23 @@ ${getMarkdownCss()}
             width: 100%;
         }
 
+        /* Themes may set their own font-family.  In the edit preview, keep the
+           same CJK-aware stack as the Markdown editor after the theme loads. */
+        body:not(.share-view) #preview-md.markdown-body,
+        body:not(.share-view) #preview-plain.markdown-body,
+        body:not(.share-view) #preview-md.markdown-body :is(
+            p, li, dd, dt, blockquote, strong, b, em, i, del, s, strike, mark, small,
+            span, a, figcaption, summary, table, thead, tbody, tfoot, tr, th, td,
+            ul, ol, dl, h1, h2, h3, h4, h5, h6, code, pre
+        ),
+        body:not(.share-view) #preview-plain.markdown-body :is(
+            p, li, dd, dt, blockquote, strong, b, em, i, del, s, strike, mark, small,
+            span, a, figcaption, summary, table, thead, tbody, tfoot, tr, th, td,
+            ul, ol, dl, h1, h2, h3, h4, h5, h6, code, pre
+        ) {
+            font-family: var(--editor-font-family);
+        }
+
         body.share-view #preview-md.markdown-body,
         body.share-view #preview-plain.markdown-body {
             font-size: 16px;
@@ -1753,39 +1770,63 @@ ${getMarkdownCss()}
         }
 
         if ($textarea) {
-            const selectionAiButton = document.createElement('button')
-            selectionAiButton.type = 'button'
-            selectionAiButton.className = 'selection-ai-button'
-            selectionAiButton.textContent = APP_STATE.lang === 'zh-TW' ? 'AI 編輯' : 'AI Edit'
-            selectionAiButton.setAttribute('aria-label', APP_STATE.lang === 'zh-TW' ? '使用 AI 編輯圈選文字' : 'Edit selected text with AI')
-            document.body.appendChild(selectionAiButton)
+            const selectionAiActions = [
+                {
+                    mode: 'format',
+                    label: APP_STATE.lang === 'zh-TW' ? '排版' : 'Format',
+                    ariaLabel: APP_STATE.lang === 'zh-TW' ? '使用 AI 排版圈選文字' : 'Format selected text with AI',
+                },
+                {
+                    mode: 'edit',
+                    label: APP_STATE.lang === 'zh-TW' ? 'AI 編輯' : 'AI Edit',
+                    ariaLabel: APP_STATE.lang === 'zh-TW' ? '使用 AI 編輯圈選文字' : 'Edit selected text with AI',
+                },
+                {
+                    mode: 'translate',
+                    label: APP_STATE.lang === 'zh-TW' ? '翻譯' : 'Translate',
+                    ariaLabel: APP_STATE.lang === 'zh-TW' ? '使用 AI 翻譯圈選文字' : 'Translate selected text with AI',
+                },
+            ]
+            const selectionAiMenu = document.createElement('div')
+            selectionAiMenu.className = 'selection-ai-menu'
+            selectionAiMenu.setAttribute('role', 'toolbar')
+            selectionAiMenu.setAttribute('aria-label', APP_STATE.lang === 'zh-TW' ? '圈選文字 AI 工具' : 'Selected text AI tools')
+            selectionAiActions.forEach(({ mode, label, ariaLabel }) => {
+                const button = document.createElement('button')
+                button.type = 'button'
+                button.className = 'selection-ai-button'
+                button.textContent = label
+                button.setAttribute('aria-label', ariaLabel)
+                button.addEventListener('mousedown', event => event.preventDefault())
+                button.addEventListener('click', () => {
+                    hideSelectionAiMenu()
+                    runAiAssistant(mode)
+                })
+                selectionAiMenu.appendChild(button)
+            })
+            document.body.appendChild(selectionAiMenu)
 
-            const hideSelectionAiButton = () => selectionAiButton.classList.remove('visible')
-            const showSelectionAiButton = event => {
+            const hideSelectionAiMenu = () => selectionAiMenu.classList.remove('visible')
+            const showSelectionAiMenu = event => {
                 if ($textarea.selectionEnd <= $textarea.selectionStart) {
-                    hideSelectionAiButton()
+                    hideSelectionAiMenu()
                     return
                 }
                 const editorRect = $textarea.getBoundingClientRect()
-                const left = event?.clientX || editorRect.right - 90
+                const left = event?.clientX || editorRect.right - 180
                 const top = event?.clientY || editorRect.top + 16
-                selectionAiButton.style.left = Math.min(window.innerWidth - 100, Math.max(8, left + 10)) + 'px'
-                selectionAiButton.style.top = Math.min(window.innerHeight - 48, Math.max(8, top - 42)) + 'px'
-                selectionAiButton.classList.add('visible')
+                selectionAiMenu.style.left = Math.min(window.innerWidth - 210, Math.max(8, left + 10)) + 'px'
+                selectionAiMenu.style.top = Math.min(window.innerHeight - 48, Math.max(8, top - 42)) + 'px'
+                selectionAiMenu.classList.add('visible')
             }
 
-            selectionAiButton.addEventListener('mousedown', event => event.preventDefault())
-            selectionAiButton.addEventListener('click', () => {
-                hideSelectionAiButton()
-                runAiAssistant('edit')
-            })
-            $textarea.addEventListener('mouseup', showSelectionAiButton)
+            $textarea.addEventListener('mouseup', showSelectionAiMenu)
             $textarea.addEventListener('keyup', event => {
-                if (event.shiftKey) showSelectionAiButton()
+                if (event.shiftKey) showSelectionAiMenu()
             })
-            $textarea.addEventListener('input', hideSelectionAiButton)
-            $textarea.addEventListener('scroll', hideSelectionAiButton, { passive: true })
-            window.addEventListener('resize', hideSelectionAiButton)
+            $textarea.addEventListener('input', hideSelectionAiMenu)
+            $textarea.addEventListener('scroll', hideSelectionAiMenu, { passive: true })
+            window.addEventListener('resize', hideSelectionAiMenu)
         }
 
         if ($importMdBtn && $importMdInput && $textarea) {
