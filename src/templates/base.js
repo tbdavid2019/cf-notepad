@@ -25,6 +25,30 @@ const escapeHtml = value => String(value || '')
 
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
+export const resolvePageTheme = ({
+    isEdit = false,
+    storedTheme = '',
+    themes = THEMES,
+    random = Math.random,
+} = {}) => {
+    const themeNames = Object.keys(themes)
+    const fallbackTheme = Object.prototype.hasOwnProperty.call(themes, 'claude-canvas')
+        ? 'claude-canvas'
+        : (themeNames[0] || '')
+
+    if (!isEdit) {
+        return Object.prototype.hasOwnProperty.call(themes, storedTheme)
+            ? storedTheme
+            : fallbackTheme
+    }
+
+    const randomValue = Number(random())
+    const randomIndex = Number.isFinite(randomValue)
+        ? Math.min(themeNames.length - 1, Math.max(0, Math.floor(randomValue * themeNames.length)))
+        : 0
+    return themeNames[randomIndex] || fallbackTheme
+}
+
 const PUBLISH_NUDGE_MODAL = lang => {
     const t = getLangText(lang)
     return `
@@ -50,6 +74,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
+    const pageTheme = resolvePageTheme({ isEdit, storedTheme: ext.theme })
     const annotationsEnabled = resolveAnnotationsEnabled(ext)
     const annotationsUiEnabled = isSharePage && !isEmbed && annotationsEnabled
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
@@ -135,7 +160,7 @@ ${getBaseCss()}
 ${getEditorCss()}
 ${getMarkdownCss()}
     </style>
-    <style id="theme-style">${THEMES[ext.theme || 'claude-canvas'] || ''}</style>
+    <style id="theme-style">${THEMES[pageTheme] || ''}</style>
     <style>
         #preview-md.markdown-body,
         #preview-plain.markdown-body {
@@ -276,7 +301,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme })}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}

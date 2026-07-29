@@ -26,6 +26,9 @@
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 
 ### Changed
+- **Random Theme on Every Edit**
+  - Each Edit page render now picks one theme at random from the complete bundled theme registry and keeps the selector synchronized with the preview.
+  - The random preview does not write KV merely by opening the editor; Share pages retain their persisted article theme until the author explicitly chooses another theme.
 - **Annotations Enabled by Default**
   - Existing published notes without an annotation preference now expose paragraph annotations automatically, without a KV migration.
   - New and republished notes start with annotations enabled, while notes explicitly disabled by their authors remain closed.
