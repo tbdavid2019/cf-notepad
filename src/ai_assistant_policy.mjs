@@ -21,11 +21,12 @@ export const preservesFormatLanguage = (source, result) => {
     return HAN_CHARACTER.test(sourceText) || !HAN_CHARACTER.test(resultText)
 }
 
-export const buildTranslationSystemPrompt = ({ targetLanguage, bilingual }) => {
+export const buildTranslationSystemPrompt = ({ targetLanguage, bilingual, selectionOnly = false }) => {
     const target = String(targetLanguage || '').trim()
+    const subject = selectionOnly ? 'selected Markdown only' : 'full note'
     const outputMode = bilingual
-        ? 'Create a bilingual document: keep every original Markdown block, then place its translation in the requested target language directly after it. Preserve links, code blocks, and Markdown structure.'
-        : 'Translate the full note into the requested target language. Preserve links, code blocks, facts, and Markdown structure.'
+        ? `Create a bilingual document for the ${subject}: keep every original Markdown block, then place its translation in the requested target language directly after it. Preserve links, code blocks, and Markdown structure.`
+        : `Translate the ${subject} into the requested target language. Preserve links, code blocks, facts, and Markdown structure.`
 
     return [
         'You are a careful Markdown translation assistant.',

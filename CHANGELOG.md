@@ -9,6 +9,7 @@
 - **Format-Only AI Formatting**
   - AI formatting now has an explicit format-only policy: it may improve Markdown structure, whitespace, headings, and lists, but must preserve the source language, prose, links, code, and meaning.
   - Pure-English documents reject a formatting response that introduces Chinese characters, keeping the original text unchanged instead of applying an unintended translation.
+  - Fixed an editor-script syntax error that had stopped Markdown previews from rendering. The three AI controls are now adjacent icon-only buttons, and formatting or translation applies only to a selected fragment when one is selected.
 
 ### Documentation
 - Updated the Traditional Chinese and English README descriptions for the separated formatting and translation workflows.

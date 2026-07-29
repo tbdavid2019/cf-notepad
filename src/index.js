@@ -1672,7 +1672,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(40005, 'A target language is required for translation', { status: 400 })
     }
 
-    const hasSelection = mode === 'edit'
+    const hasSelection = (mode === 'format' || mode === 'edit' || mode === 'translate')
         && Number.isInteger(selectionStart)
         && Number.isInteger(selectionEnd)
         && selectionStart >= 0
@@ -1683,7 +1683,11 @@ router.post('/:path/ai-format', async (request, { env }) => {
         {
             role: 'system',
             content: hasSelection
-                ? 'You are a careful Markdown editing assistant. Rewrite only the selected text according to the user requirements. Use the surrounding text only as context. Return only the replacement text for the selection, with no markers, explanations, quotes, or unchanged surrounding text.'
+                ? mode === 'format'
+                    ? `${AI_FORMAT_SYSTEM_PROMPT} Apply it only to the selected text. Return only the replacement text, with no markers, explanations, quotes, or unchanged surrounding text.`
+                    : mode === 'translate'
+                    ? buildTranslationSystemPrompt({ targetLanguage: translationTargetLanguage, bilingual: bilingual === true, selectionOnly: true })
+                    : 'You are a careful Markdown editing assistant. Rewrite only the selected text according to the user requirements. Use the surrounding text only as context. Return only the replacement text for the selection, with no markers, explanations, quotes, or unchanged surrounding text.'
                 : mode === 'edit'
                 ? 'You are a careful Markdown editing assistant. Apply the user requirements precisely, whether they request inserting a passage, editing part of the note, or refining the full note. Preserve all untouched content, facts, links, Markdown structure, and the original language unless explicitly asked otherwise. Return the complete edited note, not a summary or patch. Output only the final Markdown with no explanations.'
                 : mode === 'translate'
@@ -1693,8 +1697,10 @@ router.post('/:path/ai-format', async (request, { env }) => {
         {
             role: 'user',
             content: hasSelection ? [
-                'Task: replace the selected text only.',
-                `User requirements: ${userInstruction}`,
+                mode === 'format' ? 'Task: format the selected text only.' : mode === 'translate' ? 'Task: translate the selected text only.' : 'Task: replace the selected text only.',
+                mode === 'translate'
+                    ? `Target language: ${translationTargetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`
+                    : `User requirements: ${userInstruction || 'improve Markdown structure only; do not alter prose or language.'}`,
                 '',
                 'Text before selection (context only):',
                 normalizedText.slice(0, selectionStart),
@@ -1730,7 +1736,8 @@ router.post('/:path/ai-format', async (request, { env }) => {
         console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
         const resultText = extractAiText(aiResponse)
         if (resultText) {
-            if (mode === 'format' && !preservesFormatLanguage(normalizedText, resultText)) {
+            const formatSource = hasSelection ? normalizedText.slice(selectionStart, selectionEnd) : normalizedText
+            if (mode === 'format' && !preservesFormatLanguage(formatSource, resultText)) {
                 return returnJSON(40006, 'AI formatting changed the document language. The original content was kept unchanged.', { status: 422 })
             }
             return returnJSON(0, { result: resultText, scope: hasSelection ? 'selection' : 'document', modelUsed: model })

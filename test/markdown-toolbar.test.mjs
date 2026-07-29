@@ -123,10 +123,13 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /data-markdown-toolbar/)
     assert.match(
         commonTemplate,
-        /data-language="\$\{lang\}" role="toolbar"[^>]*>\s*<button type="button" id="editor-ai-edit-btn"/
+        /data-language="\$\{lang\}" role="toolbar"[^>]*>\s*<button type="button" id="editor-ai-format-btn"/
     )
     assert.match(commonTemplate, /id="editor-ai-edit-btn"[^>]*data-ai-action="edit"/)
-    assert.match(commonTemplate, /markdown-toolbar-ai-label/)
+    assert.match(commonTemplate, /id="editor-ai-edit-btn"[^>]*>\s*<span[^>]*>\$\{SVG_ICONS\.magic\}<\/span>\s*<\/button>/)
+    assert.match(commonTemplate, /id="editor-ai-translate-btn"[^>]*>\s*<span[^>]*>\$\{SVG_ICONS\.languages\}<\/span>\s*<\/button>/)
+    assert.match(commonTemplate, /id="editor-ai-format-btn"[^>]*>\s*<span[^>]*>\$\{SVG_ICONS\.sparkles\}<\/span>\s*<\/button>/)
+    assert.doesNotMatch(commonTemplate, /markdown-toolbar-ai-label/)
     assert.match(commonTemplate, /data-command="\$\{item\.command\}"/)
     assert.match(commonTemplate, /glyph: '&lt;\/&gt;'/)
     assert.match(commonTemplate, /markdown-toolbar-image-input/)

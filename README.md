@@ -56,8 +56,8 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **Theme 特色說明**：主題選單保留完整名稱，並依介面語言顯示繁中或英文風格描述，方便使用者依視覺特色挑選主題。
 - **動態空白頁歡迎提示**：當新建或清空編輯器時，會自動載入一首隨機的泰戈爾詩歌，以及 `static/data/editor-tips.json` 中的一則雙語小訣竅；兩者會在漂鳥集下方以同步的**打字機動畫效果**出現。
 - **AI 寫作特助**：
-  - **AI 排版優化**：內建 Workers AI（`gpt-oss-20b`），只整理 Markdown 結構、空白、標題與清單；會保留原文的語言、文字、連結與內容，不會翻譯或改寫。純英文文件若收到含中文的結果，系統會拒絕取代原文。
-  - **AI 翻譯／雙語**：上方 Markdown 工具列提供獨立的「AI 翻譯」按鈕（`gpt-oss-120b`）。先指定目標語言，再選擇只翻譯或保留原文並產生雙語版本。
+  - **AI 排版優化**：內建 Workers AI（`gpt-oss-20b`），只整理 Markdown 結構、空白、標題與清單；會保留原文的語言、文字、連結與內容，不會翻譯或改寫。純英文文件若收到含中文的結果，系統會拒絕取代原文。若先圈選內容，僅會排版該片段。
+  - **AI 翻譯／雙語**：上方 Markdown 工具列提供純圖示的獨立翻譯按鈕（`gpt-oss-120b`）。先指定目標語言，再選擇只翻譯或保留原文並產生雙語版本；若先圈選內容，僅翻譯該片段。
   - **編輯器 AI 排版**：AI 排版可直接從上方 Markdown 工具列啟動。
   - **AI 編輯與生成**：採用 `gpt-oss-120b` 模型，提供指令式的段落插入、部分改寫或整篇筆記內容生成。
   - **選取文字 AI 捷徑**：在編輯器中選取任意文字時，會自動彈出「AI編輯」捷徑按鈕，可僅針對選取的特定區塊進行指令式修改，其餘內容原封不動。
@@ -211,8 +211,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Theme Descriptions**: Theme names remain complete and are paired with localized Traditional Chinese or English descriptions, with the selected theme's full description available through its tooltip.
 - **Dynamic Welcome Tips**: On each new or empty editor load, a random bilingual tip from `static/data/editor-tips.json` is typed below the Tagore poem with the same synchronized **typewriter animation**.
 - **AI-Assisted Writing**:
-  - **AI Formatting**: The `gpt-oss-20b` formatter only improves Markdown structure, whitespace, headings, and lists. It preserves the source language, prose, links, and content rather than translating or rewriting; an English note is not replaced if the result introduces Chinese.
-  - **AI Translate / Bilingual**: A separate top-toolbar AI Translate action uses `gpt-oss-120b`. Choose the target language, then choose a translation-only result or a bilingual document that retains the original text.
+  - **AI Formatting**: The `gpt-oss-20b` formatter only improves Markdown structure, whitespace, headings, and lists. It preserves the source language, prose, links, and content rather than translating or rewriting; an English note is not replaced if the result introduces Chinese. With a selection, it formats only that selection.
+  - **AI Translate / Bilingual**: A separate icon-only top-toolbar translation action uses `gpt-oss-120b`. Choose the target language, then choose a translation-only result or a bilingual document that retains the original text. With a selection, it translates only that selection.
   - **Editor Toolbar AI Formatting**: Start the formatting-only flow directly from the top Markdown toolbar.
   - **AI Editing & Generation**: Integrated "AI Edit" button leveraging the `gpt-oss-120b` model, allowing instruction-based section insertion, partial rewriting, or full-note copy refinement and content generation.
   - **Contextual Selection Shortcut**: Selecting text inside the editor triggers a floating "AI Edit" shortcut. Instruct the AI to modify or translate only the highlighted selection while keeping the rest of your note completely untouched.

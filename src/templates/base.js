@@ -1665,9 +1665,10 @@ ${getMarkdownCss()}
 
             const isEdit = mode === 'edit'
             const isTranslate = mode === 'translate'
-            const selectionStart = isEdit ? $textarea.selectionStart : 0
-            const selectionEnd = isEdit ? $textarea.selectionEnd : 0
-            const hasSelection = isEdit && selectionEnd > selectionStart
+            const supportsSelection = mode === 'edit' || mode === 'format' || mode === 'translate'
+            const selectionStart = supportsSelection ? $textarea.selectionStart : 0
+            const selectionEnd = supportsSelection ? $textarea.selectionEnd : 0
+            const hasSelection = supportsSelection && selectionEnd > selectionStart
             let targetLanguage = ''
             let bilingual = false
             if (isTranslate) {
@@ -1677,8 +1678,8 @@ ${getMarkdownCss()}
                 targetLanguage = window.prompt(targetPrompt, APP_STATE.lang === 'zh-TW' ? '繁體中文' : 'English')
                 if (targetLanguage === null || !targetLanguage.trim()) return;
                 bilingual = window.confirm(APP_STATE.lang === 'zh-TW'
-                    ? '要保留原文並產生雙語版本嗎？\n選擇「確定」＝雙語；「取消」＝只翻譯。'
-                    : 'Keep the original and create a bilingual version?\nOK = bilingual; Cancel = translation only.')
+                    ? '要保留原文並產生雙語版本嗎？\\n選擇「確定」＝雙語；「取消」＝只翻譯。'
+                    : 'Keep the original and create a bilingual version?\\nOK = bilingual; Cancel = translation only.')
             }
             const instructionPrompt = isEdit
                 ? (APP_STATE.lang === 'zh-TW'
@@ -1691,7 +1692,7 @@ ${getMarkdownCss()}
                 : (APP_STATE.lang === 'zh-TW'
                     ? '請輸入排版需求，例如：補標題、整理段落、改成條列重點'
                     : 'Enter formatting instructions, for example: add headings, clean paragraphs, and turn key points into bullets')
-            const instruction = window.prompt(instructionPrompt, '')
+            const instruction = isTranslate ? '' : window.prompt(instructionPrompt, '')
             if (instruction === null) return;
             if (isEdit && !instruction.trim()) {
                 window.showToast(APP_STATE.lang === 'zh-TW' ? '請輸入編輯要求' : 'Please enter editing instructions')

@@ -22,6 +22,7 @@ test('formatting rejects Chinese output when the source contains no Chinese text
 test('translation has its own prompt with single-language and bilingual modes', () => {
     assert.match(buildTranslationSystemPrompt({ targetLanguage: 'Traditional Chinese', bilingual: false }), /Translate the full note/)
     assert.match(buildTranslationSystemPrompt({ targetLanguage: 'Traditional Chinese', bilingual: true }), /bilingual document/)
+    assert.match(buildTranslationSystemPrompt({ targetLanguage: 'Traditional Chinese', bilingual: false, selectionOnly: true }), /selected Markdown only/)
 })
 
 test('translation target accepts language names but not prompt instructions', () => {
