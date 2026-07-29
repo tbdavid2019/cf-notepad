@@ -783,6 +783,24 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     align-items: center;
     gap: 1px;
 }
+#share-analytics-hook {
+    display: inline-flex;
+    align-items: center;
+}
+.share-view-count {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: var(--toolbar-height);
+    padding: 0 8px;
+    color: var(--toolbar-text);
+    font-size: 12px;
+    white-space: nowrap;
+}
+.share-view-count .svg-icon {
+    width: 15px;
+    height: 15px;
+}
 .footer-toggle-control-group {
     height: var(--toolbar-height);
     justify-content: center;

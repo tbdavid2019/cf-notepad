@@ -34,6 +34,7 @@ import {
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
+import { getNoteStatsDb, getNoteViewCount, incrementNoteViewCount, shouldCountShareView } from './note_stats.mjs'
 
 // init
 const router = Router()
@@ -655,7 +656,7 @@ router.post('/share/:shareId/auth', async request => {
     return returnJSON(404, 'Share not found')
 })
 
-async function renderSharePage(request, presentationMode = false) {
+async function renderSharePage(request, presentationMode = false, execution = {}) {
     const lang = getI18n(request)
     const { shareId } = request.params
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
@@ -698,7 +699,8 @@ async function renderSharePage(request, presentationMode = false) {
         const canonicalPath = presentationMode ? presentationPath : sharePath
         const canonicalUrl = `${origin}${canonicalPath}`
 
-        if (requestAcceptsMarkdown(request)) {
+        const acceptsMarkdown = requestAcceptsMarkdown(request)
+        if (acceptsMarkdown) {
             return createMarkdownResponse(
                 buildMarkdownDocument(value, {
                     title,
@@ -709,6 +711,31 @@ async function renderSharePage(request, presentationMode = false) {
                     note_path: path,
                 }),
             )
+        }
+
+        let viewCount = null
+        if (shouldCountShareView({
+            method: request.method,
+            presentationMode,
+            embedMode,
+            acceptsMarkdown,
+        })) {
+            const statsDb = getNoteStatsDb()
+            if (statsDb) {
+                try {
+                    viewCount = (await getNoteViewCount(statsDb, path)) + 1
+                    const incrementPromise = incrementNoteViewCount(statsDb, path)
+                        .catch(error => console.error('Share view increment failed:', error))
+                    if (typeof execution.waitUntil === 'function') {
+                        execution.waitUntil(incrementPromise)
+                    } else {
+                        await incrementPromise
+                    }
+                } catch (error) {
+                    console.error('Share view count failed:', error)
+                    viewCount = null
+                }
+            }
         }
 
         return returnPage('Share', {
@@ -726,6 +753,7 @@ async function renderSharePage(request, presentationMode = false) {
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
                 embed: embedMode,
+                viewCount,
                 meta: {
                     canonicalUrl,
                     description,
@@ -743,20 +771,20 @@ async function renderSharePage(request, presentationMode = false) {
     return returnPage('Page404', { lang, title: '404' })
 }
 
-router.get('/share/:shareId', async (request) => {
-    return renderSharePage(request, false)
+router.get('/share/:shareId', async (request, execution) => {
+    return renderSharePage(request, false, execution)
 })
 
-router.head('/share/:shareId', async (request) => {
-    return renderSharePage(request, false)
+router.head('/share/:shareId', async (request, execution) => {
+    return renderSharePage(request, false, execution)
 })
 
-router.get('/share/:shareId/present', async (request) => {
-    return renderSharePage(request, true)
+router.get('/share/:shareId/present', async (request, execution) => {
+    return renderSharePage(request, true, execution)
 })
 
-router.head('/share/:shareId/present', async (request) => {
-    return renderSharePage(request, true)
+router.head('/share/:shareId/present', async (request, execution) => {
+    return renderSharePage(request, true, execution)
 })
 
 router.get('/icon.svg', iconSvgResponse)

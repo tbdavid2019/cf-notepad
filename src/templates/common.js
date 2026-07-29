@@ -156,7 +156,7 @@ export const SWITCHER = (text, open, className = '') => `
 <span class="footer-control-label">${text}</span>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount }) => {
     const t = getLangText(lang)
     const effectiveWidth = width || DEFAULT_PREVIEW_WIDTH
     const showNoteHistory = noteHistoryEnabled === true && isEdit
@@ -168,6 +168,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
     const moreToolsTitle = lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'
+    const safeViewCount = Number.isSafeInteger(viewCount) && viewCount >= 0 ? viewCount : null
+    const formattedViewCount = safeViewCount === null ? '' : new Intl.NumberFormat(lang).format(safeViewCount)
+    const viewCountText = safeViewCount === null
+        ? ''
+        : (lang === 'zh-TW' ? `${formattedViewCount} 次瀏覽` : `${formattedViewCount} views`)
     const getThemeLabel = themeName => {
         const description = THEME_OPTION_LABELS[themeName]?.[lang] || ''
         return description ? `${themeName} · ${description}` : themeName
@@ -411,7 +416,16 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             </wa-select>
                         </div>
                     ` : ''}
-                    ${sharePath ? '<div id="share-analytics-hook"></div>' : ''}
+                    ${sharePath ? `
+                        <div id="share-analytics-hook">
+                            ${safeViewCount === null ? '' : `
+                                <span id="share-view-count" class="share-view-count" title="${viewCountText}" aria-label="${viewCountText}">
+                                    ${SVG_ICONS.eye}
+                                    <span>${viewCountText}</span>
+                                </span>
+                            `}
+                        </div>
+                    ` : ''}
                 </div>
             </div>
 

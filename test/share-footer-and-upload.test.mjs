@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { FOOTER } from '../src/templates/common.js'
 
 const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
@@ -36,4 +37,25 @@ test('attachment uploads prefer david888 box and fall back in order', () => {
         'https://box.glsoft.ai/api.php?action=upload',
     ])
     assert.match(toolbarSource, /for\s*\(const endpoint of BOX_UPLOAD_ENDPOINTS\)/)
+})
+
+test('share footer displays the D1 view count and omits it when unavailable', () => {
+    const sharedFooter = FOOTER({
+        lang: 'zh-TW',
+        isEdit: false,
+        mode: 'md',
+        sharePath: '/share/abc123',
+        viewCount: 42,
+    })
+    const unavailableFooter = FOOTER({
+        lang: 'zh-TW',
+        isEdit: false,
+        mode: 'md',
+        sharePath: '/share/abc123',
+        viewCount: null,
+    })
+
+    assert.match(sharedFooter, /id="share-view-count"/)
+    assert.match(sharedFooter, /42 次瀏覽/)
+    assert.doesNotMatch(unavailableFooter, /id="share-view-count"/)
 })
