@@ -86,3 +86,7 @@ export function extractNoteDescription(value = '', fallbackTitle = '') {
 
     return (plain || fallbackTitle || 'Shared note on david888 wiki').substring(0, 180)
 }
+
+export function resolveAnnotationsEnabled(metadata = {}) {
+    return metadata.share === true && metadata.annotationsEnabled !== false
+}

@@ -16,7 +16,7 @@ test('annotation write routes create threads and replies with same-origin protec
 
 test('annotation writes require an enabled shared note and preserve view-password access', () => {
     assert.match(indexSource, /metadata\.share !== true/)
-    assert.match(indexSource, /metadata\.annotationsEnabled !== true/)
+    assert.match(indexSource, /!resolveAnnotationsEnabled\(metadata\)/)
     assert.match(indexSource, /checkAuth\(cookie, path\)/)
     assert.match(indexSource, /Share password required/)
 })

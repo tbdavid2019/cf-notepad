@@ -17,7 +17,7 @@ test('annotation schema keeps source anchors independent from mutable note conte
 
 test('share annotation read API hides retained threads while the author setting is off', () => {
     assert.match(indexSource, /router\.get\('\/api\/shares\/:shareId\/annotations'/)
-    assert.match(indexSource, /if \(metadata\.annotationsEnabled !== true\)/)
+    assert.match(indexSource, /if \(!resolveAnnotationsEnabled\(metadata\)\)/)
     assert.match(indexSource, /enabled:\s*false,\s*sourceRevision:\s*null,\s*threads:\s*\[\]/s)
     assert.match(indexSource, /computeSourceRevision\(value\)/)
     assert.match(indexSource, /listAnnotationThreads/)

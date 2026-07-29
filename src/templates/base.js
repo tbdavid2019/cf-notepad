@@ -9,6 +9,7 @@ import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
 import { AUTOSAVE_IDLE_MS } from '../save_policy.mjs'
+import { resolveAnnotationsEnabled } from '../note_meta.js'
 
 const PUBLIC_ICON_SVG_URL = '/icon.svg'
 const PUBLIC_ICON_PNG_URL = '/icon.png'
@@ -49,7 +50,8 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
-    const annotationsUiEnabled = isSharePage && !isEmbed && ext.annotationsEnabled === true
+    const annotationsEnabled = resolveAnnotationsEnabled(ext)
+    const annotationsUiEnabled = isSharePage && !isEmbed && annotationsEnabled
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
     const ogSiteNameMeta = ext.meta?.siteName === false
         ? ''
@@ -274,7 +276,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled })}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
@@ -699,7 +701,7 @@ ${getMarkdownCss()}
         autosave: ext.autosave === true && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
         publicIndex: ext.publicIndex === true,
-        annotationsEnabled: ext.annotationsEnabled === true,
+        annotationsEnabled: resolveAnnotationsEnabled(ext),
         noteSettings: {
             width: ext.width || '',
             shareFont: ext.shareFont || '',
@@ -1989,6 +1991,7 @@ ${getMarkdownCss()}
                     }
                     APP_STATE.isPublished = true;
                     APP_STATE.shareId = nextShareId;
+                    if (!wasPublished) APP_STATE.annotationsEnabled = true;
                     APP_STATE.autosave = wasPublished ? APP_STATE.autosave : false;
                     savedContent = $textarea ? $textarea.value : savedContent;
                     clearAutosaveTimer();

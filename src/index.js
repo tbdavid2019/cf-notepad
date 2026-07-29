@@ -6,7 +6,7 @@ import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw
 import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
-import { extractNoteDescription, extractNoteTitle } from './note_meta'
+import { extractNoteDescription, extractNoteTitle, resolveAnnotationsEnabled } from './note_meta'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -818,7 +818,7 @@ router.get('/api/shares/:shareId/annotations', async request => {
         if (!valid) return returnJSON(401, 'Share password required', { status: 401 })
     }
 
-    if (metadata.annotationsEnabled !== true) {
+    if (!resolveAnnotationsEnabled(metadata)) {
         return returnJSON(0, {
             enabled: false,
             sourceRevision: null,
@@ -891,7 +891,7 @@ async function getWritableAnnotationContext(request) {
         }
     }
 
-    if (metadata.annotationsEnabled !== true) {
+    if (!resolveAnnotationsEnabled(metadata)) {
         return {
             response: returnJSON(403, 'Annotations are closed', { status: 403 }),
         }
@@ -1438,8 +1438,13 @@ router.post('/api/:path', async (request) => {
         updateMetadata.publicIndex = reqBody.publicIndex === true
     }
 
+    if (updateMetadata.share === true && metadata.share !== true) {
+        updateMetadata.annotationsEnabled = true
+    }
+
     if (updateMetadata.share === false) {
         updateMetadata.publicIndex = false
+        updateMetadata.annotationsEnabled = false
     }
     updateMetadata = await ensureShareMetadata(path, updateMetadata)
 
@@ -1755,6 +1760,9 @@ router.post('/:path/setting', async request => {
                         ...mode !== undefined && { mode },
                     }
 
+                    if (share === true && metadata.share !== true && annotationsEnabled === undefined) {
+                        nextMetadata.annotationsEnabled = true
+                    }
                     if (share === false) {
                         nextMetadata.publicIndex = false
                         nextMetadata.annotationsEnabled = false

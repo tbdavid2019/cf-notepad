@@ -12,7 +12,7 @@ const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', impo
 const annotationCss = readFileSync(new URL('../static/css/share-annotations.css', import.meta.url), 'utf8')
 
 test('share pages load annotation UI only when the author enabled annotations', () => {
-    assert.match(baseTemplateSource, /ext\.annotationsEnabled === true/)
+    assert.match(baseTemplateSource, /resolveAnnotationsEnabled\(ext\)/)
     assert.match(baseTemplateSource, /id="share-annotation-root"/)
     assert.match(baseTemplateSource, /\/js\/share-annotations\.mjs/)
     assert.match(baseTemplateSource, /\/css\/share-annotations\.css/)

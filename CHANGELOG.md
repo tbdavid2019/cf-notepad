@@ -8,7 +8,7 @@
   - Kept article delivery resilient: missing or unavailable D1 stats do not block a Share page from loading.
 - **Per-Note Paragraph Annotation Control**
   - Added an author-only `段落註解` / Paragraph annotations switch to the published Share menu.
-  - Existing notes default to closed; the choice is persisted in KV note metadata and restored on reload.
+  - Published notes default to open; an author's explicit choice is persisted in KV note metadata and restored on reload.
   - Unpublishing closes annotations without deleting any annotation records.
 - **D1 Annotation Read Model**
   - Added independent D1 thread and message tables that retain the selected quote, surrounding context, source offsets, and source revision even when the article changes.
@@ -26,6 +26,9 @@
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 
 ### Changed
+- **Annotations Enabled by Default**
+  - Existing published notes without an annotation preference now expose paragraph annotations automatically, without a KV migration.
+  - New and republished notes start with annotations enabled, while notes explicitly disabled by their authors remain closed.
 - **Format-Only AI Formatting**
   - AI formatting now has an explicit format-only policy: it may improve Markdown structure, whitespace, headings, and lists, but must preserve the source language, prose, links, code, and meaning.
   - Pure-English documents reject a formatting response that introduces Chinese characters, keeping the original text unchanged instead of applying an unintended translation.
