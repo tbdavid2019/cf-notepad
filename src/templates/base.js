@@ -1676,7 +1676,7 @@ ${getMarkdownCss()}
         const $editorAiEditBtn = document.querySelector('#editor-ai-edit-btn')
         const $editorAiTranslateBtn = document.querySelector('#editor-ai-translate-btn')
 
-        const runAiAssistant = async mode => {
+        const runAiAssistant = async (mode, selectionRange = null) => {
             if (!$textarea) return;
 
             const rawText = $textarea.value || ''
@@ -1688,8 +1688,18 @@ ${getMarkdownCss()}
             const isEdit = mode === 'edit'
             const isTranslate = mode === 'translate'
             const supportsSelection = mode === 'edit' || mode === 'format' || mode === 'translate'
-            const selectionStart = supportsSelection ? $textarea.selectionStart : 0
-            const selectionEnd = supportsSelection ? $textarea.selectionEnd : 0
+            const hasSavedSelection = supportsSelection
+                && Number.isInteger(selectionRange?.start)
+                && Number.isInteger(selectionRange?.end)
+                && selectionRange.start >= 0
+                && selectionRange.end > selectionRange.start
+                && selectionRange.end <= rawText.length
+            const selectionStart = supportsSelection
+                ? (hasSavedSelection ? selectionRange.start : $textarea.selectionStart)
+                : 0
+            const selectionEnd = supportsSelection
+                ? (hasSavedSelection ? selectionRange.end : $textarea.selectionEnd)
+                : 0
             const hasSelection = supportsSelection && selectionEnd > selectionStart
             let targetLanguage = ''
             let bilingual = false
@@ -1775,6 +1785,7 @@ ${getMarkdownCss()}
         }
 
         if ($textarea) {
+            let selectionAiRange = null
             const selectionAiActions = [
                 {
                     mode: 'format',
@@ -1802,10 +1813,12 @@ ${getMarkdownCss()}
                 button.className = 'selection-ai-button'
                 button.textContent = label
                 button.setAttribute('aria-label', ariaLabel)
+                button.addEventListener('pointerdown', event => event.preventDefault())
                 button.addEventListener('mousedown', event => event.preventDefault())
                 button.addEventListener('click', () => {
+                    const selectedRange = selectionAiRange
                     hideSelectionAiMenu()
-                    runAiAssistant(mode)
+                    runAiAssistant(mode, selectedRange)
                 })
                 selectionAiMenu.appendChild(button)
             })
@@ -1814,8 +1827,13 @@ ${getMarkdownCss()}
             const hideSelectionAiMenu = () => selectionAiMenu.classList.remove('visible')
             const showSelectionAiMenu = event => {
                 if ($textarea.selectionEnd <= $textarea.selectionStart) {
+                    selectionAiRange = null
                     hideSelectionAiMenu()
                     return
+                }
+                selectionAiRange = {
+                    start: $textarea.selectionStart,
+                    end: $textarea.selectionEnd,
                 }
                 const editorRect = $textarea.getBoundingClientRect()
                 const left = event?.clientX || editorRect.right - 180
@@ -1829,7 +1847,10 @@ ${getMarkdownCss()}
             $textarea.addEventListener('keyup', event => {
                 if (event.shiftKey) showSelectionAiMenu()
             })
-            $textarea.addEventListener('input', hideSelectionAiMenu)
+            $textarea.addEventListener('input', () => {
+                selectionAiRange = null
+                hideSelectionAiMenu()
+            })
             $textarea.addEventListener('scroll', hideSelectionAiMenu, { passive: true })
             window.addEventListener('resize', hideSelectionAiMenu)
         }

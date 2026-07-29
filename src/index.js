@@ -33,7 +33,7 @@ import {
 } from './note_history.mjs'
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
-import { AI_FORMAT_SYSTEM_PROMPT, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
+import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 
 // init
 const router = Router()
@@ -1696,29 +1696,16 @@ router.post('/:path/ai-format', async (request, { env }) => {
         },
         {
             role: 'user',
-            content: hasSelection ? [
-                mode === 'format' ? 'Task: format the selected text only.' : mode === 'translate' ? 'Task: translate the selected text only.' : 'Task: replace the selected text only.',
-                mode === 'translate'
-                    ? `Target language: ${translationTargetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`
-                    : `User requirements: ${userInstruction || 'improve Markdown structure only; do not alter prose or language.'}`,
-                '',
-                'Text before selection (context only):',
-                normalizedText.slice(0, selectionStart),
-                '',
-                'Selected text to edit:',
-                normalizedText.slice(selectionStart, selectionEnd),
-                '',
-                'Text after selection (context only):',
-                normalizedText.slice(selectionEnd),
-            ].join('\n') : [
-                mode === 'edit' ? 'Task: edit this full note.' : mode === 'translate' ? 'Task: translate this full note.' : 'Task: format this full note only.',
-                mode === 'translate'
-                    ? `Target language: ${translationTargetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`
-                    : userInstruction ? `User requirements: ${userInstruction}` : 'User requirements: improve Markdown structure only; do not alter prose or language.',
-                '',
-                'Full note:',
-                normalizedText,
-            ].join('\n')
+            content: buildAiUserPrompt({
+                mode,
+                text: normalizedText,
+                instruction: userInstruction,
+                selectionStart,
+                selectionEnd,
+                hasSelection,
+                targetLanguage: translationTargetLanguage,
+                bilingual: bilingual === true,
+            })
         }
     ]
 

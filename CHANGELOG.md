@@ -15,6 +15,11 @@
   - The edit preview reapplies the CJK-aware GenJyuu/Maple font stack after a theme stylesheet loads, so Chinese preview text no longer falls back to a theme font.
   - Replaced the invalid footer GitHub SVG path with a browser-safe 24px icon, removed the presentation engine's production debug log, and placed the password input in a proper submit form.
 
+### Fixed
+- **Selection-Only AI Translation**
+  - The floating selection toolbar now snapshots the textarea range before its button receives focus, so Format, AI Edit, and Translate keep the intended fragment.
+  - Selection translation sends only the highlighted Markdown to Workers AI; surrounding paragraphs are no longer included as model context and cannot be translated accidentally.
+
 ### Documentation
 - Updated the Traditional Chinese and English README descriptions for the separated formatting and translation workflows.
 

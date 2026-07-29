@@ -36,3 +36,53 @@ export const buildTranslationSystemPrompt = ({ targetLanguage, bilingual, select
         'Return only the final Markdown with no explanations.',
     ].join(' ')
 }
+
+export const buildAiUserPrompt = ({
+    mode,
+    text,
+    instruction = '',
+    selectionStart = 0,
+    selectionEnd = 0,
+    hasSelection = false,
+    targetLanguage = '',
+    bilingual = false,
+}) => {
+    const source = String(text || '')
+    const requirements = String(instruction || '').trim()
+
+    if (hasSelection && mode === 'translate') {
+        return [
+            'Task: translate the selected text only.',
+            `Target language: ${targetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`,
+            '',
+            'Selected text to translate:',
+            source.slice(selectionStart, selectionEnd),
+        ].join('\n')
+    }
+
+    if (hasSelection) {
+        return [
+            mode === 'format' ? 'Task: format the selected text only.' : 'Task: replace the selected text only.',
+            `User requirements: ${requirements || 'improve Markdown structure only; do not alter prose or language.'}`,
+            '',
+            'Text before selection (context only):',
+            source.slice(0, selectionStart),
+            '',
+            'Selected text to edit:',
+            source.slice(selectionStart, selectionEnd),
+            '',
+            'Text after selection (context only):',
+            source.slice(selectionEnd),
+        ].join('\n')
+    }
+
+    return [
+        mode === 'edit' ? 'Task: edit this full note.' : mode === 'translate' ? 'Task: translate this full note.' : 'Task: format this full note only.',
+        mode === 'translate'
+            ? `Target language: ${targetLanguage}. Output mode: ${bilingual === true ? 'bilingual' : 'translation only'}.`
+            : requirements ? `User requirements: ${requirements}` : 'User requirements: improve Markdown structure only; do not alter prose or language.',
+        '',
+        'Full note:',
+        source,
+    ].join('\n')
+}
