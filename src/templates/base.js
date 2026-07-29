@@ -49,6 +49,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
+    const annotationsUiEnabled = isSharePage && !isEmbed && ext.annotationsEnabled === true
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
     const ogSiteNameMeta = ext.meta?.siteName === false
         ? ''
@@ -114,6 +115,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="twitter:title" content="${escapeHtml(title || APP_NAME)}" />
     <meta name="twitter:description" content="${escapeHtml(pageDescription)}" />
     <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/styles/webawesome.css" />
+    ${annotationsUiEnabled ? '<link rel="stylesheet" href="/css/share-annotations.css" />' : ''}
     <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
@@ -274,6 +276,7 @@ ${getMarkdownCss()}
         </div>
         ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true })}
     </div>
+    ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
     <div id="loading"></div>
     ${isEmbed ? `
@@ -2605,6 +2608,7 @@ ${getMarkdownCss()}
     ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
+    ${annotationsUiEnabled ? '<script type="module" src="/js/share-annotations.mjs"></script>' : ''}
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};

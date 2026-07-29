@@ -18,6 +18,10 @@
   - Added same-origin Share APIs for creating a text-anchored discussion and replying to an existing thread.
   - Enforced author, comment, quote, context, offset, and source-revision validation before writing parameterized D1 transactions.
   - Preserved Share view-password checks and rejected new threads when the article changed after text selection.
+- **Share Text Selection Annotations**
+  - Enabled readers to select rendered Share text and open a nearby annotation action that carries the quote into a discussion composer.
+  - Added a responsive annotation sidebar with thread history, replies, source highlighting, source navigation, loading/error/empty states, and keyboard focus treatment.
+  - Reattaches discussions with exact quote plus surrounding context after article edits; when the quoted text is gone, the retained thread is labeled `原文已移除`.
 - **Dedicated AI Translation and Bilingual Output**
   - Added a separate top-toolbar `AI 翻譯` / AI Translate action. It asks for the target language and lets the author choose translation-only output or a bilingual document that keeps each original Markdown block.
 
