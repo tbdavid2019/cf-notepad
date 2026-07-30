@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-07-30]
+
+### Changed
+
+- **Initial-Only Random Theme**
+  - Random Theme selection now runs only for a brand-new note created from the site root; reopening an existing author Edit restores its persisted Theme.
+  - The initial Theme is written to Server metadata immediately and is included again in the first publish request.
+- **Human New-Note Titles**
+  - Empty new notes use a localized Taiwan-time title such as `新筆記 · 07/30 09:05` or `New note · 07/30 09:05` instead of displaying the random note path.
+
+### Fixed
+
+- **Annotation Source Navigation**
+  - `定位原文` / `Locate in article` now scrolls the actual nested article container and centers the exact annotated range before flashing its source element.
+
+### Documentation
+
+- Added a README storage inventory covering Server KV, D1, R2, external services, localStorage, sessionStorage, and Cookies.
+- Clarified that Markdown Themes are Server metadata, while editor chrome and layout preferences use browser storage.
+
 ## [2026-07-29]
 ### Added
 - **D1 Share View Counter**

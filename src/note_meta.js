@@ -90,3 +90,34 @@ export function extractNoteDescription(value = '', fallbackTitle = '') {
 export function resolveAnnotationsEnabled(metadata = {}) {
     return metadata.share === true && metadata.annotationsEnabled !== false
 }
+
+export function isNewNoteEntry(requestUrl, value = '', metadata = {}) {
+    let url
+    try {
+        url = requestUrl instanceof URL ? requestUrl : new URL(requestUrl)
+    } catch {
+        return false
+    }
+
+    return url.searchParams.get('new') === '1'
+        && !String(value || '').trim()
+        && Object.keys(metadata || {}).length === 0
+}
+
+export function formatNewNoteTitle(lang = 'zh-TW', date = new Date()) {
+    const parts = Object.fromEntries(
+        new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Taipei',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hourCycle: 'h23',
+        })
+            .formatToParts(date)
+            .filter(part => part.type !== 'literal')
+            .map(part => [part.type, part.value])
+    )
+    const label = lang === 'zh-TW' ? '新筆記' : 'New note'
+    return `${label} · ${parts.month}/${parts.day} ${parts.hour}:${parts.minute}`
+}

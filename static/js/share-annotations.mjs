@@ -142,6 +142,32 @@ export function locateAnchorRange(root, anchor, currentRevision) {
     return createRangeFromOffsets(root, best.index, best.index + anchor.exact.length)
 }
 
+export function scrollRangeIntoView(range, scrollRoot, { behavior = 'smooth' } = {}) {
+    if (!range || !scrollRoot || typeof range.getBoundingClientRect !== 'function') return false
+
+    const rangeRect = range.getBoundingClientRect()
+    const rootRect = typeof scrollRoot.getBoundingClientRect === 'function'
+        ? scrollRoot.getBoundingClientRect()
+        : { top: 0, height: Number(scrollRoot.clientHeight) || 0 }
+    const viewportHeight = Number(scrollRoot.clientHeight) || Number(rootRect.height) || 0
+    const rangeHeight = Number(rangeRect.height) || 0
+    const centerOffset = Math.max(16, (viewportHeight - rangeHeight) / 2)
+    const top = Math.max(
+        0,
+        (Number(scrollRoot.scrollTop) || 0)
+            + (Number(rangeRect.top) || 0)
+            - (Number(rootRect.top) || 0)
+            - centerOffset,
+    )
+
+    if (typeof scrollRoot.scrollTo === 'function') {
+        scrollRoot.scrollTo({ top, behavior })
+    } else {
+        scrollRoot.scrollTop = top
+    }
+    return true
+}
+
 function createElement(document, tagName, className, text) {
     const element = document.createElement(tagName)
     if (className) element.className = className
@@ -435,7 +461,10 @@ function initShareAnnotations() {
             if (location) {
                 locationButton.addEventListener('click', () => {
                     const target = location.startContainer.parentElement
-                    target?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                    const scrollRoot = articleRoot.closest('.contents')
+                        || document.scrollingElement
+                        || document.documentElement
+                    scrollRangeIntoView(location, scrollRoot)
                     target?.classList.add('annotation-source-flash')
                     window.setTimeout(() => target?.classList.remove('annotation-source-flash'), 1400)
                 })

@@ -54,6 +54,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **閱讀進度與編輯狀態**：預覽／分享頁左側會顯示可點擊的垂直閱讀進度尺，讓讀者知道目前閱讀位置與文章長度；編輯區左下角則即時顯示第幾行、第幾欄與全文總長度。
 - **複製內容**：Footer 的 Markdown `匯出` 右側提供 `複製`，會同時寫入 rich HTML 與 Markdown/plain-text fallback；rich HTML 使用媒體 preview 建立前的安全 HTML，不會把 YouTube／PDF iframe 貼進 Jira、Confluence 或其他編輯器；成功後顯示勾勾動畫與複製提示。
 - **Theme 特色說明**：主題選單保留完整名稱，並依介面語言顯示繁中或英文風格描述，方便使用者依視覺特色挑選主題。
+- **新筆記隨機 Theme**：只有從網站根目錄建立全新隨機編號筆記時才會抽選 Theme，並立即保存到 Server metadata；原作者重新打開既有 Edit 會沿用已保存的 Theme。空白新筆記的瀏覽器標題使用「新筆記 · 月/日 時:分」，不顯示對人類無意義的隨機路徑。
 - **動態空白頁歡迎提示**：當新建或清空編輯器時，會自動載入一首隨機的泰戈爾詩歌，以及 `static/data/editor-tips.json` 中的一則雙語小訣竅；兩者會在漂鳥集下方以同步的**打字機動畫效果**出現。
 - **AI 寫作特助**：
   - **AI 排版優化**：內建 Workers AI（`gpt-oss-20b`），只整理 Markdown 結構、空白、標題與清單；會保留原文的語言、文字、連結與內容，不會翻譯或改寫。純英文文件若收到含中文的結果，系統會拒絕取代原文。若先圈選內容，僅會排版該片段。
@@ -104,6 +105,48 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **LLM & AI Agent API**：支援外部 App 透過 REST API (`/api/:path`) 讀寫與接續撰寫 (Append)。支援 JSON、`text/markdown` 與 `multipart/form-data` 多種格式，降低 LLM 寫長文時的跳脫字元失敗率。
 - **原生圖片上傳**：支援 API 圖片上傳 (`/api/upload`) 與自動 Markdown 連結。
 - **Discovery 發現端點**：部署完成後，站點會提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/index.json` 等 AI 探索入口，支援 RFC 9727 格式。
+
+---
+
+## 💾 儲存位置盤點
+
+### Server / Cloudflare
+
+| 儲存位置 | 保存內容 | 備註 |
+| --- | --- | --- |
+| `NOTES` KV | Markdown 文章內容與逐篇 metadata：`theme`、`width`、`shareFont`、`mode`、`share`、`shareSlug`、`publicIndex`、`autosave`、`annotationsEnabled`、`updateAt`、`pw`／`vpw` 雜湊，以及相容舊資料的 `title`／`views` | 未發布文章不保存 Markdown 內容；但從首頁建立新筆記時，隨機 Theme 會立即寫入一次 metadata |
+| `SHARE` KV | Share slug／舊版 MD5 Share ID 到文章 path 的對照 | 不保存文章本文 |
+| D1 `note_history` | 歷史版本的文章 path、舊內容與建立時間 | 受版本上限與最短快照間隔控制 |
+| D1 `note_stats`、`note_view_devices` | 文章瀏覽總數、最後瀏覽時間、文章與匿名裝置 hash 的去重紀錄 | Server 不保存原始裝置 UUID，只保存 SHA-256 hash |
+| D1 `annotation_threads`、`annotation_messages` | 段落錨點、原文摘錄、前後文、來源 revision、留言與回覆 | 原文刪除後討論仍保留 |
+| `IMAGES` R2 | 透過內建圖片上傳保存的圖片檔案 | 文章只保存公開圖片 URL |
+| 外部服務 | 888box 附件與 WebTalk 自己管理的資料 | 不在此專案的 KV／D1／R2 內 |
+
+Markdown 預覽 Theme 的正式來源是 `NOTES` KV metadata。它不保存在 localStorage；只有新筆記第一次從首頁開啟時隨機抽選，之後 Edit 與 Share 都讀取 Server 已保存值。
+
+### Browser localStorage
+
+| Key | 保存內容 | 是否同步 Server |
+| --- | --- | --- |
+| `cf-notepad-preview-width` | 最近使用的預覽寬度 fallback | 是；逐篇 `width` 也保存到 KV，Server 值優先 |
+| `cf-notepad-preview-device` | Desktop／Mobile 預覽裝置 | 否 |
+| `cf-notepad-split-direction` | 左右／上下編輯器排列 | 否 |
+| `cf-notepad-share-font` | 最近使用的 Share 字型 fallback | 是；逐篇 `shareFont` 也保存到 KV，Server 值優先 |
+| `cf-notepad-ui-theme` | 編輯器介面的 `auto`／`light`／`dark` | 否；這不是 Markdown 預覽 Theme |
+| `cf-notepad-autosave` | Autosave UI 的本機鏡像／相容值 | 真正逐篇 Autosave 狀態保存在 KV |
+| `cf-notepad:share-history:created` | 本裝置最近建立的 Share，最多 20 筆 | 否 |
+| `cf-notepad:share-history:viewed` | 本裝置最近瀏覽的 Share，最多 20 筆 | 否 |
+| `cf-notepad:annotation-author` | 留言表單最近使用的顯示名稱 | 否 |
+
+### sessionStorage 與 Cookie
+
+| 類型 | Key | 用途 |
+| --- | --- | --- |
+| sessionStorage | `cf-notepad:pending-presentation-destination` | 密碼驗證前暫存簡報返回位置；同一分頁使用後即刪除 |
+| Cookie | `lang` | 介面語言偏好 |
+| HttpOnly Cookie | `auth` | 逐篇、具 path scope 的 Edit／View JWT，預設 7 天 |
+| HttpOnly Cookie | `cn_device` | 匿名瀏覽裝置 UUID，D1 只保存其 hash，預設 1 年 |
+| HttpOnly Cookie | `admin_session` | 管理後台 session，預設 1 天 |
 
 ---
 
@@ -209,6 +252,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Reading Progress & Editor Status**: A clickable vertical progress rail at the left of Preview and Share pages shows the reader's position through a long article. The editor's bottom-left status bar reports the current line, column, and total text length.
 - **Copy Rendered Content**: The Footer places Copy beside Markdown Export and writes rich HTML plus Markdown/plain-text fallback for editors such as Notion and Jira. Rich HTML comes from the sanitized snapshot before media preview decoration, so YouTube/PDF iframes are not pasted into external editors. A check animation confirms successful copying.
 - **Theme Descriptions**: Theme names remain complete and are paired with localized Traditional Chinese or English descriptions, with the selected theme's full description available through its tooltip.
+- **Random Theme for New Notes**: A theme is randomized only when the root site creates a brand-new random note path, then immediately persisted to server metadata. Reopening an existing author Edit keeps its saved theme. Empty new tabs use a human title such as `New note · 07/30 09:05` instead of exposing the random path.
 - **Dynamic Welcome Tips**: On each new or empty editor load, a random bilingual tip from `static/data/editor-tips.json` is typed below the Tagore poem with the same synchronized **typewriter animation**.
 - **AI-Assisted Writing**:
   - **AI Formatting**: The `gpt-oss-20b` formatter only improves Markdown structure, whitespace, headings, and lists. It preserves the source language, prose, links, and content rather than translating or rewriting; an English note is not replaced if the result introduces Chinese. With a selection, it formats only that selection.
@@ -244,6 +288,36 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 See the real editor and preview interface here:
 ![Editor and Real-Time Preview](image-1.png)
+
+## 💾 Storage Inventory
+
+### Server / Cloudflare
+
+| Storage | Data |
+| --- | --- |
+| `NOTES` KV | Markdown content and per-note metadata, including theme, width, Share font, mode, publishing state, Share slug, sitemap state, Autosave, annotations, update time, and password hashes |
+| `SHARE` KV | Share slug and legacy Share-ID mappings to note paths |
+| D1 | Version history, unique view totals/device hashes, annotation threads, anchors, messages, and replies |
+| `IMAGES` R2 | Images uploaded through the built-in image flow |
+| External services | 888box attachments and WebTalk-managed data are not stored in this project's KV, D1, or R2 |
+
+The persisted Markdown preview theme lives in `NOTES` KV metadata, not localStorage. Unpublished Markdown content remains browser-only, while the initial randomized theme for a root-created new note is written to metadata once.
+
+### Browser localStorage
+
+| Key | Data |
+| --- | --- |
+| `cf-notepad-preview-width` | Last preview-width fallback; per-note width also exists on the server |
+| `cf-notepad-preview-device` | Desktop/mobile preview mode |
+| `cf-notepad-split-direction` | Side-by-side/stacked editor layout |
+| `cf-notepad-share-font` | Last Share-font fallback; per-note font also exists on the server |
+| `cf-notepad-ui-theme` | Editor chrome auto/light/dark preference; not the Markdown theme |
+| `cf-notepad-autosave` | Local UI mirror; actual per-note Autosave state is server metadata |
+| `cf-notepad:share-history:created` | Up to 20 recently created Share links |
+| `cf-notepad:share-history:viewed` | Up to 20 recently viewed Share links |
+| `cf-notepad:annotation-author` | Last annotation display name |
+
+`sessionStorage` only keeps `cf-notepad:pending-presentation-destination`. Cookies keep language, path-scoped authentication, the anonymous view-device UUID, and the admin session; D1 stores only the SHA-256 device hash.
 
 ## 🧭 開發維護 / Maintenance for Contributors and LLMs
 

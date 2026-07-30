@@ -6,7 +6,13 @@ import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw
 import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
-import { extractNoteDescription, extractNoteTitle, resolveAnnotationsEnabled } from './note_meta'
+import {
+    extractNoteDescription,
+    extractNoteTitle,
+    formatNewNoteTitle,
+    isNewNoteEntry,
+    resolveAnnotationsEnabled,
+} from './note_meta'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -360,6 +366,7 @@ async function backupCurrentNoteBeforeRestore({
 const homePage = request => {
     const originUrl = new URL(request.url)
     const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
+    nextUrl.searchParams.set('new', '1')
     const canonicalUrl = new URL('/', originUrl)
     const ogImageUrl = getOgImageUrl(originUrl)
 
@@ -1508,7 +1515,11 @@ router.get('/:path', async (request) => {
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const { value, metadata } = await queryNote(path)
 
-    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const newEntry = isNewNoteEntry(request.url, value, metadata)
+    const title = !String(value || '').trim() && !metadata?.title
+        ? formatNewNoteTitle(lang)
+        : extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const pageMetadata = newEntry ? { ...metadata, isNewEntry: true } : metadata
 
     // Calculate shareId only if sharing is enabled
     const shareId = await getShareIdForPath(path, metadata)
@@ -1529,7 +1540,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
@@ -1553,7 +1564,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
@@ -1564,7 +1575,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
             shareId,
             path,
         })
@@ -1576,7 +1587,7 @@ router.get('/:path', async (request) => {
         lang,
         title,
         content: value,
-        ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
         shareId,
         path,
     })
@@ -1587,7 +1598,12 @@ router.head('/:path', async (request) => {
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const { value, metadata } = await queryNote(path)
-    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const lang = getI18n(request)
+    const newEntry = isNewNoteEntry(request.url, value, metadata)
+    const title = !String(value || '').trim() && !metadata?.title
+        ? formatNewNoteTitle(lang)
+        : extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const pageMetadata = newEntry ? { ...metadata, isNewEntry: true } : metadata
     const shareId = await getShareIdForPath(path, metadata)
 
     if (!metadata.pw && !metadata.vpw) {
@@ -1602,18 +1618,16 @@ router.head('/:path', async (request) => {
             )
         }
 
-        const lang = getI18n(request)
         return returnPage('Edit', {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
     }
 
-    const lang = getI18n(request)
     const { valid, role } = await checkAuth(cookie, path)
 
     if (valid && role === 'edit') {
@@ -1632,7 +1646,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2() },
             shareId,
             path,
         })
@@ -1643,7 +1657,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
             shareId,
             path,
         })
@@ -1655,7 +1669,7 @@ router.head('/:path', async (request) => {
         lang,
         title,
         content: value,
-        ext: { ...metadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
         shareId,
         path,
     })

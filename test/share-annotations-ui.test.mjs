@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom'
 import {
     buildSelectionAnchor,
     locateAnchorRange,
+    scrollRangeIntoView,
 } from '../static/js/share-annotations.mjs'
 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -55,6 +56,27 @@ test('anchors reattach by quote context and become detached when source text dis
 
     article.textContent = 'The original sentence was removed.'
     assert.equal(locateAnchorRange(article, anchor, 'b'.repeat(64)), null)
+})
+
+test('locating an annotation scrolls the article container to center the exact range', () => {
+    let scrollOptions
+    const scrollRoot = {
+        clientHeight: 600,
+        scrollTop: 100,
+        getBoundingClientRect: () => ({ top: 0, height: 600 }),
+        scrollTo: options => {
+            scrollOptions = options
+        },
+    }
+    const range = {
+        getBoundingClientRect: () => ({ top: 900, height: 20 }),
+    }
+
+    assert.equal(scrollRangeIntoView(range, scrollRoot), true)
+    assert.deepEqual(scrollOptions, {
+        top: 710,
+        behavior: 'smooth',
+    })
 })
 
 test('annotation sidebar supports responsive layout and visible keyboard focus', () => {

@@ -26,7 +26,7 @@ const escapeHtml = value => String(value || '')
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
 export const resolvePageTheme = ({
-    isEdit = false,
+    randomize = false,
     storedTheme = '',
     themes = THEMES,
     random = Math.random,
@@ -36,7 +36,7 @@ export const resolvePageTheme = ({
         ? 'claude-canvas'
         : (themeNames[0] || '')
 
-    if (!isEdit) {
+    if (!randomize) {
         return Object.prototype.hasOwnProperty.call(themes, storedTheme)
             ? storedTheme
             : fallbackTheme
@@ -74,7 +74,10 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
-    const pageTheme = resolvePageTheme({ isEdit, storedTheme: ext.theme })
+    const pageTheme = resolvePageTheme({
+        randomize: isEdit && ext.isNewEntry === true,
+        storedTheme: ext.theme,
+    })
     const annotationsEnabled = resolveAnnotationsEnabled(ext)
     const annotationsUiEnabled = isSharePage && !isEmbed && annotationsEnabled
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
@@ -722,6 +725,8 @@ ${getMarkdownCss()}
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
+        isNewEntry: isEdit === true && ext.isNewEntry === true,
+        theme: pageTheme,
         isPublished: ext.share === true,
         autosave: ext.autosave === true && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
@@ -739,6 +744,12 @@ ${getMarkdownCss()}
     })}
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
     const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+
+    if (APP_STATE.isNewEntry && window.history?.replaceState) {
+        const cleanUrl = new URL(window.location.href)
+        cleanUrl.searchParams.delete('new')
+        window.history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash)
+    }
 
     const getI18n = key => {
         return (APP_STATE.i18n && APP_STATE.i18n[key]) || key
@@ -930,6 +941,9 @@ ${getMarkdownCss()}
             }
             if (Object.prototype.hasOwnProperty.call(nextSettings, 'annotationsEnabled')) {
                 APP_STATE.annotationsEnabled = nextSettings.annotationsEnabled === true
+            }
+            if (Object.prototype.hasOwnProperty.call(nextSettings, 'theme')) {
+                APP_STATE.theme = nextSettings.theme
             }
             return payload
         }
@@ -1476,6 +1490,11 @@ ${getMarkdownCss()}
         const $exportPdfBtn = document.querySelector('#export-pdf-btn')
         const $saveNoteBtn = document.querySelector('#save-note-btn')
         const $autosaveToggle = document.querySelector('#autosave-toggle')
+        if (APP_STATE.isNewEntry && APP_STATE.theme) {
+            persistSetting({ theme: APP_STATE.theme }).catch(error => {
+                console.warn('Initial theme persistence failed:', error?.message || error)
+            })
+        }
         if ($autosaveToggle) {
             $autosaveToggle.checked = APP_STATE.autosave
         }
@@ -1995,10 +2014,11 @@ ${getMarkdownCss()}
         const publishCurrentNote = () => {
             const wasPublished = APP_STATE.isPublished === true
             const currentWidth = APP_STATE.noteSettings.width || (previewWidthSelector ? previewWidthSelector.value : '') || (APP_STATE.isEdit ? '1200px' : '100%')
+            const currentTheme = themeSelector?.value || themeSelector?.getAttribute('value') || APP_STATE.theme
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '', width: currentWidth })
+                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '', width: currentWidth, theme: currentTheme })
             })
                 .then(async res => {
                     if (res.err !== 0) {

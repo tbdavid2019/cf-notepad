@@ -12,18 +12,24 @@ const themes = {
     gamma: 'gamma css',
 }
 
-test('edit pages choose a theme from the complete theme registry on each render', () => {
-    assert.equal(resolvePageTheme({ isEdit: true, storedTheme: 'beta', themes, random: () => 0 }), 'alpha')
-    assert.equal(resolvePageTheme({ isEdit: true, storedTheme: 'beta', themes, random: () => 0.999999 }), 'gamma')
+test('only a homepage-created new note chooses a random theme', () => {
+    assert.equal(resolvePageTheme({ randomize: true, storedTheme: 'beta', themes, random: () => 0 }), 'alpha')
+    assert.equal(resolvePageTheme({ randomize: true, storedTheme: 'beta', themes, random: () => 0.999999 }), 'gamma')
 })
 
-test('share pages retain the article theme and invalid themes use a safe fallback', () => {
-    assert.equal(resolvePageTheme({ isEdit: false, storedTheme: 'beta', themes }), 'beta')
-    assert.equal(resolvePageTheme({ isEdit: false, storedTheme: 'missing', themes }), 'alpha')
+test('existing edit and share pages retain the persisted article theme', () => {
+    assert.equal(resolvePageTheme({ randomize: false, storedTheme: 'beta', themes }), 'beta')
+    assert.equal(resolvePageTheme({ randomize: false, storedTheme: 'missing', themes }), 'alpha')
 })
 
-test('the random editor theme drives both preview CSS and the theme selector', () => {
-    assert.match(baseTemplateSource, /const pageTheme = resolvePageTheme\(\{ isEdit, storedTheme: ext\.theme \}\)/)
+test('the initial random theme is published to server metadata', () => {
+    assert.match(baseTemplateSource, /randomize: isEdit && ext\.isNewEntry === true/)
     assert.match(baseTemplateSource, /THEMES\[pageTheme\]/)
     assert.match(baseTemplateSource, /FOOTER\(\{[\s\S]*theme: pageTheme/)
+    assert.match(
+        baseTemplateSource,
+        /APP_STATE\.isNewEntry[\s\S]*persistSetting\(\{ theme: APP_STATE\.theme \}\)/,
+    )
+    assert.match(baseTemplateSource, /JSON\.stringify\(\{ share: true, content:[\s\S]*theme: currentTheme/)
+    assert.match(baseTemplateSource, /history\.replaceState/)
 })
