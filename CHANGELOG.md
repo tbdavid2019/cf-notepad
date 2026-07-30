@@ -1,5 +1,18 @@
 # Changelog
 
+## [2026-07-31]
+
+### Added
+
+- **Installable PWA Shell**
+  - Added a Web App Manifest, 192px/512px app icons, and Service Worker registration so the notepad can be installed as a standalone app.
+  - Added a bilingual offline page that appears when navigation is attempted without a network connection.
+  - The Service Worker precaches only the PWA shell, manifest, and icons. It never caches notes, Share pages, or API responses, so protected content is not persisted in browser cache.
+
+### Documentation
+
+- Documented PWA installation and the intentionally limited offline behavior in both README language sections.
+
 ## [2026-07-30]
 
 ### Added
