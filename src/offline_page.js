@@ -1,4 +1,4 @@
-<!doctype html>
+const OFFLINE_PAGE_HTML = `<!doctype html>
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="utf-8">
@@ -20,4 +20,11 @@
         <p>請在恢復連線後重新開啟筆記。<br>You’re offline. Reconnect to open your notes.</p>
     </main>
 </body>
-</html>
+</html>`
+
+export const createOfflinePageResponse = () => new Response(OFFLINE_PAGE_HTML, {
+    headers: {
+        'Content-Type': 'text/html; charset=UTF-8',
+        'Cache-Control': 'no-store',
+    },
+})

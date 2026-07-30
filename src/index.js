@@ -6,6 +6,7 @@ import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw
 import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
+import { createOfflinePageResponse } from './offline_page'
 import {
     extractNoteDescription,
     extractNoteTitle,
@@ -380,6 +381,7 @@ const homePage = request => {
 
 router.get('/', homePage)
 router.head('/', homePage)
+router.get('/_pwa-offline', () => createOfflinePageResponse())
 
 const handleAdminGet = async (request) => {
     const lang = getI18n(request)

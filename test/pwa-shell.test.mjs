@@ -6,6 +6,8 @@ import { HTML } from '../src/templates/base.js'
 
 const staticFile = file => readFileSync(new URL(`../static/${file}`, import.meta.url), 'utf8')
 const homeTemplate = readFileSync(new URL('../src/templates/pages.js', import.meta.url), 'utf8')
+const workerSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const offlinePageSource = readFileSync(new URL('../src/offline_page.js', import.meta.url), 'utf8')
 
 test('every rendered page advertises the installable web app manifest', () => {
     const page = HTML({
@@ -42,10 +44,16 @@ test('service worker precaches only the safe application shell and falls back of
     const worker = staticFile('sw.js')
 
     assert.match(worker, /const PRECACHE_URLS = \[/)
-    assert.match(worker, /'\/offline'/)
+    assert.match(worker, /const OFFLINE_URL = '\/_pwa-offline'/)
     assert.match(worker, /request\.method !== 'GET'/)
     assert.match(worker, /request\.mode === 'navigate'/)
     assert.match(worker, /caches\.match\(OFFLINE_URL\)/)
     assert.doesNotMatch(worker, /\/share\//)
     assert.doesNotMatch(worker, /\/api\//)
+})
+
+test('the offline fallback has a dedicated Worker route before dynamic note routing', () => {
+    assert.match(workerSource, /router\.get\('\/_pwa-offline', \(\) => createOfflinePageResponse\(\)\)/)
+    assert.match(offlinePageSource, /目前離線中/)
+    assert.match(offlinePageSource, /You.re offline/)
 })

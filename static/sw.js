@@ -1,5 +1,5 @@
 const CACHE_NAME = 'cloud-notepad-shell-v1'
-const OFFLINE_URL = '/offline'
+const OFFLINE_URL = '/_pwa-offline'
 const PRECACHE_URLS = [
     OFFLINE_URL,
     '/app.webmanifest',
