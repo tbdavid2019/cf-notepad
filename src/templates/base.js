@@ -134,6 +134,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="description" content="${escapeHtml(pageDescription)}" />
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
     <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/app.webmanifest" />
     ${isSharePage ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
     ${webtalkScript}
     ${ogSiteNameMeta}
@@ -2659,6 +2660,15 @@ ${getMarkdownCss()}
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
     ${annotationsUiEnabled ? '<script type="module" src="/js/share-annotations.mjs"></script>' : ''}
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(error => {
+                    console.warn('Service worker registration failed', error)
+                })
+            })
+        }
+    </script>
 
     <script>
         const THEMES = ${JSON.stringify(THEMES)};

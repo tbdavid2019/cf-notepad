@@ -27,6 +27,7 @@ export const Home = ({ nextUrl, canonicalUrl, ogImageUrl }) => `
     <meta name="description" content="DAVID888 WIKI is a fast Markdown wiki for writing, publishing, and sharing notes." />
     <meta name="robots" content="index,follow" />
     <meta name="theme-color" content="#0f172a" />
+    <link rel="manifest" href="/app.webmanifest" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
     <meta property="og:site_name" content="DAVID888 WIKI" />
     <meta property="og:locale" content="en_US" />
@@ -53,7 +54,12 @@ export const Home = ({ nextUrl, canonicalUrl, ogImageUrl }) => `
         <p>Markdown wiki for You</p>
         <a href="${escapeHtml(nextUrl)}">Open a new note</a>
     </main>
-    <script>window.location.replace(${escapeScriptJson(nextUrl)})</script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(() => {})
+        }
+        window.location.replace(${escapeScriptJson(nextUrl)})
+    </script>
 </body>
 </html>
 `
