@@ -2,6 +2,14 @@
 
 ## [2026-07-30]
 
+### Added
+
+- **HackMD Image Size Compatibility**
+  - Markdown images now accept HackMD-style `=600x`, `=600x400`, and `=x400` dimensions while retaining responsive maximum width.
+- **Two- and Three-Column Content Layouts**
+  - Added Edit toolbar actions that wrap selected Markdown in `two-column-layout` or `three-column-layout` containers.
+  - Column sections are grouped by headings and collapse to one column on narrow screens.
+
 ### Changed
 
 - **Initial-Only Random Theme**

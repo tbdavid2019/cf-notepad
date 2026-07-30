@@ -341,6 +341,7 @@ ${getMarkdownCss()}
         import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
         import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
+        import { decorateColumnLayouts, expandHackmdImageSizes } from '/js/markdown-extensions.mjs';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
         import { decorateMediaPreviews } from '/js/media-preview.mjs';
 
@@ -683,7 +684,7 @@ ${getMarkdownCss()}
         window.renderMarkdown = async (node, text) => {
             if (!node) return;
             try {
-                const file = await processor.process(text);
+                const file = await processor.process(expandHackmdImageSizes(text));
                 const clean = DOMPurify.sanitize(String(file), {
                     ADD_TAGS: ['math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
                     ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed'],
@@ -692,6 +693,7 @@ ${getMarkdownCss()}
                 });
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
+                decorateColumnLayouts(node);
                 decorateHeadingAnchors(node);
                 renderTableOfContents(node);
                 node.dataset.copyHtml = node.innerHTML;

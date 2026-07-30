@@ -55,6 +55,8 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **複製內容**：Footer 的 Markdown `匯出` 右側提供 `複製`，會同時寫入 rich HTML 與 Markdown/plain-text fallback；rich HTML 使用媒體 preview 建立前的安全 HTML，不會把 YouTube／PDF iframe 貼進 Jira、Confluence 或其他編輯器；成功後顯示勾勾動畫與複製提示。
 - **Theme 特色說明**：主題選單保留完整名稱，並依介面語言顯示繁中或英文風格描述，方便使用者依視覺特色挑選主題。
 - **新筆記隨機 Theme**：只有從網站根目錄建立全新隨機編號筆記時才會抽選 Theme，並立即保存到 Server metadata；原作者重新打開既有 Edit 會沿用已保存的 Theme。空白新筆記的瀏覽器標題使用「新筆記 · 月/日 時:分」，不顯示對人類無意義的隨機路徑。
+- **HackMD 圖片尺寸**：支援 `![圖片](URL =600x)`、`=600x400` 與 `=x400`；尺寸只接受安全的數字值，圖片仍受文章容器最大寬度限制。
+- **二欄／三欄版面**：Edit 工具列可將圈選內容包成 `<div class="two-column-layout">` 或 `<div class="three-column-layout">`。容器內以標題分隔各欄，窄螢幕會自動改為單欄。
 - **動態空白頁歡迎提示**：當新建或清空編輯器時，會自動載入一首隨機的泰戈爾詩歌，以及 `static/data/editor-tips.json` 中的一則雙語小訣竅；兩者會在漂鳥集下方以同步的**打字機動畫效果**出現。
 - **AI 寫作特助**：
   - **AI 排版優化**：內建 Workers AI（`gpt-oss-20b`），只整理 Markdown 結構、空白、標題與清單；會保留原文的語言、文字、連結與內容，不會翻譯或改寫。純英文文件若收到含中文的結果，系統會拒絕取代原文。若先圈選內容，僅會排版該片段。
@@ -253,6 +255,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Copy Rendered Content**: The Footer places Copy beside Markdown Export and writes rich HTML plus Markdown/plain-text fallback for editors such as Notion and Jira. Rich HTML comes from the sanitized snapshot before media preview decoration, so YouTube/PDF iframes are not pasted into external editors. A check animation confirms successful copying.
 - **Theme Descriptions**: Theme names remain complete and are paired with localized Traditional Chinese or English descriptions, with the selected theme's full description available through its tooltip.
 - **Random Theme for New Notes**: A theme is randomized only when the root site creates a brand-new random note path, then immediately persisted to server metadata. Reopening an existing author Edit keeps its saved theme. Empty new tabs use a human title such as `New note · 07/30 09:05` instead of exposing the random path.
+- **HackMD Image Dimensions**: Supports `![image](URL =600x)`, `=600x400`, and `=x400` with numeric-only dimensions and responsive maximum width.
+- **Two/Three-Column Layouts**: Edit toolbar actions wrap selected Markdown in `two-column-layout` or `three-column-layout` containers. Heading sections become columns and stack on narrow screens.
 - **Dynamic Welcome Tips**: On each new or empty editor load, a random bilingual tip from `static/data/editor-tips.json` is typed below the Tagore poem with the same synchronized **typewriter animation**.
 - **AI-Assisted Writing**:
   - **AI Formatting**: The `gpt-oss-20b` formatter only improves Markdown structure, whitespace, headings, and lists. It preserves the source language, prose, links, and content rather than translating or rewriting; an English note is not replaced if the result introduces Chinese. With a selection, it formats only that selection.

@@ -2,10 +2,14 @@ const TOOLBAR_TEXT = {
     'zh-TW': {
         bold: '粗體文字', italic: '斜體文字', strike: '刪除線文字', inlineCode: '程式碼',
         link: '連結文字', codeBlock: '程式碼', table: '| 欄位 1 | 欄位 2 | 欄位 3 |\n| --- | --- | --- |\n| 文字 | 文字 | 文字 |', imageAlt: '圖片說明',
+        twoColumns: '### 第一欄\n\n內容\n\n### 第二欄\n\n內容',
+        threeColumns: '### 第一欄\n\n內容\n\n### 第二欄\n\n內容\n\n### 第三欄\n\n內容',
     },
     'en-US': {
         bold: 'bold text', italic: 'italic text', strike: 'strikethrough text', inlineCode: 'code',
         link: 'link text', codeBlock: 'code', table: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text | Text | Text |', imageAlt: 'image description',
+        twoColumns: '### Column 1\n\nContent\n\n### Column 2\n\nContent',
+        threeColumns: '### Column 1\n\nContent\n\n### Column 2\n\nContent\n\n### Column 3\n\nContent',
     },
 }
 
@@ -84,6 +88,23 @@ const replaceSnippet = (text, start, end, snippet, selectionStart, selectionEnd)
     selectionEnd: start + selectionEnd,
 })
 
+const replaceColumnLayout = (text, start, end, columns, placeholder) => {
+    const selected = text.slice(start, end)
+    const content = selected || placeholder
+    const className = columns === 3 ? 'three-column-layout' : 'two-column-layout'
+    const leadingBreak = start > 0 && text[start - 1] !== '\n' ? '\n\n' : ''
+    const trailingBreak = end < text.length && text[end] !== '\n' ? '\n\n' : ''
+    const opening = `${leadingBreak}<div class="${className}">\n\n`
+    const closing = `\n\n</div>${trailingBreak}`
+    const replacement = opening + content + closing
+
+    return {
+        text: text.slice(0, start) + replacement + text.slice(end),
+        selectionStart: start + opening.length,
+        selectionEnd: start + opening.length + content.length,
+    }
+}
+
 export const createLineNumbers = text => String(text || '').split('\n')
     .map((_, index) => String(index + 1))
     .join('\n')
@@ -138,6 +159,12 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
         const snippet = `![${labels.imageAlt}](https://example.com/image.png)`
         const urlStart = 8
         return replaceSnippet(source, safeStart, safeEnd, snippet, urlStart, urlStart + 29)
+    }
+    if (command === 'twoColumns') {
+        return replaceColumnLayout(source, safeStart, safeEnd, 2, labels.twoColumns)
+    }
+    if (command === 'threeColumns') {
+        return replaceColumnLayout(source, safeStart, safeEnd, 3, labels.threeColumns)
     }
 
     return { text: source, selectionStart: safeStart, selectionEnd: safeEnd }

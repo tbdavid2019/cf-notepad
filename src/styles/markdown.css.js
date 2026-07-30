@@ -32,6 +32,34 @@ export const getMarkdownCss = () => `
 .markdown-body a { color: #0366d6; text-decoration: none; }
 .markdown-body a:hover { text-decoration: underline; }
 .markdown-body img { max-width: 100%; box-sizing: content-box; }
+.markdown-body .two-column-layout,
+.markdown-body .three-column-layout {
+    display: grid;
+    gap: clamp(20px, 3vw, 40px);
+    align-items: start;
+    margin: 20px 0;
+}
+.markdown-body .two-column-layout {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.markdown-body .three-column-layout {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.markdown-body .column-layout-item {
+    min-width: 0;
+}
+.markdown-body .column-layout-item > :first-child {
+    margin-top: 0;
+}
+.markdown-body .column-layout-item > :last-child {
+    margin-bottom: 0;
+}
+@media (max-width: 720px) {
+    .markdown-body .two-column-layout,
+    .markdown-body .three-column-layout {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
 .markdown-body .media-preview { margin: 20px 0; padding: 12px; border: 1px solid rgba(127, 127, 127, 0.28); border-radius: 8px; background: rgba(127, 127, 127, 0.06); }
 .markdown-body .media-preview-player { display: block; width: 100%; max-width: 100%; border: 0; border-radius: 4px; }
 .markdown-body .media-preview-youtube { padding: 0; overflow: hidden; }

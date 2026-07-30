@@ -96,6 +96,18 @@ test('inserts task list, code block, table, and image snippets', () => {
     assert.deepEqual([image.selectionStart, image.selectionEnd], [8, 37])
 })
 
+test('wraps selected content in two-column and three-column layouts', () => {
+    const selected = '### One\n\nFirst\n\n### Two\n\nSecond'
+    assert.equal(
+        apply(selected, 'twoColumns', 0, selected.length).text,
+        `<div class="two-column-layout">\n\n${selected}\n\n</div>`,
+    )
+
+    const threeColumns = apply('', 'threeColumns', 0, 0, 'en-US')
+    assert.match(threeColumns.text, /^<div class="three-column-layout">\n\n### Column 1/)
+    assert.match(threeColumns.text, /### Column 3[\s\S]*<\/div>$/)
+})
+
 test('inserts a standalone TOC placeholder at the cursor', () => {
     assert.deepEqual(apply('', 'toc'), {
         text: '[TOC]',
@@ -136,6 +148,8 @@ test('renders the toolbar for editable pages', () => {
     assert.match(commonTemplate, /markdown-toolbar-asset-input/)
     assert.match(commonTemplate, /command: 'asset'/)
     assert.match(commonTemplate, /command: 'toc'/)
+    assert.match(commonTemplate, /command: 'twoColumns'/)
+    assert.match(commonTemplate, /command: 'threeColumns'/)
     assert.doesNotMatch(commonTemplate, /command: 'citation'/)
     assert.match(commonTemplate, /accept="video\/\*,audio\/\*,application\/pdf/)
     assert.match(commonTemplate, /command: 'fullscreen'/)
