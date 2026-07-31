@@ -27,7 +27,7 @@ test('does not show the install prompt when the page runs as an installed standa
     assert.equal(dom.window.document.querySelector('#pwa-install-prompt').hidden, true)
 })
 
-test('keeps the install prompt hidden after the user dismisses it', () => {
+test('keeps the install prompt hidden after dismissal within 24 hours and prompts again after 24 hours', () => {
     const dom = createPromptDom()
     Object.defineProperty(dom.window, 'matchMedia', {
         value: () => ({ matches: false }),
@@ -41,6 +41,14 @@ test('keeps the install prompt hidden after the user dismisses it', () => {
     dom.window.document.querySelector('#pwa-install-dismiss').click()
     assert.equal(dom.window.document.querySelector('#pwa-install-prompt').hidden, true)
 
+    // Second event immediately after -> still hidden
     dom.window.dispatchEvent(new dom.window.Event('beforeinstallprompt', { cancelable: true }))
     assert.equal(dom.window.document.querySelector('#pwa-install-prompt').hidden, true)
+
+    // Simulate 24 hours + 1 second later
+    const futureNow = Date.now() + 24 * 60 * 60 * 1000 + 1000
+    dom.window.Date = { now: () => futureNow }
+
+    dom.window.dispatchEvent(new dom.window.Event('beforeinstallprompt', { cancelable: true }))
+    assert.equal(dom.window.document.querySelector('#pwa-install-prompt').hidden, false)
 })

@@ -73,7 +73,7 @@ test('installable browsers receive an in-app install action that triggers the de
 
     assert.match(page, /id="pwa-install-prompt"/)
     assert.match(page, /id="pwa-install-button"/)
-    assert.match(page, /id="pwa-install-dismiss"[^>]*onclick="try\{localStorage\.setItem\('cf-notepad:pwa-install-dismissed','1'\)\}catch\(e\)\{\}this\.closest\('#pwa-install-prompt'\)\.hidden = true"/)
+    assert.match(page, /id="pwa-install-dismiss"[^>]*onclick="try\{localStorage\.setItem\('cf-notepad:pwa-install-dismissed',String\(Date\.now\(\)\)\)\}catch\(e\)\{\}this\.closest\('#pwa-install-prompt'\)\.hidden = true"/)
     assert.match(page, /src="\/js\/pwa-install\.mjs"/)
     assert.match(installPromptSource, /beforeinstallprompt/)
     assert.match(installPromptSource, /deferredInstallPrompt\.prompt\(\)/)

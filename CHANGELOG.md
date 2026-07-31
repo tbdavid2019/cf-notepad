@@ -7,7 +7,7 @@
 - **Installable PWA Shell**
   - Added a Web App Manifest, 192px/512px app icons, and Service Worker registration so the notepad can be installed as a standalone app.
   - Added an in-app `安裝 App` / Install app prompt for Android Chromium browsers after they report that the PWA is installable; clicking it opens the browser's native install confirmation.
-  - Kept the cross-platform installation flow and made dismissal persistent: `×` immediately closes the promotion, records the choice locally, and prevents it from returning after reload or reopening the app.
+  - Kept the cross-platform installation flow with a 24-hour renewal cycle: `×` closes the promotion for 24 hours. If the app remains uninstalled, the prompt will ask again after 24 hours have elapsed.
   - Added a bilingual offline page that appears when navigation is attempted without a network connection.
   - The Service Worker precaches only the PWA shell, manifest, and icons. It never caches notes, Share pages, or API responses, so protected content is not persisted in browser cache.
 

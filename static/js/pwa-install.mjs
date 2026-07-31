@@ -4,18 +4,27 @@ export const isStandalonePwa = windowRef => {
 }
 
 const DISMISSED_STORAGE_KEY = 'cf-notepad:pwa-install-dismissed'
+export const DISMISSAL_TTL_MS = 24 * 60 * 60 * 1000
 
-const wasDismissed = windowRef => {
+export const wasDismissed = windowRef => {
     try {
-        return windowRef.localStorage?.getItem(DISMISSED_STORAGE_KEY) === '1'
+        const val = windowRef.localStorage?.getItem(DISMISSED_STORAGE_KEY)
+        if (!val) return false
+        const timestamp = Number(val)
+        if (Number.isNaN(timestamp)) {
+            return true
+        }
+        const now = windowRef.Date?.now ? windowRef.Date.now() : Date.now()
+        return now - timestamp < DISMISSAL_TTL_MS
     } catch {
         return false
     }
 }
 
-const rememberDismissal = windowRef => {
+export const rememberDismissal = windowRef => {
     try {
-        windowRef.localStorage?.setItem(DISMISSED_STORAGE_KEY, '1')
+        const now = windowRef.Date?.now ? windowRef.Date.now() : Date.now()
+        windowRef.localStorage?.setItem(DISMISSED_STORAGE_KEY, String(now))
     } catch {
         // Closing the prompt must still work when storage is unavailable.
     }
@@ -28,7 +37,6 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     if (!prompt || !installButton || !dismissButton) return false
 
     let deferredInstallPrompt = null
-    let dismissed = wasDismissed(windowRef) || isStandalonePwa(windowRef)
 
     const hidePrompt = () => {
         deferredInstallPrompt = null
@@ -37,13 +45,12 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
 
     windowRef.addEventListener('beforeinstallprompt', event => {
         event.preventDefault()
-        if (dismissed || isStandalonePwa(windowRef)) return
+        if (wasDismissed(windowRef) || isStandalonePwa(windowRef)) return
         deferredInstallPrompt = event
         prompt.hidden = false
     })
 
     dismissButton.addEventListener('click', () => {
-        dismissed = true
         rememberDismissal(windowRef)
         hidePrompt()
     })
@@ -60,7 +67,6 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     })
 
     windowRef.addEventListener('appinstalled', () => {
-        dismissed = true
         rememberDismissal(windowRef)
         hidePrompt()
     })
