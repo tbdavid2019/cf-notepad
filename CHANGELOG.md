@@ -15,6 +15,8 @@
 
 - **PWA Install Prompt Dismissal**
   - Added `.pwa-install-prompt[hidden]` CSS rule to ensure setting `prompt.hidden = true` immediately hides the PWA install prompt on screen when the `×` button is clicked.
+- **PWA Manifest App Name**
+  - Updated Web App Manifest (`app.webmanifest`) and added a dynamic route handler to serve the configured application name (`david888 wiki` / `SCN_APP_NAME`) instead of default `Cloud Notepad`.
 
 ### Documentation
 

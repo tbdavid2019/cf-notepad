@@ -31,10 +31,10 @@ test('the homepage registers the PWA before it redirects to a new note', () => {
     assert.match(homeTemplate, /navigator\.serviceWorker\.register\('\/sw\.js'\)/)
 })
 
-test('manifest describes a standalone Cloud Notepad installation', () => {
+test('manifest describes a standalone david888 wiki installation', () => {
     const manifest = JSON.parse(staticFile('app.webmanifest'))
 
-    assert.equal(manifest.name, 'Cloud Notepad')
+    assert.equal(manifest.name, 'david888 wiki')
     assert.equal(manifest.start_url, '/')
     assert.equal(manifest.scope, '/')
     assert.equal(manifest.display, 'standalone')

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Cloud Notepad",
-  "short_name": "Notepad",
-  "description": "A fast, private Markdown notepad.",
+  "name": "david888 wiki",
+  "short_name": "david888 wiki",
+  "description": "david888 wiki - A fast, private Markdown notepad.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",

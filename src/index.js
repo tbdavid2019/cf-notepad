@@ -3,7 +3,7 @@ import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
 import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
-import { getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
+import { APP_NAME, getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { createOfflinePageResponse } from './offline_page'
@@ -382,6 +382,37 @@ const homePage = request => {
 router.get('/', homePage)
 router.head('/', homePage)
 router.get('/_pwa-offline', () => createOfflinePageResponse())
+router.get('/app.webmanifest', () => {
+    const name = APP_NAME || 'david888 wiki'
+    return new Response(JSON.stringify({
+        id: '/',
+        name: name,
+        short_name: name,
+        description: `${name} - A fast, private Markdown notepad.`,
+        start_url: '/',
+        scope: '/',
+        display: 'standalone',
+        background_color: '#f9f6f0',
+        theme_color: '#0f172a',
+        icons: [
+            {
+                src: '/notepad-icon-192.png',
+                sizes: '192x192',
+                type: 'image/png'
+            },
+            {
+                src: '/notepad-icon.png',
+                sizes: '512x512',
+                type: 'image/png'
+            }
+        ]
+    }), {
+        headers: {
+            'content-type': 'application/manifest+json; charset=utf-8',
+            'cache-control': 'public, max-age=3600'
+        }
+    })
+})
 
 const handleAdminGet = async (request) => {
     const lang = getI18n(request)
