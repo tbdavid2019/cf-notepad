@@ -1,10 +1,14 @@
-const OFFLINE_PAGE_HTML = `<!doctype html>
+import { APP_NAME } from './constant.js'
+
+export const createOfflinePageResponse = () => {
+    const appName = APP_NAME || 'david888 wiki'
+    const html = `<!doctype html>
 <html lang="zh-Hant-TW">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#0f172a">
-    <title>目前離線中 · Cloud Notepad</title>
+    <title>目前離線中 · ${appName}</title>
     <style>
         :root { color-scheme: light dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
         body { align-items: center; background: #f9f6f0; color: #2c2a29; display: flex; justify-content: center; margin: 0; min-height: 100vh; padding: 24px; text-align: center; }
@@ -22,9 +26,10 @@ const OFFLINE_PAGE_HTML = `<!doctype html>
 </body>
 </html>`
 
-export const createOfflinePageResponse = () => new Response(OFFLINE_PAGE_HTML, {
-    headers: {
-        'Content-Type': 'text/html; charset=UTF-8',
-        'Cache-Control': 'no-store',
-    },
-})
+    return new Response(html, {
+        headers: {
+            'Content-Type': 'text/html; charset=UTF-8',
+            'Cache-Control': 'no-store',
+        },
+    })
+}

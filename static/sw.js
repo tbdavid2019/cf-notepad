@@ -1,4 +1,4 @@
-const CACHE_NAME = 'cloud-notepad-shell-v1'
+const CACHE_NAME = 'david888-wiki-shell-v2'
 const OFFLINE_URL = '/_pwa-offline'
 const PRECACHE_URLS = [
     OFFLINE_URL,
@@ -41,6 +41,19 @@ self.addEventListener('fetch', event => {
             fetch(request).catch(async () =>
                 (await caches.match(OFFLINE_URL)) || Response.error(),
             ),
+        )
+        return
+    }
+
+    if (url.pathname === '/app.webmanifest') {
+        event.respondWith(
+            fetch(request)
+                .then(response => {
+                    const copy = response.clone()
+                    caches.open(CACHE_NAME).then(cache => cache.put(request, copy))
+                    return response
+                })
+                .catch(() => caches.match(request)),
         )
         return
     }
