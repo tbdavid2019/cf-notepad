@@ -2673,6 +2673,7 @@ ${getMarkdownCss()}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
+    <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
     ${annotationsUiEnabled ? '<script type="module" src="/js/share-annotations.mjs"></script>' : ''}
@@ -2684,39 +2685,6 @@ ${getMarkdownCss()}
                 })
             })
         }
-
-        const pwaInstallPrompt = document.getElementById('pwa-install-prompt')
-        const pwaInstallButton = document.getElementById('pwa-install-button')
-        const pwaInstallDismiss = document.getElementById('pwa-install-dismiss')
-        let deferredInstallPrompt = null
-
-        const hidePwaInstallPrompt = () => {
-            deferredInstallPrompt = null
-            if (pwaInstallPrompt) pwaInstallPrompt.hidden = true
-        }
-
-        window.addEventListener('beforeinstallprompt', event => {
-            event.preventDefault()
-            deferredInstallPrompt = event
-            if (pwaInstallPrompt) pwaInstallPrompt.hidden = false
-        })
-
-        pwaInstallDismiss?.addEventListener('click', () => {
-            if (pwaInstallPrompt) pwaInstallPrompt.hidden = true
-        })
-
-        pwaInstallButton?.addEventListener('click', async () => {
-            if (!deferredInstallPrompt) return
-            pwaInstallButton.disabled = true
-            try {
-                await deferredInstallPrompt.prompt()
-            } finally {
-                pwaInstallButton.disabled = false
-                hidePwaInstallPrompt()
-            }
-        })
-
-        window.addEventListener('appinstalled', hidePwaInstallPrompt)
     </script>
 
     <script>

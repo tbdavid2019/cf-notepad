@@ -9,6 +9,7 @@ const homeTemplate = readFileSync(new URL('../src/templates/pages.js', import.me
 const workerSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const offlinePageSource = readFileSync(new URL('../src/offline_page.js', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
+const installPromptSource = staticFile('js/pwa-install.mjs')
 
 test('every rendered page advertises the installable web app manifest', () => {
     const page = HTML({
@@ -72,8 +73,9 @@ test('installable browsers receive an in-app install action that triggers the de
 
     assert.match(page, /id="pwa-install-prompt"/)
     assert.match(page, /id="pwa-install-button"/)
-    assert.match(page, /beforeinstallprompt/)
-    assert.match(page, /deferredInstallPrompt\.prompt\(\)/)
-    assert.match(page, /appinstalled/)
+    assert.match(page, /src="\/js\/pwa-install\.mjs"/)
+    assert.match(installPromptSource, /beforeinstallprompt/)
+    assert.match(installPromptSource, /deferredInstallPrompt\.prompt\(\)/)
+    assert.match(installPromptSource, /appinstalled/)
     assert.match(baseCssSource, /\.pwa-install-prompt/)
 })
