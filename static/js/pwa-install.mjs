@@ -3,6 +3,8 @@ export const isStandalonePwa = windowRef => {
     return standaloneDisplayMode || windowRef.navigator?.standalone === true
 }
 
+export const isAndroid = windowRef => /Android/i.test(windowRef.navigator?.userAgent || '')
+
 export const initPwaInstallPrompt = (documentRef = document, windowRef = window) => {
     const prompt = documentRef.getElementById('pwa-install-prompt')
     const installButton = documentRef.getElementById('pwa-install-button')
@@ -10,7 +12,7 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     if (!prompt || !installButton || !dismissButton) return false
 
     let deferredInstallPrompt = null
-    let dismissed = isStandalonePwa(windowRef)
+    let dismissed = !isAndroid(windowRef) || isStandalonePwa(windowRef)
 
     const hidePrompt = () => {
         deferredInstallPrompt = null
@@ -18,7 +20,7 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     }
 
     windowRef.addEventListener('beforeinstallprompt', event => {
-        if (dismissed || isStandalonePwa(windowRef)) return
+        if (dismissed || !isAndroid(windowRef) || isStandalonePwa(windowRef)) return
         event.preventDefault()
         deferredInstallPrompt = event
         prompt.hidden = false
