@@ -5,6 +5,8 @@ import { JSDOM } from 'jsdom'
 
 import {
     buildSelectionAnchor,
+    createAnnotationThreadUrl,
+    getAnnotationThreadIdFromHash,
     locateAnchorRange,
     setupAnnotationRailDragging,
     scrollRangeIntoView,
@@ -131,4 +133,26 @@ test('annotation rail can be dragged and restores its saved viewport-relative po
     })
     assert.equal(restored.style.left, '780px')
     assert.equal(restored.style.top, '580px')
+})
+
+test('annotation links keep the share URL while removing password query values', () => {
+    const url = createAnnotationThreadUrl(
+        'https://example.test/share/demo?pw=private&view=compact#old-section',
+        'thread/with spaces',
+    )
+
+    assert.equal(
+        url,
+        'https://example.test/share/demo?view=compact#annotation=thread%2Fwith%20spaces',
+    )
+    assert.equal(getAnnotationThreadIdFromHash('#annotation=thread%2Fwith%20spaces'), 'thread/with spaces')
+    assert.equal(getAnnotationThreadIdFromHash('#section-1'), null)
+})
+
+test('annotation cards expose a copyable deep link and handle it when the URL changes', () => {
+    assert.match(annotationCss, /\.annotation-copy-link-button/)
+    assert.match(
+        readFileSync(new URL('../static/js/share-annotations.mjs', import.meta.url), 'utf8'),
+        /window\.addEventListener\('hashchange', locateThreadFromLocation\)/,
+    )
 })

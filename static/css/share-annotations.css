@@ -25,6 +25,7 @@
 .annotation-primary-button,
 .annotation-secondary-button,
 .annotation-locate-button,
+.annotation-copy-link-button,
 .annotation-detached-label {
     font: inherit;
 }
@@ -348,6 +349,22 @@
     text-underline-offset: 3px;
 }
 
+.annotation-copy-link-button {
+    justify-self: start;
+    padding: 2px 0;
+    color: var(--annotation-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+    font-size: 12px;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+.annotation-copy-link-button:hover {
+    color: var(--annotation-accent-strong);
+}
+
 .annotation-detached-label {
     color: var(--annotation-danger);
     background: transparent;
@@ -424,6 +441,11 @@
 .annotation-primary-button:focus-visible,
 .annotation-secondary-button:focus-visible,
 .annotation-locate-button:focus-visible {
+    outline: 3px solid rgba(182, 83, 62, 0.38);
+    outline-offset: 3px;
+}
+
+.annotation-copy-link-button:focus-visible {
     outline: 3px solid rgba(182, 83, 62, 0.38);
     outline-offset: 3px;
 }

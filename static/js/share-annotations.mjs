@@ -144,6 +144,49 @@ export function setupAnnotationRailDragging(rail, {
     }
 }
 
+export function createAnnotationThreadUrl(locationRef, threadId) {
+    const url = new URL(typeof locationRef === 'string' ? locationRef : locationRef?.href)
+    const normalizedThreadId = typeof threadId === 'string' ? threadId.trim() : ''
+    if (!normalizedThreadId) return url.toString()
+
+    url.searchParams.delete('pw')
+    url.searchParams.delete('vpw')
+    url.searchParams.delete('password')
+    url.hash = `annotation=${encodeURIComponent(normalizedThreadId)}`
+    return url.toString()
+}
+
+export function getAnnotationThreadIdFromHash(hash) {
+    const match = /^#annotation=([^&]+)$/.exec(typeof hash === 'string' ? hash : '')
+    if (!match) return null
+    try {
+        const threadId = decodeURIComponent(match[1]).trim()
+        return threadId || null
+    } catch {
+        return null
+    }
+}
+
+async function copyTextToClipboard(text, documentRef = document) {
+    if (navigator.clipboard?.writeText) {
+        try {
+            await navigator.clipboard.writeText(text)
+            return
+        } catch {}
+    }
+
+    const field = documentRef.createElement('textarea')
+    field.value = text
+    field.setAttribute('readonly', '')
+    field.style.position = 'fixed'
+    field.style.opacity = '0'
+    documentRef.body.append(field)
+    field.select()
+    const copied = documentRef.execCommand?.('copy') === true
+    field.remove()
+    if (!copied) throw new DOMException('The request is not allowed', 'NotAllowedError')
+}
+
 function getTextNodes(root) {
     if (!root?.ownerDocument) return []
 
@@ -355,6 +398,9 @@ function initShareAnnotations() {
             title: '段落註解',
             open: '開啟段落註解',
             move: '拖曳以移動註解按鈕',
+            copyLink: '複製連結',
+            linkCopied: '註解連結已複製。',
+            copyError: '無法複製連結，請再試一次。',
             close: '關閉註解欄',
             annotate: '註解',
             selectionHint: '圈選文章文字即可新增註解。',
@@ -378,6 +424,9 @@ function initShareAnnotations() {
             title: 'Paragraph annotations',
             open: 'Open paragraph annotations',
             move: 'Drag to move the annotation button',
+            copyLink: 'Copy link',
+            linkCopied: 'Annotation link copied.',
+            copyError: 'The annotation link could not be copied. Try again.',
             close: 'Close annotations',
             annotate: 'Annotate',
             selectionHint: 'Select article text to start an annotation.',
@@ -617,7 +666,17 @@ function initShareAnnotations() {
                     window.setTimeout(() => target?.classList.remove('annotation-source-flash'), 1400)
                 })
             }
-            cardHeader.append(quote, locationButton)
+            const copyLinkButton = createElement(document, 'button', 'annotation-copy-link-button', copy.copyLink)
+            copyLinkButton.type = 'button'
+            copyLinkButton.addEventListener('click', async () => {
+                try {
+                    await copyTextToClipboard(createAnnotationThreadUrl(window.location, thread.id))
+                    status.textContent = copy.linkCopied
+                } catch {
+                    status.textContent = copy.copyError
+                }
+            })
+            cardHeader.append(quote, locationButton, copyLinkButton)
 
             const messages = createElement(document, 'div', 'annotation-messages')
             for (const message of thread.messages) {
@@ -658,6 +717,24 @@ function initShareAnnotations() {
         }
     }
 
+    const locateThreadFromLocation = () => {
+        const threadId = getAnnotationThreadIdFromHash(window.location.hash)
+        if (!threadId) return
+        const thread = state.threads.find(item => item.id === threadId)
+        if (!thread) return
+
+        setPanelOpen(true)
+        const range = locateAnchorRange(articleRoot, thread.anchor, state.currentRevision)
+        if (!range) return
+        const scrollRoot = articleRoot.closest('.contents')
+            || document.scrollingElement
+            || document.documentElement
+        scrollRangeIntoView(range, scrollRoot)
+        const target = range.startContainer.parentElement
+        target?.classList.add('annotation-source-flash')
+        window.setTimeout(() => target?.classList.remove('annotation-source-flash'), 1400)
+    }
+
     const loadThreads = async () => {
         status.textContent = copy.loading
         try {
@@ -668,6 +745,7 @@ function initShareAnnotations() {
             state.threads = Array.isArray(data.threads) ? data.threads : []
             status.textContent = ''
             renderThreads()
+            locateThreadFromLocation()
         } catch {
             status.textContent = copy.loadError
         }
@@ -745,6 +823,7 @@ function initShareAnnotations() {
     })
     articleRoot.addEventListener('pointerup', () => window.setTimeout(captureSelection, 0))
     articleRoot.addEventListener('keyup', captureSelection)
+    window.addEventListener('hashchange', locateThreadFromLocation)
 
     let highlightTimer = null
     const observer = new MutationObserver(() => {
