@@ -2434,13 +2434,22 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     color: #cbd5e1;
     font-size: 20px;
     line-height: 1;
+    min-height: 32px;
+    min-width: 32px;
     padding: 2px 3px;
+    touch-action: manipulation;
 }
 
 .pwa-install-button:focus-visible,
 .pwa-install-dismiss:focus-visible {
     outline: 2px solid #fff;
     outline-offset: 2px;
+}
+
+@media (display-mode: standalone) {
+    .pwa-install-prompt {
+        display: none !important;
+    }
 }
 
 @keyframes wiggle-right-icon {
