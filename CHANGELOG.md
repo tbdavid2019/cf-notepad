@@ -11,6 +11,11 @@
   - Added a bilingual offline page that appears when navigation is attempted without a network connection.
   - The Service Worker precaches only the PWA shell, manifest, and icons. It never caches notes, Share pages, or API responses, so protected content is not persisted in browser cache.
 
+### Fixed
+
+- **PWA Install Prompt Dismissal**
+  - Added `.pwa-install-prompt[hidden]` CSS rule to ensure setting `prompt.hidden = true` immediately hides the PWA install prompt on screen when the `×` button is clicked.
+
 ### Documentation
 
 - Documented PWA installation and the intentionally limited offline behavior in both README language sections.

@@ -2405,6 +2405,10 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     z-index: 1200;
 }
 
+.pwa-install-prompt[hidden] {
+    display: none !important;
+}
+
 .pwa-install-title {
     font-size: 13px;
     font-weight: 700;
