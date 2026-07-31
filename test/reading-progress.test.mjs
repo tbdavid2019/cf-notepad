@@ -27,6 +27,13 @@ test('loads a reading progress widget for rendered Markdown pages', () => {
     assert.match(baseCss, /\.reading-progress-track/)
 })
 
+test('centers the reading progress control on the left side of shared pages', () => {
+    assert.match(
+        baseCss,
+        /body\.share-view \.reading-progress\s*\{[^}]*top:\s*50%;[^}]*transform:\s*translateY\(-50%\);/,
+    )
+})
+
 test('uses GenJyuu Gothic for Chinese while preserving the existing Latin font stack', () => {
     assert.match(baseCss, /font-family: "GenJyuu Gothic CJK"/)
     assert.match(baseCss, /GenJyuuGothic-Medium\.woff2/)

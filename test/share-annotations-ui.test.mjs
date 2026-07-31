@@ -6,6 +6,7 @@ import { JSDOM } from 'jsdom'
 import {
     buildSelectionAnchor,
     locateAnchorRange,
+    setupAnnotationRailDragging,
     scrollRangeIntoView,
 } from '../static/js/share-annotations.mjs'
 
@@ -84,4 +85,50 @@ test('annotation sidebar supports responsive layout and visible keyboard focus',
     assert.match(annotationCss, /@media \(max-width: 720px\)/)
     assert.match(annotationCss, /:focus-visible/)
     assert.match(annotationCss, /::highlight\(share-annotations\)/)
+})
+
+test('annotation rail defaults below the center to avoid other right-side controls', () => {
+    assert.match(
+        annotationCss,
+        /\.annotation-rail-button\s*\{[^}]*inset-block-start:\s*70%;[^}]*transform:\s*translateY\(-50%\);/,
+    )
+})
+
+test('annotation rail can be dragged and restores its saved viewport-relative position', () => {
+    const dom = new JSDOM('<!doctype html><button class="annotation-rail-button"></button>', {
+        url: 'https://example.test/share/demo',
+    })
+    const rail = dom.window.document.querySelector('.annotation-rail-button')
+    Object.defineProperties(dom.window, {
+        innerWidth: { value: 1000, configurable: true },
+        innerHeight: { value: 800, configurable: true },
+    })
+    rail.getBoundingClientRect = () => ({ left: 900, top: 200, width: 70, height: 42 })
+
+    setupAnnotationRailDragging(rail, {
+        storageKey: 'annotation-rail-test',
+        windowRef: dom.window,
+    })
+
+    const pointer = (type, x, y) => {
+        const event = new dom.window.MouseEvent(type, { bubbles: true, button: 0, clientX: x, clientY: y })
+        Object.defineProperty(event, 'pointerId', { value: 1 })
+        return event
+    }
+    rail.dispatchEvent(pointer('pointerdown', 920, 220))
+    dom.window.dispatchEvent(pointer('pointermove', 800, 600))
+    dom.window.dispatchEvent(pointer('pointerup', 800, 600))
+
+    assert.equal(rail.style.left, '780px')
+    assert.equal(rail.style.top, '580px')
+    assert.match(dom.window.localStorage.getItem('annotation-rail-test'), /"leftRatio"/)
+
+    const restored = dom.window.document.createElement('button')
+    restored.getBoundingClientRect = () => ({ width: 70, height: 42 })
+    setupAnnotationRailDragging(restored, {
+        storageKey: 'annotation-rail-test',
+        windowRef: dom.window,
+    })
+    assert.equal(restored.style.left, '780px')
+    assert.equal(restored.style.top, '580px')
 })

@@ -1,6 +1,148 @@
 const MAX_QUOTE_LENGTH = 1000
 const CONTEXT_LENGTH = 160
 const AUTHOR_STORAGE_KEY = 'cf-notepad:annotation-author'
+const RAIL_POSITION_STORAGE_PREFIX = 'cf-notepad:annotation-rail-position:'
+const RAIL_VIEWPORT_PADDING = 8
+
+const clamp = (value, minimum, maximum) => Math.min(Math.max(value, minimum), Math.max(minimum, maximum))
+
+const getRailDimensions = rail => {
+    const rect = rail.getBoundingClientRect()
+    return {
+        width: rect.width || rail.offsetWidth || 42,
+        height: rect.height || rail.offsetHeight || 42,
+    }
+}
+
+const getViewportDimensions = windowRef => ({
+    width: windowRef.innerWidth || windowRef.document?.documentElement?.clientWidth || 0,
+    height: windowRef.innerHeight || windowRef.document?.documentElement?.clientHeight || 0,
+})
+
+const applyRailPosition = (rail, left, top) => {
+    rail.style.left = `${Math.round(left)}px`
+    rail.style.top = `${Math.round(top)}px`
+    rail.style.right = 'auto'
+    rail.style.bottom = 'auto'
+    rail.style.transform = 'none'
+}
+
+const readRailPosition = (storageKey, windowRef) => {
+    try {
+        const value = JSON.parse(windowRef.localStorage.getItem(storageKey) || 'null')
+        if (
+            Number.isFinite(value?.leftRatio)
+            && Number.isFinite(value?.topRatio)
+            && value.leftRatio >= 0 && value.leftRatio <= 1
+            && value.topRatio >= 0 && value.topRatio <= 1
+        ) return value
+    } catch {}
+    return null
+}
+
+const saveRailPosition = (storageKey, left, top, rail, windowRef) => {
+    const viewport = getViewportDimensions(windowRef)
+    const dimensions = getRailDimensions(rail)
+    const maxLeft = Math.max(0, viewport.width - dimensions.width)
+    const maxTop = Math.max(0, viewport.height - dimensions.height)
+    try {
+        windowRef.localStorage.setItem(storageKey, JSON.stringify({
+            leftRatio: maxLeft ? left / maxLeft : 0,
+            topRatio: maxTop ? top / maxTop : 0,
+        }))
+    } catch {}
+}
+
+export function setupAnnotationRailDragging(rail, {
+    storageKey,
+    windowRef = window,
+} = {}) {
+    if (!rail || !storageKey || !windowRef) return () => {}
+
+    const savedPosition = readRailPosition(storageKey, windowRef)
+    if (savedPosition) {
+        const viewport = getViewportDimensions(windowRef)
+        const dimensions = getRailDimensions(rail)
+        applyRailPosition(
+            rail,
+            savedPosition.leftRatio * Math.max(0, viewport.width - dimensions.width),
+            savedPosition.topRatio * Math.max(0, viewport.height - dimensions.height),
+        )
+    }
+
+    let activePointer = null
+    let suppressNextClick = false
+
+    const move = event => {
+        if (!activePointer || event.pointerId !== activePointer.id) return
+        const viewport = getViewportDimensions(windowRef)
+        const dimensions = getRailDimensions(rail)
+        const left = clamp(
+            event.clientX - activePointer.offsetX,
+            RAIL_VIEWPORT_PADDING,
+            viewport.width - dimensions.width - RAIL_VIEWPORT_PADDING,
+        )
+        const top = clamp(
+            event.clientY - activePointer.offsetY,
+            RAIL_VIEWPORT_PADDING,
+            viewport.height - dimensions.height - RAIL_VIEWPORT_PADDING,
+        )
+        if (Math.abs(left - activePointer.initialLeft) > 4 || Math.abs(top - activePointer.initialTop) > 4) {
+            activePointer.moved = true
+        }
+        applyRailPosition(rail, left, top)
+    }
+
+    const stop = event => {
+        if (!activePointer || event.pointerId !== activePointer.id) return
+        const { moved } = activePointer
+        activePointer = null
+        rail.classList.remove('is-dragging')
+        rail.releasePointerCapture?.(event.pointerId)
+        if (!moved) return
+
+        const left = Number.parseFloat(rail.style.left) || 0
+        const top = Number.parseFloat(rail.style.top) || 0
+        saveRailPosition(storageKey, left, top, rail, windowRef)
+        suppressNextClick = true
+    }
+
+    const start = event => {
+        if (event.button !== 0) return
+        const rect = rail.getBoundingClientRect()
+        activePointer = {
+            id: event.pointerId,
+            offsetX: event.clientX - rect.left,
+            offsetY: event.clientY - rect.top,
+            initialLeft: rect.left,
+            initialTop: rect.top,
+            moved: false,
+        }
+        rail.setPointerCapture?.(event.pointerId)
+        rail.classList.add('is-dragging')
+    }
+
+    const blockDraggedClick = event => {
+        if (!suppressNextClick) return
+        suppressNextClick = false
+        event.preventDefault()
+        event.stopImmediatePropagation()
+    }
+
+    rail.addEventListener('pointerdown', start)
+    rail.addEventListener('click', blockDraggedClick, true)
+    windowRef.addEventListener('pointermove', move)
+    windowRef.addEventListener('pointerup', stop)
+    windowRef.addEventListener('pointercancel', stop)
+
+    return () => {
+        rail.removeEventListener('pointerdown', start)
+        rail.removeEventListener('click', blockDraggedClick, true)
+        windowRef.removeEventListener('pointermove', move)
+        windowRef.removeEventListener('pointerup', stop)
+        windowRef.removeEventListener('pointercancel', stop)
+    }
+}
 
 function getTextNodes(root) {
     if (!root?.ownerDocument) return []
@@ -212,6 +354,7 @@ function initShareAnnotations() {
         ? {
             title: '段落註解',
             open: '開啟段落註解',
+            move: '拖曳以移動註解按鈕',
             close: '關閉註解欄',
             annotate: '註解',
             selectionHint: '圈選文章文字即可新增註解。',
@@ -234,6 +377,7 @@ function initShareAnnotations() {
         : {
             title: 'Paragraph annotations',
             open: 'Open paragraph annotations',
+            move: 'Drag to move the annotation button',
             close: 'Close annotations',
             annotate: 'Annotate',
             selectionHint: 'Select article text to start an annotation.',
@@ -315,6 +459,7 @@ function initShareAnnotations() {
     const railButton = createElement(document, 'button', 'annotation-rail-button')
     railButton.type = 'button'
     railButton.setAttribute('aria-label', copy.open)
+    railButton.title = copy.move
     railButton.setAttribute('aria-controls', panel.id)
     railButton.setAttribute('aria-expanded', 'false')
     const railIcon = createElement(document, 'span', 'annotation-rail-icon', '◰')
@@ -334,6 +479,9 @@ function initShareAnnotations() {
     } catch {
         authorInput.value = ''
     }
+    setupAnnotationRailDragging(railButton, {
+        storageKey: `${RAIL_POSITION_STORAGE_PREFIX}${shareId}`,
+    })
 
     const setPanelOpen = open => {
         document.body.classList.toggle('annotation-sidebar-open', open)

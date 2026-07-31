@@ -1696,7 +1696,11 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     font: 10px/1 var(--editor-font-family);
     text-align: center;
 }
-body.share-view .reading-progress { position: fixed; top: 88px; }
+body.share-view .reading-progress {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+}
 
 @media (max-width: 640px) {
     .reading-progress { top: 10px; left: 4px; }
