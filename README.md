@@ -51,7 +51,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **Footer 與工具列控制**：採用 Lucide / GitHub Octicons 精緻筆劃型 SVG 微圖示，配合掛載於頁面最上層的 **0ms 極速漂浮氣泡標籤**（Hover、Touch、Focus 時即時浮現，不受橫向捲動容器裁切）；編輯頁與分享頁的圖示按鈕皆提供繁中／英文提示。發布、字型、語言與裝置切換採用無滑塊 **3D 翻轉卡片開關 (3D Flip Card Toggle)**，寬度自動自適應。提示訊息與確認視窗統一置中顯示。
 - **儲存策略**：未發布文章不會寫入內容；發布時會同步儲存目前編輯內容。發布後可使用「儲存」按鈕，或逐篇開啟 Autosave，停止輸入 10 秒後才會儲存；若不想開放公開閱讀，可搭配閱讀鎖。
 - **編輯器視圖設定**：`預覽`、`排列` 與 `裝置` 會集中在同一個視圖設定群組，方便快速調整編輯器佈局。
-- **閱讀進度與編輯狀態**：預覽／分享頁左側會顯示可點擊的垂直閱讀進度尺，讓讀者知道目前閱讀位置與文章長度；編輯區左下角則即時顯示第幾行、第幾欄與全文總長度。
+- **閱讀進度與編輯狀態**：預覽／分享頁左側會顯示可點擊的垂直閱讀進度尺，讓讀者知道目前閱讀位置與文章長度；分享頁桌面版置中顯示，手機版維持上方節省空間。編輯區左下角則即時顯示第幾行、第幾欄與全文總長度。
 - **複製內容**：Footer 的 Markdown `匯出` 右側提供 `複製`，會同時寫入 rich HTML 與 Markdown/plain-text fallback；rich HTML 使用媒體 preview 建立前的安全 HTML，不會把 YouTube／PDF iframe 貼進 Jira、Confluence 或其他編輯器；成功後顯示勾勾動畫與複製提示。
 - **Theme 特色說明**：主題選單保留完整名稱，並依介面語言顯示繁中或英文風格描述，方便使用者依視覺特色挑選主題。
 - **新筆記隨機 Theme**：只有從網站根目錄建立全新隨機編號筆記時才會抽選 Theme，並立即保存到 Server metadata；原作者重新打開既有 Edit 會沿用已保存的 Theme。空白新筆記的瀏覽器標題使用「新筆記 · 月/日 時:分」，不顯示對人類無意義的隨機路徑。
@@ -100,6 +100,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **D1 歷史版本快照**：透過 Cloudflare D1 資料庫自動儲存版本歷史。預設開啟 5 分鐘快照防刷節流，每篇保留最近 10 份快照，可在 Footer 「版本」選單中預覽、複製或一鍵還原。
 - **簡報模式與 PDF 導出**：支援以標準 `---` 進行 Markdown 分頁，一鍵將 Markdown 轉為幻燈片全螢幕簡報。針對 `@media print` 進行版面優化，列印或導出為 PDF 時會自動隱藏所有工具列，解決內容被裁剪或高度限制的痛點。
 - **發布控制與 SEO 優化**：支援生成唯讀分享頁，並提供 localStorage 分享紀錄。建立分享後可選擇是否加入公開網站地圖（`/sitemap.xml`）。分享頁支援 Open Graph 與 Twitter 社群預覽卡片。
+- **段落註解與精準連結**：讀者可圈選分享頁文字建立討論；`定位原文` 會使用原文摘錄與前後文找回來源。每個註解提供「複製連結」，收件者開啟後會自動展開註解欄、捲到並標示對應原文。右側註解鈕預設避開其他控制列，也可由讀者拖曳，位置會依分享頁保留在本機。
 
 以下是安全存取權限的整合規劃：
 ![權限防護設計](image-2.png)
@@ -140,6 +141,7 @@ Markdown 預覽 Theme 的正式來源是 `NOTES` KV metadata。它不保存在 l
 | `cf-notepad:share-history:created` | 本裝置最近建立的 Share，最多 20 筆 | 否 |
 | `cf-notepad:share-history:viewed` | 本裝置最近瀏覽的 Share，最多 20 筆 | 否 |
 | `cf-notepad:annotation-author` | 留言表單最近使用的顯示名稱 | 否 |
+| `cf-notepad:annotation-rail-position:<shareId>` | 指定 Share 頁註解鈕的拖曳位置 | 否 |
 
 ### sessionStorage 與 Cookie
 
@@ -252,7 +254,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Compact Footer Controls**: Preview, publishing, saving, lock, font, language, layout, and device controls use compact icon and two-state controls. Editor and Share actions expose localized instant floating tooltips on hover, touch, and keyboard focus; the body-level tooltip layer stays visible outside horizontal scrollers. Width options include their own context so the footer stays compact. Toasts and confirmations use a centered in-app treatment.
 - **Save Policy**: Unpublished note content is not persisted. Publishing saves the current editor content in the same operation; published notes offer a manual Save button and optional per-note Autosave that waits 10 seconds after typing stops. Use the View Lock when a published note should not be openly readable.
 - **Editor View Settings**: Preview, layout, and device controls are grouped together as one editor view-settings group for faster layout adjustments.
-- **Reading Progress & Editor Status**: A clickable vertical progress rail at the left of Preview and Share pages shows the reader's position through a long article. The editor's bottom-left status bar reports the current line, column, and total text length.
+- **Reading Progress & Editor Status**: A clickable vertical progress rail at the left of Preview and Share pages shows the reader's position through a long article. It is vertically centered on desktop Share pages and stays at the top on mobile. The editor's bottom-left status bar reports the current line, column, and total text length.
 - **Copy Rendered Content**: The Footer places Copy beside Markdown Export and writes rich HTML plus Markdown/plain-text fallback for editors such as Notion and Jira. Rich HTML comes from the sanitized snapshot before media preview decoration, so YouTube/PDF iframes are not pasted into external editors. A check animation confirms successful copying.
 - **Theme Descriptions**: Theme names remain complete and are paired with localized Traditional Chinese or English descriptions, with the selected theme's full description available through its tooltip.
 - **Random Theme for New Notes**: A theme is randomized only when the root site creates a brand-new random note path, then immediately persisted to server metadata. Reopening an existing author Edit keeps its saved theme. Empty new tabs use a human title such as `New note · 07/30 09:05` instead of exposing the random path.
@@ -322,6 +324,7 @@ The persisted Markdown preview theme lives in `NOTES` KV metadata, not localStor
 | `cf-notepad:share-history:created` | Up to 20 recently created Share links |
 | `cf-notepad:share-history:viewed` | Up to 20 recently viewed Share links |
 | `cf-notepad:annotation-author` | Last annotation display name |
+| `cf-notepad:annotation-rail-position:<shareId>` | Dragged annotation-launcher position for that Share page |
 
 `sessionStorage` only keeps `cf-notepad:pending-presentation-destination`. Cookies keep language, path-scoped authentication, the anonymous view-device UUID, and the admin session; D1 stores only the SHA-256 device hash.
 
@@ -342,6 +345,7 @@ Keep agent-facing guidance synchronized as well: update `skills/SKILL.md` for th
 - **D1 Snapshot History**: Automatically saves content snapshots to Cloudflare D1 with a 5-minute cooldown and a max limit of 10 versions. Editors can preview, restore, or copy text from historical versions.
 - **Presentation Mode & PDF Export**: Splice slides using standard `---` page breaks for fullscreen Slidev-like presentations. Presentations use a bordered 16:9 canvas with safe content margins, readable overflow handling, and a landscape prompt on portrait phones. Custom `@media print` CSS hides controls, overrides page heights, and prevents text clipping during PDF exports.
 - **Public Index Sitemap**: Opt-in public indexing allows you to choose which shared pages appear in `sitemap.xml`. Shared pages emit server-rendered Open Graph / Twitter metadata and prefer stronger human-readable titles when available.
+- **Paragraph Annotations and Precise Links**: Readers can select Share-page text to discuss it. `Locate in article` finds the original quote using its surrounding context. Every annotation also offers a Copy link action: opening that URL expands the annotation sidebar, centers the cited text, and flashes its source. The movable annotation launcher avoids other right-side controls and remembers its position per Share page in the browser.
 
 This is the integrated diagram of our access control model:
 ![Access Control Diagram](image-2.png)

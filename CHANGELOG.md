@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Share Annotation Navigation and Deep Links**
+  - Moved the Share-page reading-progress rail to the vertical center on desktop while retaining the compact top placement on mobile.
+  - Moved the paragraph-annotation launcher below the right-side controls; readers can drag it to any viewport position, which is remembered separately for each Share page.
+  - Added `複製連結` / Copy link beside `定位原文` / Locate in article. Opening the copied annotation URL expands the annotation sidebar, centers the cited text, and flashes its source. Password query values are intentionally excluded from copied URLs.
+
 - **Installable PWA Shell**
   - Added a Web App Manifest, 192px/512px app icons, and Service Worker registration so the notepad can be installed as a standalone app.
   - Added an in-app `安裝 App` / Install app prompt for Android Chromium browsers after they report that the PWA is installable; clicking it opens the browser's native install confirmation.
