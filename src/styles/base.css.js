@@ -2387,6 +2387,62 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     animation: wiggle-right-icon 1.6s ease-in-out infinite;
 }
 
+.pwa-install-prompt {
+    align-items: center;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 999px;
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.28);
+    color: #fff;
+    display: flex;
+    gap: 8px;
+    left: 50%;
+    max-width: calc(100vw - 32px);
+    padding: 8px 10px 8px 14px;
+    position: fixed;
+    transform: translateX(-50%);
+    z-index: 1200;
+}
+
+.pwa-install-title {
+    font-size: 13px;
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+.pwa-install-button,
+.pwa-install-dismiss {
+    border: 0;
+    cursor: pointer;
+    font: inherit;
+}
+
+.pwa-install-button {
+    background: #fff;
+    border-radius: 999px;
+    color: #0f172a;
+    font-size: 13px;
+    font-weight: 800;
+    padding: 7px 11px;
+}
+
+.pwa-install-button:disabled { opacity: 0.65; cursor: wait; }
+
+.pwa-install-dismiss {
+    background: transparent;
+    color: #cbd5e1;
+    font-size: 20px;
+    line-height: 1;
+    padding: 2px 3px;
+}
+
+.pwa-install-button:focus-visible,
+.pwa-install-dismiss:focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
 @keyframes wiggle-right-icon {
     0%, 100% { transform: translate3d(0, 0, 0); }
     50% { transform: translate3d(4px, 0, 0); }
@@ -2398,6 +2454,7 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .divide-line,
     textarea#contents,
     #loading,
+    .pwa-install-prompt,
     .tips,
     .modal,
     .publish-nudge-modal,

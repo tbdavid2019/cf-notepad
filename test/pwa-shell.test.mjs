@@ -8,6 +8,7 @@ const staticFile = file => readFileSync(new URL(`../static/${file}`, import.meta
 const homeTemplate = readFileSync(new URL('../src/templates/pages.js', import.meta.url), 'utf8')
 const workerSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const offlinePageSource = readFileSync(new URL('../src/offline_page.js', import.meta.url), 'utf8')
+const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
 
 test('every rendered page advertises the installable web app manifest', () => {
     const page = HTML({
@@ -56,4 +57,23 @@ test('the offline fallback has a dedicated Worker route before dynamic note rout
     assert.match(workerSource, /router\.get\('\/_pwa-offline', \(\) => createOfflinePageResponse\(\)\)/)
     assert.match(offlinePageSource, /目前離線中/)
     assert.match(offlinePageSource, /You.re offline/)
+})
+
+test('installable browsers receive an in-app install action that triggers the deferred prompt', () => {
+    const page = HTML({
+        lang: 'zh-TW',
+        title: 'PWA install',
+        content: '',
+        ext: {},
+        isEdit: true,
+        path: 'pwa-install',
+        shareId: '',
+    })
+
+    assert.match(page, /id="pwa-install-prompt"/)
+    assert.match(page, /id="pwa-install-button"/)
+    assert.match(page, /beforeinstallprompt/)
+    assert.match(page, /deferredInstallPrompt\.prompt\(\)/)
+    assert.match(page, /appinstalled/)
+    assert.match(baseCssSource, /\.pwa-install-prompt/)
 })

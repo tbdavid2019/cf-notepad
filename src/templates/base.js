@@ -67,6 +67,21 @@ const PUBLISH_NUDGE_MODAL = lang => {
     `
 }
 
+const PWA_INSTALL_PROMPT = lang => {
+    const zh = lang === 'zh-TW'
+    const title = zh ? '安裝 DAVID888 WIKI' : 'Install DAVID888 WIKI'
+    const action = zh ? '安裝 App' : 'Install app'
+    const dismiss = zh ? '稍後' : 'Later'
+
+    return `
+    <aside id="pwa-install-prompt" class="pwa-install-prompt" hidden aria-live="polite">
+        <span class="pwa-install-title">${title}</span>
+        <button type="button" id="pwa-install-button" class="pwa-install-button">${action}</button>
+        <button type="button" id="pwa-install-dismiss" class="pwa-install-dismiss" aria-label="${dismiss}">×</button>
+    </aside>
+    `
+}
+
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
     const initialShareFont = ext.shareFont === 'maple' ? 'maple' : 'jetbrains'
@@ -309,6 +324,7 @@ ${getMarkdownCss()}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
+    ${isEmbed ? '' : PWA_INSTALL_PROMPT(lang)}
     <div id="loading"></div>
     ${isEmbed ? `
     <script>
@@ -2668,6 +2684,39 @@ ${getMarkdownCss()}
                 })
             })
         }
+
+        const pwaInstallPrompt = document.getElementById('pwa-install-prompt')
+        const pwaInstallButton = document.getElementById('pwa-install-button')
+        const pwaInstallDismiss = document.getElementById('pwa-install-dismiss')
+        let deferredInstallPrompt = null
+
+        const hidePwaInstallPrompt = () => {
+            deferredInstallPrompt = null
+            if (pwaInstallPrompt) pwaInstallPrompt.hidden = true
+        }
+
+        window.addEventListener('beforeinstallprompt', event => {
+            event.preventDefault()
+            deferredInstallPrompt = event
+            if (pwaInstallPrompt) pwaInstallPrompt.hidden = false
+        })
+
+        pwaInstallDismiss?.addEventListener('click', () => {
+            if (pwaInstallPrompt) pwaInstallPrompt.hidden = true
+        })
+
+        pwaInstallButton?.addEventListener('click', async () => {
+            if (!deferredInstallPrompt) return
+            pwaInstallButton.disabled = true
+            try {
+                await deferredInstallPrompt.prompt()
+            } finally {
+                pwaInstallButton.disabled = false
+                hidePwaInstallPrompt()
+            }
+        })
+
+        window.addEventListener('appinstalled', hidePwaInstallPrompt)
     </script>
 
     <script>

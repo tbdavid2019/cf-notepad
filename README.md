@@ -90,7 +90,7 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **極致行動適應性**：
   - **單列橫向工具列**：手機版的編輯與分享 Footer 維持單列排列並支援觸控橫向捲動；所有圖示控制都有即時繁中／英文浮動提示，發布狀態旁的 `...` 分享選單會浮在 Footer 外，不會被裁切。
   - **行動自適應閱讀**：手機版表格支援自動換行與防溢出；長網頁滾動時會出現 `＾` 回到頂部按鈕。
-- **可安裝 PWA 與安全離線提示**：在支援的瀏覽器中，可從瀏覽器選單選擇「安裝 App」或「加入主畫面」，以獨立視窗開啟。離線時導覽會顯示內建提示頁；目前不快取筆記、Share 頁或 API 回應，因此不支援離線閱讀／編輯，也不會將受保護內容存入瀏覽器快取。
+- **可安裝 PWA 與安全離線提示**：在支援的 Android Chromium 瀏覽器中，當瀏覽器判定可安裝時，頁面底部會出現「安裝 App」；點擊後開啟原生安裝確認。也可從瀏覽器選單選擇「安裝 App」或「加入主畫面」，以獨立視窗開啟。離線時導覽會顯示內建提示頁；目前不快取筆記、Share 頁或 API 回應，因此不支援離線閱讀／編輯，也不會將受保護內容存入瀏覽器快取。
 
 我們來看看編輯與預覽的實際版面：
 ![編輯器與即時預覽](image-1.png)
@@ -290,7 +290,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 ```
 - **Responsive Mobile Layout**: Keeps Edit and Share footers in one touch-scrollable row. Every icon control has an instant localized floating tooltip, and the published-state `...` menu floats outside the footer instead of being clipped by it.
 - **Mobile-Friendly Reading**: Tables wrap cell texts and code snippets safely; long pages feature a smooth `＾` back-to-top button.
-- **Installable PWA with Safe Offline Handling**: In supported browsers, choose Install App or Add to Home Screen to launch the notepad in a standalone window. Offline navigation shows a built-in fallback page. Notes, Share pages, and API responses are deliberately not cached, so offline reading/editing is not available and protected content is never stored in browser cache.
+- **Installable PWA with Safe Offline Handling**: In supported Android Chromium browsers, an in-page Install app action appears after the browser reports the PWA is installable; clicking it opens the native install confirmation. You can also choose Install app or Add to Home Screen from the browser menu to launch the notepad in a standalone window. Offline navigation shows a built-in fallback page. Notes, Share pages, and API responses are deliberately not cached, so offline reading/editing is not available and protected content is never stored in browser cache.
 
 See the real editor and preview interface here:
 ![Editor and Real-Time Preview](image-1.png)
