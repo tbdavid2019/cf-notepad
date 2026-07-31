@@ -77,7 +77,7 @@ const PWA_INSTALL_PROMPT = lang => {
     <aside id="pwa-install-prompt" class="pwa-install-prompt" hidden aria-live="polite">
         <span class="pwa-install-title">${title}</span>
         <button type="button" id="pwa-install-button" class="pwa-install-button">${action}</button>
-        <button type="button" id="pwa-install-dismiss" class="pwa-install-dismiss" aria-label="${dismiss}" onclick="this.closest('#pwa-install-prompt').hidden = true">×</button>
+        <button type="button" id="pwa-install-dismiss" class="pwa-install-dismiss" aria-label="${dismiss}" onclick="try{localStorage.setItem('cf-notepad:pwa-install-dismissed','1')}catch(e){}this.closest('#pwa-install-prompt').hidden = true">×</button>
     </aside>
     `
 }

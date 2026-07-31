@@ -3,7 +3,23 @@ export const isStandalonePwa = windowRef => {
     return standaloneDisplayMode || windowRef.navigator?.standalone === true
 }
 
-export const isAndroid = windowRef => /Android/i.test(windowRef.navigator?.userAgent || '')
+const DISMISSED_STORAGE_KEY = 'cf-notepad:pwa-install-dismissed'
+
+const wasDismissed = windowRef => {
+    try {
+        return windowRef.localStorage?.getItem(DISMISSED_STORAGE_KEY) === '1'
+    } catch {
+        return false
+    }
+}
+
+const rememberDismissal = windowRef => {
+    try {
+        windowRef.localStorage?.setItem(DISMISSED_STORAGE_KEY, '1')
+    } catch {
+        // Closing the prompt must still work when storage is unavailable.
+    }
+}
 
 export const initPwaInstallPrompt = (documentRef = document, windowRef = window) => {
     const prompt = documentRef.getElementById('pwa-install-prompt')
@@ -12,7 +28,7 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     if (!prompt || !installButton || !dismissButton) return false
 
     let deferredInstallPrompt = null
-    let dismissed = !isAndroid(windowRef) || isStandalonePwa(windowRef)
+    let dismissed = wasDismissed(windowRef) || isStandalonePwa(windowRef)
 
     const hidePrompt = () => {
         deferredInstallPrompt = null
@@ -20,14 +36,15 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     }
 
     windowRef.addEventListener('beforeinstallprompt', event => {
-        if (dismissed || !isAndroid(windowRef) || isStandalonePwa(windowRef)) return
         event.preventDefault()
+        if (dismissed || isStandalonePwa(windowRef)) return
         deferredInstallPrompt = event
         prompt.hidden = false
     })
 
     dismissButton.addEventListener('click', () => {
         dismissed = true
+        rememberDismissal(windowRef)
         hidePrompt()
     })
 
@@ -44,6 +61,7 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
 
     windowRef.addEventListener('appinstalled', () => {
         dismissed = true
+        rememberDismissal(windowRef)
         hidePrompt()
     })
 
