@@ -2468,6 +2468,7 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 @media print {
     /* Hide non-printable elements */
     .footer,
+    .share-footer,
     .divide-line,
     textarea#contents,
     #loading,
@@ -2477,7 +2478,33 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .publish-nudge-modal,
     .publish-nudge-content,
     #presentation-close-btn,
-    #presentation-container {
+    #presentation-container,
+    .toolbar-container,
+    .toolbar,
+    #toolbar,
+    .markdown-editor-toolbar-wrap,
+    .markdown-editor-toolbar,
+    .bottom-sheet,
+    #mobile-bottom-sheet,
+    .bottom-sheet-backdrop,
+    .bottom-sheet-content,
+    .reader-controls,
+    #reader-controls,
+    .floating-tooltip,
+    .share-back-to-top,
+    #share-back-to-top,
+    #toast-container,
+    .dropdown-menu,
+    .share-menu-dropdown,
+    .reading-progress-container,
+    #reading-progress-bar,
+    .annotation-sidebar,
+    .annotation-popover,
+    .annotation-card,
+    .share-annotations-layer,
+    #share-annotations-root,
+    .share-annotations-trigger,
+    .share-annotations-popover {
         display: none !important;
     }
 

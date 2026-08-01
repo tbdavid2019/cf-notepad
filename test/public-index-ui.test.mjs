@@ -220,3 +220,14 @@ test('editor toolbar exposes AI controls without duplicating them in the footer'
     assert.match(indexSource, /return returnJSON\(0, \{ result: resultText, scope: hasSelection \? 'selection' : 'document', modelUsed: model \}\)/)
     assert.doesNotMatch(indexSource, /returnJSON\(0, 'Success', \{ result:/)
 })
+
+test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and reader controls', () => {
+    assert.match(baseCssSource, /@media print \{/)
+    assert.match(baseCssSource, /\.bottom-sheet,/)
+    assert.match(baseCssSource, /#mobile-bottom-sheet,/)
+    assert.match(baseCssSource, /\.floating-tooltip,/)
+    assert.match(baseCssSource, /\.toolbar,/)
+    assert.match(baseCssSource, /#reader-controls,/)
+    assert.match(baseCssSource, /\.share-footer,/)
+})
+
