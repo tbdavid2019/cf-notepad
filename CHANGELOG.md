@@ -7,6 +7,7 @@
 - **Print & PDF Export Layout Cleanliness**
   - Updated `@media print` CSS rules in `base.css.js` and `share-annotations.css` to hide all non-content floating UI overlays during print or PDF export, including mobile bottom sheets (`.bottom-sheet`), floating tooltips (`.floating-tooltip`), toolbars (`.toolbar`), reader controls (`#reader-controls`), and annotation rail buttons (`.annotation-rail-button`).
   - Overrode mobile negative bleed margins (`margin-left: -30px` / `-18px`) during print for `.markdown-body > table`, `.markdown-body > pre`, and `.markdown-body > .media-preview` with `margin-left: 0 !important; width: 100% !important;`, preventing left/right text clipping on printed paper and PDF exports.
+  - Added compact cell padding (`5px 6px`), reduced font sizing (`9.5pt`), and automatic word wrapping (`overflow-wrap: anywhere; word-break: break-word`) for print table cells (`th, td`), preventing multi-column tables from overflowing the right printable boundary.
 
 - **Annotation Rail Button Positioning**
   - Repositioned the default initial placement of `.annotation-rail-button` to the top-right corner (`top: 16px; right: 14px`), preventing it from obscuring the mobile back-to-top button.

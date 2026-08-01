@@ -2574,8 +2574,20 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .markdown-body table {
         display: table !important;
         table-layout: auto !important;
+        border-collapse: collapse !important;
         word-break: break-word !important;
         overflow: visible !important;
+    }
+
+    .markdown-body table th,
+    .markdown-body table td {
+        padding: 5px 6px !important;
+        font-size: 9.5pt !important;
+        line-height: 1.4 !important;
+        word-break: break-word !important;
+        overflow-wrap: anywhere !important;
+        white-space: normal !important;
+        box-sizing: border-box !important;
     }
 
     /* Keep page breaks clean */
