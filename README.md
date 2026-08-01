@@ -1,8 +1,8 @@
-# Cloud Notepad - Serverless Wiki Notepad on Cloudflare Workers
+# Cloud Notepad - 基於 Cloudflare Workers 的無伺服器 Wiki 記事本
 
 ![Banner](image.png)
 
-Cloud Notepad is a lightweight cloud notepad and headless CMS. It runs on Cloudflare Workers. It supports live Markdown preview, password locks, D1 version history, presentation slides, an admin dashboard, an MCP server, and AI Agent Skills.
+Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且對 AI 友善的雲端記事本與無頭 CMS 平台。不僅支援 Markdown 即時預覽、密碼保護、D1 版本歷史與簡報模式，更整合了 **AI 寫作特助 (排版/改寫/翻譯)**、**剪貼簿直接貼圖與 R2 上傳**、**888box 大檔附件**、**ECharts 動態圖表**、**段落劃線討論**與 **MCP / AI Agent Skills** 生態。
 
 👉 **⚠️ 給 AI 與開發者：若需使用 API 進行讀寫，請存取專屬 Skill 規格表：[SKILL.md](https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md) 或 [LLM_API_DOCS.md](./LLM_API_DOCS.md) ⚠️**
 
@@ -17,14 +17,17 @@ Cloud Notepad is a lightweight cloud notepad and headless CMS. It runs on Cloudf
 
 # 繁體中文
 
-## 🤖 AI Agent 與 LLM 生態整合
+## ⚡ 強大亮點功能一覽 (Feature Highlights)
 
-AI 代理（如 Antigravity、Cursor、Claude Desktop、OpenClaw 或 n8n）可以直接將本專案當作外部大腦與發文平台使用。
-
-### 1. 一鍵呼叫發文 Prompt (給 GPT / Claude 網頁版)
-複製以下文字並貼給 ChatGPT 或 Claude 網頁版，AI 即可自動撰寫文章並發布：
+### 🤖 1. AI 智慧寫作特助與 Agent 生態
+- **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
+- **AI 輔助編輯與生成 (AI Edit & Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
+- **AI 翻譯／雙語生成 (AI Translate & Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
+- **選取文字浮動 AI 捷徑**：在編輯器中選取任意文字，自動彈出浮動選單，一鍵觸發排版、AI 編輯或翻譯。
+- **Agent 生態 (MCP & Skills)**：提供符合 Model Context Protocol 的遠端 MCP 伺服器 (`uv run server.py`)，並發布 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，可直接作為 Antigravity、Cursor、Claude Desktop 或 n8n 的發文大腦。
 
 ```text
+👉 ChatGPT / Claude 一鍵發文 Prompt：
 這是一台架設好的 Wiki 記事本，具備無頭 CMS 的發文 API：`https://wiki.david888.com/api`。
 請你擔任我的寫作助理，根據我的需求撰寫文章並發布。
 操作指南請閱讀以下檔案內容（請運用你的上網 / 執行工具讀取）：
@@ -32,40 +35,31 @@ AI 代理（如 Antigravity、Cursor、Claude Desktop、OpenClaw 或 n8n）可�
 請你使用上述檔案的 cURL/HTTP 請求，完成寫作後將內容存檔，並把最後發布的文章網址給我。
 ```
 
-### 2. Antigravity AI Skills
-專屬 Skill 規格書可於 `https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 自動探索與讀取。您也可以將 `skills/` 資料夾複製到本機 `~/.gemini/antigravity/skills/` 目錄。
-
-### 3. 零安裝 MCP 伺服器
-提供符合 Model Context Protocol (MCP) 規範的伺服器，使用 Python `uv` 遠端執行：
-- **Cursor / Claude Desktop 設定**：
-  - **Type**: `command`
-  - **Command**: `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
-  - *(詳細說明請見 [mcp/README.md](./mcp/README.md))*
-
 ---
 
-## ✨ 核心功能特色
-
-### 🚀 1. 寫作與編輯體驗
-- **字體與主題**：繁體中文預設使用 `GenJyuu Gothic`，英文與程式碼使用 `Maple Mono`／`JetBrains Mono`。Footer 內建寬度切換（Full / 960 / 1200 / 1440）與 20+ 款 CSS 預覽主題（預設 `claude-canvas`）。
-- **工具列功能**：提供標題、粗體、斜體、清單、行內程式碼、程式碼區塊、表格、圖片、附件上傳、全螢幕、Undo/Redo、AI 排版、AI 翻譯/雙語與 `[TOC]` 目錄。
-- **附件與圖片儲存**：工具列支援將影片、音訊、文件直接上傳至 `box.david888.com`；圖片上傳使用內建 Cloudflare R2 儲存。
-- **媒體與 ECharts 圖表**：預覽區可繪製 `echarts` 圖表，並自動解析 YouTube、PDF 與影音 Player。
-- **多欄排版與 PWA**：支援二欄/三欄 Markdown 排版。支援 Android、Mac 與桌面瀏覽器安裝為 PWA 獨立 App。
+### 🎨 2. 極致寫作、媒體與排版體驗
+- **剪貼簿直貼與 R2 圖片上傳**：支援剪貼簿直接貼圖 (Paste)、檔案拖曳 (Drag & Drop) 或工具列點選上傳至 Cloudflare R2，自動插入 Markdown 圖片語法。
+- **888box 多媒體附件上傳**：工具列支援將影片、音訊、文件、壓縮檔等大檔上傳至 `box.david888.com`（具自動 fallback 機制），自動插入 `<video>`、`<audio>` 或下載連結。
+- **ECharts 動態圖表渲染**：支援在 Markdown 中撰寫 ````echarts { JSON } ```` 程式碼區塊，即時渲染互動式餅圖、折線圖、柱狀圖等 ECharts 圖表。
+- **自動 `[TOC]` 文章目錄**：插入 `[TOC]` 標籤自動掃描文件標題階層（`#` ~ `###`），生成可點擊平滑跳轉的索引目錄。
+- **二欄／三欄多欄版面**：工具列一鍵圈選文字生成 `<div class="two-column-layout">` 或 `three-column-layout` 橫向多欄排版（手機自動切換單欄）。
+- **多媒體網址自動預覽**：自動將 YouTube 連結轉為隱私保護播放器、PDF 轉為嵌入式閱覽器、MP4/MP3 轉為原生播放器。
+- **HackMD 圖片尺寸標記**：支援 `![alt](url =600x400)` 設定精準響應式圖片大小。
+- **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換。
 
 ![編輯器與即時預覽](image-1.png)
 
-### 🔐 2. 隱私與安全分享
-- **編輯鎖與閱讀鎖**：提供獨立的「編輯鎖」（限制修改）與「閱讀鎖」（限制閱讀），採用 Salted MD5 雜湊加密。
-- **D1 歷史版本快照**：使用 Cloudflare D1 資料庫自動保存版本歷史（5 分鐘節流，保留最近 10 份快照），支援預覽與還原。
-- **簡報模式與 PDF 導出**：使用 `---` 分頁切換 16:9 簡報模式。優化 `@media print` 樣式，匯出 PDF 時自動隱藏工具列並防止表格內容截斷。
-- **段落註解與精準連結**：讀者可在分享頁劃線進行段落討論並複製精準連結，開啟時會自動捲動並高亮指定段落。
+---
+
+### 🔐 3. 隱私、版本控制、簡報與劃線互動
+- **雙重密碼鎖定 (Edit Lock vs View Lock)**：獨立設定「編輯鎖」（限制修改）與「閱讀鎖」（限制閱讀），均以 Salted MD5 雜湊保護。
+- **D1 歷史版本快照**：Cloudflare D1 自動儲存 10 份版本快照（5 分鐘防刷節流），提供對比、還原與複製。
+- **簡報模式 (Slide Presentation)**：使用 `---` 進行 Markdown 分頁，一鍵轉換為 16:9 全螢幕簡報模式（支援雙欄與動畫點擊）。
+- **段落劃線註解與精準連結**：讀者可在分享頁劃線進行段落討論與「複製精準連結」，開啟時會自動跳轉並高亮指定段落。
+- **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
+- **PWA 獨立應用與離線防護**：支援 Android / Mac / 桌面版瀏覽器安裝為 PWA 獨立 App；斷網時顯示離線防護頁面。
 
 ![權限防護設計](image-2.png)
-
-### 🤖 3. 無頭 CMS API
-- **REST Publishing API**：`POST /api/:path` 端點接受 JSON、`text/markdown` 與 `multipart/form-data` 格式寫入。
-- **Discovery 探索端點**：提供 `/.well-known/api-catalog`、`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` 與 `Accept: text/markdown` 標頭協商。
 
 ---
 
@@ -77,7 +71,7 @@ AI 代理（如 Antigravity、Cursor、Claude Desktop、OpenClaw 或 n8n）可�
 | `NOTES` KV | Markdown 文章內容與屬性 (`theme`, `width`, `shareFont`, `publicIndex`, `autosave`, `pw`/`vpw` 雜湊) | 未發布文章不保存內容；新開筆記時儲存初始主題 |
 | `SHARE` KV | Share slug 到文章 path 的對照 | 不保存文章本文 |
 | D1 `note_history` | 歷史版本快照 (path、舊內容、建立時間) | 留存最新 10 份歷史 |
-| D1 `note_stats` | 文章瀏覽數、最後瀏覽時間、匿名裝置 UUID hash | 僅保存 SHA-256 hash |
+| D1 `note_stats` | 文章瀏覽數、最後瀏覽時間、匿名裝置 UUID hash | Server 不留存原始 UUID，僅保存 SHA-256 hash |
 | D1 `annotation_*` | 劃線段落錨點、原文摘錄、留言與回覆 | 原文修改後討論紀錄仍留存 |
 | `IMAGES` R2 | 圖片上傳儲存桶 | 文章內僅保存公開圖片 URL |
 
@@ -145,14 +139,17 @@ npm run deploy
 
 # English Version
 
-## 🤖 AI Agent & LLM Integration
+## ⚡ Feature Highlights
 
-AI agents (such as Antigravity, Cursor, Claude Desktop, OpenClaw, or n8n) can use this project directly as an external brain or an auto-publishing platform.
-
-### 1. One-Click Prompt (For ChatGPT / Claude Web)
-Copy this prompt and paste it into ChatGPT or Claude Web:
+### 🤖 1. AI Writing Assistant & Agent Ecosystem
+- **AI Formatting (AI Format)**: Workers AI (`gpt-oss-20b`) restructures Markdown headings, lists, and whitespace while preserving original language and text. Supports selection-only formatting.
+- **AI Editing & Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
+- **AI Translation & Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.
+- **Floating Selection AI Menu**: Selecting text in the editor automatically triggers floating AI Format, AI Edit, and Translate shortcuts.
+- **Agent Ecosystem (MCP & Skills)**: Serves a remote Model Context Protocol server (`uv run server.py`) and standard Agent Skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
 
 ```text
+👉 One-Click Prompt for ChatGPT / Claude Web:
 This is a deployed Wiki platform functioning as a Headless CMS publishing API: `https://wiki.david888.com/api`.
 Please act as my writing assistant to draft and publish articles based on my requests.
 For operational guidelines, please read the following document (use your web-browsing/execution tools to fetch it):
@@ -160,54 +157,110 @@ For operational guidelines, please read the following document (use your web-bro
 Use the cURL/HTTP request tools detailed in that document to save the content once you finish writing, and give me the URL of the published article.
 ```
 
-### 2. Antigravity AI Skills
-The canonical skill specification is available at `https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
+---
 
-### 3. Zero-Install MCP Server
-Execute the remote MCP server via Python `uv`:
-- **Cursor / Claude Desktop Config**:
-  - **Type**: `command`
-  - **Command**: `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
-  - *(See details in [mcp/README.md](./mcp/README.md))*
+### 🎨 2. Rich Editing, Media & Layout
+- **Direct Clipboard Paste & R2 Uploads**: Paste images directly from clipboard, drag-and-drop, or click the toolbar to upload to Cloudflare R2 with automatic Markdown image links.
+- **888box Multimedia Attachments**: Upload videos, audio, documents, and archives directly to `box.david888.com` (with fallback nodes), inserting `<video>`, `<audio>`, or download links.
+- **ECharts Interactive Charts**: Render interactive ECharts graphs directly from ````echarts { JSON } ```` code blocks in Markdown.
+- **Automatic `[TOC]` Table of Contents**: Insert `[TOC]` to scan document heading hierarchy and render smooth-scrolling TOC jump links.
+- **Two/Three-Column Layouts**: Wrap selected text in `<div class="two-column-layout">` or `three-column-layout` for multi-column presentation (stacks on mobile).
+- **Auto Media Previews**: Automatically converts YouTube URLs to privacy-enhanced players, PDFs to embedded viewers, and MP4/MP3 links to native players.
+- **HackMD Image Dimensions**: Supports `![alt](url =600x400)` responsive image sizing.
+- **Typography & 20+ Themes**: Traditional Chinese defaults to `GenJyuu Gothic`; Latin text uses `Maple Mono` / `JetBrains Mono`. Features 20+ CSS preview themes (default `claude-canvas`) and width toggles.
+
+![Editor and Real-Time Preview](image-1.png)
 
 ---
 
-## ✨ Features
+### 🔐 3. Privacy, Versioning, Slides & Annotations
+- **Edit Lock vs View Lock**: Separate Salted MD5 password controls for editing permissions versus reading permissions.
+- **D1 Snapshot History**: Cloudflare D1 automatically backs up content (5-minute cooldown, retains 10 snapshots) for preview and restoration.
+- **Slide Presentation Mode**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations (supports two-column slides and click reveals).
+- **Paragraph Annotations & Deep Links**: Highlight text on Share pages to start inline discussions, with copyable deep links that auto-scroll and highlight cited passages.
+- **PDF Export & Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
+- **Installable PWA & Offline Guard**: Install as a standalone PWA app on Android, Mac, or desktop, with a clean offline fallback page.
 
-### 🚀 1. Writing & Editing Experience
-- **Typography & Themes**: Defaults to `GenJyuu Gothic` (TC) and `Maple Mono` / `JetBrains Mono` (Latin/Code). Includes 20+ CSS themes, responsive width controls, and draggable split panes.
-- **Rich Markdown Tooling**: Headings, formatting, lists, tables, image upload, 888box attachment uploads, ECharts code blocks, TOC generation, Undo/Redo, and AI Translate/Formatting.
-- **Media Previews & Columns**: Includes players for YouTube, PDF, Video/Audio links, and two/three-column Markdown layout support.
-- **PWA & Offline Guard**: Supports mobile PWA installation and displays a clean offline fallback page.
-
-### 🔐 2. Privacy, Versioning & Sharing
-- **Edit & View Locks**: Provides separate Salted MD5 password controls for editing versus reading.
-- **D1 Snapshot History**: Automatically backs up content to Cloudflare D1 (5-minute cooldown, retains 10 snapshots).
-- **Slide Presentation & PDF Export**: Converts notes to 16:9 slides with `---` dividers. Optimized `@media print` CSS hides UI overlays and prevents table text clipping.
-- **Paragraph Annotations**: Select text to start discussions with deep links that scroll and highlight cited text upon opening.
-
-### 🤖 3. Headless CMS API
-- **REST Publishing API**: `POST /api/:path` accepts JSON, raw `text/markdown`, and `multipart/form-data`.
-- **Discovery Endpoints**: Exposes RFC 9727 Linksets, Agent Skill endpoints, and `Accept: text/markdown` content negotiation.
+![Access Control Diagram](image-2.png)
 
 ---
 
-## 🛠️ Quick API Write Demo
+## 💾 Storage Inventory
 
+### Server / Cloudflare
+| Storage | Data | Description |
+| --- | --- | --- |
+| `NOTES` KV | Markdown content & metadata (`theme`, `width`, `shareFont`, `publicIndex`, `autosave`, `pw`/`vpw` hashes) | Unpublished notes are browser-only; saves initial theme on note creation |
+| `SHARE` KV | Share slug to note path mapping | Does not store article body |
+| D1 `note_history` | Historical version snapshots (path, text, created time) | Retains latest 10 versions |
+| D1 `note_stats` | View count, last view time, anonymous device UUID hash | Stores SHA-256 hash only |
+| D1 `annotation_*` | Paragraph anchors, source quotes, comments & replies | Retains discussion threads after text edits |
+| `IMAGES` R2 | Image upload bucket | Stores public image URLs |
+
+### Browser (localStorage / Cookie)
+| Type | Key | Description |
+| --- | --- | --- |
+| localStorage | `cf-notepad-preview-width` / `share-font` / `ui-theme` | Mirror of layout and visual preferences |
+| localStorage | `cf-notepad:share-history:*` / `annotation-author` | Local history of 20 recent shares & author name |
+| Cookie | `auth` / `cn_device` / `admin_session` | Path-scoped JWT, anonymous device hash & admin session |
+
+---
+
+## 🛠️ Deployment Guide
+
+### Prerequisites
+- Node.js and npm installed
+- Cloudflare account & Wrangler CLI: `npm install -g wrangler`
+
+### 1. Initialize Project & Create KV
 ```bash
-curl -X POST "https://wiki.david888.com/api/api_test_demo" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "content": "## Headless API Write Test\nWritten via API."
-  }'
+cp wrangler.toml.example wrangler.toml
+wrangler kv:namespace create "NOTES"
+wrangler kv:namespace create "SHARE"
 ```
+Paste the namespace IDs into `wrangler.toml`.
+
+### 2. Create D1 Database (Optional)
+```bash
+wrangler d1 create cloud-notepad-history
+wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
+```
+Paste `database_id` into `wrangler.toml`.
+
+### 3. Setup R2 Image Uploads (Optional)
+Create an R2 Bucket in Cloudflare and enable public domain access. Set `bucket_name` in `wrangler.toml` and secrets `SCN_ENABLE_R2="1"` and `SCN_R2_DOMAIN="https://s3.wiki.david888.com"`.
+
+### 4. Set Environment Secrets
+Set secrets via `wrangler secret put <VAR>`:
+- `SCN_SALT`: Password hashing salt UUID
+- `SCN_SECRET`: JWT encryption secret
+- `SCN_ADMIN_PATH`: Admin dashboard path (e.g., `/admin333`)
+- `SCN_ADMIN_PW`: Admin dashboard password
+- `SCN_SLUG_LENGTH`: Length of random share URLs (default `4`)
+- `SCN_ENABLE_NOTE_HISTORY`: Set to `"1"` for D1 history
+
+### 5. Deploy
+```bash
+npm install
+npm run deploy
+```
+
+---
+
+## 🔍 Discovery Endpoints
+
+- `GET /.well-known/api-catalog`: RFC 9727 Linkset JSON.
+- `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`: LLM Agent Skill spec.
+- `GET /auth.md`: Authentication specification.
+- `GET /robots.txt`: AI Crawler rules.
+- `Accept: text/markdown`: Requesting `/share/...` or `/:path` returns raw Markdown.
 
 ---
 
 ## 🧭 Maintenance for Contributors & LLMs
 
-When you add or change a user-facing feature, update these three files:
-1. `CHANGELOG.md` for the release record.
+When adding or changing a user-facing feature, update these three files:
+1. `CHANGELOG.md` for release records.
 2. `README.md` for feature documentation.
 3. `static/data/editor-tips.json` for bilingual startup tips (`zh-TW` and `en-US`).
 
