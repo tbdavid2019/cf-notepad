@@ -33,7 +33,7 @@
 .annotation-rail-button {
     position: fixed;
     z-index: 2500;
-    inset-block-start: 70%;
+    inset-block-start: 16px;
     inset-inline-end: 14px;
     display: inline-flex;
     align-items: center;
@@ -47,7 +47,6 @@
     box-shadow: 0 8px 24px rgba(92, 46, 34, 0.22);
     cursor: grab;
     touch-action: none;
-    transform: translateY(-50%);
     transition: background-color 160ms ease-out, transform 160ms ease-out, box-shadow 160ms ease-out;
 }
 
@@ -59,7 +58,7 @@
 
 .annotation-rail-button:hover {
     background: var(--annotation-accent-strong);
-    transform: translateY(calc(-50% - 2px));
+    transform: translateY(-2px);
     box-shadow: 0 10px 28px rgba(92, 46, 34, 0.28);
 }
 

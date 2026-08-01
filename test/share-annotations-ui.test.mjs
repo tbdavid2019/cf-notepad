@@ -89,10 +89,10 @@ test('annotation sidebar supports responsive layout and visible keyboard focus',
     assert.match(annotationCss, /::highlight\(share-annotations\)/)
 })
 
-test('annotation rail defaults below the center to avoid other right-side controls', () => {
+test('annotation rail defaults to top right to avoid blocking bottom controls', () => {
     assert.match(
         annotationCss,
-        /\.annotation-rail-button\s*\{[^}]*inset-block-start:\s*70%;[^}]*transform:\s*translateY\(-50%\);/,
+        /\.annotation-rail-button\s*\{[^}]*inset-block-start:\s*16px;/,
     )
 })
 
