@@ -230,5 +230,7 @@ test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and r
     assert.match(baseCssSource, /#reader-controls,/)
     assert.match(baseCssSource, /\.share-footer,/)
     assert.match(baseCssSource, /\.annotation-rail-button,/)
+    assert.match(baseCssSource, /\.markdown-body > table,/)
+    assert.match(baseCssSource, /margin-left:\s*0\s*!important;/)
 })
 

@@ -2559,6 +2559,25 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         color: #000 !important;
     }
 
+    /* Reset mobile negative bleed margins and ensure tables and pre elements fit printable page area */
+    .markdown-body > pre,
+    .markdown-body > table,
+    .markdown-body > .media-preview,
+    .markdown-body table {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
+    }
+
+    .markdown-body table {
+        display: table !important;
+        table-layout: auto !important;
+        word-break: break-word !important;
+        overflow: visible !important;
+    }
+
     /* Keep page breaks clean */
     h1, h2, h3, h4, h5, h6 {
         page-break-after: avoid !important;
