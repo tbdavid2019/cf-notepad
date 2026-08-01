@@ -96,6 +96,11 @@ test('annotation rail defaults to top right to avoid blocking bottom controls', 
     )
 })
 
+test('annotation css hides rail button and popovers during print', () => {
+    assert.match(annotationCss, /@media print \{/)
+    assert.match(annotationCss, /\.annotation-rail-button,/)
+})
+
 test('annotation rail can be dragged and restores its saved viewport-relative position', () => {
     const dom = new JSDOM('<!doctype html><button class="annotation-rail-button"></button>', {
         url: 'https://example.test/share/demo',

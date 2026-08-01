@@ -2498,6 +2498,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .share-menu-dropdown,
     .reading-progress-container,
     #reading-progress-bar,
+    .annotation-rail-button,
+    .annotation-selection-button,
     .annotation-sidebar,
     .annotation-popover,
     .annotation-card,

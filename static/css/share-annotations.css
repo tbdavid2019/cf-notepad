@@ -492,3 +492,15 @@
         animation: none;
     }
 }
+
+@media print {
+    .annotation-rail-button,
+    .annotation-selection-button,
+    .annotation-sidebar,
+    .annotation-popover,
+    .annotation-card,
+    #share-annotations-root {
+        display: none !important;
+    }
+}
+
