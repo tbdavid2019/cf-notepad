@@ -2506,7 +2506,9 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .share-annotations-layer,
     #share-annotations-root,
     .share-annotations-trigger,
-    .share-annotations-popover {
+    .share-annotations-popover,
+    [class*="webtalk"],
+    [id*="webtalk"] {
         display: none !important;
     }
 
@@ -2559,7 +2561,16 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         color: #000 !important;
     }
 
-    /* Reset mobile negative bleed margins and ensure tables and pre elements fit printable page area */
+    /* High specificity reset to override body.share-view #preview-md.markdown-body > table negative margins */
+    body #preview-md.markdown-body > pre,
+    body #preview-md.markdown-body > table,
+    body #preview-md.markdown-body > .media-preview,
+    body.share-view #preview-md.markdown-body > pre,
+    body.share-view #preview-md.markdown-body > table,
+    body.share-view #preview-md.markdown-body > .media-preview,
+    body.preview-device-mobile #preview-md.markdown-body > pre,
+    body.preview-device-mobile #preview-md.markdown-body > table,
+    body.preview-device-mobile #preview-md.markdown-body > .media-preview,
     .markdown-body > pre,
     .markdown-body > table,
     .markdown-body > .media-preview,
@@ -2581,8 +2592,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 
     .markdown-body table th,
     .markdown-body table td {
-        padding: 5px 6px !important;
-        font-size: 9.5pt !important;
+        padding: 6px 8px !important;
+        font-size: 10pt !important;
         line-height: 1.4 !important;
         word-break: break-word !important;
         overflow-wrap: anywhere !important;
