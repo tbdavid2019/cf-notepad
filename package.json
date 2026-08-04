@@ -4,10 +4,12 @@
   "author": "s0urce",
   "license": "MIT",
   "devDependencies": {
+    "esbuild": "^0.28.1",
     "wrangler": "^4.86.0"
   },
   "private": true,
   "scripts": {
+    "build:block-editor": "node scripts/build-block-editor.mjs",
     "prepare:skill-doc": "node scripts/generate-agent-skill.mjs",
     "prestart": "npm run prepare:skill-doc",
     "start": "wrangler dev",
@@ -21,6 +23,15 @@
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
+    "@tiptap/core": "^3.29.2",
+    "@tiptap/extension-image": "^3.29.2",
+    "@tiptap/extension-link": "^3.29.2",
+    "@tiptap/extension-placeholder": "^3.29.2",
+    "@tiptap/extension-task-item": "^3.29.2",
+    "@tiptap/extension-task-list": "^3.29.2",
+    "@tiptap/extension-underline": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2",
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",
     "cookie": "^0.5.0",
     "dayjs": "^1.11.2",
