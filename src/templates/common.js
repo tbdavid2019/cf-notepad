@@ -172,6 +172,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const copyPresentTitle = lang === 'zh-TW' ? '複製簡報連結' : 'Copy presentation link'
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
+    const newNoteTitle = lang === 'zh-TW' ? '新增筆記' : 'New note'
+    const newMarkdownTitle = lang === 'zh-TW' ? 'Markdown 筆記' : 'Markdown note'
+    const newBlockTitle = lang === 'zh-TW' ? 'Block 筆記' : 'Block note'
     const moreToolsTitle = lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'
     const safeViewCount = Number.isSafeInteger(viewCount) && viewCount >= 0 ? viewCount : null
     const formattedViewCount = safeViewCount === null ? '' : new Intl.NumberFormat(lang).format(safeViewCount)
@@ -186,6 +189,19 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     return `
     <div class="footer">
         <div class="footer-sections">
+            <div class="footer-section footer-section-create">
+                <div class="footer-section-body">
+                    <div class="dropdown-container new-note-dropdown">
+                        <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
+                            <span class="new-note-plus" aria-hidden="true">＋</span> <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
+                        </button>
+                        <div class="dropdown-menu" role="menu">
+                            <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
+                            <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="footer-section footer-section-edit">
                 <div class="footer-section-body">
                     ${isEdit ? `

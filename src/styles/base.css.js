@@ -575,6 +575,24 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     display: none !important;
 }
 
+/* New note: compact icon on phones, explicit action label on desktop. */
+.new-note-dropdown .dropdown-menu {
+    min-width: 184px;
+}
+.new-note-menu-trigger {
+    width: auto !important;
+    gap: 4px;
+    padding: 0 9px !important;
+}
+.new-note-menu-trigger .toolbar-button-label {
+    display: inline !important;
+}
+.new-note-plus {
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1;
+}
+
 /* Mobile more button: hidden on desktop, shown on mobile */
 .mobile-more-btn {
     display: none !important;
@@ -822,6 +840,9 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .footer-section:last-child {
     border-right: 0;
     padding-right: 0;
+}
+.footer-section-create {
+    flex: 0 0 auto;
 }
 .footer-section-edit {
     flex: 0 0 auto;
@@ -2526,6 +2547,7 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         border-right: 0 !important;
     }
 
+    .footer-section-create,
     .footer-section-edit,
     .footer-section-appearance,
     .footer-section-info {
@@ -2536,6 +2558,15 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 
     .mobile-more-btn {
         display: none !important;
+    }
+
+    .footer-section-create .toolbar-button-label {
+        display: none !important;
+    }
+    .new-note-menu-trigger {
+        width: var(--toolbar-height) !important;
+        padding: 0 !important;
+        justify-content: center;
     }
 
     .footer-section-edit .footer-section-body,

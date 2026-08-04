@@ -46,6 +46,19 @@ test('edit share options trigger exposes the same localized tooltip contract', (
     assert.equal(document.querySelector('#share-menu-btn')?.dataset.tooltip, '分享選項')
 })
 
+test('footer starts with a visible new-note menu for Markdown and Block formats', () => {
+    const document = renderFooter({ isEdit: true })
+    const firstSection = document.querySelector('.footer-sections > .footer-section:first-child')
+    const trigger = document.querySelector('#new-note-menu-btn')
+
+    assert.equal(firstSection?.classList.contains('footer-section-create'), true)
+    assert.equal(trigger?.classList.contains('dropdown-trigger'), true)
+    assert.equal(trigger?.textContent.trim(), '＋ 新增')
+    assert.equal(document.querySelector('#new-markdown-note-link')?.getAttribute('href'), '/new/markdown')
+    assert.equal(document.querySelector('#new-block-note-link')?.getAttribute('href'), '/new/block')
+    assert.match(baseCssSource, /@media \(max-width: 640px\)[\s\S]*\.footer-section-create \.toolbar-button-label\s*\{\s*display: none/)
+})
+
 test('scrolling toolbars delegate unclipped tooltips and dropdowns to a body-level floating layer', () => {
     assert.match(baseTemplateSource, /\/js\/floating-controls\.mjs/)
     assert.match(baseCssSource, /\.footer\s*\{[\s\S]*overflow-x:\s*auto;/)
