@@ -7,6 +7,7 @@
 - **Block Editor Architecture & Dedicated Creation Routes**
   - Added support for `editorFormat: "block"` immutable note format in metadata, enabling single-column WYSIWYG block-based notes alongside standard Markdown notes.
   - Registered `/new/block` and `/new/markdown` creation endpoints that allocate unique note slugs with locked format metadata.
+  - Added the leftmost Footer `＋ 新增` / `+ New` menu: desktop exposes its label, mobile keeps a compact plus button, and both formats are available from its dropdown.
   - Implemented `src/block_renderer.mjs` supporting JSON document parsing, safe HTML rendering for all core blocks (`heading`, `paragraph`, `bulletList`, `taskList`, `code`, `quote`, `divider`, `slideBreak`, `image`, `youtube`, `pdf`, `mermaid`, `echarts`, `file`, `raw`), and Markdown export.
   - Updated title and description extraction in `src/note_meta.js` to parse block JSON documents seamlessly.
 - **Vanilla Block Editing and Rich Block Rendering**
