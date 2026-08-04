@@ -1,5 +1,13 @@
-function escapeHtml(str = '') {
-    return String(str)
+export const BLOCK_DOCUMENT_VERSION = 1
+
+const BLOCK_TYPES = new Set([
+    'paragraph', 'heading', 'bulletList', 'taskList', 'code', 'quote',
+    'divider', 'slideBreak', 'image', 'file', 'youtube', 'pdf',
+    'mermaid', 'echarts', 'raw',
+])
+
+function escapeHtml(value = '') {
+    return String(value)
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
@@ -7,62 +15,125 @@ function escapeHtml(str = '') {
         .replace(/'/g, '&#39;')
 }
 
-function escapeAttr(str = '') {
-    return escapeHtml(str)
+function text(value = '') {
+    return typeof value === 'string' ? value : ''
 }
 
-export function parseBlockDocument(value = '') {
-    if (!value || typeof value !== 'string') {
-        return { version: 1, blocks: [] }
-    }
+function safeUrl(value = '') {
+    const raw = text(value).trim()
+    if (!raw) return ''
+    if (raw.startsWith('/') && !raw.startsWith('//')) return raw
+
     try {
-        const parsed = JSON.parse(value)
-        if (parsed && typeof parsed === 'object' && Array.isArray(parsed.blocks)) {
-            return parsed
-        }
-    } catch (e) {}
-    const trimmed = String(value).trim()
-    return {
-        version: 1,
-        blocks: trimmed ? [{ id: 'b-init', type: 'paragraph', props: { text: trimmed } }] : []
+        const parsed = new URL(raw)
+        return parsed.protocol === 'https:' || parsed.protocol === 'http:' ? parsed.href : ''
+    } catch {
+        return ''
     }
 }
 
-export function renderBlockToHtml(blockInput, options = {}) {
-    const doc = typeof blockInput === 'string' ? parseBlockDocument(blockInput) : (blockInput || { version: 1, blocks: [] })
-    const blocks = Array.isArray(doc.blocks) ? doc.blocks : []
+function safeDimension(value = '') {
+    const match = text(value).trim().match(/^(\d{1,4})(px|%)$/)
+    if (!match) return ''
+    const size = Number(match[1])
+    if (size < 1 || (match[2] === '%' && size > 100) || (match[2] === 'px' && size > 5000)) return ''
+    return `${size}${match[2]}`
+}
 
-    if (blocks.length === 0) {
-        return '<p></p>'
+function getYouTubeVideoId(props = {}) {
+    const directId = text(props.videoId).trim()
+    if (/^[a-zA-Z0-9_-]{11}$/.test(directId)) return directId
+
+    const url = safeUrl(props.url)
+    if (!url || url.startsWith('/')) return ''
+    try {
+        const parsed = new URL(url)
+        const host = parsed.hostname.toLowerCase().replace(/^www\./, '')
+        if (host === 'youtu.be') return /^[a-zA-Z0-9_-]{11}$/.test(parsed.pathname.slice(1)) ? parsed.pathname.slice(1) : ''
+        if (host === 'youtube.com' || host === 'm.youtube.com') {
+            const candidate = parsed.searchParams.get('v') || parsed.pathname.match(/^\/embed\/([a-zA-Z0-9_-]{11})/)?.[1] || ''
+            return /^[a-zA-Z0-9_-]{11}$/.test(candidate) ? candidate : ''
+        }
+    } catch {}
+    return ''
+}
+
+function getDocumentForRendering(blockInput) {
+    try {
+        if (typeof blockInput === 'string') return parseBlockDocument(blockInput, { allowTextFallback: false })
+        return validateBlockDocument(blockInput || createEmptyBlockDocument())
+    } catch {
+        return createEmptyBlockDocument()
     }
+}
+
+export function createEmptyBlockDocument() {
+    return { version: BLOCK_DOCUMENT_VERSION, blocks: [] }
+}
+
+export function validateBlockDocument(input) {
+    if (!input || typeof input !== 'object' || Array.isArray(input) || !Array.isArray(input.blocks)) {
+        throw new TypeError('Invalid block document')
+    }
+
+    const version = Number.isInteger(input.version) ? input.version : BLOCK_DOCUMENT_VERSION
+    if (version !== BLOCK_DOCUMENT_VERSION) throw new TypeError('Unsupported block document version')
+
+    return {
+        version,
+        blocks: input.blocks.map((block, index) => {
+            if (!block || typeof block !== 'object' || Array.isArray(block)) {
+                throw new TypeError(`Invalid block at index ${index}`)
+            }
+            if (!BLOCK_TYPES.has(block.type)) throw new TypeError(`Unsupported block type at index ${index}`)
+            if (block.props !== undefined && (!block.props || typeof block.props !== 'object' || Array.isArray(block.props))) {
+                throw new TypeError(`Invalid block props at index ${index}`)
+            }
+            return {
+                id: text(block.id).slice(0, 128),
+                type: block.type,
+                props: block.props || {},
+            }
+        }),
+    }
+}
+
+export function parseBlockDocument(value = '', { allowTextFallback = true } = {}) {
+    if (value === '' || value === null || value === undefined) return createEmptyBlockDocument()
+    if (typeof value !== 'string') throw new TypeError('Block document must be a JSON string')
+
+    try {
+        return validateBlockDocument(JSON.parse(value))
+    } catch (error) {
+        if (!allowTextFallback) throw error
+    }
+
+    const trimmed = value.trim()
+    return trimmed
+        ? { version: BLOCK_DOCUMENT_VERSION, blocks: [{ id: 'b-init', type: 'paragraph', props: { text: trimmed } }] }
+        : createEmptyBlockDocument()
+}
+
+export function renderBlockToHtml(blockInput) {
+    const { blocks } = getDocumentForRendering(blockInput)
+    if (blocks.length === 0) return '<p></p>'
 
     const htmlParts = []
     let currentListType = null
-
     const closeListIfNeeded = () => {
-        if (currentListType === 'bullet') {
-            htmlParts.push('</ul>')
-            currentListType = null
-        } else if (currentListType === 'task') {
-            htmlParts.push('</ul>')
-            currentListType = null
-        }
+        if (currentListType) htmlParts.push('</ul>')
+        currentListType = null
     }
 
     for (const block of blocks) {
-        const id = block.id || ''
-        const type = block.type || 'paragraph'
-        const props = block.props || {}
-        const dataAttr = id ? ` data-block-id="${escapeAttr(id)}"` : ''
-
-        if (type !== 'bulletList' && type !== 'taskList') {
-            closeListIfNeeded()
-        }
+        const { id, type, props } = block
+        const dataAttr = id ? ` data-block-id="${escapeHtml(id)}"` : ''
+        if (type !== 'bulletList' && type !== 'taskList') closeListIfNeeded()
 
         switch (type) {
             case 'heading': {
                 const level = Math.min(Math.max(parseInt(props.level, 10) || 1, 1), 6)
-                htmlParts.push(`<h${level}${dataAttr}>${escapeHtml(props.text || '')}</h${level}>`)
+                htmlParts.push(`<h${level}${dataAttr}>${escapeHtml(text(props.text))}</h${level}>`)
                 break
             }
             case 'bulletList': {
@@ -71,7 +142,7 @@ export function renderBlockToHtml(blockInput, options = {}) {
                     htmlParts.push('<ul class="block-bullet-list">')
                     currentListType = 'bullet'
                 }
-                htmlParts.push(`<li${dataAttr}>${escapeHtml(props.text || '')}</li>`)
+                htmlParts.push(`<li${dataAttr}>${escapeHtml(text(props.text))}</li>`)
                 break
             }
             case 'taskList': {
@@ -80,163 +151,103 @@ export function renderBlockToHtml(blockInput, options = {}) {
                     htmlParts.push('<ul class="contains-task-list block-task-list">')
                     currentListType = 'task'
                 }
-                const checked = props.checked === true ? 'checked' : ''
-                htmlParts.push(`<li class="task-list-item"${dataAttr}><input type="checkbox" class="task-list-item-checkbox" ${checked} disabled> ${escapeHtml(props.text || '')}</li>`)
+                const checked = props.checked === true ? ' checked' : ''
+                htmlParts.push(`<li class="task-list-item"${dataAttr}><input type="checkbox" class="task-list-item-checkbox"${checked} disabled> ${escapeHtml(text(props.text))}</li>`)
                 break
             }
             case 'code': {
-                const lang = props.language ? ` class="language-${escapeAttr(props.language)}"` : ''
-                htmlParts.push(`<pre${dataAttr}><code${lang}>${escapeHtml(props.text || '')}</code></pre>`)
+                const language = text(props.language).replace(/[^a-zA-Z0-9_+-]/g, '')
+                const langClass = language ? ` class="language-${language}"` : ''
+                htmlParts.push(`<pre${dataAttr}><code${langClass}>${escapeHtml(text(props.text))}</code></pre>`)
                 break
             }
-            case 'quote': {
-                htmlParts.push(`<blockquote${dataAttr}><p>${escapeHtml(props.text || '')}</p></blockquote>`)
+            case 'quote':
+                htmlParts.push(`<blockquote${dataAttr}><p>${escapeHtml(text(props.text))}</p></blockquote>`)
                 break
-            }
-            case 'divider': {
+            case 'divider':
                 htmlParts.push(`<hr${dataAttr}>`)
                 break
-            }
-            case 'slideBreak': {
+            case 'slideBreak':
                 htmlParts.push(`<hr class="slide-break"${dataAttr} data-slide-break="true">`)
                 break
-            }
             case 'image': {
-                const src = props.src || ''
-                const alt = props.alt || ''
-                const width = props.width ? ` style="width: ${escapeAttr(props.width)};"` : ''
-                htmlParts.push(`<p${dataAttr}><img src="${escapeAttr(src)}" alt="${escapeAttr(alt)}"${width}></p>`)
+                const src = safeUrl(props.src)
+                if (src) {
+                    const width = safeDimension(props.width)
+                    htmlParts.push(`<p${dataAttr}><img src="${escapeHtml(src)}" alt="${escapeHtml(text(props.alt))}"${width ? ` style="width: ${width};"` : ''}></p>`)
+                }
                 break
             }
             case 'youtube': {
-                const videoId = props.videoId || (props.url ? (props.url.match(/(?:v=|\/embed\/|youtu\.be\/)([a-zA-Z0-9_-]{11})/) || [])[1] : '')
+                const videoId = getYouTubeVideoId(props)
                 if (videoId) {
-                    htmlParts.push(`<div class="youtube-embed-wrapper"${dataAttr}><iframe src="https://www.youtube-nocookie.com/embed/${escapeAttr(videoId)}" frameborder="0" allowfullscreen title="${escapeAttr(props.title || 'YouTube video')}"></iframe></div>`)
+                    htmlParts.push(`<div class="youtube-embed-wrapper"${dataAttr}><iframe src="https://www.youtube-nocookie.com/embed/${videoId}" frameborder="0" allowfullscreen title="${escapeHtml(text(props.title) || 'YouTube video')}"></iframe></div>`)
                 } else {
-                    htmlParts.push(`<p${dataAttr}><a href="${escapeAttr(props.url || '')}" target="_blank" rel="noopener noreferrer">${escapeHtml(props.url || 'YouTube link')}</a></p>`)
+                    const url = safeUrl(props.url)
+                    if (url) htmlParts.push(`<p${dataAttr}><a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer">${escapeHtml(url)}</a></p>`)
                 }
                 break
             }
             case 'pdf': {
-                const url = props.url || ''
-                htmlParts.push(`<div class="pdf-embed-wrapper"${dataAttr}><iframe src="${escapeAttr(url)}" width="100%" height="600px" title="${escapeAttr(props.title || 'PDF Document')}"></iframe></div>`)
+                const url = safeUrl(props.url)
+                if (url) htmlParts.push(`<div class="pdf-embed-wrapper"${dataAttr}><iframe src="${escapeHtml(url)}" width="100%" height="600" title="${escapeHtml(text(props.title) || 'PDF Document')}"></iframe></div>`)
                 break
             }
-            case 'mermaid': {
-                const source = props.source || props.text || ''
-                htmlParts.push(`<div class="mermaid-block-container"${dataAttr}><pre class="mermaid">${escapeHtml(source)}</pre></div>`)
+            case 'mermaid':
+                htmlParts.push(`<div class="mermaid-block-container"${dataAttr}><pre class="mermaid">${escapeHtml(text(props.source) || text(props.text))}</pre></div>`)
                 break
-            }
             case 'echarts': {
                 const optionJson = typeof props.optionJson === 'string' ? props.optionJson : JSON.stringify(props.optionJson || {})
-                htmlParts.push(`<div class="echarts-block-container"${dataAttr}><div class="echarts" data-echarts-options="${escapeAttr(optionJson)}" style="width:100%;height:350px;"></div></div>`)
+                htmlParts.push(`<div class="echarts-block-container"${dataAttr}><div class="echarts" data-echarts-options="${escapeHtml(optionJson)}" style="width:100%;height:350px;"></div></div>`)
                 break
             }
             case 'file': {
-                const url = props.url || ''
-                const name = props.name || props.url || 'Download File'
-                const mime = props.mimeType || ''
-                if (mime.startsWith('video/')) {
-                    htmlParts.push(`<div class="media-video-wrapper"${dataAttr}><video controls src="${escapeAttr(url)}"></video></div>`)
-                } else if (mime.startsWith('audio/')) {
-                    htmlParts.push(`<div class="media-audio-wrapper"${dataAttr}><audio controls src="${escapeAttr(url)}"></audio></div>`)
-                } else {
-                    htmlParts.push(`<p${dataAttr}><a class="file-download-link" href="${escapeAttr(url)}" download target="_blank" rel="noopener noreferrer">📎 ${escapeHtml(name)}</a></p>`)
-                }
+                const url = safeUrl(props.url)
+                if (!url) break
+                const mime = text(props.mimeType).toLowerCase()
+                if (mime.startsWith('video/')) htmlParts.push(`<div class="media-video-wrapper"${dataAttr}><video controls src="${escapeHtml(url)}"></video></div>`)
+                else if (mime.startsWith('audio/')) htmlParts.push(`<div class="media-audio-wrapper"${dataAttr}><audio controls src="${escapeHtml(url)}"></audio></div>`)
+                else htmlParts.push(`<p${dataAttr}><a class="file-download-link" href="${escapeHtml(url)}" download target="_blank" rel="noopener noreferrer">📎 ${escapeHtml(text(props.name) || url)}</a></p>`)
                 break
             }
-            case 'raw': {
-                htmlParts.push(`<div class="raw-block"${dataAttr}>${props.content || ''}</div>`)
+            case 'raw':
+                htmlParts.push(`<pre class="raw-block"${dataAttr}><code>${escapeHtml(text(props.content))}</code></pre>`)
                 break
-            }
             case 'paragraph':
-            default: {
-                htmlParts.push(`<p${dataAttr}>${escapeHtml(props.text || '')}</p>`)
+                htmlParts.push(`<p${dataAttr}>${escapeHtml(text(props.text))}</p>`)
                 break
-            }
         }
     }
 
     closeListIfNeeded()
-    return htmlParts.join('\n')
+    return htmlParts.join('\n') || '<p></p>'
 }
 
 export function blockToMarkdown(blockInput) {
-    const doc = typeof blockInput === 'string' ? parseBlockDocument(blockInput) : (blockInput || { version: 1, blocks: [] })
-    const blocks = Array.isArray(doc.blocks) ? doc.blocks : []
-
+    const { blocks } = getDocumentForRendering(blockInput)
     const lines = []
-    for (const block of blocks) {
-        const type = block.type || 'paragraph'
-        const props = block.props || {}
 
+    for (const { type, props } of blocks) {
         switch (type) {
             case 'heading': {
                 const level = Math.min(Math.max(parseInt(props.level, 10) || 1, 1), 6)
-                lines.push('#'.repeat(level) + ' ' + (props.text || ''))
+                lines.push('#'.repeat(level) + ' ' + text(props.text))
                 break
             }
-            case 'bulletList': {
-                lines.push('- ' + (props.text || ''))
-                break
-            }
-            case 'taskList': {
-                const check = props.checked ? '[x]' : '[ ]'
-                lines.push(`- ${check} ` + (props.text || ''))
-                break
-            }
-            case 'code': {
-                const lang = props.language || ''
-                lines.push('```' + lang)
-                lines.push(props.text || '')
-                lines.push('```')
-                break
-            }
-            case 'quote': {
-                lines.push('> ' + (props.text || ''))
-                break
-            }
-            case 'divider': {
-                lines.push('---')
-                break
-            }
-            case 'slideBreak': {
-                lines.push('\n---\n')
-                break
-            }
-            case 'image': {
-                lines.push(`![${props.alt || ''}](${props.src || ''})`)
-                break
-            }
-            case 'youtube': {
-                lines.push(props.url || `https://www.youtube.com/watch?v=${props.videoId || ''}`)
-                break
-            }
-            case 'pdf': {
-                lines.push(`[PDF Document](${props.url || ''})`)
-                break
-            }
-            case 'mermaid': {
-                lines.push('```mermaid')
-                lines.push(props.source || props.text || '')
-                lines.push('```')
-                break
-            }
-            case 'echarts': {
-                lines.push('```echarts')
-                lines.push(typeof props.optionJson === 'string' ? props.optionJson : JSON.stringify(props.optionJson || {}, null, 2))
-                lines.push('```')
-                break
-            }
-            case 'file': {
-                lines.push(`[${props.name || 'File'}](${props.url || ''})`)
-                break
-            }
-            case 'paragraph':
-            default: {
-                lines.push(props.text || '')
-                break
-            }
+            case 'bulletList': lines.push('- ' + text(props.text)); break
+            case 'taskList': lines.push(`- ${props.checked ? '[x]' : '[ ]'} ${text(props.text)}`); break
+            case 'code': lines.push(`\`\`\`${text(props.language)}\n${text(props.text)}\n\`\`\``); break
+            case 'quote': lines.push('> ' + text(props.text)); break
+            case 'divider': lines.push('---'); break
+            case 'slideBreak': lines.push('---'); break
+            case 'image': lines.push(`![${text(props.alt)}](${safeUrl(props.src)})`); break
+            case 'youtube': lines.push(safeUrl(props.url) || `https://www.youtube.com/watch?v=${getYouTubeVideoId(props)}`); break
+            case 'pdf': lines.push(`[PDF Document](${safeUrl(props.url)})`); break
+            case 'mermaid': lines.push(`\`\`\`mermaid\n${text(props.source) || text(props.text)}\n\`\`\``); break
+            case 'echarts': lines.push(`\`\`\`echarts\n${typeof props.optionJson === 'string' ? props.optionJson : JSON.stringify(props.optionJson || {}, null, 2)}\n\`\`\``); break
+            case 'file': lines.push(`[${text(props.name) || 'File'}](${safeUrl(props.url)})`); break
+            case 'raw': lines.push(`\`\`\`html\n${text(props.content)}\n\`\`\``); break
+            case 'paragraph': lines.push(text(props.text)); break
         }
         lines.push('')
     }

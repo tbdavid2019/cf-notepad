@@ -26,7 +26,7 @@ function extractContentTitle(value = '') {
             const parsed = JSON.parse(trimmedVal)
             if (parsed && Array.isArray(parsed.blocks)) {
                 for (const b of parsed.blocks) {
-                    if (b && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
+                    if (b && (b.type === 'heading' || b.type === 'paragraph') && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
                         const candidate = normalizeTitleCandidate(b.props.text)
                         if (candidate) return candidate
                     }
@@ -152,3 +152,16 @@ export function resolveEditorFormat(metadata = {}) {
     return metadata && metadata.editorFormat === 'block' ? 'block' : 'markdown'
 }
 
+export function resolveLockedEditorFormat(metadata = {}, requestedFormat = undefined) {
+    const existing = metadata?.editorFormat
+    if (existing !== undefined && existing !== 'block' && existing !== 'markdown') {
+        throw new TypeError('Invalid stored editor format')
+    }
+    if (requestedFormat !== undefined && requestedFormat !== 'block' && requestedFormat !== 'markdown') {
+        throw new TypeError('Invalid editor format')
+    }
+    if (existing && requestedFormat && existing !== requestedFormat) {
+        throw new TypeError('editorFormat is immutable after note creation')
+    }
+    return existing || requestedFormat || 'markdown'
+}

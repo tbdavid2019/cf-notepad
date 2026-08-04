@@ -1,12 +1,20 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { parseBlockDocument, renderBlockToHtml, blockToMarkdown } from '../src/block_renderer.mjs'
-import { resolveEditorFormat, extractNoteTitle, extractNoteDescription } from '../src/note_meta.js'
+import { parseBlockDocument, renderBlockToHtml, blockToMarkdown, validateBlockDocument } from '../src/block_renderer.mjs'
+import { resolveEditorFormat, resolveLockedEditorFormat, extractNoteTitle, extractNoteDescription } from '../src/note_meta.js'
 
 test('resolveEditorFormat returns block when metadata.editorFormat is block', () => {
     assert.equal(resolveEditorFormat({ editorFormat: 'block' }), 'block')
     assert.equal(resolveEditorFormat({ editorFormat: 'markdown' }), 'markdown')
     assert.equal(resolveEditorFormat({}), 'markdown')
+})
+
+test('resolveLockedEditorFormat prevents a note format from changing after creation', () => {
+    assert.equal(resolveLockedEditorFormat({}, 'block'), 'block')
+    assert.equal(resolveLockedEditorFormat({ editorFormat: 'markdown' }), 'markdown')
+    assert.equal(resolveLockedEditorFormat({ editorFormat: 'block' }, 'block'), 'block')
+    assert.throws(() => resolveLockedEditorFormat({ editorFormat: 'block' }, 'markdown'), /immutable/)
+    assert.throws(() => resolveLockedEditorFormat({}, 'html'), /Invalid editor format/)
 })
 
 test('parseBlockDocument parses valid block JSON and falls back gracefully', () => {
@@ -23,6 +31,13 @@ test('parseBlockDocument parses valid block JSON and falls back gracefully', () 
     const fallback = parseBlockDocument('Plain text fallback')
     assert.equal(fallback.blocks.length, 1)
     assert.equal(fallback.blocks[0].props.text, 'Plain text fallback')
+})
+
+test('block documents reject malformed blocks at write boundaries and render safely at read boundaries', () => {
+    assert.throws(() => validateBlockDocument({ version: 1, blocks: [null] }), /Invalid block/)
+    assert.throws(() => parseBlockDocument('{"version":1,"blocks":[null]}', { allowTextFallback: false }), /Invalid block/)
+    assert.doesNotThrow(() => renderBlockToHtml({ version: 1, blocks: [null] }))
+    assert.equal(renderBlockToHtml({ version: 1, blocks: [null] }), '<p></p>')
 })
 
 test('renderBlockToHtml renders all core block types safely', () => {
@@ -82,6 +97,31 @@ test('blockToMarkdown converts block document to valid Markdown', () => {
     assert.match(md, /---/)
 })
 
+test('raw blocks are escaped in HTML and preserved as an explicit HTML code fence in Markdown', () => {
+    const doc = {
+        version: 1,
+        blocks: [{ id: 'raw', type: 'raw', props: { content: '<img src=x onerror=alert(1)>' } }],
+    }
+
+    const html = renderBlockToHtml(doc)
+    assert.doesNotMatch(html, /<img src=x/)
+    assert.match(html, /&lt;img src=x onerror=alert\(1\)&gt;/)
+    assert.match(blockToMarkdown(doc), /```html\n<img src=x onerror=alert\(1\)>\n```/)
+})
+
+test('block media renderers allow only http and https URLs', () => {
+    const html = renderBlockToHtml({
+        version: 1,
+        blocks: [
+            { type: 'image', props: { src: 'javascript:alert(1)' } },
+            { type: 'pdf', props: { url: 'data:text/html,boom' } },
+            { type: 'file', props: { url: 'javascript:alert(2)', name: 'bad' } },
+        ],
+    })
+
+    assert.doesNotMatch(html, /javascript:|data:text\/html/)
+})
+
 test('extractNoteTitle and extractNoteDescription handle block JSON documents', () => {
     const json = JSON.stringify({
         version: 1,
@@ -96,4 +136,16 @@ test('extractNoteTitle and extractNoteDescription handle block JSON documents', 
 
     const desc = extractNoteDescription(json)
     assert.match(desc, /Block Article Title First paragraph text/)
+})
+
+test('block title extraction skips non-textual and list blocks before a heading or paragraph', () => {
+    const json = JSON.stringify({
+        version: 1,
+        blocks: [
+            { id: 'list', type: 'bulletList', props: { text: 'Not the title' } },
+            { id: 'h1', type: 'heading', props: { text: 'Actual title' } },
+        ],
+    })
+
+    assert.equal(extractNoteTitle(json), 'Actual title')
 })
