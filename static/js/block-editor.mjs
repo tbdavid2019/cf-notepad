@@ -4,6 +4,7 @@ import Image from '@tiptap/extension-image'
 import BubbleMenu from '@tiptap/extension-bubble-menu'
 import DragHandle from '@tiptap/extension-drag-handle'
 import FileHandler from '@tiptap/extension-file-handler'
+import { TextSelection } from '@tiptap/pm/state'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
@@ -173,7 +174,7 @@ root.replaceChildren(shell)
 const toolbarItems = [
     ['B', '粗體', 'bold'], ['I', '斜體', 'italic'], ['S', '刪除線', 'strike'], ['⌁', '連結', 'link'],
     ['H1', '標題 1', 'heading1'], ['H2', '標題 2', 'heading2'], ['•', '項目清單', 'bulletList'], ['☑', '待辦清單', 'taskList'],
-    ['❝', '引言', 'blockquote'], ['</>', '程式碼區塊', 'codeBlock'], ['—', '分隔線', 'horizontalRule'], ['↶', '復原', 'undo'], ['↷', '重做', 'redo'],
+    ['❝', '引言', 'blockquote'], ['</>', '程式碼區塊', 'codeBlock'], ['—', '分隔線', 'horizontalRule'], ['↑', '上移目前區塊', 'moveUp'], ['↓', '下移目前區塊', 'moveDown'], ['↶', '復原', 'undo'], ['↷', '重做', 'redo'],
 ]
 for (const [label, title, command] of toolbarItems) toolbar.append(createButton({ label, title, command }))
 const insertMenu = document.createElement('select')
@@ -245,6 +246,8 @@ function runCommand(command) {
     else if (command === 'blockquote') chain.toggleBlockquote().run()
     else if (command === 'codeBlock') chain.toggleCodeBlock().run()
     else if (command === 'horizontalRule') chain.setHorizontalRule().run()
+    else if (command === 'moveUp') moveCurrentTopLevelBlock(-1)
+    else if (command === 'moveDown') moveCurrentTopLevelBlock(1)
     else if (command === 'undo') chain.undo().run()
     else if (command === 'redo') chain.redo().run()
     else if (command === 'link') {
@@ -252,6 +255,24 @@ function runCommand(command) {
         if (href) chain.setLink({ href }).run()
         else chain.unsetLink().run()
     }
+}
+
+function moveCurrentTopLevelBlock(direction) {
+    const { state, view } = editor
+    const index = state.selection.$from.index(0)
+    const targetIndex = index + direction
+    if (targetIndex < 0 || targetIndex >= state.doc.childCount) return
+
+    const node = state.doc.child(index)
+    const target = state.doc.child(targetIndex)
+    const position = state.selection.$from.posAtIndex(index, 0)
+    const targetPosition = state.selection.$from.posAtIndex(targetIndex, 0)
+    const insertionPosition = direction < 0 ? targetPosition : position + target.nodeSize
+    const transaction = state.tr
+        .delete(position, position + node.nodeSize)
+        .insert(insertionPosition, node)
+    view.dispatch(transaction.setSelection(TextSelection.near(transaction.doc.resolve(insertionPosition + 1))))
+    view.focus()
 }
 
 toolbar.addEventListener('click', event => {
