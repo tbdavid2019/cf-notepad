@@ -149,3 +149,12 @@ test('block title extraction skips non-textual and list blocks before a heading 
 
     assert.equal(extractNoteTitle(json), 'Actual title')
 })
+
+test('a block document without a heading or paragraph never exposes its JSON as a title', () => {
+    const json = JSON.stringify({
+        version: 1,
+        blocks: [{ id: 'raw', type: 'raw', props: { content: '<img src=x>' } }],
+    })
+
+    assert.equal(extractNoteTitle(json, '', 'fallback-title'), 'fallback-title')
+})

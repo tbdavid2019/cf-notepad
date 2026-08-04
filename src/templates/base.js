@@ -144,6 +144,9 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
+    const isBlockDocument = ext.editorFormat === 'block'
+    const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
+    const textareaContent = isBlockDocument ? escapeHtml(content) : content
     const pageTheme = resolvePageTheme({
         randomize: isEdit && ext.isNewEntry === true,
         storedTheme: ext.theme,
@@ -359,26 +362,29 @@ ${getMarkdownCss()}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
-                         <article style="display:none;" id="bot-accessible-content">${content}</article>
-                        ${isEdit ? `<div class="editor-pane">
+                         <article style="display:none;" id="bot-accessible-content">${isBlockDocument ? blockHtml : content}</article>
+                        ${isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
+                            <div id="block-editor" class="block-editor" aria-label="Block editor"></div>
+                            <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
+                        </div>` : `<div class="editor-pane">
                             ${EDITOR_TOOLBAR(lang)}
                             <div class="editor-code-shell">
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
-                        </div>` : '<textarea id="contents" class="contents hide" spellcheck="false">' + content + '</textarea>'}
-                        ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
-                        ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
+                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'}
+                        ${(isEdit && !isBlockDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
+                        ${tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
                                 ? `<div class="preview-pane">${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div></div>`
-                                : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>`
+                                : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
                         )}
                     </div>
                 </div>
             </div>
         </div>
-        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme, editorFormat: isBlockDocument ? 'block' : 'markdown' })}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
@@ -406,7 +412,7 @@ ${getMarkdownCss()}
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
     
     <!-- Remark / Unified Ecosystem -->
-    ${((ext.mode || 'md') === 'md' || !isEdit) ? `
+    ${!isBlockDocument && ((ext.mode || 'md') === 'md' || !isEdit) ? `
     <script type="module">
         import { unified } from 'https://esm.sh/unified@11.0.4?bundle';
         import remarkParse from 'https://esm.sh/remark-parse@11.0.0?bundle';
@@ -802,6 +808,9 @@ ${getMarkdownCss()}
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
         isEdit: isEdit === true,
+        editorFormat: isBlockDocument ? 'block' : 'markdown',
+        isBlock: isBlockDocument,
+        blockMarkdown: ext.blockMarkdown || '',
         isNewEntry: isEdit === true && ext.isNewEntry === true,
         theme: pageTheme,
         isPublished: ext.share === true,
@@ -1694,8 +1703,10 @@ ${getMarkdownCss()}
             previewMarkdownNode: $previewMd,
             previewPlainNode: $previewPlain,
         })
-        renderPlain($previewPlain, $textarea ? $textarea.value : '')
-        triggerRender($previewMd, $textarea ? $textarea.value : '')
+        if (!APP_STATE.isBlock) {
+            renderPlain($previewPlain, $textarea ? $textarea.value : '')
+            triggerRender($previewMd, $textarea ? $textarea.value : '')
+        }
         setupShareBackToTop($previewMd || $previewPlain)
 
         // Fetch a random Tagore poem and a random localized editor tip. They
@@ -2415,7 +2426,7 @@ ${getMarkdownCss()}
 
             $textarea.addEventListener('input', () => {
                 schedulePublishNudge()
-                triggerRender($previewMd, $textarea.value)
+                if (!APP_STATE.isBlock) triggerRender($previewMd, $textarea.value)
             })
         }
 
@@ -2837,6 +2848,8 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.mjs"></script>' : ''}
+    ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
@@ -3237,7 +3250,9 @@ ${getMarkdownCss()}
             var edit = document.getElementById('contents');
             var share = document.getElementById('bot-accessible-content');
             
-            if (edit && !edit.classList.contains('hide')) {
+            if (APP_STATE.isBlock) {
+                content = APP_STATE.blockMarkdown || '';
+            } else if (edit && !edit.classList.contains('hide')) {
                 content = edit.value;
             } else if (share) {
                 content = share.innerText || share.textContent || '';

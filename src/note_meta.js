@@ -31,6 +31,7 @@ function extractContentTitle(value = '') {
                         if (candidate) return candidate
                     }
                 }
+                return ''
             }
         } catch (e) {}
     }
@@ -125,9 +126,12 @@ export function isNewNoteEntry(requestUrl, value = '', metadata = {}) {
         return false
     }
 
+    const metadataKeys = Object.keys(metadata || {}).filter(key => metadata[key] !== undefined)
+    const isCreationMetadata = metadataKeys.every(key => key === 'editorFormat' || key === 'blockDocumentVersion')
+
     return url.searchParams.get('new') === '1'
         && !String(value || '').trim()
-        && Object.keys(metadata || {}).length === 0
+        && isCreationMetadata
 }
 
 export function formatNewNoteTitle(lang = 'zh-TW', date = new Date()) {

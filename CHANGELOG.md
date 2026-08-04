@@ -9,6 +9,10 @@
   - Registered `/new/block` and `/new/markdown` creation endpoints that allocate unique note slugs with locked format metadata.
   - Implemented `src/block_renderer.mjs` supporting JSON document parsing, safe HTML rendering for all core blocks (`heading`, `paragraph`, `bulletList`, `taskList`, `code`, `quote`, `divider`, `slideBreak`, `image`, `youtube`, `pdf`, `mermaid`, `echarts`, `file`, `raw`), and Markdown export.
   - Updated title and description extraction in `src/note_meta.js` to parse block JSON documents seamlessly.
+- **Vanilla Block Editing and Rich Block Rendering**
+  - Added a single-column Block editor canvas with structural controls, mobile-friendly move buttons, and no persistent Markdown preview.
+  - Connected image upload to the existing R2 endpoint and file upload to the existing 888box fallback endpoints.
+  - Added safe Mermaid and ECharts enhancement on rendered Block pages; `slideBreak` blocks become Reveal.js slide separators.
 - **Unified Publish Choices**
   - Consolidated Publish, Autosave, and Public Index into one checkbox dialog instead of asking three consecutive questions.
   - All three choices default to enabled. Confirmed choices are remembered in localStorage and restored the next time the dialog opens on the same device.
@@ -32,6 +36,11 @@
   - Removed the separate post-publish Autosave and Public Index questions. Public Index remains enabled by default in the unified dialog to support sitemap discovery.
 
 ### Fixed
+
+- **Block Format Integrity and Rendering Safety**
+  - `/new/block` and `/new/markdown` now persist a locked format before redirecting; API, publish, and form saves reject invalid Block JSON and format changes.
+  - Block renderers now validate every block, accept only HTTP(S) or same-origin media URLs, and display `raw` content as escaped source code rather than executable HTML.
+  - Block Share pages render server-side HTML rather than treating JSON as Markdown; explicit Markdown responses use the documented best-effort export.
 
 - **Dark Mode Dropdown Danger Item Contrast**
   - Updated `--toolbar-danger` (`#ff7b72`) and `--toolbar-danger-bg-hover` (`rgba(248, 81, 73, 0.2)`) in dark theme palettes.

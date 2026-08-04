@@ -16,6 +16,14 @@ test('only an empty unpersisted path carrying the homepage marker is a new-note 
     assert.equal(isNewNoteEntry('https://wiki.david888.com/abcd?new=1', '', { theme: 'retro' }), false)
 })
 
+test('a pre-created note can retain the new-note marker when it only has immutable format metadata', () => {
+    assert.equal(isNewNoteEntry(
+        'https://wiki.david888.com/abcd?new=1',
+        '',
+        { editorFormat: 'block', blockDocumentVersion: 1 },
+    ), true)
+})
+
 test('new-note tab title uses a human timestamp instead of the random path', () => {
     const date = new Date('2026-07-30T01:05:00.000Z')
 
@@ -27,4 +35,11 @@ test('homepage marks its generated path and note rendering consumes that marker'
     assert.match(indexSource, /nextUrl\.searchParams\.set\('new', '1'\)/)
     assert.match(indexSource, /isNewNoteEntry\(request\.url, value, metadata\)/)
     assert.match(indexSource, /formatNewNoteTitle\(lang\)/)
+})
+
+test('dedicated creation routes persist a locked editor format before redirecting', () => {
+    assert.match(indexSource, /async function createNewNote\(request, editorFormat\)/)
+    assert.match(indexSource, /new URL\(`\/\$\{path\}`, originUrl\)/)
+    assert.match(indexSource, /router\.get\('\/new\/block', request => createNewNote\(request, 'block'\)\)/)
+    assert.match(indexSource, /router\.get\('\/new\/markdown', request => createNewNote\(request, 'markdown'\)\)/)
 })

@@ -14,8 +14,9 @@ import {
     isNewNoteEntry,
     resolveAnnotationsEnabled,
     resolveEditorFormat,
+    resolveLockedEditorFormat,
 } from './note_meta'
-import { renderBlockToHtml, blockToMarkdown, parseBlockDocument } from './block_renderer.mjs'
+import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -343,6 +344,17 @@ async function persistNoteContent({
     }
 }
 
+function getBlockPageExt(value, metadata = {}) {
+    const editorFormat = resolveEditorFormat(metadata)
+    return editorFormat === 'block'
+        ? { editorFormat, blockHtml: renderBlockToHtml(value), blockMarkdown: blockToMarkdown(value) }
+        : { editorFormat }
+}
+
+function getMarkdownExportContent(value, metadata = {}) {
+    return resolveEditorFormat(metadata) === 'block' ? blockToMarkdown(value) : value
+}
+
 async function backupCurrentNoteBeforeRestore({
     path,
     currentContent,
@@ -410,21 +422,25 @@ const homePage = request => {
 router.get('/', homePage)
 router.head('/', homePage)
 
-router.get('/new/block', request => {
+async function createNewNote(request, editorFormat) {
     const originUrl = new URL(request.url)
-    const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
-    nextUrl.searchParams.set('new', '1')
-    nextUrl.searchParams.set('editor', 'block')
-    return Response.redirect(nextUrl.href, 302)
-})
+    for (let attempt = 0; attempt < 12; attempt += 1) {
+        const path = genRandomStr(getSlugLength())
+        const existing = await getNotesNamespace().getWithMetadata(path)
+        if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
 
-router.get('/new/markdown', request => {
-    const originUrl = new URL(request.url)
-    const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
-    nextUrl.searchParams.set('new', '1')
-    nextUrl.searchParams.set('editor', 'markdown')
-    return Response.redirect(nextUrl.href, 302)
-})
+        await getNotesNamespace().put(path, '', {
+            metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 1 : undefined },
+        })
+        const nextUrl = new URL(`/${path}`, originUrl)
+        nextUrl.searchParams.set('new', '1')
+        return Response.redirect(nextUrl.href, 302)
+    }
+    return returnJSON(503, 'Could not allocate a new note path', { status: 503 })
+}
+
+router.get('/new/block', request => createNewNote(request, 'block'))
+router.get('/new/markdown', request => createNewNote(request, 'markdown'))
 router.get('/_pwa-offline', () => createOfflinePageResponse())
 router.get('/app.webmanifest', () => {
     const name = APP_NAME || 'david888 wiki'
@@ -790,13 +806,15 @@ async function renderSharePage(request, presentationMode = false, execution = {}
 
         const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
         const description = extractNoteDescription(value, title)
+        const blockPageExt = getBlockPageExt(value, metadata)
+        const markdownExportContent = getMarkdownExportContent(value, metadata)
         const canonicalPath = presentationMode ? presentationPath : sharePath
         const canonicalUrl = `${origin}${canonicalPath}`
 
         const acceptsMarkdown = requestAcceptsMarkdown(request)
         if (acceptsMarkdown) {
             return createMarkdownResponse(
-                buildMarkdownDocument(value, {
+                buildMarkdownDocument(markdownExportContent, {
                     title,
                     description,
                     canonical_url: canonicalUrl,
@@ -846,6 +864,7 @@ async function renderSharePage(request, presentationMode = false, execution = {}
             shareId,
             ext: {
                 ...metadata,
+                ...blockPageExt,
                 ...(metadata.pw || metadata.vpw ? { authPath } : {}),
                 sharePath,
                 presentationPath,
@@ -1376,7 +1395,9 @@ router.get('/api/:path', async (request) => {
 
     return new Response(value || '', {
         headers: {
-            'Content-Type': 'text/markdown;charset=UTF-8',
+            'Content-Type': resolveEditorFormat(metadata) === 'block'
+                ? 'application/json;charset=UTF-8'
+                : 'text/markdown;charset=UTF-8',
             'Access-Control-Allow-Origin': '*'
         }
     })
@@ -1486,9 +1507,29 @@ router.post('/api/:path', async (request) => {
     const auth = await requireApiEditAccess(request, metadata, reqBody.pw || null)
     if (!auth.ok) return auth.response
 
-    // Support "content" as a fallback in case LLM sends the wrong json key
-    const text = reqBody.text || reqBody.content || ''
+    // Support "content" as a fallback in case LLM sends the wrong json key.
+    const text = typeof reqBody.text === 'string'
+        ? reqBody.text
+        : (typeof reqBody.content === 'string' ? reqBody.content : '')
     const append = reqBody.append === true
+
+    const requestedEditorFormat = reqBody.editorFormat ?? url.searchParams.get('editor') ?? undefined
+    let editorFormat
+    try {
+        editorFormat = resolveLockedEditorFormat(metadata, requestedEditorFormat)
+    } catch (error) {
+        const status = /immutable/.test(error.message) ? 409 : 400
+        return returnJSON(status, error.message, { status })
+    }
+
+    if (editorFormat === 'block') {
+        if (append) return returnJSON(400, 'Block documents do not support append', { status: 400 })
+        try {
+            validateBlockDocument(parseBlockDocument(text, { allowTextFallback: false }))
+        } catch (error) {
+            return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+        }
+    }
 
     const newContent = append ? (value ? value + '\n\n' + text : text) : text
 
@@ -1497,11 +1538,7 @@ router.post('/api/:path', async (request) => {
         updateAt: dayjs().unix(),
     }
 
-    if (reqBody.editorFormat === 'block' || url.searchParams.get('editor') === 'block') {
-        updateMetadata.editorFormat = 'block'
-    } else if (metadata.editorFormat) {
-        updateMetadata.editorFormat = metadata.editorFormat
-    }
+    updateMetadata.editorFormat = editorFormat
 
     if (reqBody.pw !== undefined) updateMetadata.pw = reqBody.pw ? await saltPw(reqBody.pw) : undefined
     if (reqBody.vpw !== undefined) updateMetadata.vpw = reqBody.vpw ? await saltPw(reqBody.vpw) : undefined
@@ -1597,6 +1634,8 @@ router.get('/:path', async (request) => {
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const { value, metadata } = await queryNote(path)
+    const blockPageExt = getBlockPageExt(value, metadata)
+    const markdownExportContent = getMarkdownExportContent(value, metadata)
 
     const newEntry = isNewNoteEntry(request.url, value, metadata)
     const title = !String(value || '').trim() && !metadata?.title
@@ -1610,7 +1649,7 @@ router.get('/:path', async (request) => {
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
-                buildMarkdownDocument(value, {
+                buildMarkdownDocument(markdownExportContent, {
                     title,
                     note_path: path,
                     edit_url: `${new URL(request.url).origin}/${path}`,
@@ -1623,7 +1662,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1634,7 +1673,7 @@ router.get('/:path', async (request) => {
     if (valid && role === 'edit') {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
-                buildMarkdownDocument(value, {
+                buildMarkdownDocument(markdownExportContent, {
                     title,
                     note_path: path,
                     edit_url: `${new URL(request.url).origin}/${path}`,
@@ -1647,7 +1686,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1658,7 +1697,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), authPath: `/${path}/auth` },
             shareId,
             path,
         })
@@ -1670,7 +1709,7 @@ router.get('/:path', async (request) => {
         lang,
         title,
         content: value,
-        ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), authPath: `/${path}/auth` },
         shareId,
         path,
     })
@@ -1681,6 +1720,8 @@ router.head('/:path', async (request) => {
 
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const { value, metadata } = await queryNote(path)
+    const blockPageExt = getBlockPageExt(value, metadata)
+    const markdownExportContent = getMarkdownExportContent(value, metadata)
     const lang = getI18n(request)
     const newEntry = isNewNoteEntry(request.url, value, metadata)
     const title = !String(value || '').trim() && !metadata?.title
@@ -1692,7 +1733,7 @@ router.head('/:path', async (request) => {
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
-                buildMarkdownDocument(value, {
+                buildMarkdownDocument(markdownExportContent, {
                     title,
                     note_path: path,
                     edit_url: `${new URL(request.url).origin}/${path}`,
@@ -1705,7 +1746,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1716,7 +1757,7 @@ router.head('/:path', async (request) => {
     if (valid && role === 'edit') {
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
-                buildMarkdownDocument(value, {
+                buildMarkdownDocument(markdownExportContent, {
                     title,
                     note_path: path,
                     edit_url: `${new URL(request.url).origin}/${path}`,
@@ -1729,7 +1770,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1740,7 +1781,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+            ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), authPath: `/${path}/auth` },
             shareId,
             path,
         })
@@ -1752,7 +1793,7 @@ router.head('/:path', async (request) => {
         lang,
         title,
         content: value,
-        ext: { ...pageMetadata, enableR2: getEnableR2(), authPath: `/${path}/auth` },
+        ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), authPath: `/${path}/auth` },
         shareId,
         path,
     })
@@ -1839,6 +1880,13 @@ router.post('/:path/setting', async request => {
 
             if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
                 try {
+                    if (typeof content === 'string' && resolveEditorFormat(metadata) === 'block') {
+                        try {
+                            validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
+                        } catch (error) {
+                            return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+                        }
+                    }
                     const normalizedWidth = width === undefined
                         ? undefined
                         : normalizePreviewWidth(width, metadata.width || DEFAULT_PREVIEW_WIDTH)
@@ -1929,7 +1977,13 @@ router.post('/:path', async request => {
     const formData = await request.formData();
     const content = formData.get('t')
 
-    // const { metadata } = await queryNote(path)
+    if (resolveEditorFormat(metadata) === 'block') {
+        try {
+            validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
+        } catch (error) {
+            return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+        }
+    }
 
     try {
         await persistNoteContent({

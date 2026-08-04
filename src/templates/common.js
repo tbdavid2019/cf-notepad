@@ -161,7 +161,7 @@ export const SWITCHER = (text, open, className = '') => `
 <span class="footer-control-label">${text}</span>
 `
 
-export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount, annotationsEnabled }) => {
+export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount, annotationsEnabled, editorFormat = 'markdown' }) => {
     const t = getLangText(lang)
     const effectiveWidth = width || DEFAULT_PREVIEW_WIDTH
     const showNoteHistory = noteHistoryEnabled === true && isEdit
@@ -178,6 +178,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const viewCountText = safeViewCount === null
         ? ''
         : (lang === 'zh-TW' ? `${formattedViewCount} 次瀏覽` : `${formattedViewCount} views`)
+    const isBlockEditor = isEdit && editorFormat === 'block'
     const getThemeLabel = themeName => {
         const description = THEME_OPTION_LABELS[themeName]?.[lang] || ''
         return description ? `${themeName} · ${description}` : themeName
@@ -282,6 +283,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.readLock}
                             <span class="toolbar-button-label">${t.readLockTitle}</span>
                         </button>
+                        ${!isBlockEditor ? `
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
@@ -352,6 +354,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 </div>
                             ` : ''}
                         </div>
+                        ` : ''}
                     ` : (path ? `
                         ${authPath
                             ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
