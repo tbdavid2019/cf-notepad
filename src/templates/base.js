@@ -49,6 +49,15 @@ export const resolvePageTheme = ({
     return themeNames[randomIndex] || fallbackTheme
 }
 
+export const resolveInitialPreviewDevice = ({
+    isNewEntry = false,
+    storedDevice = '',
+    random = Math.random,
+} = {}) => {
+    if (!isNewEntry) return storedDevice === 'mobile' ? 'mobile' : 'desktop'
+    return Number(random()) < 0.5 ? 'mobile' : 'desktop'
+}
+
 const PUBLISH_NUDGE_MODAL = lang => {
     const t = getLangText(lang)
     return `
@@ -58,13 +67,55 @@ const PUBLISH_NUDGE_MODAL = lang => {
             <button type="button" class="close-btn publish-nudge-close" aria-label="${escapeHtml(t.later)}">x</button>
             <h2 id="publish-nudge-title">${escapeHtml(t.publishNudgeTitle)}</h2>
             <p>${escapeHtml(t.publishNudgeText)}</p>
+            <fieldset class="publish-preferences">
+                <legend class="sr-only">${escapeHtml(t.publishNudgeTitle)}</legend>
+                <label class="publish-preference-row">
+                    <input type="checkbox" class="publish-preference-input" data-publish-preference="publish" checked>
+                    <span><strong>${escapeHtml(t.publishPreferencePublish)}</strong><small>${escapeHtml(t.publishPreferencePublishHelp)}</small></span>
+                </label>
+                <label class="publish-preference-row">
+                    <input type="checkbox" class="publish-preference-input" data-publish-preference="autosave" checked>
+                    <span><strong>${escapeHtml(t.publishPreferenceAutosave)}</strong><small>${escapeHtml(t.publishPreferenceAutosaveHelp)}</small></span>
+                </label>
+                <label class="publish-preference-row">
+                    <input type="checkbox" class="publish-preference-input" data-publish-preference="publicIndex" checked>
+                    <span><strong>${escapeHtml(t.publishPreferencePublicIndex)}</strong><small>${escapeHtml(t.publishPreferencePublicIndexHelp)}</small></span>
+                </label>
+            </fieldset>
+            <p class="publish-preferences-note">${escapeHtml(t.publishPreferencesRemembered)}</p>
             <div class="publish-nudge-actions">
                 <button type="button" class="opt-button publish-nudge-later">${escapeHtml(t.later)}</button>
-                <button type="button" class="opt-button publish-nudge-publish">${escapeHtml(t.publishAndSave)}</button>
+                <button type="button" class="opt-button publish-nudge-publish">${escapeHtml(t.publishApplyChoices)}</button>
             </div>
         </div>
     </div>
     `
+}
+
+const EDITOR_PUBLICATION_STATUS = ({ lang, ext = {}, shareId = '' }) => {
+    const t = getLangText(lang)
+    const published = ext.share === true && Boolean(shareId)
+    const safeVersionCount = Number.isSafeInteger(ext.versionCount) && ext.versionCount >= 0 ? ext.versionCount : null
+    const safeViewCount = Number.isSafeInteger(ext.viewCount) && ext.viewCount >= 0 ? ext.viewCount : null
+    const sharePath = published ? `/share/${encodeURIComponent(shareId)}` : ''
+
+    return `<aside class="editor-publication-status" data-published="${published ? 'true' : 'false'}" aria-live="polite">
+        <div class="publication-status-main">
+            <span id="publication-state" class="publication-state ${published ? 'is-published' : 'is-draft'}">${escapeHtml(published ? t.publicationPublished : t.publicationDraft)}</span>
+            <div class="publication-share-details" ${published ? '' : 'hidden'}>
+                <span class="publication-label">${escapeHtml(t.publicationUrl)}</span>
+                <a id="publication-share-url" href="${escapeHtml(sharePath || '#')}" target="_blank" rel="noopener noreferrer">${escapeHtml(sharePath)}</a>
+                <button type="button" id="publication-copy-url" class="publication-icon-button" aria-label="${escapeHtml(t.copy)}" title="${escapeHtml(t.copy)}">⧉</button>
+                <button type="button" id="publication-public-index" class="publication-index-button ${ext.publicIndex === true ? 'is-indexed' : ''}" aria-pressed="${ext.publicIndex === true ? 'true' : 'false'}">${escapeHtml(ext.publicIndex === true ? t.publicIndexOn : t.publicIndexOff)}</button>
+            </div>
+        </div>
+        <div class="publication-metrics" ${published ? '' : 'hidden'}>
+            <span title="${escapeHtml(t.publicationVersions)}">${escapeHtml(t.publicationVersions)} <strong id="publication-version-count">${safeVersionCount ?? '—'}</strong></span>
+            <span title="${escapeHtml(t.publicationViews)}">${escapeHtml(t.publicationViews)} <strong id="publication-view-count">${safeViewCount ?? '—'}</strong></span>
+            <span title="${escapeHtml(t.publicationUpdated)}">${escapeHtml(t.publicationUpdated)} <time id="publication-updated-at" datetime="${escapeHtml(ext.updateAt || '')}">—</time></span>
+        </div>
+        <span class="publication-pending-hint" ${published ? 'hidden' : ''}>${escapeHtml(t.publicationPendingHint)}</span>
+    </aside>`
 }
 
 const PWA_INSTALL_PROMPT = lang => {
@@ -93,6 +144,9 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
         randomize: isEdit && ext.isNewEntry === true,
         storedTheme: ext.theme,
     })
+    const initialEditorPreviewDevice = isEdit && ext.isNewEntry === true
+        ? resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: ext.previewDevice })
+        : ''
     const annotationsEnabled = resolveAnnotationsEnabled(ext)
     const annotationsUiEnabled = isSharePage && !isEmbed && annotationsEnabled
     const pageDescription = ext.meta?.description || tips || title || APP_NAME
@@ -313,7 +367,7 @@ ${getMarkdownCss()}
                         ${(isEdit && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (ext.mode || 'md') !== 'md') ? '' : (
                             isEdit
-                                ? `<div class="preview-pane"><div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div></div>`
+                                ? `<div class="preview-pane">${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div></div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>`
                         )}
                     </div>
@@ -750,11 +804,14 @@ ${getMarkdownCss()}
         autosave: ext.autosave === true && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
         publicIndex: ext.publicIndex === true,
+        versionCount: Number.isSafeInteger(ext.versionCount) && ext.versionCount >= 0 ? ext.versionCount : null,
+        viewCount: Number.isSafeInteger(ext.viewCount) && ext.viewCount >= 0 ? ext.viewCount : null,
+        updateAt: Number.isFinite(Number(ext.updateAt)) ? Number(ext.updateAt) : null,
         annotationsEnabled: resolveAnnotationsEnabled(ext),
         noteSettings: {
             width: ext.width || '',
             shareFont: ext.shareFont || '',
-            previewDevice: ext.previewDevice || '',
+            previewDevice: initialEditorPreviewDevice || ext.previewDevice || '',
             splitDirection: ext.splitDirection || '',
         },
         lang,
@@ -1494,14 +1551,16 @@ ${getMarkdownCss()}
         const $closeBtn = document.querySelector('.share-modal .close-btn')
         const $copyBtn = document.querySelector('.share-modal-copy-btn')
         const $shareInput = document.querySelector('.share-modal input')
-        const $shareIndexPrompt = document.querySelector('.share-index-prompt')
-        const $shareIndexApprove = document.querySelector('.share-index-approve')
-        const $shareIndexDecline = document.querySelector('.share-index-decline')
         const $languageSelector = document.querySelector('#language-selector')
         const $publishNudgeModal = document.querySelector('.publish-nudge-modal')
         const $publishNudgePublish = document.querySelector('.publish-nudge-publish')
         const $publishNudgeLater = document.querySelector('.publish-nudge-later')
         const $publishNudgeClose = document.querySelector('.publish-nudge-close')
+        const $publishPreferenceInputs = [...document.querySelectorAll('.publish-preference-input')]
+        const $publicationStatus = document.querySelector('.editor-publication-status')
+        const $publicationShareUrl = document.querySelector('#publication-share-url')
+        const $publicationCopyUrl = document.querySelector('#publication-copy-url')
+        const $publicationPublicIndex = document.querySelector('#publication-public-index')
         const $importMdBtn = document.querySelector('#import-md-btn')
         const $importMdInput = document.querySelector('#import-md-input')
         const $exportMdBtn = document.querySelector('#export-md-btn')
@@ -1519,6 +1578,24 @@ ${getMarkdownCss()}
         }
 
         const AUTOSAVE_IDLE_MS = ${AUTOSAVE_IDLE_MS}
+        const PUBLISH_PREFERENCES_KEY = 'cf-notepad:publish-preferences'
+        const defaultPublishPreferences = Object.freeze({ publish: true, autosave: true, publicIndex: true })
+        const loadPublishPreferences = () => {
+            try {
+                const stored = JSON.parse(window.localStorage.getItem(PUBLISH_PREFERENCES_KEY) || 'null')
+                if (!stored || typeof stored !== 'object') return { ...defaultPublishPreferences }
+                return {
+                    publish: stored.publish !== false,
+                    autosave: stored.autosave !== false,
+                    publicIndex: stored.publicIndex !== false,
+                }
+            } catch (error) {
+                return { ...defaultPublishPreferences }
+            }
+        }
+        const savePublishPreferences = preferences => {
+            try { window.localStorage.setItem(PUBLISH_PREFERENCES_KEY, JSON.stringify(preferences)) } catch (error) {}
+        }
         let savedContent = $textarea ? $textarea.value : ''
         let autosaveTimer = null
         let saveInFlight = null
@@ -1567,6 +1644,9 @@ ${getMarkdownCss()}
                 .then(res => {
                     if (res.err !== 0) throw new Error(res.msg || 'save failed')
                     if ($textarea.value === content) savedContent = content
+                    APP_STATE.updateAt = Math.floor(Date.now() / 1000)
+                    syncPublicationStatus()
+                    refreshPublicationVersionCount()
                     showSaveStatus(APP_STATE.lang === 'zh-TW' ? '已儲存' : 'Saved')
                     window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已儲存' : 'Note saved')
                     return true
@@ -1952,15 +2032,6 @@ ${getMarkdownCss()}
             })
         }
 
-        const showShareModal = (shareId) => {
-            if (!$shareModal || !$shareInput || !shareId) return;
-            $shareInput.value = window.location.origin + '/share/' + shareId;
-            if ($shareIndexPrompt) {
-                $shareIndexPrompt.style.display = APP_STATE.publicIndex ? 'none' : 'flex';
-            }
-            $shareModal.style.display = 'block';
-        }
-
         const setPublicIndex = async enabled => {
             const payload = await fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
@@ -1972,16 +2043,75 @@ ${getMarkdownCss()}
             return payload
         }
 
-        const syncPublicIndexButton = () => {
+        function syncPublicIndexButton() {
             const button = document.querySelector('#public-index-btn')
-            if (!button) return
             const enabled = APP_STATE.publicIndex === true
-            button.dataset.publicIndex = enabled ? 'true' : 'false'
-            button.textContent = enabled ? getI18n('publicIndexOn') : getI18n('publicIndexOff')
-            button.classList.toggle('opt-button-accent', enabled)
             const label = enabled ? getI18n('publicIndexDisable') : getI18n('publicIndexEnable')
-            button.title = label
-            button.setAttribute('aria-label', label)
+            if (button) {
+                button.dataset.publicIndex = enabled ? 'true' : 'false'
+                button.textContent = enabled ? getI18n('publicIndexOn') : getI18n('publicIndexOff')
+                button.classList.toggle('opt-button-accent', enabled)
+                button.title = label
+                button.setAttribute('aria-label', label)
+            }
+            if ($publicationPublicIndex) {
+                $publicationPublicIndex.textContent = getI18n(enabled ? 'publicIndexOn' : 'publicIndexOff')
+                $publicationPublicIndex.classList.toggle('is-indexed', enabled)
+                $publicationPublicIndex.setAttribute('aria-pressed', enabled ? 'true' : 'false')
+                $publicationPublicIndex.title = label
+            }
+        }
+
+        function formatPublicationUpdatedAt(timestamp) {
+            const value = Number(timestamp)
+            if (!Number.isFinite(value) || value <= 0) return '—'
+            return new Date(value * 1000).toLocaleString(APP_STATE.lang === 'zh-TW' ? 'zh-TW' : 'en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
+            })
+        }
+
+        function syncPublicationStatus() {
+            if (!$publicationStatus) return
+            const published = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId)
+            const state = document.querySelector('#publication-state')
+            const details = $publicationStatus.querySelector('.publication-share-details')
+            const metrics = $publicationStatus.querySelector('.publication-metrics')
+            const pendingHint = $publicationStatus.querySelector('.publication-pending-hint')
+            const versionCount = document.querySelector('#publication-version-count')
+            const viewCount = document.querySelector('#publication-view-count')
+            const updatedAt = document.querySelector('#publication-updated-at')
+            const shareUrl = getCurrentShareUrl()
+
+            $publicationStatus.dataset.published = published ? 'true' : 'false'
+            if (state) {
+                state.textContent = getI18n(published ? 'publicationPublished' : 'publicationDraft')
+                state.classList.toggle('is-published', published)
+                state.classList.toggle('is-draft', !published)
+            }
+            if (details) details.hidden = !published
+            if (metrics) metrics.hidden = !published
+            if (pendingHint) pendingHint.hidden = published
+            if ($publicationShareUrl) {
+                $publicationShareUrl.href = shareUrl || '#'
+                $publicationShareUrl.textContent = shareUrl
+            }
+            if (versionCount) versionCount.textContent = Number.isSafeInteger(APP_STATE.versionCount) ? String(APP_STATE.versionCount) : '—'
+            if (viewCount) viewCount.textContent = Number.isSafeInteger(APP_STATE.viewCount) ? String(APP_STATE.viewCount) : '—'
+            if (updatedAt) {
+                updatedAt.dateTime = APP_STATE.updateAt ? String(APP_STATE.updateAt) : ''
+                updatedAt.textContent = formatPublicationUpdatedAt(APP_STATE.updateAt)
+            }
+            syncPublicIndexButton()
+        }
+
+        async function refreshPublicationVersionCount() {
+            if (!APP_STATE.noteHistoryEnabled || !APP_STATE.isPublished) return
+            try {
+                const payload = await fetchJson('/api' + window.location.pathname + '/history')
+                if (payload.err !== 0) return
+                APP_STATE.versionCount = Array.isArray(payload.data?.versions) ? payload.data.versions.length : APP_STATE.versionCount
+                syncPublicationStatus()
+            } catch (error) {}
         }
 
         const syncAnnotationsEnabledButton = () => {
@@ -2018,28 +2148,37 @@ ${getMarkdownCss()}
 
         function syncShareStateUI() {
             const switcher = document.querySelector('.share-state-switcher')
-            if (!switcher) return
             const isPublished = APP_STATE.isPublished
-            switcher.classList.toggle('is-checked', isPublished)
-            switcher.classList.toggle('share-published', isPublished)
-            switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
+            if (switcher) {
+                switcher.classList.toggle('is-checked', isPublished)
+                switcher.classList.toggle('share-published', isPublished)
+                switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
+            }
             syncShareMenuUI()
             if ($autosaveToggle) {
                 $autosaveToggle.disabled = !isPublished
                 $autosaveToggle.checked = APP_STATE.autosave === true && isPublished
             }
+            syncPublicationStatus()
         }
 
-        const publishCurrentNote = () => {
+        const publishCurrentNote = (preferences = defaultPublishPreferences) => {
             const wasPublished = APP_STATE.isPublished === true
             const currentWidth = APP_STATE.noteSettings.width || (previewWidthSelector ? previewWidthSelector.value : '') || (APP_STATE.isEdit ? '1200px' : '100%')
             const currentTheme = themeSelector?.value || themeSelector?.getAttribute('value') || APP_STATE.theme
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ share: true, content: $textarea ? $textarea.value : '', width: currentWidth, theme: currentTheme })
+                body: JSON.stringify({
+                    share: true,
+                    content: $textarea ? $textarea.value : '',
+                    width: currentWidth,
+                    theme: currentTheme,
+                    autosave: preferences.autosave,
+                    publicIndex: preferences.publicIndex,
+                })
             })
-                .then(async res => {
+                .then(res => {
                     if (res.err !== 0) {
                         if ($shareBtn) {
                             $shareBtn.classList.remove('is-checked')
@@ -2056,7 +2195,9 @@ ${getMarkdownCss()}
                     APP_STATE.isPublished = true;
                     APP_STATE.shareId = nextShareId;
                     if (!wasPublished) APP_STATE.annotationsEnabled = true;
-                    APP_STATE.autosave = wasPublished ? APP_STATE.autosave : false;
+                    APP_STATE.autosave = preferences.autosave === true;
+                    APP_STATE.publicIndex = preferences.publicIndex === true;
+                    APP_STATE.updateAt = Math.floor(Date.now() / 1000);
                     savedContent = $textarea ? $textarea.value : savedContent;
                     clearAutosaveTimer();
                     if ($shareBtn) {
@@ -2067,8 +2208,8 @@ ${getMarkdownCss()}
                     recordShareHistory('created', getCurrentShareUrl(), APP_STATE.title);
                     syncPublicIndexButton();
                     syncAnnotationsEnabledButton();
-                    if (!wasPublished) await promptEnableAutosave();
-                    showShareModal(nextShareId);
+                    refreshPublicationVersionCount();
+                    window.showToast?.(getI18n('publicationPublished'));
                     return true;
                 })
                 .catch(err => {
@@ -2099,33 +2240,33 @@ ${getMarkdownCss()}
             if ($publishNudgeModal) $publishNudgeModal.style.display = 'none';
         }
 
-        const showPublishNudge = () => {
+        const syncPublishPreferenceDependencies = () => {
+            const publishInput = $publishPreferenceInputs.find(input => input.dataset.publishPreference === 'publish')
+            const publishEnabled = publishInput?.checked !== false
+            $publishPreferenceInputs.forEach(input => {
+                if (input === publishInput) return
+                input.disabled = !publishEnabled
+                input.closest('.publish-preference-row')?.classList.toggle('is-dependent-disabled', !publishEnabled)
+            })
+        }
+
+        const openPublishOptions = () => {
             if (!$publishNudgeModal || APP_STATE.isPublished || !APP_STATE.isEdit) return;
             if (!$textarea || !$textarea.value.trim()) return;
+            const preferences = loadPublishPreferences()
+            $publishPreferenceInputs.forEach(input => {
+                input.checked = preferences[input.dataset.publishPreference] !== false
+            })
+            syncPublishPreferenceDependencies()
             $publishNudgeModal.style.display = 'block';
             if ($publishNudgePublish) $publishNudgePublish.focus();
         }
 
-        const promptEnableAutosave = async () => {
-            if (!APP_STATE.isEdit || !APP_STATE.isPublished || APP_STATE.autosave === true) return
-            const shouldEnable = await window.showAppDialog({
-                title: getI18n('autosaveNudgeTitle'),
-                message: getI18n('autosaveNudgeText'),
-                kind: 'confirm',
-                confirm: true,
-                cancelText: getI18n('later'),
-                confirmText: getI18n('autosaveEnable'),
-            })
-            if (!shouldEnable) return
-            try {
-                await persistSetting({ autosave: true })
-                try { window.localStorage.setItem('cf-notepad-autosave', 'true') } catch(e) {}
-                syncShareStateUI()
-                scheduleAutosave()
-                window.showToast?.(getI18n('autosaveEnabled'))
-            } catch (error) {
-                errHandle(error.message || error)
-            }
+        const readPublishPreferencesFromDialog = () => {
+            return $publishPreferenceInputs.reduce((preferences, input) => {
+                preferences[input.dataset.publishPreference] = input.checked === true
+                return preferences
+            }, { ...defaultPublishPreferences })
         }
 
         if ($languageSelector) {
@@ -2141,10 +2282,15 @@ ${getMarkdownCss()}
 
         if ($publishNudgePublish) {
             $publishNudgePublish.addEventListener('click', () => {
+                const preferences = readPublishPreferencesFromDialog()
+                savePublishPreferences(preferences)
                 closePublishNudge();
-                publishCurrentNote();
+                if (preferences.publish) publishCurrentNote(preferences);
             });
         }
+        $publishPreferenceInputs.forEach(input => {
+            input.addEventListener('change', syncPublishPreferenceDependencies)
+        })
         if ($publishNudgeLater) $publishNudgeLater.addEventListener('click', closePublishNudge);
         if ($publishNudgeClose) $publishNudgeClose.addEventListener('click', closePublishNudge);
         if ($publishNudgeModal) {
@@ -2258,7 +2404,7 @@ ${getMarkdownCss()}
                 if (publishNudgeShown || APP_STATE.isPublished || !$textarea.value.trim()) return;
                 publishNudgeTimer = setTimeout(() => {
                     publishNudgeShown = true;
-                    showPublishNudge();
+                    openPublishOptions();
                 }, AUTOSAVE_IDLE_MS);
             }
 
@@ -2414,6 +2560,34 @@ ${getMarkdownCss()}
                 }
             })
         }
+        if ($publicationCopyUrl) {
+            $publicationCopyUrl.addEventListener('click', async () => {
+                const shareUrl = getCurrentShareUrl()
+                if (!shareUrl) return
+                try {
+                    await clipboardCopy(shareUrl)
+                    window.showToast(getI18n('copied'))
+                } catch (error) {
+                    errHandle(getI18n('copyFailed'))
+                }
+            })
+        }
+        if ($publicationPublicIndex) {
+            $publicationPublicIndex.addEventListener('click', async () => {
+                if (!APP_STATE.isPublished) return
+                const nextValue = APP_STATE.publicIndex !== true
+                $publicationPublicIndex.disabled = true
+                try {
+                    await setPublicIndex(nextValue)
+                    syncPublicIndexButton()
+                    window.showToast(getI18n(nextValue ? 'publicIndexUpdatedOn' : 'publicIndexUpdatedOff'))
+                } catch (error) {
+                    errHandle(error.message || error)
+                } finally {
+                    $publicationPublicIndex.disabled = false
+                }
+            })
+        }
         if ($annotationsEnabledBtn) {
             syncAnnotationsEnabledButton()
             $annotationsEnabledBtn.addEventListener('click', async () => {
@@ -2438,7 +2612,7 @@ ${getMarkdownCss()}
             });
         }
         if ($sharePublishMenuBtn) {
-            $sharePublishMenuBtn.addEventListener('click', publishCurrentNote)
+            $sharePublishMenuBtn.addEventListener('click', openPublishOptions)
         }
 
         if ($saveNoteBtn) {
@@ -2475,7 +2649,7 @@ ${getMarkdownCss()}
                         .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; allowUnload = true; window.location.reload(); })
                         .catch(err => errHandle(err))
                 } else {
-                    publishCurrentNote();
+                    openPublishOptions();
                 }
             }
         }
@@ -2503,22 +2677,6 @@ ${getMarkdownCss()}
                 const originText = $copyBtn.innerHTML; const originColor = $copyBtn.style.background;
                 $copyBtn.innerHTML = getI18n('copied'); $copyBtn.style.background = 'orange';
                 window.setTimeout(() => { $shareModal.style.display = 'none'; $copyBtn.innerHTML = originText; $copyBtn.style.background = originColor; }, 1500)
-            }
-            if ($shareIndexApprove) {
-                $shareIndexApprove.onclick = async function () {
-                    try {
-                        await setPublicIndex(true)
-                        syncPublicIndexButton()
-                        if ($shareIndexPrompt) $shareIndexPrompt.style.display = 'none'
-                    } catch (error) {
-                        errHandle(error.message || error)
-                    }
-                }
-            }
-            if ($shareIndexDecline) {
-                $shareIndexDecline.onclick = function () {
-                    if ($shareIndexPrompt) $shareIndexPrompt.style.display = 'none'
-                }
             }
         }
 
@@ -2672,7 +2830,6 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
-    ${isEdit ? '<script type="module" src="/js/editor-view-shortcuts.mjs"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
@@ -2780,7 +2937,7 @@ ${getMarkdownCss()}
 
         if (previewDeviceSelector) {
             const savedPreviewDevice = window.localStorage.getItem(PREVIEW_DEVICE_STORAGE_KEY);
-            const initialPreviewDevice = savedPreviewDevice || 'desktop';
+            const initialPreviewDevice = APP_STATE.noteSettings.previewDevice || savedPreviewDevice || 'desktop';
             applyPreviewDevice(initialPreviewDevice);
             const previewDeviceSwitch = getRailSwitch(previewDeviceSelector)
             if (previewDeviceSwitch) previewDeviceSwitch.addEventListener('click', function() {
@@ -2803,36 +2960,6 @@ ${getMarkdownCss()}
                 try { window.localStorage.setItem(PREVIEW_SPLIT_STORAGE_KEY, direction); } catch(e) {}
             });
         }
-
-        const setupEditorViewShortcuts = () => {
-            if (!APP_STATE.isEdit || typeof window.getEditorViewShortcut !== 'function' || !$modeBtn) return;
-            const modeSwitch = getRailSwitch($modeBtn);
-            if (!modeSwitch) return;
-
-            document.addEventListener('keydown', async event => {
-                const action = window.getEditorViewShortcut(event);
-                if (!action) return;
-                event.preventDefault();
-
-                const currentMode = modeSwitch.getAttribute('aria-pressed') === 'true' ? 'md' : 'plain';
-                if (action.mode === 'plain') {
-                    if (currentMode === 'md') modeSwitch.click();
-                    return;
-                }
-
-                const splitDirection = action.splitDirection === 'vertical' ? 'vertical' : 'horizontal';
-                try { window.localStorage.setItem(PREVIEW_DEVICE_STORAGE_KEY, 'desktop'); } catch(e) {}
-                try { window.localStorage.setItem(PREVIEW_SPLIT_STORAGE_KEY, splitDirection); } catch(e) {}
-                if (currentMode === 'md') {
-                    applyPreviewDevice('desktop');
-                    applySplitDirection(splitDirection);
-                } else {
-                    modeSwitch.click();
-                }
-            });
-        };
-
-        setupEditorViewShortcuts();
 
         if (shareViewBody.classList.contains('share-view') || shareFontSelector) {
             const savedShareFont = canPersistSettings ? window.localStorage.getItem(SHARE_FONT_STORAGE_KEY) : '';

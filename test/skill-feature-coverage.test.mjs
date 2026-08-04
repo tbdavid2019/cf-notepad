@@ -11,9 +11,6 @@ test('agent skill documents editor features and bilingual startup tips', () => {
     for (const phrase of [
         'echarts',
         'editor-tips.json',
-        'Ctrl-Alt-7',
-        'Ctrl-Alt-8',
-        'Ctrl-Alt-9',
         'Inline code',
         'Undo / Redo',
         'Image Insertion',

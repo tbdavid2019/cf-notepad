@@ -511,14 +511,6 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <div class="modal-body">
             <input type="text" readonly value="" />
             <button class="opt-button share-modal-copy-btn">${t.copy}</button>
-            <div class="share-index-prompt">
-                <strong>${t.publicIndexPromptTitle}</strong>
-                <p>${t.publicIndexPromptText}</p>
-                <div class="share-index-actions">
-                    <button type="button" class="opt-button opt-button-accent share-index-approve">${t.publicIndexPromptApprove}</button>
-                    <button type="button" class="opt-button share-index-decline">${t.publicIndexPromptDecline}</button>
-                </div>
-            </div>
         </div>
 </div>
 </div>

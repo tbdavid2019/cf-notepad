@@ -27,10 +27,14 @@ test('loads a reading progress widget for rendered Markdown pages', () => {
     assert.match(baseCss, /\.reading-progress-track/)
 })
 
-test('centers the reading progress control on the left side of shared pages', () => {
+test('centers the reading progress control on the left side of share and edit previews', () => {
     assert.match(
         baseCss,
         /body\.share-view \.reading-progress\s*\{[^}]*top:\s*50%;[^}]*transform:\s*translateY\(-50%\);/,
+    )
+    assert.match(
+        baseCss,
+        /body:not\(\.share-view\) \.preview-pane \.reading-progress\s*\{[^}]*top:\s*50%;[^}]*transform:\s*translateY\(-50%\);/,
     )
 })
 

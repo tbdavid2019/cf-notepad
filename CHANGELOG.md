@@ -1,5 +1,46 @@
 # Changelog
 
+## [2026-08-04]
+
+### Added
+
+- **Unified Publish Choices**
+  - Consolidated Publish, Autosave, and Public Index into one checkbox dialog instead of asking three consecutive questions.
+  - All three choices default to enabled. Confirmed choices are remembered in localStorage and restored the next time the dialog opens on the same device.
+  - The first publish writes content, share state, Autosave, and Public Index together in one settings request.
+- **Editor Preview Publication Status**
+  - Added a compact status strip above the Edit preview with the Share URL, copy/open controls, Public Index state, retained D1 version count, unique D1 view count, and last-saved time.
+  - Draft notes show a short publish hint; desktop shows the full status while narrow and phone previews use a compact layout.
+
+### Changed
+
+- **Random New-Note Preview Device**
+  - Brand-new editor notes now start with either desktop or mobile preview at random, giving authors an early chance to check narrow-screen layout.
+  - Existing notes keep their saved editor preview preference, and Share pages remain responsive to each reader's actual viewport.
+- **Publish Follow-up Flow**
+  - Removed the separate post-publish Autosave and Public Index questions. Public Index remains enabled by default in the unified dialog to support sitemap discovery.
+
+### Fixed
+
+- **Edit Preview Rendering and Alignment**
+  - Fixed publication-status initialization errors that stopped the Markdown renderer before it could populate the preview.
+  - Matched the publication status strip to the editor toolbar's 32px height so both content panes and their scroll origins align vertically.
+  - Centered the Edit preview reading-progress rail vertically, matching its Share-page position.
+- **Dark Editor Chrome Consistency**
+  - Made the Edit preview publication strip inherit the dark UI palette instead of retaining its light background.
+  - Changed published/indexed states to the same blue color family in dark mode, and strengthened footer control labels to bold high-contrast text.
+
+### Documentation
+
+- **Mermaid Render Error Safeguards in Skill Docs**
+  - Updated both `skills/SKILL.md` (canonical site documentation) and `.agent/skills/david888-wiki-publisher/SKILL.md` (local agent skill) with critical safeguards against Mermaid lexical syntax errors.
+  - Required LLMs to enclose node labels in double quotes `"..."` to prevent unquoted slashes (e.g. `[/api/proxy]`) from triggering Mermaid parallelogram token (`[/.../]`) parsing failures.
+  - Re-generated `src/generated/agent-skill.generated.mjs` so `https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md` serves the updated instructions.
+
+### Removed
+
+- **Editor View Shortcuts**
+  - Removed the non-functional `⌘-⌥-7` / `Ctrl-Alt-7`, `⌘-⌥-8` / `Ctrl-Alt-8`, and `⌘-⌥-9` / `Ctrl-Alt-9` shortcuts, including their startup tip and documentation.
 ## [2026-08-01]
 
 ### Fixed

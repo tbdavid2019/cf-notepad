@@ -35,7 +35,7 @@ test('setting route persists share, theme, width, share font, publicIndex, autos
 test('base template initializes reader appearance from metadata and local editor preferences from localStorage', () => {
     assert.match(baseTemplateSource, /const DEFAULT_PREVIEW_WIDTH = \$\{JSON\.stringify\(DEFAULT_PREVIEW_WIDTH\)\}/)
     assert.match(baseTemplateSource, /const initialPreviewWidth = APP_STATE\.noteSettings\.width \|\| savedPreviewWidth \|\| DEFAULT_PREVIEW_WIDTH/)
-    assert.match(baseTemplateSource, /const initialPreviewDevice = savedPreviewDevice \|\| 'desktop'/)
+    assert.match(baseTemplateSource, /const initialPreviewDevice = APP_STATE\.noteSettings\.previewDevice \|\| savedPreviewDevice \|\| 'desktop'/)
     assert.match(baseTemplateSource, /const initialSplitDirection = savedSplitDirection === 'vertical' \? 'vertical' : 'horizontal'/)
     assert.match(baseTemplateSource, /const savedShareFont = canPersistSettings \? window\.localStorage\.getItem\(SHARE_FONT_STORAGE_KEY\) : '';/)
     assert.match(baseTemplateSource, /const initialShareFont = APP_STATE\.noteSettings\.shareFont/)

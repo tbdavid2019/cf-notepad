@@ -2,11 +2,6 @@
   "version": 1,
   "tips": [
     {
-      "id": "view-shortcuts",
-      "zh-TW": "小訣竅：⌘-⌥-7 左右預覽、⌘-⌥-8 純 Markdown、⌘-⌥-9 上下預覽。Windows / Linux 請使用 Ctrl-Alt。",
-      "en-US": "Tip: ⌘-⌥-7 uses side-by-side preview, ⌘-⌥-8 uses pure Markdown, and ⌘-⌥-9 stacks the preview. Use Ctrl-Alt on Windows / Linux."
-    },
-    {
       "id": "toolbar-selection",
       "zh-TW": "小訣竅：先選取文字，再按粗體、斜體、連結或行內程式碼，工具列會直接套用 Markdown 語法。",
       "en-US": "Tip: Select text first, then choose Bold, Italic, Link, or Inline code to apply Markdown syntax directly."

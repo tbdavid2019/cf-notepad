@@ -277,10 +277,11 @@ The wiki also includes a browser-based Markdown editor. When helping a user auth
 ```
 ````
 
+- **Editor view shortcuts**: `⌘-⌥-7` / `Ctrl-Alt-7` selects side-by-side WYSIWYG, `⌘-⌥-8` / `Ctrl-Alt-8` selects pure Markdown, and `⌘-⌥-9` / `Ctrl-Alt-9` selects stacked WYSIWYG.
 - **Undo / Redo** tracks typing, toolbar Markdown commands, image insertion, and pasted content. Use the toolbar or the normal `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, and `Ctrl/Cmd+Y` shortcuts.
 - **AI formatting** is available in both the top toolbar and the footer. It restructures Markdown while preserving the draft's meaning. AI Edit can rewrite a selected passage or the full note only after the user supplies an explicit instruction.
 - **Footer Copy** is beside Markdown Export. It prefers rich HTML and includes Markdown/plain-text fallback for editors such as Notion and Jira, then shows a localized check animation after success.
-- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview. New notes randomly start in a desktop or mobile editor preview so authors can check both presentation shapes.
+- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview.
 - **Share links**: links in rendered Markdown on `/share/...` pages open in a new tab with `noopener noreferrer`.
 - **Startup tips**: the editor randomly chooses a bilingual tip from `static/data/editor-tips.json` and types it below the Stray Birds placeholder with the same typewriter animation. Future user-facing features that deserve a hint must add one object with `id`, `zh-TW`, and `en-US` fields, then update `README.md` and `CHANGELOG.md`.
 - **Admin dashboard**: the route is configured by the runtime `SCN_ADMIN_PATH` binding. The dashboard supports URL/title search, Markdown full-text search, modified-date filters, sortable columns, pagination, URL/public/protected/Sitemap totals, and retained version counts. `views` is a legacy field and may not be available in current data.

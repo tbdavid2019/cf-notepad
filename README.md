@@ -45,7 +45,8 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 - **二欄／三欄多欄版面**：工具列一鍵圈選文字生成 `<div class="two-column-layout">` 或 `three-column-layout` 橫向多欄排版（手機自動切換單欄）。
 - **多媒體網址自動預覽**：自動將 YouTube 連結轉為隱私保護播放器、PDF 轉為嵌入式閱覽器、MP4/MP3 轉為原生播放器。
 - **HackMD 圖片尺寸標記**：支援 `![alt](url =600x400)` 設定精準響應式圖片大小。
-- **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換。
+- **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；新筆記編輯器會隨機從桌面或手機預覽開始，方便作者先檢查窄版排版。
+- **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比藍色系。
 
 ![編輯器與即時預覽](image-1.png)
 
@@ -78,7 +79,8 @@ Cloud Notepad 是一個運行在 Cloudflare Workers 上的輕量級、極速且�
 ### Browser (localStorage / Cookie)
 | 類型 | Key | 用途 |
 | --- | --- | --- |
-| localStorage | `cf-notepad-preview-width` / `share-font` / `ui-theme` | 介面佈局與視覺偏好鏡像 |
+| localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | 介面佈局與視覺偏好鏡像 |
+| localStorage | `cf-notepad:publish-preferences` | 發布、自動儲存與公開索引的上次勾選偏好；首次預設全部開啟 |
 | localStorage | `cf-notepad:share-history:*` / `annotation-author` | 本機近 20 筆分享紀錄與註解留言名稱 |
 | Cookie | `auth` / `cn_device` / `admin_session` | 具 path scope 的驗證 JWT、匿名裝置 hash 與管理員 session |
 
@@ -167,7 +169,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Two/Three-Column Layouts**: Wrap selected text in `<div class="two-column-layout">` or `three-column-layout` for multi-column presentation (stacks on mobile).
 - **Auto Media Previews**: Automatically converts YouTube URLs to privacy-enhanced players, PDFs to embedded viewers, and MP4/MP3 links to native players.
 - **HackMD Image Dimensions**: Supports `![alt](url =600x400)` responsive image sizing.
-- **Typography & 20+ Themes**: Traditional Chinese defaults to `GenJyuu Gothic`; Latin text uses `Maple Mono` / `JetBrains Mono`. Features 20+ CSS preview themes (default `claude-canvas`) and width toggles.
+- **Typography & 20+ Themes**: Traditional Chinese defaults to `GenJyuu Gothic`; Latin text uses `Maple Mono` / `JetBrains Mono`. Features 20+ CSS preview themes (default `claude-canvas`) and width toggles. New editor notes randomly start in a desktop or mobile preview so authors can check narrow layouts early.
+- **Unified Publishing & Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode keeps this strip and its footer controls in a consistent, high-contrast blue palette.
 
 ![Editor and Real-Time Preview](image-1.png)
 
@@ -200,7 +203,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 ### Browser (localStorage / Cookie)
 | Type | Key | Description |
 | --- | --- | --- |
-| localStorage | `cf-notepad-preview-width` / `share-font` / `ui-theme` | Mirror of layout and visual preferences |
+| localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | Mirror of layout and visual preferences |
+| localStorage | `cf-notepad:publish-preferences` | Last confirmed Publish, Autosave, and Public Index choices; all enabled on first use |
 | localStorage | `cf-notepad:share-history:*` / `annotation-author` | Local history of 20 recent shares & author name |
 | Cookie | `auth` / `cn_device` / `admin_session` | Path-scoped JWT, anonymous device hash & admin session |
 

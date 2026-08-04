@@ -41,7 +41,7 @@ import {
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
-import { getNoteStatsDb, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
+import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import {
     addAnnotationMessage,
     computeSourceRevision,
@@ -362,6 +362,32 @@ async function backupCurrentNoteBeforeRestore({
         nowSeconds: dayjs().unix(),
         force: true,
     })
+}
+
+async function getEditorPublicationStats(path, metadata = {}) {
+    if (metadata.share !== true) {
+        return { versionCount: 0, viewCount: 0 }
+    }
+
+    const historyConfig = getNoteHistoryConfig()
+    const historyPromise = historyConfig.enabled && historyConfig.db
+        ? getNoteHistoryCounts(historyConfig.db, [path])
+            .then(counts => counts.get(path) || 0)
+            .catch(error => {
+                console.warn(`Editor history count failed for ${path}:`, error?.message || error)
+                return null
+            })
+        : Promise.resolve(null)
+    const statsDb = getNoteStatsDb()
+    const viewsPromise = statsDb
+        ? getNoteViewCount(statsDb, path).catch(error => {
+            console.warn(`Editor view count failed for ${path}:`, error?.message || error)
+            return null
+        })
+        : Promise.resolve(null)
+    const [versionCount, viewCount] = await Promise.all([historyPromise, viewsPromise])
+
+    return { versionCount, viewCount }
 }
 
 const homePage = request => {
@@ -1573,7 +1599,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1597,7 +1623,7 @@ router.get('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1655,7 +1681,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })
@@ -1679,7 +1705,7 @@ router.head('/:path', async (request) => {
             lang,
             title,
             content: value,
-            ext: { ...pageMetadata, enableR2: getEnableR2() },
+            ext: { ...pageMetadata, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
         })

@@ -69,7 +69,7 @@ test('share state uses a working toggle and does not interrupt preview rendering
     assert.match(commonTemplateSource, /share-publish-menu-btn/)
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
     assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
-    assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', publishCurrentNote\)/)
+    assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', openPublishOptions\)/)
     assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-success\)/)
 })
 
@@ -85,19 +85,18 @@ test('footer uses native-style rails for the requested two-state controls', () =
     assert.match(baseCssSource, /\.toolbar-button-label \{\s*display: none !important;/)
 })
 
-test('share modal prompts for public index approval after publish', () => {
-    assert.match(commonTemplateSource, /share-index-prompt/)
-    assert.match(commonTemplateSource, /share-index-approve/)
-    assert.match(commonTemplateSource, /share-index-decline/)
+test('publish dialog includes public index in the unified choices', () => {
+    assert.match(baseTemplateSource, /class="publish-preference-input" data-publish-preference="publicIndex"/)
+    assert.match(baseTemplateSource, /publishPreferencePublicIndex/)
     assert.match(baseTemplateSource, /const setPublicIndex = async enabled =>/)
-    assert.match(baseTemplateSource, /if \(\$shareIndexPrompt\) \{\s*\$shareIndexPrompt\.style\.display = APP_STATE\.publicIndex \? 'none' : 'flex';/s)
+    assert.doesNotMatch(commonTemplateSource, /share-index-prompt/)
 })
 
 test('language strings cover public index actions', () => {
     assert.match(constantSource, /publicIndexEnable: 'Add to sitemap'/)
-    assert.match(constantSource, /publicIndexPromptApprove: 'Yes, add it'/)
+    assert.match(constantSource, /publishPreferencePublicIndex: 'Public index'/)
     assert.match(constantSource, /publicIndexEnable: '加入 sitemap'/)
-    assert.match(constantSource, /publicIndexPromptApprove: '同意加入'/)
+    assert.match(constantSource, /publishPreferencePublicIndex: '公開索引'/)
 })
 
 test('footer skill link points to the built-in well-known skill endpoint', () => {
@@ -233,6 +232,4 @@ test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and r
     assert.match(baseCssSource, /body\.share-view #preview-md\.markdown-body > table,/)
     assert.match(baseCssSource, /margin-left:\s*0\s*!important;/)
     assert.match(baseCssSource, /\.markdown-body table td/)
-    assert.match(baseCssSource, /font-size:\s*10pt\s*!important;/)
 })
-

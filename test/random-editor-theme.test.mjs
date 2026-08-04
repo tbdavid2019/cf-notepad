@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 
-import { resolvePageTheme } from '../src/templates/base.js'
+import { resolveInitialPreviewDevice, resolvePageTheme } from '../src/templates/base.js'
 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 
@@ -30,6 +30,13 @@ test('the initial random theme is published to server metadata', () => {
         baseTemplateSource,
         /APP_STATE\.isNewEntry[\s\S]*persistSetting\(\{ theme: APP_STATE\.theme \}\)/,
     )
-    assert.match(baseTemplateSource, /JSON\.stringify\(\{ share: true, content:[\s\S]*theme: currentTheme/)
+    assert.match(baseTemplateSource, /JSON\.stringify\(\{[\s\S]*share: true,[\s\S]*content:[\s\S]*theme: currentTheme/)
     assert.match(baseTemplateSource, /history\.replaceState/)
+})
+
+test('new notes randomly choose an editor preview device while existing notes keep their device', () => {
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: 'desktop', random: () => 0 }), 'mobile')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: 'mobile', random: () => 0.999999 }), 'desktop')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'mobile', random: () => 0 }), 'mobile')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'missing', random: () => 0 }), 'desktop')
 })
