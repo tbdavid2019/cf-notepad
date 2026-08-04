@@ -49,6 +49,7 @@ export const getBaseCss = () => `
     --toolbar-appearance-bg: #5c5aab;
     --toolbar-language-bg: #7a5ba6;
     --toolbar-danger: #c64545;
+    --toolbar-danger-bg-hover: #ffebe9;
     --footer-bg: #f4f0e8;
     --footer-border: #e2dacd;
     --footer-text: #4a4640;
@@ -83,6 +84,8 @@ html[data-ui-theme="dark"] body {
     --toolbar-layout-bg: #1d70b0;
     --toolbar-appearance-bg: #5366b6;
     --toolbar-language-bg: #7058a4;
+    --toolbar-danger: #ff7b72;
+    --toolbar-danger-bg-hover: rgba(248, 81, 73, 0.2);
     --status-bg: #0c3b63;
     --status-border: #1b6399;
     --status-text: #d9efff;
@@ -118,6 +121,8 @@ html[data-ui-theme="dark"] body {
         --toolbar-layout-bg: #1d70b0;
         --toolbar-appearance-bg: #5366b6;
         --toolbar-language-bg: #7058a4;
+        --toolbar-danger: #ff7b72;
+        --toolbar-danger-bg-hover: rgba(248, 81, 73, 0.2);
         --status-bg: #0c3b63;
         --status-border: #1b6399;
         --status-text: #d9efff;
@@ -526,7 +531,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     color: var(--toolbar-danger, #cf222e);
 }
 .dropdown-danger-item:hover {
-    background: #ffebe9;
+    background: var(--toolbar-danger-bg-hover, #ffebe9);
     color: var(--toolbar-danger, #cf222e);
 }
 @keyframes dropdownFadeIn {

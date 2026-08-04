@@ -28,6 +28,9 @@
 
 ### Fixed
 
+- **Dark Mode Dropdown Danger Item Contrast**
+  - Updated `--toolbar-danger` (`#ff7b72`) and `--toolbar-danger-bg-hover` (`rgba(248, 81, 73, 0.2)`) in dark theme palettes.
+  - Ensured the "Unpublish" (`取消發布`) action text in the share dropdown menu remains high-contrast, clearly legible, and stylishly highlighted in dark mode.
 - **Edit Preview Rendering and Alignment**
   - Fixed publication-status initialization errors that stopped the Markdown renderer before it could populate the preview.
   - Matched the publication status strip to the editor toolbar's 32px height so both content panes and their scroll origins align vertically.
