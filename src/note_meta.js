@@ -20,6 +20,21 @@ function isWeakTitleCandidate(value = '') {
 }
 
 function extractContentTitle(value = '') {
+    const trimmedVal = String(value || '').trim()
+    if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            if (parsed && Array.isArray(parsed.blocks)) {
+                for (const b of parsed.blocks) {
+                    if (b && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
+                        const candidate = normalizeTitleCandidate(b.props.text)
+                        if (candidate) return candidate
+                    }
+                }
+            }
+        } catch (e) {}
+    }
+
     const candidates = []
     let inFence = false
     let inFrontmatter = false
@@ -72,7 +87,18 @@ export function extractNoteTitle(value = '', metadataTitle = '', fallback = '') 
 }
 
 export function extractNoteDescription(value = '', fallbackTitle = '') {
-    const plain = value
+    let str = value
+    const trimmedVal = String(value || '').trim()
+    if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            if (parsed && Array.isArray(parsed.blocks)) {
+                str = parsed.blocks.map(b => (b && b.props && b.props.text) || '').filter(Boolean).join(' ')
+            }
+        } catch (e) {}
+    }
+
+    const plain = str
         .replace(/```[\s\S]*?```/g, ' ')
         .replace(/`[^`]*`/g, ' ')
         .replace(/!\[[^\]]*\]\([^)]+\)/g, ' ')
@@ -121,3 +147,8 @@ export function formatNewNoteTitle(lang = 'zh-TW', date = new Date()) {
     const label = lang === 'zh-TW' ? '新筆記' : 'New note'
     return `${label} · ${parts.month}/${parts.day} ${parts.hour}:${parts.minute}`
 }
+
+export function resolveEditorFormat(metadata = {}) {
+    return metadata && metadata.editorFormat === 'block' ? 'block' : 'markdown'
+}
+

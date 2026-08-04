@@ -4,6 +4,11 @@
 
 ### Added
 
+- **Block Editor Architecture & Dedicated Creation Routes**
+  - Added support for `editorFormat: "block"` immutable note format in metadata, enabling single-column WYSIWYG block-based notes alongside standard Markdown notes.
+  - Registered `/new/block` and `/new/markdown` creation endpoints that allocate unique note slugs with locked format metadata.
+  - Implemented `src/block_renderer.mjs` supporting JSON document parsing, safe HTML rendering for all core blocks (`heading`, `paragraph`, `bulletList`, `taskList`, `code`, `quote`, `divider`, `slideBreak`, `image`, `youtube`, `pdf`, `mermaid`, `echarts`, `file`, `raw`), and Markdown export.
+  - Updated title and description extraction in `src/note_meta.js` to parse block JSON documents seamlessly.
 - **Unified Publish Choices**
   - Consolidated Publish, Autosave, and Public Index into one checkbox dialog instead of asking three consecutive questions.
   - All three choices default to enabled. Confirmed choices are remembered in localStorage and restored the next time the dialog opens on the same device.

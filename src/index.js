@@ -13,7 +13,9 @@ import {
     formatNewNoteTitle,
     isNewNoteEntry,
     resolveAnnotationsEnabled,
+    resolveEditorFormat,
 } from './note_meta'
+import { renderBlockToHtml, blockToMarkdown, parseBlockDocument } from './block_renderer.mjs'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -407,6 +409,22 @@ const homePage = request => {
 
 router.get('/', homePage)
 router.head('/', homePage)
+
+router.get('/new/block', request => {
+    const originUrl = new URL(request.url)
+    const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
+    nextUrl.searchParams.set('new', '1')
+    nextUrl.searchParams.set('editor', 'block')
+    return Response.redirect(nextUrl.href, 302)
+})
+
+router.get('/new/markdown', request => {
+    const originUrl = new URL(request.url)
+    const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
+    nextUrl.searchParams.set('new', '1')
+    nextUrl.searchParams.set('editor', 'markdown')
+    return Response.redirect(nextUrl.href, 302)
+})
 router.get('/_pwa-offline', () => createOfflinePageResponse())
 router.get('/app.webmanifest', () => {
     const name = APP_NAME || 'david888 wiki'
@@ -1477,6 +1495,12 @@ router.post('/api/:path', async (request) => {
     let updateMetadata = {
         ...metadata,
         updateAt: dayjs().unix(),
+    }
+
+    if (reqBody.editorFormat === 'block' || url.searchParams.get('editor') === 'block') {
+        updateMetadata.editorFormat = 'block'
+    } else if (metadata.editorFormat) {
+        updateMetadata.editorFormat = metadata.editorFormat
     }
 
     if (reqBody.pw !== undefined) updateMetadata.pw = reqBody.pw ? await saltPw(reqBody.pw) : undefined
