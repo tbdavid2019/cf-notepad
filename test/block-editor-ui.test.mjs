@@ -32,6 +32,16 @@ test('block editor exposes structural blocks and both existing upload paths', ()
     assert.match(source, /box\.david888\.com\/api\.php\?action=upload/)
 })
 
+test('Tiptap block editor uses native bubble, file-drop, and desktop drag-handle extensions', () => {
+    const source = readFileSync(new URL('../static/js/block-editor.mjs', import.meta.url), 'utf8')
+
+    assert.match(source, /@tiptap\/extension-bubble-menu/)
+    assert.match(source, /@tiptap\/extension-file-handler/)
+    assert.match(source, /@tiptap\/extension-drag-handle/)
+    assert.match(source, /tiptap-bubble-menu/)
+    assert.match(source, /david888-drag-handle/)
+})
+
 test('shared block pages load dedicated Mermaid and ECharts enhancement only when needed', () => {
     const page = HTML({
         lang: 'zh-TW',

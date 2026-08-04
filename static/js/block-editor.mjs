@@ -1,6 +1,9 @@
 import { Editor, Node } from '@tiptap/core'
 import StarterKit from '@tiptap/starter-kit'
 import Image from '@tiptap/extension-image'
+import BubbleMenu from '@tiptap/extension-bubble-menu'
+import DragHandle from '@tiptap/extension-drag-handle'
+import FileHandler from '@tiptap/extension-file-handler'
 import Placeholder from '@tiptap/extension-placeholder'
 import TaskItem from '@tiptap/extension-task-item'
 import TaskList from '@tiptap/extension-task-list'
@@ -138,6 +141,13 @@ async function uploadAttachment(file, editor) {
     throw lastError || new Error('Attachment upload failed')
 }
 
+async function uploadFiles(files, editor) {
+    for (const file of files) {
+        if (file.type.startsWith('image/')) await uploadImage(file, editor)
+        else await uploadAttachment(file, editor)
+    }
+}
+
 const shell = document.createElement('div')
 shell.className = 'tiptap-editor-shell'
 const toolbar = document.createElement('div')
@@ -150,7 +160,14 @@ const slashMenu = document.createElement('div')
 slashMenu.className = 'tiptap-slash-menu'
 slashMenu.hidden = true
 slashMenu.setAttribute('role', 'menu')
-shell.append(toolbar, canvas, slashMenu)
+const bubbleMenu = document.createElement('div')
+bubbleMenu.className = 'tiptap-bubble-menu'
+bubbleMenu.setAttribute('role', 'toolbar')
+bubbleMenu.setAttribute('aria-label', '選取文字格式工具')
+for (const [label, title, command] of [['B', '粗體', 'bold'], ['I', '斜體', 'italic'], ['S', '刪除線', 'strike'], ['⌁', '連結', 'link']]) {
+    bubbleMenu.append(createButton({ label, title, command }))
+}
+shell.append(toolbar, canvas, slashMenu, bubbleMenu)
 root.replaceChildren(shell)
 
 const toolbarItems = [
@@ -178,6 +195,27 @@ const editor = new Editor({
         TaskList,
         TaskItem.configure({ nested: true }),
         Placeholder.configure({ placeholder: '輸入 / 開啟指令，或直接開始撰寫…' }),
+        BubbleMenu.configure({
+            element: bubbleMenu,
+            updateDelay: 0,
+            shouldShow: ({ state }) => !state.selection.empty,
+        }),
+        DragHandle.configure({
+            render: () => {
+                const handle = document.createElement('button')
+                handle.type = 'button'
+                handle.className = 'david888-drag-handle'
+                handle.setAttribute('aria-label', '拖曳移動區塊')
+                handle.title = '拖曳移動區塊'
+                handle.textContent = '⠿'
+                return handle
+            },
+        }),
+        FileHandler.configure({
+            consumePasteEvent: true,
+            onPaste: (currentEditor, files) => uploadFiles(files, currentEditor).catch(error => window.showToast?.(error.message || 'Upload failed')),
+            onDrop: (currentEditor, files) => uploadFiles(files, currentEditor).catch(error => window.showToast?.(error.message || 'Upload failed')),
+        }),
         David888Embed,
     ],
     editorProps: {
@@ -220,6 +258,10 @@ toolbar.addEventListener('click', event => {
     const command = event.target.closest('button')?.dataset.command
     if (command) runCommand(command)
 })
+bubbleMenu.addEventListener('click', event => {
+    const command = event.target.closest('button')?.dataset.command
+    if (command) runCommand(command)
+})
 
 insertMenu.addEventListener('change', () => {
     const kind = insertMenu.value
@@ -245,18 +287,6 @@ uploadInput.addEventListener('change', async () => {
         window.showToast?.(error.message || 'Upload failed') || window.alert(error.message || 'Upload failed')
     } finally {
         uploadInput.value = ''
-    }
-})
-
-canvas.addEventListener('paste', async event => {
-    const file = [...(event.clipboardData?.files || [])][0]
-    if (!file) return
-    event.preventDefault()
-    try {
-        if (file.type.startsWith('image/')) await uploadImage(file, editor)
-        else await uploadAttachment(file, editor)
-    } catch (error) {
-        window.showToast?.(error.message || 'Upload failed') || window.alert(error.message || 'Upload failed')
     }
 })
 

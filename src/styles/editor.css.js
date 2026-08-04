@@ -183,6 +183,10 @@ export const getEditorCss = () => `
 .tiptap-slash-item { display: grid; gap: 2px; padding: 9px 10px; border: 0; border-radius: 7px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .tiptap-slash-item:hover, .tiptap-slash-item:focus-visible { background: var(--toolbar-bg-hover, #f0f2f4); outline: none; }
 .tiptap-slash-item small { color: var(--toolbar-muted, #57606a); }
+.tiptap-bubble-menu { display: flex; gap: 3px; padding: 5px; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 8px; background: var(--status-control-bg, #fff); box-shadow: 0 8px 20px rgba(0, 0, 0, .15); }
+.david888-drag-handle { display: grid; width: 24px; height: 28px; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--toolbar-muted, #57606a); cursor: grab; font-size: 19px; line-height: 1; }
+.david888-drag-handle:hover { background: var(--toolbar-bg-hover, #f0f2f4); color: var(--toolbar-accent, #c8654b); }
+.david888-drag-handle:active { cursor: grabbing; }
 
 @media (max-width: 640px) {
     .tiptap-editor-shell { padding: 12px 16px 48px; }
@@ -190,6 +194,8 @@ export const getEditorCss = () => `
     .tiptap-editor-canvas .ProseMirror { font-size: 16px; }
     .tiptap-editor-canvas .ProseMirror h1 { font-size: 1.9em; }
     .tiptap-slash-menu { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; width: auto; }
+    .david888-drag-handle { display: none !important; }
+    .tiptap-bubble-menu { max-width: calc(100vw - 24px); overflow-x: auto; }
 }
 
 .editor-status {
