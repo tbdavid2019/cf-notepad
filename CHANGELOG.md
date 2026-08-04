@@ -14,6 +14,12 @@
 
 ### Changed
 
+- **Save Control Group & History Button Placement**
+  - Moved `Recent Shares` (`#share-history-btn`) and `Version History` (`#note-history-btn`) buttons inside the footer `.save-control-group` before the `Save` button, grouping all save and history operations together.
+- **Autosave Rail Switch UI**
+  - Replaced the standard checkbox UI for `Autosave` with a 3D flip-card `RAIL_SWITCH` button matching the `Zh / En` language toggle style (`Auto` / `Manual` / `自動` / `手動`).
+- **Fullscreen Presentation Mode Relocation**
+  - Relocated the `Fullscreen Presentation Mode` button (`#present-btn`) from the editor footer toolbar to the preview header status bar right before the publication state badge (`Live` / `Draft`).
 - **Random New-Note Preview Device**
   - Brand-new editor notes now start with either desktop or mobile preview at random, giving authors an early chance to check narrow-screen layout.
   - Existing notes keep their saved editor preview preference, and Share pages remain responsive to each reader's actual viewport.
@@ -29,6 +35,7 @@
 - **Dark Editor Chrome Consistency**
   - Made the Edit preview publication strip inherit the dark UI palette instead of retaining its light background.
   - Changed published/indexed states to the same blue color family in dark mode, and strengthened footer control labels to bold high-contrast text.
+  - Gave active footer controls distinct cool-tone roles: teal-blue for publishing, blue for preview/layout, indigo for font, and violet-blue for language.
 
 ### Documentation
 

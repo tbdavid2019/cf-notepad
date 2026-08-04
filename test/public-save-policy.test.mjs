@@ -59,7 +59,7 @@ test('publishing remembers one unified set of choices and applies it atomically'
     assert.match(baseTemplateSource, /window\.localStorage\.setItem\(PUBLISH_PREFERENCES_KEY, JSON\.stringify\(preferences\)\)/)
     assert.match(baseTemplateSource, /const openPublishOptions = \(\) =>/)
     assert.match(baseTemplateSource, /publishCurrentNote\(preferences\)/)
-    assert.match(baseTemplateSource, /\$autosaveToggle\.checked = APP_STATE\.autosave === true && isPublished/)
+    assert.match(baseTemplateSource, /setRailSwitchState\(\$autosaveToggle, APP_STATE\.autosave === true && isPublished\)/)
     assert.doesNotMatch(baseTemplateSource, /const promptEnableAutosave = async/)
     assert.doesNotMatch(baseTemplateSource, /if \(!wasPublished\) await promptEnableAutosave\(\)/)
     assert.doesNotMatch(baseTemplateSource, /APP_STATE\.isEdit && APP_STATE\.isPublished[\s\S]*cf-notepad-from-share/)

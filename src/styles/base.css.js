@@ -44,6 +44,10 @@ export const getBaseCss = () => `
     --toolbar-muted: #706c66;
     --toolbar-accent: #c8654b;
     --toolbar-success: #5db8a6;
+    --toolbar-publish-bg: #0f766e;
+    --toolbar-layout-bg: #1d6fa8;
+    --toolbar-appearance-bg: #5c5aab;
+    --toolbar-language-bg: #7a5ba6;
     --toolbar-danger: #c64545;
     --footer-bg: #f4f0e8;
     --footer-border: #e2dacd;
@@ -67,14 +71,18 @@ html[data-ui-theme="dark"] body {
     --toolbar-border: #165b99;
     --toolbar-bg: #0f4c81;
     --toolbar-bg-hover: #1a65a7;
-    --toolbar-bg-active: #cc785c;
+    --toolbar-bg-active: #1d70b0;
     --toolbar-text: #ffffff;
     --toolbar-muted: #93bde1;
-    --toolbar-accent: #e07a5f;
+    --toolbar-accent: #8bd5ff;
     --footer-bg: #0f4c81;
     --footer-border: #165b99;
     --footer-text: #ffffff;
     --toolbar-success: #8bd5ff;
+    --toolbar-publish-bg: #0f6f78;
+    --toolbar-layout-bg: #1d70b0;
+    --toolbar-appearance-bg: #5366b6;
+    --toolbar-language-bg: #7058a4;
     --status-bg: #0c3b63;
     --status-border: #1b6399;
     --status-text: #d9efff;
@@ -98,14 +106,18 @@ html[data-ui-theme="dark"] body {
         --toolbar-border: #165b99;
         --toolbar-bg: #0f4c81;
         --toolbar-bg-hover: #1a65a7;
-        --toolbar-bg-active: #cc785c;
+        --toolbar-bg-active: #1d70b0;
         --toolbar-text: #ffffff;
         --toolbar-muted: #93bde1;
-        --toolbar-accent: #e07a5f;
+        --toolbar-accent: #8bd5ff;
         --footer-bg: #0f4c81;
         --footer-border: #165b99;
         --footer-text: #ffffff;
         --toolbar-success: #8bd5ff;
+        --toolbar-publish-bg: #0f6f78;
+        --toolbar-layout-bg: #1d70b0;
+        --toolbar-appearance-bg: #5366b6;
+        --toolbar-language-bg: #7058a4;
         --status-bg: #0c3b63;
         --status-border: #1b6399;
         --status-text: #d9efff;
@@ -585,7 +597,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     padding: 0;
 }
 .share-state-switcher {
-    --rail-checked-bg: var(--toolbar-success);
+    --rail-checked-bg: var(--toolbar-publish-bg);
     flex-shrink: 0;
 }
 .share-menu-small {
@@ -1016,7 +1028,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .footer-rail-switch .btn-flip-back {
     position: absolute;
     inset: 0;
-    background: var(--toolbar-accent, #c8654b);
+    background: var(--rail-checked-bg, var(--toolbar-layout-bg));
     color: #ffffff;
     transform: rotateY(-180deg);
 }
@@ -1080,17 +1092,35 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .share-font-switch {
     width: 62px;
 }
+#share-font-selector .footer-rail-switch {
+    --rail-checked-bg: var(--toolbar-appearance-bg);
+}
+#language-selector .footer-rail-switch {
+    --rail-checked-bg: var(--toolbar-language-bg);
+}
+.autosave-rail-switch {
+    min-width: 48px;
+    --rail-checked-bg: var(--toolbar-accent, #c8654b);
+}
+.autosave-rail-switch[disabled],
+.autosave-rail-switch.is-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+}
 .share-font-switch.is-checked .footer-rail-thumb {
     transform: translateX(34px);
 }
 #split-direction-selector .footer-rail-switch {
     width: 58px;
+    --rail-checked-bg: var(--toolbar-layout-bg);
 }
 #split-direction-selector .footer-rail-switch.is-checked .footer-rail-thumb {
     transform: translateX(30px);
 }
 .preview-device-toggle {
     width: 70px;
+    --rail-checked-bg: var(--toolbar-layout-bg);
 }
 .preview-device-toggle.is-checked .footer-rail-thumb {
     transform: translateX(42px);
@@ -1133,7 +1163,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     color: var(--toolbar-text);
 }
 .segmented-toggle-btn.active {
-    background: var(--toolbar-bg-active);
+    background: var(--toolbar-layout-bg);
     color: #fff;
 }
 .segmented-toggle-btn:focus-visible {
@@ -1264,9 +1294,9 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     background: #ffebe9;
 }
 .toolbar-active-button {
-    border-color: #8cbbf7;
-    background: #ddf4ff;
-    color: var(--toolbar-accent);
+    border-color: var(--toolbar-layout-bg);
+    background: var(--toolbar-layout-bg);
+    color: #fff;
 }
 .opt-switcher {
     height: var(--toolbar-height);
@@ -1801,7 +1831,8 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 }
 #publication-share-url:hover { text-decoration: underline; }
 .publication-icon-button,
-.publication-index-button {
+.publication-index-button,
+.publication-present-btn {
     min-height: 24px;
     border: 1px solid var(--status-border);
     border-radius: 6px;
@@ -1809,6 +1840,24 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     color: var(--status-strong);
     cursor: pointer;
     font: inherit;
+}
+.publication-present-btn {
+    height: 24px;
+    padding: 0 8px;
+    font-size: 11px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1;
+    font-weight: 600;
+}
+.publication-present-btn:hover {
+    background: var(--status-control-bg-hover, var(--status-muted-bg));
+    color: var(--status-link, var(--toolbar-accent));
+}
+.publication-present-btn .svg-icon {
+    width: 12px;
+    height: 12px;
 }
 .publication-icon-button {
     width: 28px;

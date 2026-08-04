@@ -42,6 +42,16 @@ test('dark UI theme gives the publication strip and footer a consistent high-con
     assert.match(baseCssSource, /\.footer :is\(button, a, label\) \{[\s\S]*font-weight: 700;/)
 })
 
+test('dark UI theme distinguishes publish, layout, font, and language active states with a cohesive cool palette', () => {
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-publish-bg: #0f6f78;/)
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-layout-bg: #1d70b0;/)
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-appearance-bg: #5366b6;/)
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-language-bg: #7058a4;/)
+    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-publish-bg\);/)
+    assert.match(baseCssSource, /#share-font-selector \.footer-rail-switch \{[\s\S]*--rail-checked-bg: var\(--toolbar-appearance-bg\);/)
+    assert.match(baseCssSource, /#language-selector \.footer-rail-switch \{[\s\S]*--rail-checked-bg: var\(--toolbar-language-bg\);/)
+})
+
 test('publication status labels are localized', () => {
     assert.match(constantSource, /publicationDraft: 'Draft'/)
     assert.match(constantSource, /publicationVersions: 'Retained versions'/)

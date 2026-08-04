@@ -31,7 +31,7 @@ const THEME_OPTION_LABELS = {
     'x-ai': { 'zh-TW': '科技深黑', 'en-US': 'Tech black' },
 }
 
-const SVG_ICONS = {
+export const SVG_ICONS = {
     editLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="11" height="10" rx="2"></rect><path d="M7 10V7a3 3 0 0 1 5.5-1.7"></path><path d="m13.5 16.5 5.7-5.7a1.4 1.4 0 0 1 2 2l-5.7 5.7-3 1z"></path><path d="m17.8 12.2 2 2"></path></svg>`,
     readLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="10" width="10.5" height="10" rx="2"></rect><path d="M5.5 10V7a3 3 0 0 1 5.5-1.7"></path><path d="M14.5 14.5s2-3 4.5-3 4.5 3 4.5 3-2 3-4.5 3-4.5-3-4.5-3z"></path><circle cx="19" cy="14.5" r="1.1"></circle></svg>`,
     link: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`,
@@ -127,9 +127,10 @@ export const EDITOR_TOOLBAR = lang => {
     `
 }
 
-export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue, checkedIcon = '', uncheckedIcon = '' }) => `
+export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = '', uncheckedTitle = '', checkedText, uncheckedText, ariaLabel, checkedValue, uncheckedValue, checkedIcon = '', uncheckedIcon = '', id = '', disabled = false }) => `
 <button
   type="button"
+  ${id ? `id="${id}"` : ''}
   class="footer-rail-switch ${className} ${checked ? 'is-checked' : ''}"
   aria-label="${ariaLabel}"
   aria-pressed="${checked ? 'true' : 'false'}"
@@ -137,6 +138,7 @@ export const RAIL_SWITCH = ({ className = '', checked = false, checkedTitle = ''
   title="${ariaLabel}"
   ${checkedValue ? `data-rail-checked-value="${checkedValue}"` : ''}
   ${uncheckedValue ? `data-rail-unchecked-value="${uncheckedValue}"` : ''}
+  ${disabled ? 'disabled' : ''}
 >
   <span class="btn-flip-front" aria-hidden="true">
     ${uncheckedIcon ? `<span class="footer-rail-icon">${uncheckedIcon}</span>` : ''}
@@ -244,14 +246,33 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             </div>
                         </div>
                         <div class="save-control-group" aria-label="${lang === 'zh-TW' ? '儲存設定' : 'Save settings'}">
+                            <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
+                                ${SVG_ICONS.shareHistory}
+                                <span class="sr-only">${t.recentSharesTitle}</span>
+                            </button>
+                            ${showNoteHistory ? `
+                                <button type="button" id="note-history-btn" class="toolbar-icon-button note-history-trigger" data-tooltip="${t.historyTitle}" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}" aria-label="${t.historyTitle}">
+                                    ${SVG_ICONS.history}
+                                    <span class="sr-only">${t.historyTitle}</span>
+                                </button>
+                            ` : ''}
                             <button type="button" id="save-note-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" title="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" aria-label="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}">
                                 ${SVG_ICONS.save}
                                 <span class="toolbar-button-label">${lang === 'zh-TW' ? '儲存' : 'Save'}</span>
                             </button>
-                            <label class="autosave-toggle-label" title="${share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave')}" aria-label="${lang === 'zh-TW' ? '啟用文章自動儲存' : 'Enable note autosave'}">
-                                <input type="checkbox" id="autosave-toggle" ${autosave === true && share === true ? 'checked' : ''} ${share === true ? '' : 'disabled'}>
-                                <span>${lang === 'zh-TW' ? '自動儲存' : 'Autosave'}</span>
-                            </label>
+                            ${RAIL_SWITCH({
+                                id: 'autosave-toggle', // id="autosave-toggle"
+                                className: 'autosave-rail-switch',
+                                checked: autosave === true && share === true,
+                                disabled: share !== true,
+                                ariaLabel: lang === 'zh-TW' ? '啟用文章自動儲存' : 'Enable note autosave',
+                                checkedTitle: share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave'),
+                                uncheckedTitle: share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave'),
+                                checkedText: lang === 'zh-TW' ? '自動' : 'Auto',
+                                uncheckedText: lang === 'zh-TW' ? '手動' : 'Manual',
+                                checkedValue: 'true',
+                                uncheckedValue: 'false',
+                            })}
                         </div>
                         <button class="toolbar-icon-button opt-pw ${pw ? 'toolbar-active-button' : ''}" data-type="edit" data-tooltip="${t.editLockTitle}" title="${t.editLockTitle}" aria-label="${t.editLockTitle}">
                             ${SVG_ICONS.editLock}
@@ -278,17 +299,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
-                        </button>
-                        ${showNoteHistory ? `
-                            <button type="button" id="note-history-btn" class="toolbar-icon-button note-history-trigger" data-tooltip="${t.historyTitle}" aria-haspopup="dialog" aria-expanded="false" title="${t.historyTitle}" aria-label="${t.historyTitle}">
-                                ${SVG_ICONS.history}
-                                <span class="sr-only">${t.historyTitle}</span>
-                            </button>
-                        ` : ''}
-                        ${mode === 'md' ? `<button id="present-btn" class="toolbar-icon-button" data-tooltip="${t.presentTitle}" title="${t.presentTitle}" aria-label="${t.presentTitle}">${SVG_ICONS.play}<span class="toolbar-button-label">${t.present}</span></button>` : ''}
-                        <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
-                            ${SVG_ICONS.shareHistory}
-                            <span class="sr-only">${t.recentSharesTitle}</span>
                         </button>
                         <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
                             <div class="footer-preview-group footer-control-group">

@@ -70,7 +70,7 @@ test('share state uses a working toggle and does not interrupt preview rendering
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
     assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
     assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', openPublishOptions\)/)
-    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-success\)/)
+    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-publish-bg\)/)
 })
 
 test('footer uses native-style rails for the requested two-state controls', () => {

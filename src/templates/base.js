@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -101,6 +101,10 @@ const EDITOR_PUBLICATION_STATUS = ({ lang, ext = {}, shareId = '' }) => {
 
     return `<aside class="editor-publication-status" data-published="${published ? 'true' : 'false'}" aria-live="polite">
         <div class="publication-status-main">
+            <button type="button" id="present-btn" class="publication-present-btn toolbar-icon-button" data-tooltip="${escapeHtml(t.presentTitle)}" title="${escapeHtml(t.presentTitle)}" aria-label="${escapeHtml(t.presentTitle)}">
+                ${SVG_ICONS.play}
+                <span class="toolbar-button-label">${escapeHtml(t.present)}</span>
+            </button>
             <span id="publication-state" class="publication-state ${published ? 'is-published' : 'is-draft'}">${escapeHtml(published ? t.publicationPublished : t.publicationDraft)}</span>
             <div class="publication-share-details" ${published ? '' : 'hidden'}>
                 <span class="publication-label">${escapeHtml(t.publicationUrl)}</span>
@@ -1574,7 +1578,7 @@ ${getMarkdownCss()}
             })
         }
         if ($autosaveToggle) {
-            $autosaveToggle.checked = APP_STATE.autosave
+            setRailSwitchState($autosaveToggle, APP_STATE.autosave === true && APP_STATE.isPublished)
         }
 
         const AUTOSAVE_IDLE_MS = ${AUTOSAVE_IDLE_MS}
@@ -2157,7 +2161,8 @@ ${getMarkdownCss()}
             syncShareMenuUI()
             if ($autosaveToggle) {
                 $autosaveToggle.disabled = !isPublished
-                $autosaveToggle.checked = APP_STATE.autosave === true && isPublished
+                $autosaveToggle.classList.toggle('is-disabled', !isPublished)
+                setRailSwitchState($autosaveToggle, APP_STATE.autosave === true && isPublished)
             }
             syncPublicationStatus()
         }
@@ -2620,13 +2625,13 @@ ${getMarkdownCss()}
         }
 
         if ($autosaveToggle) {
-            $autosaveToggle.addEventListener('change', async () => {
+            const handleAutosaveToggle = async () => {
                 if (!APP_STATE.isPublished) {
-                    $autosaveToggle.checked = false
+                    window.showToast?.(getSaveBlockedMessage())
                     return
                 }
                 const previousValue = APP_STATE.autosave === true
-                const nextValue = $autosaveToggle.checked
+                const nextValue = !previousValue
                 try {
                     await persistSetting({ autosave: nextValue })
                     syncShareStateUI()
@@ -2638,7 +2643,9 @@ ${getMarkdownCss()}
                     syncShareStateUI()
                     errHandle(error.message || error)
                 }
-            })
+            }
+            $autosaveToggle.addEventListener('click', handleAutosaveToggle)
+            $autosaveToggle.addEventListener('change', handleAutosaveToggle)
         }
 
         if ($shareBtn) {
@@ -2896,6 +2903,7 @@ ${getMarkdownCss()}
             if (!switcher) return;
             switcher.classList.toggle('is-checked', checked === true);
             switcher.setAttribute('aria-pressed', checked === true ? 'true' : 'false');
+            try { switcher.checked = checked === true; } catch(e) {}
         }
 
         function applyPreviewDevice(value) {
