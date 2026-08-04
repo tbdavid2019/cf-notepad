@@ -1,3 +1,5 @@
+import { isTiptapBlockDocument, normalizeTiptapBlockDocument } from './block_document.mjs'
+
 export const BLOCK_DOCUMENT_VERSION = 1
 
 const BLOCK_TYPES = new Set([
@@ -67,11 +69,105 @@ function getDocumentForRendering(blockInput) {
     }
 }
 
+function renderTiptapInline(nodes = []) {
+    return nodes.map(node => {
+        if (!node || typeof node !== 'object') return ''
+        if (node.type === 'hardBreak') return '<br>'
+        if (node.type !== 'text') return renderTiptapInline(node.content || [])
+
+        let output = escapeHtml(text(node.text))
+        for (const mark of node.marks || []) {
+            if (!mark || typeof mark !== 'object') continue
+            if (mark.type === 'bold') output = `<strong>${output}</strong>`
+            else if (mark.type === 'italic') output = `<em>${output}</em>`
+            else if (mark.type === 'strike') output = `<s>${output}</s>`
+            else if (mark.type === 'underline') output = `<u>${output}</u>`
+            else if (mark.type === 'code') output = `<code>${output}</code>`
+            else if (mark.type === 'link') {
+                const href = safeUrl(mark.attrs?.href)
+                output = href ? `<a href="${escapeHtml(href)}" target="_blank" rel="noopener noreferrer">${output}</a>` : output
+            }
+        }
+        return output
+    }).join('')
+}
+
+function renderTiptapNode(node = {}) {
+    const content = Array.isArray(node.content) ? node.content : []
+    const attrs = node.attrs && typeof node.attrs === 'object' ? node.attrs : {}
+    switch (node.type) {
+        case 'doc': return content.map(renderTiptapNode).join('\n')
+        case 'text':
+        case 'hardBreak': return renderTiptapInline([node])
+        case 'paragraph': return `<p>${renderTiptapInline(content)}</p>`
+        case 'heading': {
+            const level = Math.min(Math.max(parseInt(attrs.level, 10) || 1, 1), 6)
+            return `<h${level}>${renderTiptapInline(content)}</h${level}>`
+        }
+        case 'blockquote': return `<blockquote>${content.map(renderTiptapNode).join('')}</blockquote>`
+        case 'bulletList': return `<ul class="block-bullet-list">${content.map(renderTiptapNode).join('')}</ul>`
+        case 'orderedList': return `<ol>${content.map(renderTiptapNode).join('')}</ol>`
+        case 'listItem': return `<li>${content.map(renderTiptapNode).join('')}</li>`
+        case 'taskList': return `<ul class="contains-task-list block-task-list">${content.map(renderTiptapNode).join('')}</ul>`
+        case 'taskItem': return `<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"${attrs.checked === true ? ' checked' : ''} disabled> ${content.map(renderTiptapNode).join('')}</li>`
+        case 'codeBlock': {
+            const language = text(attrs.language).replace(/[^a-zA-Z0-9_+-]/g, '')
+            return `<pre><code${language ? ` class="language-${language}"` : ''}>${escapeHtml(content.map(item => text(item.text)).join(''))}</code></pre>`
+        }
+        case 'horizontalRule': return '<hr>'
+        case 'image': return renderBlockToHtml({ version: 1, blocks: [{ type: 'image', props: attrs }] })
+        case 'david888Embed': {
+            const kind = text(attrs.kind)
+            return BLOCK_TYPES.has(kind) ? renderBlockToHtml({ version: 1, blocks: [{ type: kind, props: attrs }] }) : ''
+        }
+        default: return content.map(renderTiptapNode).join('')
+    }
+}
+
+function markdownTiptapInline(nodes = []) {
+    return nodes.map(node => {
+        if (!node || typeof node !== 'object') return ''
+        if (node.type === 'hardBreak') return '\n'
+        if (node.type !== 'text') return markdownTiptapInline(node.content || [])
+        let output = text(node.text)
+        for (const mark of node.marks || []) {
+            if (mark?.type === 'bold') output = `**${output}**`
+            else if (mark?.type === 'italic') output = `*${output}*`
+            else if (mark?.type === 'strike') output = `~~${output}~~`
+            else if (mark?.type === 'code') output = `\`${output}\``
+            else if (mark?.type === 'link' && safeUrl(mark.attrs?.href)) output = `[${output}](${safeUrl(mark.attrs.href)})`
+        }
+        return output
+    }).join('')
+}
+
+function blockToMarkdownFromTiptap(node = {}) {
+    const content = Array.isArray(node.content) ? node.content : []
+    const attrs = node.attrs && typeof node.attrs === 'object' ? node.attrs : {}
+    switch (node.type) {
+        case 'doc': return content.map(blockToMarkdownFromTiptap).filter(Boolean).join('\n\n')
+        case 'paragraph': return markdownTiptapInline(content)
+        case 'heading': return '#'.repeat(Math.min(Math.max(parseInt(attrs.level, 10) || 1, 1), 6)) + ' ' + markdownTiptapInline(content)
+        case 'blockquote': return content.map(blockToMarkdownFromTiptap).map(line => `> ${line}`).join('\n')
+        case 'bulletList': return content.map(blockToMarkdownFromTiptap).map(line => `- ${line}`).join('\n')
+        case 'orderedList': return content.map((item, index) => `${index + 1}. ${blockToMarkdownFromTiptap(item)}`).join('\n')
+        case 'listItem': return content.map(blockToMarkdownFromTiptap).join('\n')
+        case 'taskList': return content.map(blockToMarkdownFromTiptap).join('\n')
+        case 'taskItem': return `- ${attrs.checked ? '[x]' : '[ ]'} ${content.map(blockToMarkdownFromTiptap).join('')}`
+        case 'codeBlock': return `\`\`\`${text(attrs.language)}\n${content.map(item => text(item.text)).join('')}\n\`\`\``
+        case 'horizontalRule': return '---'
+        case 'image': return blockToMarkdown({ version: 1, blocks: [{ type: 'image', props: attrs }] })
+        case 'david888Embed': return BLOCK_TYPES.has(text(attrs.kind)) ? blockToMarkdown({ version: 1, blocks: [{ type: attrs.kind, props: attrs }] }) : ''
+        default: return content.map(blockToMarkdownFromTiptap).join('\n')
+    }
+}
+
 export function createEmptyBlockDocument() {
     return { version: BLOCK_DOCUMENT_VERSION, blocks: [] }
 }
 
 export function validateBlockDocument(input) {
+    if (isTiptapBlockDocument(input)) return normalizeTiptapBlockDocument(input)
     if (!input || typeof input !== 'object' || Array.isArray(input) || !Array.isArray(input.blocks)) {
         throw new TypeError('Invalid block document')
     }
@@ -115,7 +211,9 @@ export function parseBlockDocument(value = '', { allowTextFallback = true } = {}
 }
 
 export function renderBlockToHtml(blockInput) {
-    const { blocks } = getDocumentForRendering(blockInput)
+    const document = getDocumentForRendering(blockInput)
+    if (isTiptapBlockDocument(document)) return renderTiptapNode(document) || '<p></p>'
+    const { blocks } = document
     if (blocks.length === 0) return '<p></p>'
 
     const htmlParts = []
@@ -224,7 +322,9 @@ export function renderBlockToHtml(blockInput) {
 }
 
 export function blockToMarkdown(blockInput) {
-    const { blocks } = getDocumentForRendering(blockInput)
+    const document = getDocumentForRendering(blockInput)
+    if (isTiptapBlockDocument(document)) return blockToMarkdownFromTiptap(document)
+    const { blocks } = document
     const lines = []
 
     for (const { type, props } of blocks) {

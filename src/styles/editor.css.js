@@ -135,6 +135,63 @@ export const getEditorCss = () => `
     .block-type-select { max-width: 150px; }
 }
 
+/* Tiptap Block Editor */
+.block-editor-pane { background: var(--editor-surface, #fff); }
+.block-editor { width: 100%; max-width: none; padding: 0; }
+.tiptap-editor-shell { position: relative; width: min(920px, 100%); min-height: 100%; margin: 0 auto; padding: 18px 28px 72px; }
+.tiptap-editor-toolbar {
+    position: sticky; top: -18px; z-index: 5; display: flex; align-items: center; gap: 3px;
+    min-height: 42px; margin: -18px -28px 30px; padding: 8px 28px; overflow-x: auto;
+    border-bottom: 1px solid color-mix(in srgb, var(--toolbar-border, #d0d7de) 80%, transparent);
+    background: color-mix(in srgb, var(--editor-surface, #fff) 92%, transparent); backdrop-filter: blur(14px);
+    scrollbar-width: none;
+}
+.tiptap-editor-toolbar::-webkit-scrollbar { display: none; }
+.tiptap-toolbar-button, .tiptap-insert-menu {
+    flex: 0 0 auto; min-width: 30px; height: 30px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px;
+    background: transparent; color: var(--text-color, #24292f); font: 600 13px/1 var(--editor-font-family); cursor: pointer;
+}
+.tiptap-toolbar-button:hover, .tiptap-toolbar-button:focus-visible, .tiptap-toolbar-button.is-active,
+.tiptap-insert-menu:hover, .tiptap-insert-menu:focus-visible { border-color: var(--toolbar-border, #d0d7de); background: var(--toolbar-bg-hover, #f0f2f4); color: var(--toolbar-accent, #c8654b); }
+.tiptap-toolbar-button:focus-visible, .tiptap-insert-menu:focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 1px; }
+.tiptap-insert-menu { width: auto; min-width: 72px; font-weight: 500; }
+.tiptap-editor-canvas { min-height: calc(100vh - 220px); cursor: text; }
+.tiptap-editor-canvas .ProseMirror { min-height: inherit; outline: none; color: var(--text-color, #24292f); font: 17px/1.8 var(--editor-font-family); }
+.tiptap-editor-canvas .ProseMirror > :first-child { margin-top: 0; }
+.tiptap-editor-canvas .ProseMirror :is(h1, h2, h3) { margin: 1.25em 0 .48em; line-height: 1.28; letter-spacing: -.025em; }
+.tiptap-editor-canvas .ProseMirror h1 { font-size: 2.15em; }
+.tiptap-editor-canvas .ProseMirror h2 { font-size: 1.65em; }
+.tiptap-editor-canvas .ProseMirror h3 { font-size: 1.34em; }
+.tiptap-editor-canvas .ProseMirror p { margin: .62em 0; }
+.tiptap-editor-canvas .ProseMirror :is(ul, ol) { padding-left: 1.55em; }
+.tiptap-editor-canvas .ProseMirror li p { margin: .25em 0; }
+.tiptap-editor-canvas .ProseMirror blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid var(--toolbar-accent, #c8654b); color: var(--toolbar-muted, #57606a); }
+.tiptap-editor-canvas .ProseMirror pre { margin: 1em 0; padding: 14px 16px; overflow-x: auto; border-radius: 8px; background: #20212b; color: #eef0f3; font: 13px/1.65 var(--editor-font-family); }
+.tiptap-editor-canvas .ProseMirror code { padding: .12em .28em; border-radius: 4px; background: color-mix(in srgb, var(--toolbar-border, #d0d7de) 35%, transparent); font: .88em var(--editor-font-family); }
+.tiptap-editor-canvas .ProseMirror pre code { padding: 0; background: transparent; font-size: inherit; }
+.tiptap-editor-canvas .ProseMirror hr { margin: 1.6em 0; border: 0; border-top: 1px solid var(--toolbar-border, #d0d7de); }
+.tiptap-editor-canvas .ProseMirror .is-editor-empty:first-child::before { content: attr(data-placeholder); float: left; height: 0; color: #9aa1a9; pointer-events: none; }
+.tiptap-embed-card { margin: 1.1em 0; overflow: hidden; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 10px; background: color-mix(in srgb, var(--status-control-bg, #fff) 97%, #d0d7de); box-shadow: 0 1px 2px rgba(0, 0, 0, .04); }
+.tiptap-embed-card.ProseMirror-selectednode { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
+.tiptap-embed-card-header { display: flex; align-items: center; justify-content: space-between; padding: 7px 10px; border-bottom: 1px solid color-mix(in srgb, var(--toolbar-border, #d0d7de) 75%, transparent); font-size: 12px; color: var(--toolbar-muted, #57606a); }
+.tiptap-embed-delete { width: 24px; height: 24px; border: 0; border-radius: 5px; background: transparent; color: #b42318; cursor: pointer; font-size: 17px; }
+.tiptap-embed-delete:hover { background: #fff0ef; }
+.tiptap-embed-preview { display: grid; min-height: 52px; place-items: start; padding: 12px; color: var(--toolbar-muted, #57606a); font-size: 13px; }
+.tiptap-embed-preview img { display: block; max-width: 100%; max-height: 360px; border-radius: 5px; }
+.tiptap-embed-preview pre { width: 100%; margin: 0; white-space: pre-wrap; font: 12px/1.5 var(--editor-font-family); }
+.tiptap-slash-menu { position: absolute; z-index: 10; left: 28px; bottom: 28px; display: grid; width: min(340px, calc(100% - 56px)); max-height: 330px; padding: 6px; overflow-y: auto; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 10px; background: var(--status-control-bg, #fff); box-shadow: 0 14px 35px rgba(0, 0, 0, .16); }
+.tiptap-slash-item { display: grid; gap: 2px; padding: 9px 10px; border: 0; border-radius: 7px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
+.tiptap-slash-item:hover, .tiptap-slash-item:focus-visible { background: var(--toolbar-bg-hover, #f0f2f4); outline: none; }
+.tiptap-slash-item small { color: var(--toolbar-muted, #57606a); }
+
+@media (max-width: 640px) {
+    .tiptap-editor-shell { padding: 12px 16px 48px; }
+    .tiptap-editor-toolbar { top: -12px; margin: -12px -16px 22px; padding: 7px 16px; }
+    .tiptap-editor-canvas .ProseMirror { font-size: 16px; }
+    .tiptap-editor-canvas .ProseMirror h1 { font-size: 1.9em; }
+    .tiptap-slash-menu { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; width: auto; }
+}
+
 .editor-status {
     flex: 0 0 auto;
     min-height: 24px;

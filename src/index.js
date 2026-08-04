@@ -430,7 +430,7 @@ async function createNewNote(request, editorFormat) {
         if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
 
         await getNotesNamespace().put(path, '', {
-            metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 1 : undefined },
+            metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined },
         })
         const nextUrl = new URL(`/${path}`, originUrl)
         nextUrl.searchParams.set('new', '1')

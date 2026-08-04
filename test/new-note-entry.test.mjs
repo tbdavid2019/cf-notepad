@@ -20,7 +20,7 @@ test('a pre-created note can retain the new-note marker when it only has immutab
     assert.equal(isNewNoteEntry(
         'https://wiki.david888.com/abcd?new=1',
         '',
-        { editorFormat: 'block', blockDocumentVersion: 1 },
+        { editorFormat: 'block', blockDocumentVersion: 2 },
     ), true)
 })
 
@@ -40,6 +40,7 @@ test('homepage marks its generated path and note rendering consumes that marker'
 test('dedicated creation routes persist a locked editor format before redirecting', () => {
     assert.match(indexSource, /async function createNewNote\(request, editorFormat\)/)
     assert.match(indexSource, /new URL\(`\/\$\{path\}`, originUrl\)/)
+    assert.match(indexSource, /blockDocumentVersion: editorFormat === 'block' \? 2 : undefined/)
     assert.match(indexSource, /router\.get\('\/new\/block', request => createNewNote\(request, 'block'\)\)/)
     assert.match(indexSource, /router\.get\('\/new\/markdown', request => createNewNote\(request, 'markdown'\)\)/)
 })

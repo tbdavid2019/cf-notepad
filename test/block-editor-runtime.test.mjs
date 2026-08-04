@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { JSDOM } from 'jsdom'
 
-test('block editor writes structural edits back to the hidden JSON source', async () => {
+test('Tiptap block editor writes structural edits back to the hidden JSON source', async () => {
     const dom = new JSDOM('<div id="block-editor"></div><textarea id="contents">{"version":1,"blocks":[]}</textarea>', {
         url: 'https://example.test/note',
     })
@@ -22,20 +22,16 @@ test('block editor writes structural edits back to the hidden JSON source', asyn
 
     try {
         await import(`../static/js/block-editor.mjs?runtime-test=${Date.now()}`)
-        const addType = dom.window.document.querySelector('.block-add-select')
-        addType.value = 'heading'
-        addType.dispatchEvent(new dom.window.Event('change', { bubbles: true }))
-
-        const heading = dom.window.document.querySelector('.block-text-input')
-        heading.textContent = 'A real block title'
-        heading.dispatchEvent(new dom.window.Event('input', { bubbles: true }))
+        assert.ok(dom.window.document.querySelector('.ProseMirror'))
+        assert.ok(dom.window.document.querySelector('.tiptap-slash-menu'))
+        const headingButton = [...dom.window.document.querySelectorAll('.tiptap-toolbar-button')]
+            .find(button => button.dataset.command === 'heading1')
+        headingButton.click()
 
         const saved = JSON.parse(dom.window.document.querySelector('#contents').value)
-        assert.equal(saved.version, 1)
-        assert.equal(saved.blocks.length, 1)
-        assert.match(saved.blocks[0].id, /.+/)
-        assert.equal(saved.blocks[0].type, 'heading')
-        assert.deepEqual(saved.blocks[0].props, { level: 2, text: 'A real block title' })
+        assert.equal(saved.type, 'doc')
+        assert.equal(saved.content[0].type, 'heading')
+        assert.equal(saved.content[0].attrs.level, 1)
     } finally {
         Object.assign(globalThis, previous)
         dom.window.close()

@@ -19,8 +19,35 @@ function isWeakTitleCandidate(value = '') {
     return /^[a-z0-9][a-z0-9_-]{0,7}$/i.test(value.trim())
 }
 
+function tiptapNodeText(node) {
+    if (!node || typeof node !== 'object') return ''
+    if (typeof node.text === 'string') return node.text
+    return Array.isArray(node.content) ? node.content.map(tiptapNodeText).join('') : ''
+}
+
+function getTiptapDocument(value = '') {
+    const trimmed = String(value || '').trim()
+    if (!trimmed.startsWith('{') || !trimmed.includes('"type":"doc"')) return null
+    try {
+        const parsed = JSON.parse(trimmed)
+        return parsed?.type === 'doc' && Array.isArray(parsed.content) ? parsed : null
+    } catch {
+        return null
+    }
+}
+
 function extractContentTitle(value = '') {
     const trimmedVal = String(value || '').trim()
+    const tiptapDocument = getTiptapDocument(trimmedVal)
+    if (tiptapDocument) {
+        for (const node of tiptapDocument.content) {
+            if (node?.type === 'heading' || node?.type === 'paragraph') {
+                const candidate = normalizeTitleCandidate(tiptapNodeText(node))
+                if (candidate) return candidate
+            }
+        }
+        return ''
+    }
     if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
         try {
             const parsed = JSON.parse(trimmedVal)
@@ -90,7 +117,10 @@ export function extractNoteTitle(value = '', metadataTitle = '', fallback = '') 
 export function extractNoteDescription(value = '', fallbackTitle = '') {
     let str = value
     const trimmedVal = String(value || '').trim()
-    if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
+    const tiptapDocument = getTiptapDocument(trimmedVal)
+    if (tiptapDocument) {
+        str = tiptapDocument.content.map(tiptapNodeText).filter(Boolean).join(' ')
+    } else if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
         try {
             const parsed = JSON.parse(trimmedVal)
             if (parsed && Array.isArray(parsed.blocks)) {

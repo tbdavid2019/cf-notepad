@@ -19,7 +19,7 @@ test('block edit pages use a WYSIWYG block canvas instead of the Markdown split 
     assert.doesNotMatch(page, /class="divide-line"/)
     assert.doesNotMatch(page, /id="import-md-btn"/)
     assert.doesNotMatch(page, /data-rail-checked-value="md"/)
-    assert.match(page, /\/js\/block-editor\.mjs/)
+    assert.match(page, /\/js\/block-editor\.bundle\.mjs/)
     assert.doesNotMatch(page, /\/js\/block-view\.mjs/)
 })
 

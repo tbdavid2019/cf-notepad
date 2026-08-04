@@ -109,6 +109,27 @@ test('raw blocks are escaped in HTML and preserved as an explicit HTML code fenc
     assert.match(blockToMarkdown(doc), /```html\n<img src=x onerror=alert\(1\)>\n```/)
 })
 
+test('Tiptap block documents render semantic formatting and existing custom embeds safely', () => {
+    const document = {
+        type: 'doc',
+        content: [
+            { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Rich title' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Bold', marks: [{ type: 'bold' }] }, { type: 'text', text: ' link', marks: [{ type: 'link', attrs: { href: 'https://example.com' } }] }] },
+            { type: 'david888Embed', attrs: { kind: 'youtube', videoId: 'dQw4w9WgXcQ', title: 'Video' } },
+        ],
+    }
+
+    const parsed = parseBlockDocument(JSON.stringify(document), { allowTextFallback: false })
+    const html = renderBlockToHtml(parsed)
+
+    assert.equal(parsed.type, 'doc')
+    assert.match(html, /<h1>Rich title<\/h1>/)
+    assert.match(html, /<strong>Bold<\/strong>/)
+    assert.match(html, /href="https:\/\/example\.com\/?"/)
+    assert.match(html, /youtube-nocookie/)
+    assert.match(blockToMarkdown(parsed), /# Rich title/)
+})
+
 test('block media renderers allow only http and https URLs', () => {
     const html = renderBlockToHtml({
         version: 1,
@@ -136,6 +157,19 @@ test('extractNoteTitle and extractNoteDescription handle block JSON documents', 
 
     const desc = extractNoteDescription(json)
     assert.match(desc, /Block Article Title First paragraph text/)
+})
+
+test('extractNoteTitle and extractNoteDescription handle Tiptap block documents', () => {
+    const json = JSON.stringify({
+        type: 'doc',
+        content: [
+            { type: 'heading', attrs: { level: 1 }, content: [{ type: 'text', text: 'Tiptap Article Title' }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Rich text description.' }] },
+        ],
+    })
+
+    assert.equal(extractNoteTitle(json), 'Tiptap Article Title')
+    assert.match(extractNoteDescription(json), /Tiptap Article Title Rich text description/)
 })
 
 test('block title extraction skips non-textual and list blocks before a heading or paragraph', () => {

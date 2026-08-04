@@ -2848,7 +2848,7 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
-    ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.mjs"></script>' : ''}
+    ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>

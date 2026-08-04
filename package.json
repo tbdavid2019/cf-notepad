@@ -15,11 +15,11 @@
     "start": "wrangler dev",
     "predev": "npm run prepare:skill-doc",
     "dev": "wrangler dev",
-    "predeploy": "npm run prepare:skill-doc",
+    "predeploy": "npm run prepare:skill-doc && npm run build:block-editor",
     "deploy": "wrangler deploy",
     "prepublish": "npm run prepare:skill-doc",
     "publish": "wrangler deploy",
-    "pretest": "npm run prepare:skill-doc",
+    "pretest": "npm run prepare:skill-doc && npm run build:block-editor",
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
