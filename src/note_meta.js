@@ -164,12 +164,18 @@ export function isNewNoteEntry(requestUrl, value = '', metadata = {}) {
         && isCreationMetadata
 }
 
-export function formatNewNoteTitle(_lang = 'zh-TW', random = Math.random) {
-    const openingPrompts = [
-        '序章 / 一切故事的開始',
-        '天工開物 / 建立你的個人知識宇宙',
-        '見微知著 / 這裡慢慢萌芽長大',
-    ]
+export function formatNewNoteTitle(lang = 'zh-TW', random = Math.random) {
+    const openingPrompts = lang === 'en-US'
+        ? [
+            'Prologue / Where Every Story Begins',
+            'The Art of Creation / Build Your Personal Knowledge Universe',
+            'From Small Signs / Let Your Ideas Take Root and Grow',
+        ]
+        : [
+            '序章 / 一切故事的開始',
+            '天工開物 / 建立你的個人知識宇宙',
+            '見微知著 / 這裡慢慢萌芽長大',
+        ]
     const index = Math.min(openingPrompts.length - 1, Math.max(0, Math.floor(random() * openingPrompts.length)))
     return openingPrompts[index]
 }

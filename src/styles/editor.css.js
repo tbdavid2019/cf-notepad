@@ -19,6 +19,7 @@ export const getEditorCss = () => `
     min-width: 0;
     min-height: 0;
     display: flex;
+    position: relative;
     overflow: hidden;
     background: #282a36;
 }
@@ -26,6 +27,65 @@ export const getEditorCss = () => `
 .editor-code-shell > textarea.contents {
     width: 100%;
     min-height: 0;
+}
+
+.editor-welcome {
+    position: absolute;
+    inset: 0 0 0 42px;
+    z-index: 1;
+    display: grid;
+    place-content: center;
+    width: auto;
+    padding: clamp(28px, 8vh, 88px) clamp(32px, 8vw, 120px);
+    color: #abb2c5;
+    font-family: var(--editor-font-family);
+    pointer-events: none;
+    text-align: center;
+}
+
+.editor-welcome__section {
+    width: min(100%, 44rem);
+}
+
+.editor-welcome__section--tip {
+    margin-top: 24px;
+    padding-top: 22px;
+    border-top: 1px solid rgba(248, 248, 242, .16);
+}
+
+.editor-welcome__label {
+    margin: 0 0 10px;
+    color: #e4e7ef;
+    font-size: 15px;
+    font-weight: 700;
+    letter-spacing: .01em;
+    line-height: 1.45;
+}
+
+.editor-welcome__copy {
+    font-size: 15px;
+    line-height: 1.82;
+}
+
+.editor-welcome__copy p {
+    margin: 0;
+}
+
+@media (max-width: 640px) {
+    .editor-welcome {
+        inset-left: 36px;
+        padding: 28px 24px 72px;
+    }
+
+    .editor-welcome__section--tip {
+        margin-top: 20px;
+        padding-top: 18px;
+    }
+
+    .editor-welcome__label,
+    .editor-welcome__copy {
+        font-size: 14px;
+    }
 }
 
 .block-editor-pane {

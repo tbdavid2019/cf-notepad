@@ -371,6 +371,7 @@ ${getMarkdownCss()}
                             <div class="editor-code-shell">
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                                ${ext.isNewEntry === true ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
                         </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'}
@@ -1709,9 +1710,11 @@ ${getMarkdownCss()}
         }
         setupShareBackToTop($previewMd || $previewPlain)
 
-        // Fetch a random Tagore poem and a random localized editor tip. They
-        // share one timer so both lines appear together in the welcome text.
-        if (APP_STATE.isEdit && \$textarea) {
+        // New notes pair a random Tagore poem with one focused writing tip.
+        // This is an overlay rather than a textarea placeholder so each part
+        // can keep its own rhythm and disappear as soon as writing begins.
+        const \$welcome = document.querySelector('#editor-welcome')
+        if (APP_STATE.isEdit && APP_STATE.isNewEntry && \$textarea && \$welcome) {
             const poemPromise = fetch('https://answerbook.david888.com/StrayBirds')
                 .then(res => res.json())
                 .catch(err => {
@@ -1731,37 +1734,45 @@ ${getMarkdownCss()}
                 const randomTip = tips.length ? tips[Math.floor(Math.random() * tips.length)] : null;
                 if (!poem && !randomTip) return;
 
-                const originalPlaceholder = \$textarea.placeholder || '';
                 const isZh = APP_STATE.lang === 'zh-TW';
-                const poemText = poem
-                    ? '\\n\\n📖 ' + (isZh ? (poem.title || 'Stray Birds') : ('Stray Birds - No. ' + (poem.num || ''))) + '\\n' + (isZh ? (poem.chinese || '') : (poem.english || ''))
-                    : '';
-                const tipText = randomTip
-                    ? '\\n\\n💡 ' + (isZh ? randomTip['zh-TW'] : randomTip['en-US'])
-                    : '';
-                const welcomeText = poemText + tipText;
-                let currentIdx = 0;
-                let typingTimer = setInterval(() => {
-                    if (\$textarea.value || document.activeElement === \$textarea) {
-                        clearInterval(typingTimer);
-                        \$textarea.placeholder = originalPlaceholder + welcomeText;
-                        return;
-                    }
+                const addWelcomeSection = (kind, label, text) => {
+                    const lines = String(text || '').split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);
+                    if (!lines.length) return;
 
-                    if (currentIdx < welcomeText.length) {
-                        \$textarea.placeholder = originalPlaceholder + welcomeText.slice(0, currentIdx + 1);
-                        currentIdx++;
-                    } else {
-                        clearInterval(typingTimer);
-                    }
-                }, 40);
+                    const section = document.createElement('section');
+                    section.className = 'editor-welcome__section editor-welcome__section--' + kind;
+                    const heading = document.createElement('p');
+                    heading.className = 'editor-welcome__label';
+                    heading.textContent = label;
+                    const copy = document.createElement('div');
+                    copy.className = 'editor-welcome__copy';
+                    lines.forEach(line => {
+                        const paragraph = document.createElement('p');
+                        paragraph.textContent = line;
+                        copy.appendChild(paragraph);
+                    });
+                    section.append(heading, copy);
+                    \$welcome.appendChild(section);
+                };
 
-                \$textarea.addEventListener('focus', () => {
-                    if (typingTimer) {
-                        clearInterval(typingTimer);
-                        \$textarea.placeholder = originalPlaceholder + welcomeText;
-                    }
-                }, { once: true });
+                if (poem) {
+                    addWelcomeSection(
+                        'poem',
+                        '📖 ' + (isZh ? (poem.title || '《飛鳥集》') : ('Stray Birds — No. ' + (poem.num || ''))),
+                        isZh ? poem.chinese : poem.english,
+                    );
+                }
+                if (randomTip) {
+                    const tip = isZh ? randomTip['zh-TW'] : randomTip['en-US'];
+                    const tipBody = String(tip || '').replace(/^(?:小訣竅|Tip)\\s*[:：]\\s*/, '');
+                    addWelcomeSection('tip', isZh ? '💡 小訣竅' : '💡 A small tip', tipBody);
+                }
+
+                const syncWelcomeVisibility = () => {
+                    \$welcome.hidden = Boolean(\$textarea.value) || !\$welcome.childElementCount;
+                };
+                syncWelcomeVisibility();
+                \$textarea.addEventListener('input', syncWelcomeVisibility);
             });
         }
 

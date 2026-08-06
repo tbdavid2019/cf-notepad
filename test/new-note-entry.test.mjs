@@ -29,6 +29,10 @@ test('new-note tab title randomly chooses one of the wiki opening prompts', () =
     assert.equal(formatNewNoteTitle('zh-TW', () => 0), '序章 / 一切故事的開始')
     assert.equal(formatNewNoteTitle('zh-TW', () => 0.4), '天工開物 / 建立你的個人知識宇宙')
     assert.equal(formatNewNoteTitle('zh-TW', () => 0.999999), '見微知著 / 這裡慢慢萌芽長大')
+
+    assert.equal(formatNewNoteTitle('en-US', () => 0), 'Prologue / Where Every Story Begins')
+    assert.equal(formatNewNoteTitle('en-US', () => 0.4), 'The Art of Creation / Build Your Personal Knowledge Universe')
+    assert.equal(formatNewNoteTitle('en-US', () => 0.999999), 'From Small Signs / Let Your Ideas Take Root and Grow')
 })
 
 test('the Traditional Chinese empty editor has no first-visitor prompt', () => {
