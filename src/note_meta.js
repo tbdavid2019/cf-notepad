@@ -164,22 +164,14 @@ export function isNewNoteEntry(requestUrl, value = '', metadata = {}) {
         && isCreationMetadata
 }
 
-export function formatNewNoteTitle(lang = 'zh-TW', date = new Date()) {
-    const parts = Object.fromEntries(
-        new Intl.DateTimeFormat('en-US', {
-            timeZone: 'Asia/Taipei',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            hourCycle: 'h23',
-        })
-            .formatToParts(date)
-            .filter(part => part.type !== 'literal')
-            .map(part => [part.type, part.value])
-    )
-    const label = lang === 'zh-TW' ? '新筆記' : 'New note'
-    return `${label} · ${parts.month}/${parts.day} ${parts.hour}:${parts.minute}`
+export function formatNewNoteTitle(_lang = 'zh-TW', random = Math.random) {
+    const openingPrompts = [
+        '序章 / 一切故事的開始',
+        '天工開物 / 建立你的個人知識宇宙',
+        '見微知著 / 這裡慢慢萌芽長大',
+    ]
+    const index = Math.min(openingPrompts.length - 1, Math.max(0, Math.floor(random() * openingPrompts.length)))
+    return openingPrompts[index]
 }
 
 export function resolveEditorFormat(metadata = {}) {

@@ -8,6 +8,7 @@ import {
 } from '../src/note_meta.js'
 
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const constantsSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
 
 test('only an empty unpersisted path carrying the homepage marker is a new-note entry', () => {
     assert.equal(isNewNoteEntry('https://wiki.david888.com/abcd?new=1', '', {}), true)
@@ -24,11 +25,14 @@ test('a pre-created note can retain the new-note marker when it only has immutab
     ), true)
 })
 
-test('new-note tab title uses a human timestamp instead of the random path', () => {
-    const date = new Date('2026-07-30T01:05:00.000Z')
+test('new-note tab title randomly chooses one of the wiki opening prompts', () => {
+    assert.equal(formatNewNoteTitle('zh-TW', () => 0), '序章 / 一切故事的開始')
+    assert.equal(formatNewNoteTitle('zh-TW', () => 0.4), '天工開物 / 建立你的個人知識宇宙')
+    assert.equal(formatNewNoteTitle('zh-TW', () => 0.999999), '見微知著 / 這裡慢慢萌芽長大')
+})
 
-    assert.equal(formatNewNoteTitle('zh-TW', date), '新筆記 · 07/30 09:05')
-    assert.equal(formatNewNoteTitle('en-US', date), 'New note · 07/30 09:05')
+test('the Traditional Chinese empty editor has no first-visitor prompt', () => {
+    assert.doesNotMatch(constantsSource, /看來你是第一個到這裡的人/)
 })
 
 test('homepage marks its generated path and note rendering consumes that marker', () => {

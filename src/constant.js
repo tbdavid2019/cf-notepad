@@ -187,7 +187,7 @@ export const SUPPORTED_LANG = {
         copy: '複製',
         copied: '已複製',
         copyFailed: '複製失敗',
-        emptyPH: '看來你是第一個到這裡的人，寫點什麼吧...寫完後，記得按下發布分享按鈕取得URL',
+        emptyPH: '',
         tipEncrypt: '這是一篇加密筆記，你必須先輸入密碼',
         tip404: '404，你要找的東西並不存在',
         published: '已發布',
