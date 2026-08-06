@@ -1,4 +1,4 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
+import { copyFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -32,3 +32,16 @@ writeGeneratedModule({
     outputPath: resolve(generatedDir, 'api-docs.generated.mjs'),
     exportName: 'API_DOCS_MARKDOWN',
 })
+
+const wasmDir = resolve(repoRoot, 'static/wasm')
+const wasmPkgDir = resolve(repoRoot, 'node_modules/@firecrawl/anydoc-wasm')
+
+if (existsSync(wasmPkgDir)) {
+    mkdirSync(wasmDir, { recursive: true })
+    if (existsSync(resolve(wasmPkgDir, 'anydoc_wasm.js'))) {
+        copyFileSync(resolve(wasmPkgDir, 'anydoc_wasm.js'), resolve(wasmDir, 'anydoc_wasm.js'))
+    }
+    if (existsSync(resolve(wasmPkgDir, 'anydoc_wasm_bg.wasm'))) {
+        copyFileSync(resolve(wasmPkgDir, 'anydoc_wasm_bg.wasm'), resolve(wasmDir, 'anydoc_wasm_bg.wasm'))
+    }
+}

@@ -27,3 +27,19 @@ test('a new editor presents poem and tip as a centered welcome panel', () => {
     assert.match(editorCss, /\.editor-welcome\s*\{[\s\S]*place-content:\s*center/)
     assert.match(editorCss, /\.editor-welcome__section/)
 })
+
+test('new-note welcome presents poem and tip with typewriter animation', () => {
+    assert.match(baseTemplate, /typeText/)
+    assert.match(baseTemplate, /is-typing/)
+    assert.match(baseTemplate, /addWelcomeSection/)
+    assert.match(baseTemplate, /syncWelcomeVisibility/)
+    assert.match(editorCss, /welcomeCaret/)
+})
+
+test('new-note welcome survives reload until the author starts typing', () => {
+    assert.match(baseTemplate, /NEW_ENTRY_WELCOME_STORAGE_KEY/)
+    assert.match(baseTemplate, /sessionStorage\.setItem\(NEW_ENTRY_WELCOME_STORAGE_KEY, '1'\)/)
+    assert.match(baseTemplate, /APP_STATE\.isNewEntry \|\| hasPendingNewEntryWelcome\(\)/)
+    assert.match(baseTemplate, /sessionStorage\.removeItem\(NEW_ENTRY_WELCOME_STORAGE_KEY\)/)
+    assert.match(baseTemplate, /\$welcome\.appendChild\(section\);\s*\$welcome\.hidden = false/)
+})

@@ -45,6 +45,11 @@
       "id": "fullscreen",
       "zh-TW": "小訣竅：工具列的全螢幕按鈕適合專心寫作；再按一次即可回到一般編輯畫面。",
       "en-US": "Tip: Use the toolbar Fullscreen button for focused writing, then choose it again to return to the normal editor."
+    },
+    {
+      "id": "document-import",
+      "zh-TW": "小訣竅：按 Footer 匯入按鈕或「＋ 新增」選單，可直接將 Word (.docx)、PPT (.pptx)、Excel (.xlsx)、PDF 或 Markdown 檔案於瀏覽器內自動轉為 Markdown。",
+      "en-US": "Tip: Use the Footer Import button or '+ New' menu to automatically convert Word (.docx), PPT (.pptx), Excel (.xlsx), PDF, or Markdown files to Markdown directly inside your browser."
     }
   ]
 }

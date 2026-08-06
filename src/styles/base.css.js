@@ -419,7 +419,9 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 }
 .app-dialog-cancel { background: #f6f8fa; color: #24292f; border: 1px solid #d0d7de; }
 .app-dialog-cancel:hover { background: #eef1f4; }
-.app-dialog-modal .modal-mask { z-index: 1000; }
+.app-dialog-modal .modal-mask, .import-options-modal .modal-mask { z-index: 1000; }
+.import-action-cancel, .import-action-insert { background: #f6f8fa; color: #24292f; border: 1px solid #d0d7de; }
+.import-action-cancel:hover, .import-action-insert:hover { background: #eef1f4; }
 
 /* SVG Icon Utility */
 .svg-icon {

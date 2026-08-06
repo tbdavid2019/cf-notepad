@@ -71,6 +71,20 @@ export const getEditorCss = () => `
     margin: 0;
 }
 
+.editor-welcome__copy p.is-typing::after {
+    content: '▋';
+    display: inline-block;
+    margin-left: 2px;
+    font-size: 0.85em;
+    color: #38bdf8;
+    animation: welcomeCaret 0.7s infinite;
+}
+
+@keyframes welcomeCaret {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+
 @media (max-width: 640px) {
     .editor-welcome {
         inset-left: 36px;

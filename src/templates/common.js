@@ -198,6 +198,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <div class="dropdown-menu" role="menu">
                             <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
                             <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
+                            <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importMarkdown}</span></button>
                         </div>
                     </div>
                 </div>
@@ -300,7 +301,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${t.readLockTitle}</span>
                         </button>
                         ${!isBlockEditor ? `
-                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain" class="visually-hidden-file-input" aria-hidden="true">
+                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
@@ -591,6 +592,21 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <div class="app-dialog-actions">
             <button type="button" class="opt-button app-dialog-cancel">${t.passwordCancel}</button>
             <button type="button" class="opt-button opt-button-accent app-dialog-confirm">${t.passwordConfirm}</button>
+        </div>
+    </div>
+</div>
+<div class="modal import-options-modal" role="dialog" aria-modal="true" aria-labelledby="import-options-title" aria-describedby="import-options-message">
+    <div class="modal-mask"></div>
+    <div class="app-dialog-content" data-dialog-kind="confirm">
+        <div class="app-dialog-icon" aria-hidden="true">?</div>
+        <div class="app-dialog-copy">
+            <h2 id="import-options-title">${t.importOptionTitle}</h2>
+            <p id="import-options-message">${t.importOptionMessage}</p>
+        </div>
+        <div class="app-dialog-actions import-options-actions">
+            <button type="button" class="opt-button import-action-cancel">${t.importActionCancel}</button>
+            <button type="button" class="opt-button import-action-insert">${t.importActionInsert}</button>
+            <button type="button" class="opt-button opt-button-accent import-action-replace">${t.importActionReplace}</button>
         </div>
     </div>
 </div>

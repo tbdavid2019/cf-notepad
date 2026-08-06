@@ -371,7 +371,7 @@ ${getMarkdownCss()}
                             <div class="editor-code-shell">
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
-                                ${ext.isNewEntry === true ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
+                                ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
                         </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'}
@@ -834,6 +834,21 @@ ${getMarkdownCss()}
     })}
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
     const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
+    const NEW_ENTRY_WELCOME_STORAGE_KEY = 'cf-notepad:new-entry-welcome:' + APP_STATE.path
+
+    const hasPendingNewEntryWelcome = () => {
+        try {
+            return window.sessionStorage.getItem(NEW_ENTRY_WELCOME_STORAGE_KEY) === '1'
+        } catch (error) {
+            return false
+        }
+    }
+
+    if (APP_STATE.isNewEntry) {
+        try {
+            window.sessionStorage.setItem(NEW_ENTRY_WELCOME_STORAGE_KEY, '1')
+        } catch (error) {}
+    }
 
     if (APP_STATE.isNewEntry && window.history?.replaceState) {
         const cleanUrl = new URL(window.location.href)
@@ -1714,7 +1729,7 @@ ${getMarkdownCss()}
         // This is an overlay rather than a textarea placeholder so each part
         // can keep its own rhythm and disappear as soon as writing begins.
         const \$welcome = document.querySelector('#editor-welcome')
-        if (APP_STATE.isEdit && APP_STATE.isNewEntry && \$textarea && \$welcome) {
+        if (APP_STATE.isEdit && (APP_STATE.isNewEntry || hasPendingNewEntryWelcome()) && \$textarea && \$welcome) {
             const poemPromise = fetch('https://answerbook.david888.com/StrayBirds')
                 .then(res => res.json())
                 .catch(err => {
@@ -1728,15 +1743,39 @@ ${getMarkdownCss()}
                     return null;
                 });
 
-            Promise.all([poemPromise, tipsPromise]).then(([poemData, tipsData]) => {
+            Promise.all([poemPromise, tipsPromise]).then(async ([poemData, tipsData]) => {
                 const poem = poemData && poemData.poem;
                 const tips = tipsData && Array.isArray(tipsData.tips) ? tipsData.tips : [];
                 const randomTip = tips.length ? tips[Math.floor(Math.random() * tips.length)] : null;
                 if (!poem && !randomTip) return;
 
                 const isZh = APP_STATE.lang === 'zh-TW';
-                const addWelcomeSection = (kind, label, text) => {
-                    const lines = String(text || '').split(/\\r?\\n/).map(line => line.trim()).filter(Boolean);
+
+                const typeText = (element, text, speed = 22) => new Promise(resolve => {
+                    let index = 0;
+                    element.textContent = '';
+                    element.classList.add('is-typing');
+                    const timer = setInterval(() => {
+                        if ($textarea.value) {
+                            clearInterval(timer);
+                            element.classList.remove('is-typing');
+                            element.textContent = text;
+                            resolve();
+                            return;
+                        }
+                        if (index < text.length) {
+                            element.textContent += text.charAt(index);
+                            index++;
+                        } else {
+                            clearInterval(timer);
+                            element.classList.remove('is-typing');
+                            resolve();
+                        }
+                    }, speed);
+                });
+
+                const addWelcomeSection = async (kind, label, text) => {
+                    const lines = String(text || '').split('\\n').map(line => line.trim()).filter(Boolean);
                     if (!lines.length) return;
 
                     const section = document.createElement('section');
@@ -1746,17 +1785,25 @@ ${getMarkdownCss()}
                     heading.textContent = label;
                     const copy = document.createElement('div');
                     copy.className = 'editor-welcome__copy';
-                    lines.forEach(line => {
-                        const paragraph = document.createElement('p');
-                        paragraph.textContent = line;
-                        copy.appendChild(paragraph);
-                    });
                     section.append(heading, copy);
-                    \$welcome.appendChild(section);
+                    $welcome.appendChild(section);
+                    $welcome.hidden = false;
+
+                    for (const line of lines) {
+                        if ($textarea.value) {
+                            const paragraph = document.createElement('p');
+                            paragraph.textContent = line;
+                            copy.appendChild(paragraph);
+                            continue;
+                        }
+                        const paragraph = document.createElement('p');
+                        copy.appendChild(paragraph);
+                        await typeText(paragraph, line, 22);
+                    }
                 };
 
                 if (poem) {
-                    addWelcomeSection(
+                    await addWelcomeSection(
                         'poem',
                         '📖 ' + (isZh ? (poem.title || '《飛鳥集》') : ('Stray Birds — No. ' + (poem.num || ''))),
                         isZh ? poem.chinese : poem.english,
@@ -1764,15 +1811,21 @@ ${getMarkdownCss()}
                 }
                 if (randomTip) {
                     const tip = isZh ? randomTip['zh-TW'] : randomTip['en-US'];
-                    const tipBody = String(tip || '').replace(/^(?:小訣竅|Tip)\\s*[:：]\\s*/, '');
-                    addWelcomeSection('tip', isZh ? '💡 小訣竅' : '💡 A small tip', tipBody);
+                    const tipBody = String(tip || '').replace(/^(?:小訣竅|Tip)\s*[:：]\s*/, '');
+                    await addWelcomeSection('tip', isZh ? '💡 小訣竅' : '💡 A small tip', tipBody);
                 }
 
                 const syncWelcomeVisibility = () => {
-                    \$welcome.hidden = Boolean(\$textarea.value) || !\$welcome.childElementCount;
+                    const hasContent = Boolean($textarea.value)
+                    if (hasContent) {
+                        try {
+                            window.sessionStorage.removeItem(NEW_ENTRY_WELCOME_STORAGE_KEY)
+                        } catch (error) {}
+                    }
+                    $welcome.hidden = hasContent || !$welcome.childElementCount;
                 };
                 syncWelcomeVisibility();
-                \$textarea.addEventListener('input', syncWelcomeVisibility);
+                $textarea.addEventListener('input', syncWelcomeVisibility);
             });
         }
 
@@ -2033,28 +2086,150 @@ ${getMarkdownCss()}
             window.addEventListener('resize', hideSelectionAiMenu)
         }
 
+        const showImportOptionDialog = () => new Promise(resolve => {
+            const modal = document.querySelector('.import-options-modal')
+            if (!modal) {
+                resolve('replace')
+                return
+            }
+            const cancelBtn = modal.querySelector('.import-action-cancel')
+            const insertBtn = modal.querySelector('.import-action-insert')
+            const replaceBtn = modal.querySelector('.import-action-replace')
+            const mask = modal.querySelector('.modal-mask')
+
+            if (!cancelBtn || !insertBtn || !replaceBtn || !mask) {
+                resolve('replace')
+                return
+            }
+
+            let settled = false
+            const cleanup = (choice) => {
+                if (settled) return
+                settled = true
+                modal.style.display = 'none'
+                cancelBtn.removeEventListener('click', onCancel)
+                insertBtn.removeEventListener('click', onInsert)
+                replaceBtn.removeEventListener('click', onReplace)
+                mask.removeEventListener('click', onCancel)
+                modal.removeEventListener('keydown', onKeyDown)
+                resolve(choice)
+            }
+
+            const onCancel = () => cleanup('cancel')
+            const onInsert = () => cleanup('insert')
+            const onReplace = () => cleanup('replace')
+            const onKeyDown = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault()
+                    onCancel()
+                }
+            }
+
+            modal.style.display = 'block'
+            cancelBtn.addEventListener('click', onCancel)
+            insertBtn.addEventListener('click', onInsert)
+            replaceBtn.addEventListener('click', onReplace)
+            mask.addEventListener('click', onCancel)
+            modal.addEventListener('keydown', onKeyDown)
+            window.setTimeout(() => replaceBtn.focus(), 0)
+        })
+
+        const $dropdownImportDocBtn = document.querySelector('#dropdown-import-doc-btn')
+        if ($dropdownImportDocBtn && $importMdInput) {
+            $dropdownImportDocBtn.addEventListener('click', () => {
+                $importMdInput.click()
+            })
+        }
+
         if ($importMdBtn && $importMdInput && $textarea) {
             $importMdBtn.addEventListener('click', () => {
                 $importMdInput.click()
             })
-            $importMdInput.addEventListener('change', () => {
+            $importMdInput.addEventListener('change', async () => {
                 const file = $importMdInput.files && $importMdInput.files[0]
                 if (!file) return;
-                const reader = new FileReader()
-                reader.onload = () => {
-                    const text = typeof reader.result === 'string' ? reader.result : ''
-                    $textarea.value = text
-                    renderPlain($previewPlain, text)
-                    triggerRender($previewMd, text)
+
+                let insertMode = 'replace';
+                if ($textarea.value && $textarea.value.trim().length > 0) {
+                    insertMode = await showImportOptionDialog();
+                }
+
+                if (insertMode === 'cancel') {
+                    $importMdInput.value = '';
+                    return;
+                }
+
+                const fileName = file.name || '';
+                const ext = (fileName.includes('.') ? fileName.split('.').pop() : '').toLowerCase();
+                const isPlainMd = ['md', 'markdown', 'txt'].includes(ext) || file.type === 'text/markdown' || file.type === 'text/plain';
+
+                const applyImportedContent = (importedText, isDoc = false) => {
+                    if (insertMode === 'insert') {
+                        const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
+                        const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
+                        const curVal = $textarea.value;
+                        $textarea.value = curVal.substring(0, startPos) + importedText + curVal.substring(endPos);
+                        const nextPos = startPos + importedText.length;
+                        if (typeof $textarea.setSelectionRange === 'function') {
+                            $textarea.setSelectionRange(nextPos, nextPos);
+                        }
+                    } else {
+                        $textarea.value = importedText;
+                    }
+
+                    renderPlain($previewPlain, $textarea.value)
+                    triggerRender($previewMd, $textarea.value)
                     $textarea.dispatchEvent(new Event('input', { bubbles: true }))
-                    window.showToast(getI18n('markdownImported'))
+                    window.showToast(isDoc ? (getI18n('documentImported') || 'Document imported.') : getI18n('markdownImported'))
                     $importMdInput.value = ''
                 }
-                reader.onerror = () => {
-                    window.showAppDialog({ title: getI18n('err'), message: getI18n('markdownImportFailed'), kind: 'error' })
+
+                const handleImportError = (errorDetail) => {
+                    const msg = (errorDetail && errorDetail.message) ? errorDetail.message : getI18n('markdownImportFailed');
+                    window.showAppDialog({ title: getI18n('err'), message: msg, kind: 'error' })
                     $importMdInput.value = ''
                 }
-                reader.readAsText(file, 'utf-8')
+
+                if (isPlainMd) {
+                    const reader = new FileReader()
+                    reader.onload = () => applyImportedContent(typeof reader.result === 'string' ? reader.result : '', false)
+                    reader.onerror = () => handleImportError()
+                    reader.readAsText(file, 'utf-8')
+                } else {
+                    try {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(getI18n('convertingDocument') || 'Converting document to Markdown...')
+                        }
+                        let anydocModule
+                        try {
+                            anydocModule = await import('/wasm/anydoc_wasm.js')
+                        } catch (localErr) {
+                            console.warn('Local WASM load failed, falling back to CDN:', localErr)
+                            anydocModule = await import('https://esm.sh/@firecrawl/anydoc-wasm@0.1.6')
+                        }
+
+                        const initWasm = anydocModule.default || anydocModule.init
+                        const { toMarkdownBytes, formatFromExtension } = anydocModule
+
+                        if (typeof initWasm === 'function') {
+                            await initWasm()
+                        }
+
+                        const arrayBuffer = await file.arrayBuffer()
+                        const uint8Array = new Uint8Array(arrayBuffer)
+                        const fmt = typeof formatFromExtension === 'function' ? formatFromExtension(ext) : null
+                        const markdown = toMarkdownBytes(uint8Array, fmt)
+
+                        if (typeof markdown !== 'string') {
+                            throw new Error('Failed to convert document: Empty or invalid output.')
+                        }
+
+                        applyImportedContent(markdown, true)
+                    } catch (err) {
+                        console.error('Anydoc WASM conversion failed:', err)
+                        handleImportError(err)
+                    }
+                }
             })
         }
 

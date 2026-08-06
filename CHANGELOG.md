@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-06]
+
+### Added
+
+- **AnyDoc WebAssembly Multi-Format Document Import**
+  - Integrated `@firecrawl/anydoc-wasm` for client-side WebAssembly document-to-Markdown conversion directly inside the browser tab.
+  - Expanded editor file import (`#import-md-input`) to support Word (`.doc`, `.docx`, `.docm`), PowerPoint (`.ppt`, `.pptx`, `.pps`, `.pot`), Excel (`.xls`, `.xlsx`, `.xlsm`, `.csv`), PDF, EPUB, ODT, ODS, ODP, and RTF.
+  - Self-hosted WebAssembly assets under `/wasm/anydoc_wasm.js` and `/wasm/anydoc_wasm_bg.wasm` with lockfile-guaranteed versioning and CDN fallback.
+  - Added an import document action (`#dropdown-import-doc-btn`) to the `＋ 新增` / `+ New` dropdown menu for quick access.
+- **Pre-Conversion Import Options Modal**
+  - Added `.import-options-modal` dialog prompting users BEFORE file reading or WASM conversion when the editor has existing content.
+  - Supports **Replace All (`取代全文`)**, **Insert at Cursor (`插入游標處`)**, or **Cancel (`取消`)**.
+  - Cancelling immediately aborts execution without loading WASM or consuming mobile CPU/RAM.
+- **Stray Birds & Startup Tips Typewriter Animation**
+  - Re-implemented smooth character-by-character typewriter animation (`typeText`) for Tagore poem quotes and startup tips when creating new notes.
+  - Added blinking caret cursor (`▋`) styling and instant hide behavior upon user typing.
+  - Added a new bilingual startup tip for multi-format document conversion in `static/data/editor-tips.json`.
+- **CLI Document Publishing Helper (`scripts/doc2wiki.sh`)**
+  - Added executable helper script to convert local office/PDF files via `@firecrawl/anydoc` CLI and publish directly to `wiki.david888.com` API with theme and share link extraction.
+
 ## [2026-08-04]
 
 ### Added

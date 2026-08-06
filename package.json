@@ -23,6 +23,7 @@
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
+    "@firecrawl/anydoc-wasm": "^0.1.6",
     "@tiptap/core": "^3.29.2",
     "@tiptap/extension-bubble-menu": "^3.29.2",
     "@tiptap/extension-drag-handle": "^3.29.2",
