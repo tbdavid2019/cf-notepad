@@ -212,22 +212,48 @@ export const getEditorCss = () => `
 /* Tiptap Block Editor */
 .block-editor-pane { background: var(--editor-surface, #fff); }
 .block-editor { width: 100%; max-width: none; padding: 0; }
-.tiptap-editor-shell { position: relative; width: min(920px, 100%); min-height: 100%; margin: 0 auto; padding: 18px 28px 72px; }
+.block-editor-pane .block-editor { overflow: auto; }
+.david-blocknote-view.bn-mantine { min-height: 100%; padding: 34px clamp(20px, 6vw, 76px) 80px; background: var(--editor-surface, #fff); color: var(--text-color, #24292f); }
+.david-blocknote-view .bn-editor { min-height: calc(100vh - 230px); padding: 0; font-family: var(--editor-font-family); font-size: 17px; line-height: 1.8; }
+.david-blocknote-view .bn-side-menu { z-index: 12; }
+.david-blocknote-view .bn-suggestion-menu { max-height: min(420px, calc(100dvh - 28px)); }
+.david-blocknote-view .bn-formatting-toolbar { border-radius: 9px; box-shadow: 0 10px 28px rgba(15, 23, 42, .16); }
+.david-blocknote-embed { width: 100%; margin: 10px 0; overflow: hidden; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 10px; background: color-mix(in srgb, var(--status-control-bg, #fff) 96%, #d0d7de); box-sizing: border-box; }
+.david-blocknote-embed header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 7px 10px; border-bottom: 1px solid color-mix(in srgb, var(--toolbar-border, #d0d7de) 75%, transparent); color: var(--toolbar-muted, #57606a); font-size: 12px; }
+.david-blocknote-embed header button { min-height: 30px; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: var(--toolbar-accent, #c8654b); cursor: pointer; font: inherit; }
+.david-blocknote-embed header button:hover, .david-blocknote-embed header button:focus-visible { background: var(--toolbar-bg-hover, #f0f2f4); outline: none; }
+.david-blocknote-embed-preview { display: grid; min-height: 54px; place-items: start; padding: 12px; color: var(--toolbar-muted, #57606a); font-size: 13px; }
+.david-blocknote-embed-preview img { display: block; max-width: 100%; max-height: 360px; border-radius: 5px; }
+.david-blocknote-embed-preview pre { width: 100%; margin: 0; overflow-x: auto; white-space: pre-wrap; font: 12px/1.5 var(--editor-font-family); }
+.david-blocknote-menu-icon { display: inline-grid; width: 20px; place-items: center; color: var(--toolbar-accent, #c8654b); font-size: 12px; }
+.david-blocknote-dialog { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; padding: 16px; }
+.david-blocknote-dialog-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .48); backdrop-filter: blur(3px); }
+.david-blocknote-dialog-card { position: relative; z-index: 1; display: grid; gap: 14px; width: min(560px, 100%); max-height: min(720px, calc(100dvh - 32px)); overflow: auto; padding: 20px; box-sizing: border-box; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 14px; background: var(--editor-surface, #fff); color: var(--text-color, #24292f); box-shadow: 0 24px 70px rgba(15, 23, 42, .3); }
+.david-blocknote-dialog-card header, .david-blocknote-dialog-card footer { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.david-blocknote-dialog-card h2 { margin: 0; font-size: 18px; }
+.david-blocknote-dialog-card label { display: grid; gap: 6px; font-size: 14px; font-weight: 650; }
+.david-blocknote-dialog-card :is(input, textarea) { width: 100%; box-sizing: border-box; padding: 9px 10px; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 7px; background: var(--editor-surface, #fff); color: inherit; font: 400 14px/1.55 var(--editor-font-family); }
+.david-blocknote-dialog-card textarea { min-height: 160px; resize: vertical; }
+.david-blocknote-dialog-card button { min-height: 36px; padding: 0 14px; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 7px; background: var(--toolbar-bg, #fff); color: inherit; cursor: pointer; font: inherit; }
+.david-blocknote-dialog-card footer button[type="submit"] { border-color: var(--toolbar-accent, #c8654b); background: var(--toolbar-accent, #c8654b); color: #fff; }
+.david-blocknote-dialog-card :is(button, input, textarea):focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
+.david-blocknote-dialog-error { min-height: 1.3em; margin: -4px 0 0; color: #b42318; font-size: 13px; }
+.tiptap-editor-shell { position: relative; width: min(920px, 100%); min-height: 100%; margin: 0 auto; padding: 38px 28px 72px; }
 .tiptap-editor-toolbar {
-    position: sticky; top: -18px; z-index: 5; display: flex; align-items: center; gap: 3px;
-    min-height: 42px; margin: -18px -28px 30px; padding: 8px 28px; overflow-x: auto;
-    border-bottom: 1px solid color-mix(in srgb, var(--toolbar-border, #d0d7de) 80%, transparent);
-    background: color-mix(in srgb, var(--editor-surface, #fff) 92%, transparent); backdrop-filter: blur(14px);
-    scrollbar-width: none;
+    position: absolute; top: 10px; right: 28px; z-index: 5; display: flex; align-items: center; gap: 2px;
+    padding: 3px; border: 1px solid color-mix(in srgb, var(--toolbar-border, #d0d7de) 85%, transparent); border-radius: 9px;
+    background: color-mix(in srgb, var(--editor-surface, #fff) 94%, transparent); box-shadow: 0 3px 14px rgba(15, 23, 42, .08);
+    backdrop-filter: blur(14px); scrollbar-width: none;
 }
 .tiptap-editor-toolbar::-webkit-scrollbar { display: none; }
 .tiptap-toolbar-button, .tiptap-insert-menu {
-    flex: 0 0 auto; min-width: 30px; height: 30px; padding: 0 7px; border: 1px solid transparent; border-radius: 6px;
+    flex: 0 0 auto; min-width: 36px; height: 36px; padding: 0 8px; border: 1px solid transparent; border-radius: 7px;
     background: transparent; color: var(--text-color, #24292f); font: 600 13px/1 var(--editor-font-family); cursor: pointer;
 }
 .tiptap-toolbar-button:hover, .tiptap-toolbar-button:focus-visible, .tiptap-toolbar-button.is-active,
 .tiptap-insert-menu:hover, .tiptap-insert-menu:focus-visible { border-color: var(--toolbar-border, #d0d7de); background: var(--toolbar-bg-hover, #f0f2f4); color: var(--toolbar-accent, #c8654b); }
 .tiptap-toolbar-button:focus-visible, .tiptap-insert-menu:focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 1px; }
+.tiptap-editor-toolbar [data-command="openBlockMenu"] { width: auto; min-width: 36px; padding: 0 10px; font-size: 20px; font-weight: 400; }
 .tiptap-insert-menu { width: auto; min-width: 72px; font-weight: 500; }
 .tiptap-editor-canvas { min-height: calc(100vh - 220px); cursor: text; }
 .tiptap-editor-canvas .ProseMirror { min-height: inherit; outline: none; color: var(--text-color, #24292f); font: 17px/1.8 var(--editor-font-family); }
@@ -238,6 +264,59 @@ export const getEditorCss = () => `
 .tiptap-editor-canvas .ProseMirror h3 { font-size: 1.34em; }
 .tiptap-editor-canvas .ProseMirror p { margin: .62em 0; }
 .tiptap-editor-canvas .ProseMirror :is(ul, ol) { padding-left: 1.55em; }
+
+.tiptap-dialog {
+    position: fixed;
+    inset: 0;
+    z-index: 1300;
+    display: grid;
+    place-items: center;
+    padding: 16px;
+}
+.tiptap-dialog[hidden] { display: none; }
+.tiptap-dialog-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .48); backdrop-filter: blur(3px); }
+.tiptap-dialog-content {
+    position: relative;
+    z-index: 1;
+    width: min(560px, 100%);
+    max-height: min(720px, calc(100dvh - 32px));
+    overflow: auto;
+    display: grid;
+    gap: 14px;
+    padding: 20px;
+    box-sizing: border-box;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 14px;
+    background: var(--editor-surface, #fff);
+    color: var(--text-color, #24292f);
+    box-shadow: 0 24px 70px rgba(15, 23, 42, .3);
+}
+.tiptap-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.tiptap-dialog-header h2 { margin: 0; font-size: 18px; }
+.tiptap-dialog-close, .tiptap-dialog-cancel, .tiptap-dialog-submit {
+    min-height: 36px;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 7px;
+    background: var(--toolbar-bg, #fff);
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+}
+.tiptap-dialog-close { width: 36px; font-size: 22px; line-height: 1; }
+.tiptap-dialog-submit { border-color: var(--toolbar-accent, #c8654b); background: var(--toolbar-accent, #c8654b); color: #fff; padding: 0 14px; }
+.tiptap-dialog-cancel { padding: 0 14px; }
+.tiptap-dialog :is(button, input, textarea):focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
+.tiptap-dialog-help { margin: -4px 0 0; color: var(--toolbar-muted, #57606a); font-size: 13px; line-height: 1.55; }
+.tiptap-dialog-field { display: grid; gap: 6px; font-size: 14px; font-weight: 650; }
+.tiptap-dialog-field input, .tiptap-dialog-field textarea {
+    width: 100%; box-sizing: border-box; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 7px;
+    padding: 9px 10px; background: var(--editor-surface, #fff); color: inherit; font: 400 14px/1.55 var(--editor-font-family, inherit);
+}
+.tiptap-dialog-field textarea { resize: vertical; min-height: 150px; }
+.tiptap-dialog-error { min-height: 1.3em; margin: -4px 0 0; color: #b42318; font-size: 13px; }
+.tiptap-dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.tiptap-embed-edit { margin-left: auto; }
+.tiptap-embed-card-header .tiptap-toolbar-button { min-width: 32px; height: 32px; }
 .tiptap-editor-canvas .ProseMirror li p { margin: .25em 0; }
 .tiptap-editor-canvas .ProseMirror blockquote { margin: 1em 0; padding-left: 1em; border-left: 3px solid var(--toolbar-accent, #c8654b); color: var(--toolbar-muted, #57606a); }
 .tiptap-editor-canvas .ProseMirror pre { margin: 1em 0; padding: 14px 16px; overflow-x: auto; border-radius: 8px; background: #20212b; color: #eef0f3; font: 13px/1.65 var(--editor-font-family); }
@@ -253,23 +332,36 @@ export const getEditorCss = () => `
 .tiptap-embed-preview { display: grid; min-height: 52px; place-items: start; padding: 12px; color: var(--toolbar-muted, #57606a); font-size: 13px; }
 .tiptap-embed-preview img { display: block; max-width: 100%; max-height: 360px; border-radius: 5px; }
 .tiptap-embed-preview pre { width: 100%; margin: 0; white-space: pre-wrap; font: 12px/1.5 var(--editor-font-family); }
-.tiptap-slash-menu { position: absolute; z-index: 10; left: 28px; bottom: 28px; display: grid; width: min(340px, calc(100% - 56px)); max-height: 330px; padding: 6px; overflow-y: auto; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 10px; background: var(--status-control-bg, #fff); box-shadow: 0 14px 35px rgba(0, 0, 0, .16); }
+.tiptap-slash-menu, .tiptap-block-menu { position: fixed; z-index: 20; display: grid; width: min(340px, calc(100vw - 24px)); max-height: min(360px, calc(100dvh - 24px)); padding: 6px; overflow-y: auto; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 10px; background: var(--status-control-bg, #fff); box-shadow: 0 14px 35px rgba(0, 0, 0, .16); }
+.tiptap-slash-menu[hidden], .tiptap-block-menu[hidden] { display: none; }
 .tiptap-slash-item { display: grid; gap: 2px; padding: 9px 10px; border: 0; border-radius: 7px; background: transparent; color: inherit; text-align: left; cursor: pointer; }
 .tiptap-slash-item:hover, .tiptap-slash-item:focus-visible { background: var(--toolbar-bg-hover, #f0f2f4); outline: none; }
 .tiptap-slash-item small { color: var(--toolbar-muted, #57606a); }
-.tiptap-bubble-menu { display: flex; gap: 3px; padding: 5px; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 8px; background: var(--status-control-bg, #fff); box-shadow: 0 8px 20px rgba(0, 0, 0, .15); }
-.david888-drag-handle { display: grid; width: 24px; height: 28px; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--toolbar-muted, #57606a); cursor: grab; font-size: 19px; line-height: 1; }
-.david888-drag-handle:hover { background: var(--toolbar-bg-hover, #f0f2f4); color: var(--toolbar-accent, #c8654b); }
+.tiptap-bubble-menu { display: flex; width: max-content; max-width: calc(100vw - 24px); gap: 3px; padding: 5px; border: 1px solid var(--toolbar-border, #d0d7de); border-radius: 8px; background: var(--status-control-bg, #fff); box-shadow: 0 8px 20px rgba(0, 0, 0, .15); white-space: nowrap; }
+.tiptap-block-handle { display: flex; align-items: center; gap: 1px; padding: 2px; border-radius: 7px; background: var(--editor-surface, #fff); box-shadow: 0 2px 9px rgba(15, 23, 42, .12); }
+.tiptap-add-block, .david888-drag-handle { display: grid; width: 26px; height: 28px; place-items: center; border: 0; border-radius: 5px; background: transparent; color: var(--toolbar-muted, #57606a); font-size: 19px; line-height: 1; }
+.tiptap-add-block { cursor: pointer; font-size: 22px; font-weight: 300; }
+.david888-drag-handle { cursor: grab; }
+.tiptap-add-block:hover, .tiptap-add-block:focus-visible, .david888-drag-handle:hover { background: var(--toolbar-bg-hover, #f0f2f4); color: var(--toolbar-accent, #c8654b); outline: none; }
 .david888-drag-handle:active { cursor: grabbing; }
 
 @media (max-width: 640px) {
-    .tiptap-editor-shell { padding: 12px 16px 48px; }
-    .tiptap-editor-toolbar { top: -12px; margin: -12px -16px 22px; padding: 7px 16px; }
+    .tiptap-toolbar-button, .tiptap-insert-menu { min-width: 40px; height: 40px; }
+    .tiptap-dialog { padding: 12px; align-items: end; }
+    .tiptap-dialog-content { width: 100%; max-height: min(82dvh, calc(100dvh - 24px)); border-radius: 16px; padding: 18px; }
+    .tiptap-dialog-close, .tiptap-dialog-cancel, .tiptap-dialog-submit { min-height: 44px; }
+    .tiptap-editor-shell { padding: 46px 16px 48px; }
+    .tiptap-editor-toolbar { top: 8px; right: 16px; }
     .tiptap-editor-canvas .ProseMirror { font-size: 16px; }
     .tiptap-editor-canvas .ProseMirror h1 { font-size: 1.9em; }
-    .tiptap-slash-menu { position: fixed; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); left: 12px; width: auto; }
-    .david888-drag-handle { display: none !important; }
+    .tiptap-slash-menu, .tiptap-block-menu { right: 12px; left: 12px !important; width: auto; }
+    .tiptap-block-handle { display: none !important; }
     .tiptap-bubble-menu { max-width: calc(100vw - 24px); overflow-x: auto; }
+    .david-blocknote-view.bn-mantine { padding: 22px 16px 54px; }
+    .david-blocknote-view .bn-editor { min-height: calc(100vh - 190px); font-size: 16px; }
+    .david-blocknote-dialog { align-items: end; padding: 12px; }
+    .david-blocknote-dialog-card { max-height: min(82dvh, calc(100dvh - 24px)); padding: 18px; border-radius: 16px; }
+    .david-blocknote-dialog-card button { min-height: 44px; }
 }
 
 .editor-status {

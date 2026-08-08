@@ -61,7 +61,7 @@ export const resolveInitialPreviewDevice = ({
 const PUBLISH_NUDGE_MODAL = lang => {
     const t = getLangText(lang)
     return `
-    <div class="modal publish-nudge-modal" role="dialog" aria-modal="true" aria-labelledby="publish-nudge-title">
+    <div class="modal publish-nudge-modal" role="dialog" aria-modal="true" aria-labelledby="publish-nudge-title" aria-hidden="true">
         <div class="modal-mask"></div>
         <div class="publish-nudge-content">
             <button type="button" class="close-btn publish-nudge-close" aria-label="${escapeHtml(t.later)}">x</button>
@@ -223,6 +223,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="twitter:description" content="${escapeHtml(pageDescription)}" />
     <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/styles/webawesome.css" />
     ${annotationsUiEnabled ? '<link rel="stylesheet" href="/css/share-annotations.css" />' : ''}
+    ${isEdit && isBlockDocument ? '<link rel="stylesheet" href="/js/block-editor.bundle.css" />' : ''}
     <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
@@ -860,6 +861,48 @@ ${getMarkdownCss()}
         return (APP_STATE.i18n && APP_STATE.i18n[key]) || key
     }
 
+    const modalFocusState = new WeakMap()
+    const getModalFocusableElements = modal => [...modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+        .filter(element => !element.hidden && !element.closest('[hidden]'))
+    const openModal = (modal, { initialFocus = null, trigger = document.activeElement } = {}) => {
+        if (!modal) return
+        const previousState = modalFocusState.get(modal)
+        if (previousState?.onKeyDown) modal.removeEventListener('keydown', previousState.onKeyDown)
+        if (previousState?.focusTimer) window.clearTimeout(previousState.focusTimer)
+        const onKeyDown = event => {
+            if (event.key !== 'Tab') return
+            const focusable = getModalFocusableElements(modal)
+            if (!focusable.length) return
+            const first = focusable[0]
+            const last = focusable.at(-1)
+            if (event.shiftKey && document.activeElement === first) {
+                event.preventDefault()
+                last.focus()
+            } else if (!event.shiftKey && document.activeElement === last) {
+                event.preventDefault()
+                first.focus()
+            }
+        }
+        const state = { trigger, onKeyDown, focusTimer: null }
+        modalFocusState.set(modal, state)
+        modal.style.display = 'block'
+        modal.setAttribute('aria-hidden', 'false')
+        modal.addEventListener('keydown', onKeyDown)
+        state.focusTimer = window.setTimeout(() => {
+            if (modalFocusState.get(modal) === state) (initialFocus || getModalFocusableElements(modal)[0])?.focus()
+        }, 0)
+    }
+    const closeModal = (modal, { restoreFocus = true } = {}) => {
+        if (!modal) return
+        const state = modalFocusState.get(modal)
+        if (state?.onKeyDown) modal.removeEventListener('keydown', state.onKeyDown)
+        if (state?.focusTimer) window.clearTimeout(state.focusTimer)
+        modalFocusState.delete(modal)
+        modal.style.display = 'none'
+        modal.setAttribute('aria-hidden', 'true')
+        if (restoreFocus && state?.trigger?.isConnected) state.trigger.focus()
+    }
+
     const openAppDialog = ({ title = getI18n('err'), message = '', kind = 'info', confirm = false, cancelText, confirmText } = {}) => new Promise(resolve => {
         const modal = document.querySelector('.app-dialog-modal')
         const content = modal?.querySelector('.app-dialog-content')
@@ -880,7 +923,7 @@ ${getMarkdownCss()}
         const cleanup = result => {
             if (settled) return
             settled = true
-            modal.style.display = 'none'
+            closeModal(modal)
             confirmBtn.removeEventListener('click', onConfirm)
             cancelBtn.removeEventListener('click', onCancel)
             mask.removeEventListener('click', onCancel)
@@ -907,12 +950,11 @@ ${getMarkdownCss()}
         cancelBtn.style.display = confirm ? '' : 'none'
         cancelBtn.textContent = cancelText || getI18n('passwordCancel')
         confirmBtn.textContent = confirmText || getI18n('passwordConfirm')
-        modal.style.display = 'block'
+        openModal(modal, { initialFocus: confirm ? cancelBtn : confirmBtn })
         confirmBtn.addEventListener('click', onConfirm)
         cancelBtn.addEventListener('click', onCancel)
         mask.addEventListener('click', onCancel)
         modal.addEventListener('keydown', onKeyDown)
-        window.setTimeout(() => (confirm ? cancelBtn : confirmBtn).focus(), 0)
     })
     window.showAppDialog = openAppDialog
 
@@ -1090,7 +1132,7 @@ ${getMarkdownCss()}
         const cleanup = result => {
             if (settled) return
             settled = true
-            modal.style.display = 'none'
+            closeModal(modal)
             input.value = ''
             input.removeEventListener('keydown', onKeyDown)
             form.removeEventListener('submit', onSubmit)
@@ -1131,13 +1173,12 @@ ${getMarkdownCss()}
             messageNode.textContent = allowEmpty ? getI18n('enpw') : getI18n('pepw')
         }
         input.value = initialValue
-        modal.style.display = 'block'
+        openModal(modal, { initialFocus: input })
         input.addEventListener('keydown', onKeyDown)
         form.addEventListener('submit', onSubmit)
         cancelBtn.addEventListener('click', onCancel)
         closeBtn.addEventListener('click', onCancel)
         mask.addEventListener('click', onCancel)
-        window.setTimeout(() => input.focus(), 0)
     })
 
     const passwdPrompt = async () => {
@@ -1272,12 +1313,12 @@ ${getMarkdownCss()}
         }
 
         const open = () => {
-            modal.style.display = 'block'
+            openModal(modal, { initialFocus: closeBtn || tabs[0] || openBtn, trigger: openBtn })
             openBtn.setAttribute('aria-expanded', 'true')
             render()
         }
         const close = () => {
-            modal.style.display = 'none'
+            closeModal(modal)
             openBtn.setAttribute('aria-expanded', 'false')
         }
 
@@ -1483,12 +1524,12 @@ ${getMarkdownCss()}
         }
 
         const open = () => {
-            modal.style.display = 'block'
+            openModal(modal, { initialFocus: closeBtn || refreshBtn || openBtn, trigger: openBtn })
             openBtn.setAttribute('aria-expanded', 'true')
             refreshHistory()
         }
         const close = () => {
-            modal.style.display = 'none'
+            closeModal(modal)
             openBtn.setAttribute('aria-expanded', 'false')
         }
 
@@ -2106,7 +2147,7 @@ ${getMarkdownCss()}
             const cleanup = (choice) => {
                 if (settled) return
                 settled = true
-                modal.style.display = 'none'
+                closeModal(modal)
                 cancelBtn.removeEventListener('click', onCancel)
                 insertBtn.removeEventListener('click', onInsert)
                 replaceBtn.removeEventListener('click', onReplace)
@@ -2125,13 +2166,12 @@ ${getMarkdownCss()}
                 }
             }
 
-            modal.style.display = 'block'
+            openModal(modal, { initialFocus: replaceBtn })
             cancelBtn.addEventListener('click', onCancel)
             insertBtn.addEventListener('click', onInsert)
             replaceBtn.addEventListener('click', onReplace)
             mask.addEventListener('click', onCancel)
             modal.addEventListener('keydown', onKeyDown)
-            window.setTimeout(() => replaceBtn.focus(), 0)
         })
 
         const $dropdownImportDocBtn = document.querySelector('#dropdown-import-doc-btn')
@@ -2439,7 +2479,7 @@ ${getMarkdownCss()}
         }
 
         const closePublishNudge = () => {
-            if ($publishNudgeModal) $publishNudgeModal.style.display = 'none';
+            if ($publishNudgeModal) closeModal($publishNudgeModal);
         }
 
         const syncPublishPreferenceDependencies = () => {
@@ -2460,8 +2500,7 @@ ${getMarkdownCss()}
                 input.checked = preferences[input.dataset.publishPreference] !== false
             })
             syncPublishPreferenceDependencies()
-            $publishNudgeModal.style.display = 'block';
-            if ($publishNudgePublish) $publishNudgePublish.focus();
+            openModal($publishNudgeModal, { initialFocus: $publishNudgePublish });
         }
 
         const readPublishPreferencesFromDialog = () => {
@@ -2731,11 +2770,10 @@ ${getMarkdownCss()}
                 embedUrl.hash = '';
                 return '<iframe src="' + embedUrl.toString() + '" title="' + (APP_STATE.title || 'Shared note') + '" width="100%" height="600" frameborder="0" loading="lazy"></iframe>';
             };
-            const closeEmbedModal = () => { $embedModal.style.display = 'none'; };
+            const closeEmbedModal = () => { closeModal($embedModal); };
             $copyEmbedCodeBtn.addEventListener('click', () => {
                 $embedModalCode.value = getEmbedCode();
-                $embedModal.style.display = 'block';
-                $embedModalCode.focus();
+                openModal($embedModal, { initialFocus: $embedModalCode, trigger: $copyEmbedCodeBtn });
                 $embedModalCode.select();
             });
             $embedModalCopyBtn?.addEventListener('click', async () => {
@@ -2875,12 +2913,12 @@ ${getMarkdownCss()}
         }
 
         if ($shareModal) {
-            $closeBtn.onclick = function () { $shareModal.style.display = 'none' }
+            $closeBtn.onclick = function () { closeModal($shareModal) }
             $copyBtn.onclick = function () {
                 clipboardCopy($shareInput.value)
                 const originText = $copyBtn.innerHTML; const originColor = $copyBtn.style.background;
                 $copyBtn.innerHTML = getI18n('copied'); $copyBtn.style.background = 'orange';
-                window.setTimeout(() => { $shareModal.style.display = 'none'; $copyBtn.innerHTML = originText; $copyBtn.style.background = originColor; }, 1500)
+                window.setTimeout(() => { closeModal($shareModal); $copyBtn.innerHTML = originText; $copyBtn.style.background = originColor; }, 1500)
             }
         }
 

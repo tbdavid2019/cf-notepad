@@ -1,0 +1,204 @@
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { createRoot } from 'react-dom/client'
+import { BlockNoteSchema } from '@blocknote/core'
+import { filterSuggestionItems, insertOrUpdateBlockForSlashMenu } from '@blocknote/core/extensions'
+import { BlockNoteView } from '@blocknote/mantine'
+import { SuggestionMenuController, createReactBlockSpec, getDefaultReactSlashMenuItems, useCreateBlockNote } from '@blocknote/react'
+import '@blocknote/mantine/style.css'
+import { blockNoteToTiptapDocument, tiptapToBlockNoteDocument } from '../../src/blocknote_document.mjs'
+
+const root = document.querySelector('#block-editor')
+const source = document.querySelector('#contents')
+if (!root || !source) throw new Error('BlockNote editor requires #block-editor and #contents')
+
+const EMBED_KINDS = {
+    youtube: { title: 'YouTube', detail: '嵌入 YouTube 影片', icon: '▶' },
+    pdf: { title: 'PDF', detail: '嵌入 PDF 文件', icon: 'PDF' },
+    file: { title: '附件連結', detail: '插入檔案網址', icon: '↗' },
+    mermaid: { title: 'Mermaid', detail: '插入流程圖', icon: '◇' },
+    echarts: { title: 'ECharts', detail: '插入互動圖表', icon: '▥' },
+    raw: { title: 'HTML 原始碼', detail: '以安全文字保留 HTML', icon: '</>' },
+    slideBreak: { title: '簡報換頁', detail: '開始下一張投影片', icon: '—' },
+}
+
+const EMBED_PROP_SCHEMA = {
+    kind: { default: 'file', values: ['image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak'] },
+    url: { default: '' }, title: { default: '' }, name: { default: '' }, alt: { default: '' }, src: { default: '' },
+    source: { default: '' }, optionJson: { default: '' }, content: { default: '' }, mimeType: { default: '' }, width: { default: '' },
+}
+
+const DavidEmbed = createReactBlockSpec({
+    type: 'davidEmbed',
+    propSchema: EMBED_PROP_SCHEMA,
+    content: 'none',
+}, {
+    render: ({ block }) => {
+        const props = block.props
+        const kind = props.kind || 'file'
+        const label = EMBED_KINDS[kind]?.title || (kind === 'image' ? '圖片' : '嵌入內容')
+        const preview = kind === 'image' && props.src
+            ? <img src={props.src} alt={props.alt || ''} />
+            : kind === 'youtube' && props.url
+                ? <span>{props.title || props.url}</span>
+                : kind === 'pdf' && props.url
+                    ? <span>{props.title || props.url}</span>
+                    : kind === 'mermaid'
+                        ? <pre>{props.source}</pre>
+                        : kind === 'echarts'
+                            ? <pre>{props.optionJson}</pre>
+                            : kind === 'raw'
+                                ? <pre>{props.content}</pre>
+                                : <span>{props.title || props.name || props.url || '尚未設定內容'}</span>
+        return <section className="david-blocknote-embed" data-kind={kind} contentEditable={false}>
+            <header><strong>{label}</strong><button type="button" onClick={() => window.dispatchEvent(new CustomEvent('david-blocknote-edit', { detail: { block } }))}>編輯</button></header>
+            <div className="david-blocknote-embed-preview">{preview}</div>
+        </section>
+    },
+})
+
+const schema = BlockNoteSchema.create().extend({ blockSpecs: { davidEmbed: DavidEmbed() } })
+
+const safeHttpUrl = value => {
+    try {
+        const url = new URL(String(value || '').trim())
+        return url.protocol === 'https:' || url.protocol === 'http:'
+    } catch {
+        return false
+    }
+}
+
+async function uploadFile(file) {
+    if (file.type.startsWith('image/')) {
+        const form = new FormData()
+        form.append('image', file)
+        const response = await fetch('/upload', { method: 'POST', body: form })
+        const payload = await response.json()
+        if (!response.ok || payload?.err !== 0 || !payload?.data) throw new Error(payload?.msg || '圖片上傳失敗')
+        return payload.data
+    }
+    let lastError
+    for (const endpoint of ['https://box.david888.com/api.php?action=upload', 'https://box.aiurl.tw/api.php?action=upload', 'https://box.glsoft.ai/api.php?action=upload']) {
+        try {
+            const form = new FormData()
+            form.append('file', file)
+            const response = await fetch(endpoint, { method: 'POST', body: form })
+            const payload = await response.json()
+            const url = payload?.url || payload?.data?.url
+            if (!response.ok || payload?.result !== 'success' || !url) throw new Error(payload?.message || '附件上傳失敗')
+            return url
+        } catch (error) {
+            lastError = error
+        }
+    }
+    throw lastError || new Error('附件上傳失敗')
+}
+
+function EmbedDialog({ state, editor, onClose }) {
+    const [error, setError] = useState('')
+    const [draft, setDraft] = useState(() => ({ ...state.block?.props, kind: state.kind }))
+    const cardRef = useRef(null)
+    const kind = state.kind
+    const label = EMBED_KINDS[kind]?.title || kind
+    const isCode = ['mermaid', 'echarts', 'raw'].includes(kind)
+
+    useEffect(() => {
+        const card = cardRef.current
+        const previousFocus = document.activeElement
+        const focusable = () => [...card?.querySelectorAll('button:not([disabled]), input:not([disabled]), textarea:not([disabled])') || []]
+        const first = focusable()[0]
+        first?.focus()
+        const onKeyDown = event => {
+            if (event.key === 'Escape') { event.preventDefault(); onClose(); return }
+            if (event.key !== 'Tab') return
+            const items = focusable()
+            if (!items.length) return
+            if (event.shiftKey && document.activeElement === items[0]) { event.preventDefault(); items.at(-1).focus() }
+            else if (!event.shiftKey && document.activeElement === items.at(-1)) { event.preventDefault(); items[0].focus() }
+        }
+        card?.addEventListener('keydown', onKeyDown)
+        return () => {
+            card?.removeEventListener('keydown', onKeyDown)
+            if (previousFocus?.isConnected) previousFocus.focus()
+        }
+    }, [onClose])
+
+    const submit = event => {
+        event.preventDefault()
+        const value = isCode ? String(draft.source || draft.optionJson || draft.content || '').trim() : String(draft.url || '').trim()
+        if (!isCode && kind !== 'slideBreak' && !safeHttpUrl(value)) return setError('請輸入有效的 http 或 https 網址。')
+        if (kind === 'mermaid' && !String(draft.source || '').trim()) return setError('Mermaid 語法不可空白。')
+        if (kind === 'raw' && !String(draft.content || '').trim()) return setError('HTML 原始碼不可空白。')
+        if (kind === 'echarts') {
+            try {
+                const option = JSON.parse(draft.optionJson || '')
+                if (!option || Array.isArray(option) || typeof option !== 'object') throw new Error('invalid')
+            } catch { return setError('請輸入有效的 ECharts option JSON 物件。') }
+        }
+        editor.updateBlock(state.block, { props: { ...state.block.props, ...draft, kind } })
+        onClose()
+    }
+
+    return <div className="david-blocknote-dialog" role="dialog" aria-modal="true" aria-labelledby="david-blocknote-dialog-title">
+        <div className="david-blocknote-dialog-backdrop" onClick={onClose} />
+        <form ref={cardRef} className="david-blocknote-dialog-card" onSubmit={submit}>
+            <header><h2 id="david-blocknote-dialog-title">設定 {label}</h2><button type="button" onClick={onClose} aria-label="關閉">×</button></header>
+            {isCode ? <label>
+                <span>{kind === 'mermaid' ? 'Mermaid 語法' : kind === 'echarts' ? 'ECharts option JSON' : 'HTML 原始碼'}</span>
+                <textarea value={kind === 'mermaid' ? draft.source : kind === 'echarts' ? draft.optionJson : draft.content} onChange={event => setDraft(current => ({ ...current, [kind === 'mermaid' ? 'source' : kind === 'echarts' ? 'optionJson' : 'content']: event.target.value }))} rows="10" />
+            </label> : <>
+                {kind !== 'slideBreak' && <label><span>網址</span><input type="url" inputMode="url" value={draft.url || ''} onChange={event => setDraft(current => ({ ...current, url: event.target.value }))} placeholder="https://" /></label>}
+                {kind !== 'slideBreak' && <label><span>標題（可留空）</span><input value={draft.title || ''} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} /></label>}
+            </>}
+            <p className="david-blocknote-dialog-error" aria-live="polite">{error}</p>
+            <footer><button type="button" onClick={onClose}>取消</button><button type="submit">儲存</button></footer>
+        </form>
+    </div>
+}
+
+function BlockNoteEditorApp() {
+    const initialContent = useMemo(() => {
+        try { return tiptapToBlockNoteDocument(JSON.parse(source.value || '{}')) } catch { return [{ type: 'paragraph' }] }
+    }, [])
+    const [dialog, setDialog] = useState(null)
+    const editor = useCreateBlockNote({ schema, initialContent, uploadFile })
+
+    useEffect(() => {
+        const open = event => {
+            const block = event.detail?.block
+            if (block?.type === 'davidEmbed') setDialog({ kind: block.props.kind, block })
+        }
+        window.addEventListener('david-blocknote-edit', open)
+        return () => window.removeEventListener('david-blocknote-edit', open)
+    }, [])
+
+    const items = useMemo(() => [
+        ...getDefaultReactSlashMenuItems(editor),
+        ...Object.entries(EMBED_KINDS).map(([kind, definition]) => ({
+            title: definition.title,
+            subtext: definition.detail,
+            aliases: [kind, definition.title.toLowerCase()],
+            group: 'DAVID888 嵌入內容',
+            icon: <span className="david-blocknote-menu-icon">{definition.icon}</span>,
+            onItemClick: () => {
+                const block = insertOrUpdateBlockForSlashMenu(editor, { type: 'davidEmbed', props: { kind } })
+                if (kind === 'slideBreak') return
+                setDialog({ kind, block })
+            },
+        })),
+    ], [editor])
+
+    const save = () => {
+        source.value = JSON.stringify(blockNoteToTiptapDocument(editor.document))
+        source.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    return <>
+        <BlockNoteView editor={editor} theme="light" slashMenu={false} onChange={save} className="david-blocknote-view">
+            <SuggestionMenuController triggerCharacter="/" getItems={async query => filterSuggestionItems(items, query)} />
+        </BlockNoteView>
+        {dialog && <EmbedDialog state={dialog} editor={editor} onClose={() => setDialog(null)} />}
+    </>
+}
+
+const reactRoot = createRoot(root)
+reactRoot.render(<BlockNoteEditorApp />)

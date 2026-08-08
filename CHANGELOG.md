@@ -1,5 +1,32 @@
 # Changelog
 
+## [2026-08-09]
+
+### Added
+
+- **Notion-like Block Editor Dialogs**
+  - Replaced browser prompt dialogs with an in-editor, keyboard-accessible block dialog for links, image URLs, YouTube, PDFs, files, Mermaid, ECharts, and raw HTML.
+  - Added an Edit action to every embedded block, so existing media and structured blocks can be changed without deleting and recreating them.
+  - Validates HTTP(S) URLs and ECharts JSON before a block is inserted or updated.
+
+### Changed
+
+- **BlockNote Editor Migration**
+  - Replaced the hand-built Block editor UI with BlockNote's ready-made Notion-style React interface: side `+` menu, drag-and-drop controls, slash commands, floating formatting toolbar, and responsive mobile UI.
+  - Kept the persisted Tiptap block-document format as a compatibility boundary, so existing notes, Share rendering, and APIs continue to work without a data migration.
+- **Block Editor Touch Targets**
+  - Enlarged mobile editor controls and dialog actions for more reliable touch interaction.
+- **Notion-style Block Controls**
+  - Replaced the wide, always-visible formatting toolbar with a compact add/undo/redo control and a cursor-side `+` block menu.
+  - Moved slash commands next to the caret and constrained the selected-text formatting menu to its content width.
+
+### Fixed
+
+- **Modal Keyboard and Motion Accessibility**
+  - Standardized dialog semantics and hidden state across editor modals, including the mobile bottom sheet.
+  - Added focus trapping while a modal is open and returns focus to the initiating control after it closes.
+  - Added a reduced-motion mode for people who enable `prefers-reduced-motion` in their operating system or browser.
+
 ## [2026-08-06]
 
 ### Added

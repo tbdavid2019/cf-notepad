@@ -1,7 +1,7 @@
 import { build } from 'esbuild'
 
 await build({
-    entryPoints: ['static/js/block-editor.mjs'],
+    entryPoints: ['static/js/blocknote-editor.jsx'],
     bundle: true,
     format: 'esm',
     target: ['es2022'],
@@ -9,4 +9,5 @@ await build({
     sourcemap: false,
     minify: true,
     legalComments: 'none',
+    conditions: ['style'],
 })

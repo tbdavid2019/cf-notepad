@@ -21,6 +21,23 @@ test('editor inline script remains syntactically valid when AI translation is av
     assert.doesNotThrow(() => new vm.Script(editorScript[2]))
 })
 
+test('all rendered modals start hidden from assistive technology and use the shared focus manager', () => {
+    const page = HTML({
+        lang: 'zh-TW',
+        title: 'Modal test',
+        content: '# Test',
+        ext: { noteHistoryEnabled: true },
+        isEdit: true,
+        path: 'modal-test',
+    })
+
+    assert.match(page, /const modalFocusState = new WeakMap\(\)/)
+    assert.match(page, /const openModal = \(modal/)
+    assert.match(page, /const closeModal = \(modal/)
+    assert.match(page, /prefers-reduced-motion/)
+    assert.equal((page.match(/class="modal [^"]+"[^>]*aria-hidden="true"/g) || []).length >= 6, true)
+})
+
 test('publication status date formatter is hoisted before initial UI synchronization', () => {
     const page = HTML({
         lang: 'zh-TW',

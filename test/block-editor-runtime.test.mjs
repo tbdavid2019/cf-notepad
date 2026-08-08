@@ -1,72 +1,51 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { JSDOM } from 'jsdom'
+import { blockNoteToTiptapDocument, tiptapToBlockNoteDocument } from '../src/blocknote_document.mjs'
 
-test('Tiptap block editor writes structural edits back to the hidden JSON source', async () => {
-    const dom = new JSDOM('<div id="block-editor"></div><textarea id="contents">{"version":1,"blocks":[]}</textarea>', {
-        url: 'https://example.test/note',
-    })
-    const previous = {
-        window: globalThis.window,
-        document: globalThis.document,
-        Event: globalThis.Event,
-        FormData: globalThis.FormData,
+test('existing Tiptap block documents load into BlockNote without dropping formatted text or embeds', () => {
+    const source = {
+        type: 'doc',
+        content: [
+            { type: 'heading', attrs: { level: 2 }, content: [{ type: 'text', text: 'Title', marks: [{ type: 'bold' }] }] },
+            { type: 'paragraph', content: [{ type: 'text', text: 'Read ' }, { type: 'text', text: 'this', marks: [{ type: 'link', attrs: { href: 'https://example.test' } }] }] },
+            { type: 'david888Embed', attrs: { kind: 'mermaid', source: 'flowchart LR\nA-->B' } },
+        ],
     }
 
-    Object.assign(globalThis, {
-        window: dom.window,
-        document: dom.window.document,
-        Event: dom.window.Event,
-        FormData: dom.window.FormData,
-    })
-
-    try {
-        await import(`../static/js/block-editor.mjs?runtime-test=${Date.now()}`)
-        assert.ok(dom.window.document.querySelector('.ProseMirror'))
-        assert.ok(dom.window.document.querySelector('.tiptap-slash-menu'))
-        const headingButton = [...dom.window.document.querySelectorAll('.tiptap-toolbar-button')]
-            .find(button => button.dataset.command === 'heading1')
-        headingButton.click()
-
-        const saved = JSON.parse(dom.window.document.querySelector('#contents').value)
-        assert.equal(saved.type, 'doc')
-        assert.equal(saved.content[0].type, 'heading')
-        assert.equal(saved.content[0].attrs.level, 1)
-    } finally {
-        Object.assign(globalThis, previous)
-        dom.window.close()
-    }
+    const blocks = tiptapToBlockNoteDocument(source)
+    assert.equal(blocks[0].type, 'heading')
+    assert.equal(blocks[0].props.level, 2)
+    assert.equal(blocks[0].content[0].styles.bold, true)
+    assert.equal(blocks[1].content[1].type, 'link')
+    assert.equal(blocks[2].type, 'davidEmbed')
+    assert.equal(blocks[2].props.kind, 'mermaid')
 })
 
-test('Tiptap block editor moves the current top-level block with touch-safe controls', async () => {
-    const dom = new JSDOM('<div id="block-editor"></div><textarea id="contents">{"type":"doc","content":[{"type":"paragraph","content":[{"type":"text","text":"First"}]},{"type":"paragraph","content":[{"type":"text","text":"Second"}]}]}</textarea>', {
-        url: 'https://example.test/note',
+test('BlockNote edits serialize back to the existing server-rendered Tiptap block format', () => {
+    const document = blockNoteToTiptapDocument([
+        { type: 'heading', props: { level: 1 }, content: [{ type: 'text', text: 'Hello', styles: { italic: true } }] },
+        { type: 'bulletListItem', content: 'One' },
+        { type: 'bulletListItem', content: 'Two' },
+        { type: 'davidEmbed', props: { kind: 'youtube', url: 'https://youtu.be/dQw4w9WgXcQ', title: 'Video' } },
+    ])
+
+    assert.equal(document.type, 'doc')
+    assert.equal(document.content[0].type, 'heading')
+    assert.equal(document.content[0].content[0].marks[0].type, 'italic')
+    assert.equal(document.content[1].type, 'bulletList')
+    assert.equal(document.content[1].content.length, 2)
+    assert.equal(document.content[2].type, 'david888Embed')
+    assert.equal(document.content[2].attrs.kind, 'youtube')
+})
+
+test('legacy block JSON remains accepted through the existing Tiptap compatibility conversion', () => {
+    const blocks = tiptapToBlockNoteDocument({
+        version: 1,
+        blocks: [{ type: 'paragraph', props: { text: 'Legacy note' } }, { type: 'image', props: { src: 'https://example.test/image.png', alt: 'Image' } }],
     })
-    const previous = {
-        window: globalThis.window,
-        document: globalThis.document,
-        Event: globalThis.Event,
-        FormData: globalThis.FormData,
-    }
 
-    Object.assign(globalThis, {
-        window: dom.window,
-        document: dom.window.document,
-        Event: dom.window.Event,
-        FormData: dom.window.FormData,
-    })
-
-    try {
-        await import(`../static/js/block-editor.mjs?move-test=${Date.now()}`)
-        const moveDown = [...dom.window.document.querySelectorAll('.tiptap-toolbar-button')]
-            .find(button => button.dataset.command === 'moveDown')
-        moveDown.click()
-
-        const saved = JSON.parse(dom.window.document.querySelector('#contents').value)
-        assert.equal(saved.content[0].content[0].text, 'Second')
-        assert.equal(saved.content[1].content[0].text, 'First')
-    } finally {
-        Object.assign(globalThis, previous)
-        dom.window.close()
-    }
+    assert.equal(blocks[0].type, 'paragraph')
+    assert.equal(blocks[0].content[0].text, 'Legacy note')
+    assert.equal(blocks[1].type, 'davidEmbed')
+    assert.equal(blocks[1].props.kind, 'image')
 })

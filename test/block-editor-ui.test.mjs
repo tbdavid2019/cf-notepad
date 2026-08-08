@@ -20,11 +20,12 @@ test('block edit pages use a WYSIWYG block canvas instead of the Markdown split 
     assert.doesNotMatch(page, /id="import-md-btn"/)
     assert.doesNotMatch(page, /data-rail-checked-value="md"/)
     assert.match(page, /\/js\/block-editor\.bundle\.mjs/)
+    assert.match(page, /\/js\/block-editor\.bundle\.css/)
     assert.doesNotMatch(page, /\/js\/block-view\.mjs/)
 })
 
-test('block editor exposes structural blocks and both existing upload paths', () => {
-    const source = readFileSync(new URL('../static/js/block-editor.mjs', import.meta.url), 'utf8')
+test('BlockNote editor exposes structural blocks and both existing upload paths', () => {
+    const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
     assert.match(source, /slideBreak/)
     assert.match(source, /mermaid/)
     assert.match(source, /echarts/)
@@ -32,14 +33,23 @@ test('block editor exposes structural blocks and both existing upload paths', ()
     assert.match(source, /box\.david888\.com\/api\.php\?action=upload/)
 })
 
-test('Tiptap block editor uses native bubble, file-drop, and desktop drag-handle extensions', () => {
-    const source = readFileSync(new URL('../static/js/block-editor.mjs', import.meta.url), 'utf8')
+test('BlockNote editor uses the ready-made side menu, slash menu, and formatting toolbar', () => {
+    const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
 
-    assert.match(source, /@tiptap\/extension-bubble-menu/)
-    assert.match(source, /@tiptap\/extension-file-handler/)
-    assert.match(source, /@tiptap\/extension-drag-handle/)
-    assert.match(source, /tiptap-bubble-menu/)
-    assert.match(source, /david888-drag-handle/)
+    assert.match(source, /@blocknote\/mantine/)
+    assert.match(source, /BlockNoteView/)
+    assert.match(source, /SuggestionMenuController/)
+    assert.match(source, /getDefaultReactSlashMenuItems/)
+    assert.match(source, /davidEmbed/)
+})
+
+test('BlockNote editor provides editable embed cards and does not use browser prompt dialogs', () => {
+    const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
+
+    assert.match(source, /david-blocknote-dialog/)
+    assert.match(source, /david-blocknote-edit/)
+    assert.match(source, /safeHttpUrl/)
+    assert.doesNotMatch(source, /window\.prompt/)
 })
 
 test('shared block pages load dedicated Mermaid and ECharts enhancement only when needed', () => {

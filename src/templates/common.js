@@ -498,12 +498,12 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     </div>
 
     <!-- 行動版 Bottom Sheet -->
-    <div class="bottom-sheet" id="mobile-bottom-sheet">
+    <div class="bottom-sheet" id="mobile-bottom-sheet" role="dialog" aria-modal="true" aria-labelledby="mobile-bottom-sheet-title" aria-hidden="true">
         <div class="bottom-sheet-backdrop"></div>
         <div class="bottom-sheet-content">
             <div class="bottom-sheet-drag-handle"></div>
             <div class="bottom-sheet-header">
-                <h3>${lang === 'zh-TW' ? '設定與工具' : 'Settings & Tools'}</h3>
+                <h3 id="mobile-bottom-sheet-title">${lang === 'zh-TW' ? '設定與工具' : 'Settings & Tools'}</h3>
                 <button type="button" class="bottom-sheet-close-btn" aria-label="Close">
                     ${SVG_ICONS.close}
                 </button>
@@ -534,7 +534,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true
     return `
-<div class="modal share-modal">
+<div class="modal share-modal" role="dialog" aria-modal="true" aria-label="${lang === 'zh-TW' ? '分享連結' : 'Share link'}" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="modal-content">
         <span class="close-btn">x</span>
@@ -544,7 +544,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
 </div>
 </div>
-<div class="modal share-history-modal" role="dialog" aria-modal="true" aria-labelledby="share-history-title">
+<div class="modal share-history-modal" role="dialog" aria-modal="true" aria-labelledby="share-history-title" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="share-history-content">
         <button type="button" class="close-btn share-history-close" aria-label="${t.later}">x</button>
@@ -556,7 +556,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <div class="share-history-list" data-share-history-list></div>
 </div>
 </div>
-<div class="modal embed-modal" role="dialog" aria-modal="true" aria-labelledby="embed-modal-title">
+<div class="modal embed-modal" role="dialog" aria-modal="true" aria-labelledby="embed-modal-title" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="embed-modal-content">
         <button type="button" class="close-btn embed-modal-close" aria-label="${t.later}">x</button>
@@ -566,7 +566,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <button type="button" class="opt-button opt-button-accent embed-modal-copy-btn">${t.copy}</button>
     </div>
 </div>
-<div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title">
+<div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="password-modal-content">
         <form class="password-modal-form" novalidate>
@@ -581,7 +581,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </form>
     </div>
 </div>
-<div class="modal app-dialog-modal" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message">
+<div class="modal app-dialog-modal" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="app-dialog-content" data-dialog-kind="info">
         <div class="app-dialog-icon" aria-hidden="true">i</div>
@@ -595,7 +595,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
     </div>
 </div>
-<div class="modal import-options-modal" role="dialog" aria-modal="true" aria-labelledby="import-options-title" aria-describedby="import-options-message">
+<div class="modal import-options-modal" role="dialog" aria-modal="true" aria-labelledby="import-options-title" aria-describedby="import-options-message" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="app-dialog-content" data-dialog-kind="confirm">
         <div class="app-dialog-icon" aria-hidden="true">?</div>
@@ -611,7 +611,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     </div>
 </div>
 ${showNoteHistory ? `
-<div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title">
+<div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title" aria-hidden="true">
     <div class="modal-mask"></div>
     <div class="note-history-content">
         <button type="button" class="close-btn note-history-close" aria-label="${t.later}">x</button>
