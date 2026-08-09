@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, SVG_ICONS } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, URL_IMPORT_MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -408,6 +408,7 @@ ${getMarkdownCss()}
     ` : ''}
     ${MODAL(lang, { noteHistoryEnabled: ext.noteHistoryEnabled === true && isEdit })}
     ${isEmbed ? '' : EDITOR_PREFERENCE_MODAL(lang)}
+    ${URL_IMPORT_MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
@@ -2179,6 +2180,125 @@ ${getMarkdownCss()}
         if ($dropdownImportDocBtn && $importMdInput) {
             $dropdownImportDocBtn.addEventListener('click', () => {
                 $importMdInput.click()
+            })
+        }
+
+        // URL to Markdown Import Modal Handler
+        const $dropdownImportUrlBtn = document.querySelector('#dropdown-import-url-btn')
+        const $urlImportModal = document.querySelector('#url-import-modal')
+        const $urlImportMask = document.querySelector('#url-import-mask')
+        const $urlImportCloseBtn = document.querySelector('#url-import-close-btn')
+        const $urlImportCancelBtn = document.querySelector('#url-import-cancel-btn')
+        const $urlImportForm = document.querySelector('#url-import-form')
+        const $urlImportInput = document.querySelector('#url-import-input')
+        const $urlImportStatus = document.querySelector('#url-import-status')
+        const $urlImportSubmitBtn = document.querySelector('#url-import-submit-btn')
+
+        const openUrlImportModal = () => {
+            if (!$urlImportModal) return
+            $urlImportModal.style.display = 'flex'
+            $urlImportModal.setAttribute('aria-hidden', 'false')
+            if ($urlImportInput) {
+                $urlImportInput.value = ''
+                $urlImportInput.focus()
+            }
+            if ($urlImportStatus) {
+                $urlImportStatus.style.display = 'none'
+                $urlImportStatus.textContent = ''
+            }
+            if ($urlImportSubmitBtn) $urlImportSubmitBtn.disabled = false
+        }
+
+        const closeUrlImportModal = () => {
+            if (!$urlImportModal) return
+            $urlImportModal.style.display = 'none'
+            $urlImportModal.setAttribute('aria-hidden', 'true')
+        }
+
+        if ($dropdownImportUrlBtn) {
+            $dropdownImportUrlBtn.addEventListener('click', openUrlImportModal)
+        }
+        if ($urlImportMask) $urlImportMask.addEventListener('click', closeUrlImportModal)
+        if ($urlImportCloseBtn) $urlImportCloseBtn.addEventListener('click', closeUrlImportModal)
+        if ($urlImportCancelBtn) $urlImportCancelBtn.addEventListener('click', closeUrlImportModal)
+
+        if ($urlImportForm && $urlImportInput && $urlImportStatus && $urlImportSubmitBtn) {
+            $urlImportForm.addEventListener('submit', async (e) => {
+                e.preventDefault()
+                const targetUrl = $urlImportInput.value ? $urlImportInput.value.trim() : ''
+                if (!targetUrl) return
+
+                $urlImportSubmitBtn.disabled = true
+                $urlImportStatus.style.display = 'block'
+                $urlImportStatus.style.background = 'rgba(59, 130, 246, 0.1)'
+                $urlImportStatus.style.color = 'var(--text-color, #2563eb)'
+                $urlImportStatus.textContent = '⏳ 正在從網頁擷取並轉換 Markdown，請稍候...'
+
+                try {
+                    const res = await fetch('/api/url2md', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: targetUrl })
+                    })
+                    const data = await res.json().catch(() => ({}))
+
+                    if (!res.ok || data.err !== 0 || !data.data || !data.data.content) {
+                        const errMsg = (data && data.msg) ? data.msg : '網址解析失敗，請確認網址可公開存取';
+                        $urlImportStatus.style.background = 'rgba(239, 68, 68, 0.1)'
+                        $urlImportStatus.style.color = '#dc2626'
+                        $urlImportStatus.textContent = '❌ ' + errMsg
+                        $urlImportSubmitBtn.disabled = false
+                        return
+                    }
+
+                    const importedContent = data.data.content || ''
+                    const importedTitle = data.data.title || ''
+
+                    closeUrlImportModal()
+
+                    if ($textarea) {
+                        let insertMode = 'replace'
+                        if ($textarea.value && $textarea.value.trim().length > 0) {
+                            insertMode = await showImportOptionDialog()
+                        }
+                        if (insertMode === 'cancel') return
+
+                        if (insertMode === 'insert') {
+                            const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length
+                            const curVal = $textarea.value
+                            $textarea.value = curVal.substring(0, startPos) + importedContent + curVal.substring(startPos)
+                        } else {
+                            $textarea.value = importedContent
+                        }
+
+                        renderPlain($previewPlain, $textarea.value)
+                        triggerRender($previewMd, $textarea.value)
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(importedTitle ? ('已成功匯入「' + importedTitle + '」') : '網頁已成功轉為 Markdown 匯入！')
+                        }
+                    } else {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast('正在建立新筆記...')
+                        }
+                        const createRes = await fetch('/api/new-note', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ content: importedContent, editorFormat: 'markdown' })
+                        })
+                        const createData = await createRes.json().catch(() => ({}))
+                        if (createData && createData.data && createData.data.url) {
+                            window.location.href = createData.data.url
+                        } else {
+                            window.location.href = '/new/markdown'
+                        }
+                    }
+                } catch (err) {
+                    $urlImportStatus.style.background = 'rgba(239, 68, 68, 0.1)'
+                    $urlImportStatus.style.color = '#dc2626'
+                    $urlImportStatus.textContent = '❌ 連線發生錯誤：' + (err ? err.message : '')
+                    $urlImportSubmitBtn.disabled = false
+                }
             })
         }
 

@@ -4,6 +4,10 @@
 
 ### Added
 
+- **URL to Markdown Web Clipper Import**
+  - Added `🌐 從網址匯入 (URL 轉 Markdown)` entry to the `＋ 新增` / `+ New` dropdown menu.
+  - Implemented high-availability 3-tier backend proxy (`/api/url2md`): Primary (`http://2md.aiurl.tw/`) with automatic Failover to Backup 1 (`https://2md.glsoft.ai/`) and Backup 2 (`https://create360.ai/`).
+  - Supports extracting article title and clean Markdown from any public web page, inserting or replacing into current editor or automatically creating a new note via `/api/new-note`.
 - **LLM Website Entry Point**
   - Added `https://wiki.david888.com/llms.txt`, a concise, canonical Markdown index for LLMs and agents.
   - Links only to public, stable discovery resources: Agent Skill, API documentation, OpenAPI, authentication guidance, API catalog, skill index, robots policy, and public sitemap.
@@ -16,6 +20,12 @@
   - Replaced browser prompt dialogs with an in-editor, keyboard-accessible block dialog for links, image URLs, YouTube, PDFs, files, Mermaid, ECharts, and raw HTML.
   - Added an Edit action to every embedded block, so existing media and structured blocks can be changed without deleting and recreating them.
   - Validates HTTP(S) URLs and ECharts JSON before a block is inserted or updated.
+
+### Fixed
+
+- **Default Editor Preference Menu Icon & Label**
+  - Fixed missing `SVG_ICONS.settings` definition which caused `undefined 編輯預設編輯器` string rendering in the dropdown menu.
+  - Clarified confusing label to **`⚙️ 設定預設編輯器模式`** (`Set Default Editor Mode`) for choosing default format (Block or Markdown).
 
 ### Changed
 

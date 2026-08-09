@@ -32,6 +32,7 @@ const THEME_OPTION_LABELS = {
 }
 
 export const SVG_ICONS = {
+    settings: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
     editLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="11" height="10" rx="2"></rect><path d="M7 10V7a3 3 0 0 1 5.5-1.7"></path><path d="m13.5 16.5 5.7-5.7a1.4 1.4 0 0 1 2 2l-5.7 5.7-3 1z"></path><path d="m17.8 12.2 2 2"></path></svg>`,
     readLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="10" width="10.5" height="10" rx="2"></rect><path d="M5.5 10V7a3 3 0 0 1 5.5-1.7"></path><path d="M14.5 14.5s2-3 4.5-3 4.5 3 4.5 3-2 3-4.5 3-4.5-3-4.5-3z"></path><circle cx="19" cy="14.5" r="1.1"></circle></svg>`,
     link: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg>`,
@@ -202,8 +203,9 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <div class="dropdown-menu" role="menu">
                                 <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
                                 <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
-                                <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '編輯預設編輯器' : 'Set default editor'}</span></button>
                                 <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importMarkdown}</span></button>
+                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${lang === 'zh-TW' ? '匯入網站' : 'Import Website'}</span></button>
+                                <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
                             </div>
                         </div>
                     </div>
@@ -568,6 +570,36 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
             <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm>${zh ? '繼續' : 'Continue'}</button>
         </div>
     </form>
+</div>`
+}
+
+export const URL_IMPORT_MODAL = (lang) => {
+    const zh = lang === 'zh-TW'
+    const title = zh ? '從網址匯入筆記 (URL 轉 Markdown)' : 'Import Note from URL'
+    const desc = zh ? '貼上任意網頁網址，系統將自動解析文章內容並轉換為乾淨的 Markdown 格式。' : 'Paste any web page URL to convert its content into clean Markdown format.'
+    const placeholder = 'https://example.com/article'
+    const cancelText = zh ? '取消' : 'Cancel'
+    const submitText = zh ? '開始擷取' : 'Fetch & Convert'
+    return `
+<div id="url-import-modal" class="modal url-import-modal" role="dialog" aria-modal="true" aria-labelledby="url-import-title" aria-hidden="true" style="display:none;">
+    <div class="modal-mask" id="url-import-mask"></div>
+    <div class="url-import-modal-content">
+        <button type="button" class="close-btn" id="url-import-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <h3 id="url-import-title" class="url-import-modal-title">
+            ${SVG_ICONS.globe} <span>${title}</span>
+        </h3>
+        <p class="url-import-modal-desc">${desc}</p>
+        <form id="url-import-form">
+            <div style="margin-bottom: 14px;">
+                <input type="url" id="url-import-input" class="url-import-input-field" placeholder="${placeholder}" required />
+            </div>
+            <div id="url-import-status" style="margin-bottom: 14px; font-size: 0.88rem; display: none; padding: 8px 12px; border-radius: 6px;"></div>
+            <div class="url-import-actions">
+                <button type="button" class="opt-button" id="url-import-cancel-btn">${cancelText}</button>
+                <button type="submit" class="opt-button opt-button-accent" id="url-import-submit-btn">${submitText}</button>
+            </div>
+        </form>
+    </div>
 </div>`
 }
 

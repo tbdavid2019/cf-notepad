@@ -221,6 +221,14 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .embed-modal-content h2 { margin: 0 0 8px; }
 .embed-modal-content p { margin: 0 0 14px; }
 .embed-modal-code { width: 100%; min-height: 110px; box-sizing: border-box; resize: vertical; margin-bottom: 12px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace; }
+.url-import-modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--toolbar-bg, var(--panel-bg, #ffffff)); color: var(--text-color, #222); border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12)); padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); z-index: 1001; width: min(520px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; }
+.url-import-modal-content .close-btn { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 22px; line-height: 1; color: var(--toolbar-muted, #888); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.url-import-modal-content .close-btn:hover { background: rgba(0, 0, 0, 0.08); color: var(--text-color, #111); }
+.url-import-modal-title { margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-color, #111); }
+.url-import-modal-desc { margin: 0 0 16px 0; font-size: 0.88rem; line-height: 1.5; color: var(--toolbar-muted, #666); }
+.url-import-input-field { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #ccc); border-radius: 8px; font-size: 0.95rem; box-sizing: border-box; background: var(--input-bg, var(--bg-color, #fff)); color: var(--text-color, inherit); outline: none; }
+.url-import-input-field:focus { border-color: var(--toolbar-accent, #2563eb); box-shadow: 0 0 0 3px color-mix(in srgb, var(--toolbar-accent, #2563eb) 20%, transparent); }
+.url-import-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
 .modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
 .share-index-prompt {
@@ -537,6 +545,7 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .dropdown-item {
     display: flex;
     align-items: center;
+    justify-content: flex-start !important;
     width: 100%;
     padding: 8px 12px;
     font-size: 13px;
@@ -547,7 +556,11 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     cursor: pointer;
     text-decoration: none;
     box-sizing: border-box;
-    gap: 6px;
+    gap: 8px;
+}
+.dropdown-item span {
+    text-align: left;
+    white-space: nowrap;
 }
 .dropdown-item:hover {
     background: var(--toolbar-bg-hover, #f5f0e8);

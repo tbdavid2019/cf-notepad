@@ -734,6 +734,168 @@ router.post('/upload', async (request) => {
     }
 })
 
+// URL to Markdown Conversion (Primary: 2md.aiurl.tw, Backup 1: 2md.glsoft.ai, Backup 2: create360.ai)
+async function processUrlToMarkdown(targetUrl) {
+    if (!targetUrl || typeof targetUrl !== 'string') {
+        return returnJSON(400, '請提供有效的 URL 網址')
+    }
+    let cleanUrl = targetUrl.trim()
+    if (!cleanUrl.startsWith('http://') && !cleanUrl.startsWith('https://')) {
+        cleanUrl = 'https://' + cleanUrl
+    }
+
+    try {
+        new URL(cleanUrl)
+    } catch (_) {
+        return returnJSON(400, '網址格式無效')
+    }
+
+    const services = [
+        { name: '2md.aiurl.tw', url: `http://2md.aiurl.tw/${cleanUrl}` },
+        { name: '2md.glsoft.ai', url: `https://2md.glsoft.ai/${cleanUrl}` },
+        { name: 'create360.ai', url: `https://create360.ai/${cleanUrl}` }
+    ]
+
+    const fetchFromService = async (serviceUrl, timeoutMs = 6000) => {
+        const controller = new AbortController()
+        const timeout = setTimeout(() => controller.abort(), timeoutMs)
+        try {
+            const res = await fetch(serviceUrl, {
+                headers: {
+                    'Accept': 'application/json, text/plain, */*',
+                    'User-Agent': 'Mozilla/5.0 (CF-Notepad-Bot)'
+                },
+                signal: controller.signal
+            })
+            clearTimeout(timeout)
+            if (!res.ok) return null
+
+            const contentType = res.headers.get('content-type') || ''
+            if (contentType.includes('application/json')) {
+                const data = await res.json().catch(() => null)
+                if (data) {
+                    const item = Array.isArray(data.data) ? data.data[0] : (data.data || data)
+                    if (item && (item.content || item.markdown)) {
+                        return {
+                            title: item.title || '',
+                            content: item.content || item.markdown || ''
+                        }
+                    }
+                }
+            }
+
+            const rawText = await res.text().catch(() => '')
+            if (rawText && rawText.trim().length > 0) {
+                let title = ''
+                let content = rawText
+
+                const titleMatch = rawText.match(/^Title:\s*(.+)$/m)
+                if (titleMatch && titleMatch[1]) {
+                    title = titleMatch[1].trim()
+                }
+
+                if (!title) {
+                    const h1Match = rawText.match(/^#\s+(.+)$/m)
+                    if (h1Match && h1Match[1]) {
+                        title = h1Match[1].trim()
+                    }
+                }
+
+                const markdownContentIndex = rawText.indexOf('Markdown Content:')
+                if (markdownContentIndex !== -1) {
+                    content = rawText.substring(markdownContentIndex + 'Markdown Content:'.length).trim()
+                } else {
+                    content = rawText
+                        .replace(/^Title:\s*.+$/m, '')
+                        .replace(/^URL Source:\s*.+$/m, '')
+                        .trim()
+                }
+
+                return { title, content }
+            }
+            return null
+        } catch (e) {
+            clearTimeout(timeout)
+            return null
+        }
+    }
+
+    let result = null
+    let serviceUsed = ''
+
+    for (const service of services) {
+        result = await fetchFromService(service.url, 6000)
+        if (result && result.content) {
+            serviceUsed = service.name
+            break
+        }
+    }
+
+    if (!result || !result.content) {
+        return returnJSON(502, '無法擷取網頁內容，請確認該網址是否公開可存取')
+    }
+
+    return returnJSON(0, {
+        title: result.title || '',
+        content: result.content,
+        sourceUrl: cleanUrl,
+        service: serviceUsed
+    })
+}
+
+router.post('/api/url2md', async (request) => {
+    try {
+        let url = ''
+        const contentType = request.headers.get('content-type') || ''
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            url = body.url || ''
+        } else {
+            const formData = await request.formData().catch(() => null)
+            url = formData ? (formData.get('url') || '') : ''
+        }
+        return await processUrlToMarkdown(url)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.get('/api/url2md', async (request) => {
+    try {
+        const requestUrl = new URL(request.url)
+        const url = requestUrl.searchParams.get('url') || ''
+        return await processUrlToMarkdown(url)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.post('/api/new-note', async (request) => {
+    try {
+        const body = await request.json().catch(() => ({}))
+        const content = body.content || ''
+        const editorFormat = body.editorFormat || 'markdown'
+        const originUrl = new URL(request.url)
+
+        for (let attempt = 0; attempt < 12; attempt += 1) {
+            const path = genRandomStr(getSlugLength())
+            const existing = await getNotesNamespace().getWithMetadata(path)
+            if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
+
+            await getNotesNamespace().put(path, content, {
+                metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined },
+            })
+
+            const nextUrl = new URL(`/${path}`, originUrl)
+            nextUrl.searchParams.set('new', '1')
+            return returnJSON(0, { path, url: nextUrl.pathname + nextUrl.search })
+        }
+        return returnJSON(533, 'Could not allocate a new note path')
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
 
 
 router.post('/share/:shareId/auth', async request => {
