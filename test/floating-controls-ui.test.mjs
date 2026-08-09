@@ -46,16 +46,19 @@ test('edit share options trigger exposes the same localized tooltip contract', (
     assert.equal(document.querySelector('#share-menu-btn')?.dataset.tooltip, '分享選項')
 })
 
-test('footer starts with a visible new-note menu for Markdown and Block formats', () => {
+test('footer provides a primary new-note action, explicit format choices, and a default-editor setting', () => {
     const document = renderFooter({ isEdit: true })
     const firstSection = document.querySelector('.footer-sections > .footer-section:first-child')
     const trigger = document.querySelector('#new-note-menu-btn')
+    const primaryLink = document.querySelector('#new-note-link')
 
     assert.equal(firstSection?.classList.contains('footer-section-create'), true)
     assert.equal(trigger?.classList.contains('dropdown-trigger'), true)
-    assert.equal(trigger?.textContent.trim(), '＋ 新增')
+    assert.equal(primaryLink?.textContent.trim(), '＋ 新增')
+    assert.equal(primaryLink?.getAttribute('href'), '/new/block')
     assert.equal(document.querySelector('#new-markdown-note-link')?.getAttribute('href'), '/new/markdown')
     assert.equal(document.querySelector('#new-block-note-link')?.getAttribute('href'), '/new/block')
+    assert.match(document.querySelector('#editor-preference-btn')?.textContent || '', /預設編輯器/)
     assert.match(baseCssSource, /@media \(max-width: 640px\)[\s\S]*\.footer-section-create \.toolbar-button-label\s*\{\s*display: none/)
 })
 

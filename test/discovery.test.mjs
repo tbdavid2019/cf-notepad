@@ -7,6 +7,7 @@ import {
     API_DOCS_MARKDOWN,
     AUTH_MD_MARKDOWN,
     applyDiscoveryHeaders,
+    buildLlmsTxt,
     buildMarkdownDocument,
     buildAgentSkillsIndex,
     buildApiCatalog,
@@ -28,12 +29,25 @@ test('robots.txt publishes explicit crawler rules for discovery and AI agents', 
     assert.match(robots, /Sitemap: https:\/\/example\.com\/sitemap\.xml/)
     assert.match(robots, /Allow: \/\.well-known\/api-catalog/)
     assert.match(robots, /Allow: \/\.well-known\/agent-skills\//)
+    assert.match(robots, /Allow: \/llms\.txt/)
     assert.match(robots, /Content-Signal: ai-train=no, search=yes, ai-input=no/)
     assert.match(robots, /Disallow: \/api\//)
     assert.match(robots, /User-agent: GPTBot/)
     assert.match(robots, /User-agent: OAI-SearchBot/)
     assert.match(robots, /User-agent: Claude-Web/)
     assert.match(robots, /User-agent: Google-Extended/)
+})
+
+test('llms.txt is a concise canonical index of public agent resources', () => {
+    const llms = buildLlmsTxt('https://wiki.david888.com')
+
+    assert.match(llms, /^# DAVID888 WIKI/m)
+    assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/agent-skills\/david888-wiki-publisher\/SKILL\.md/)
+    assert.match(llms, /https:\/\/wiki\.david888\.com\/docs\/api/)
+    assert.match(llms, /https:\/\/wiki\.david888\.com\/openapi\.json/)
+    assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/api-catalog/)
+    assert.match(llms, /public share URL/i)
+    assert.doesNotMatch(llms, /admin333|SCN_ADMIN|password=/i)
 })
 
 test('sitemap xml includes canonical share URLs and optional lastmod dates', () => {
@@ -134,6 +148,8 @@ test('discovery headers expose api catalog and API docs links', () => {
 test('worker registers discovery routes before dynamic note routes', () => {
     assert.match(indexSource, /router\.get\('\/robots\.txt'/)
     assert.match(indexSource, /router\.head\('\/robots\.txt'/)
+    assert.match(indexSource, /router\.get\(LLMS_TXT_PATH/)
+    assert.match(indexSource, /router\.head\(LLMS_TXT_PATH/)
     assert.match(indexSource, /router\.get\('\/sitemap\.xml'/)
     assert.match(indexSource, /router\.head\('\/sitemap\.xml'/)
     assert.match(indexSource, /router\.get\(API_CATALOG_PATH/)

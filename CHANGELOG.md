@@ -4,6 +4,14 @@
 
 ### Added
 
+- **LLM Website Entry Point**
+  - Added `https://wiki.david888.com/llms.txt`, a concise, canonical Markdown index for LLMs and agents.
+  - Links only to public, stable discovery resources: Agent Skill, API documentation, OpenAPI, authentication guidance, API catalog, skill index, robots policy, and public sitemap.
+- **New-note Editor Preference**
+  - First-time visitors choose Block or Markdown for new notes, with Block selected by default.
+  - The choice can be remembered across visits or retained only for the current browser session.
+  - The footer `＋ 新增` action now creates a note with the preferred editor, while its adjacent menu keeps explicit format choices and a preference setting.
+
 - **Notion-like Block Editor Dialogs**
   - Replaced browser prompt dialogs with an in-editor, keyboard-accessible block dialog for links, image URLs, YouTube, PDFs, files, Mermaid, ECharts, and raw HTML.
   - Added an Edit action to every embedded block, so existing media and structured blocks can be changed without deleting and recreating them.
@@ -21,6 +29,10 @@
   - Moved slash commands next to the caret and constrained the selected-text formatting menu to its content width.
 
 ### Fixed
+
+- **BlockNote Dark-mode Synchronization**
+  - BlockNote now follows the site’s light, dark, and automatic theme settings immediately, including system theme changes.
+  - Removed the forced light theme and the editor surface override that prevented BlockNote’s native dark palette from rendering.
 
 - **Modal Keyboard and Motion Accessibility**
   - Standardized dialog semantics and hidden state across editor modals, including the mobile bottom sheet.

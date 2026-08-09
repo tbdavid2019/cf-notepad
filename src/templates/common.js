@@ -191,14 +191,20 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
         <div class="footer-sections">
             <div class="footer-section footer-section-create">
                 <div class="footer-section-body">
-                    <div class="dropdown-container new-note-dropdown">
-                        <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
+                    <div class="new-note-actions">
+                        <a id="new-note-link" class="toolbar-icon-button new-note-primary-link" href="/new/block" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}">
                             <span class="new-note-plus" aria-hidden="true">＋</span> <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
-                        </button>
-                        <div class="dropdown-menu" role="menu">
-                            <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
-                            <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
-                            <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importMarkdown}</span></button>
+                        </a>
+                        <div class="dropdown-container new-note-dropdown">
+                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" title="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" aria-label="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" aria-haspopup="menu" aria-expanded="false">
+                                <span aria-hidden="true">▾</span>
+                            </button>
+                            <div class="dropdown-menu" role="menu">
+                                <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
+                                <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
+                                <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '編輯預設編輯器' : 'Set default editor'}</span></button>
+                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importMarkdown}</span></button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -528,6 +534,41 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     <!-- Toast 通知容器 -->
     <div id="toast-container"></div>
 `
+}
+
+export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
+    const zh = lang === 'zh-TW'
+    const title = zh ? '選擇你的編輯方式' : 'Choose your editor'
+    const description = zh ? '這只會決定新筆記的預設方式，不會變更既有筆記。' : 'This sets the default for new notes only. Existing notes are never converted.'
+    const blockTitle = zh ? 'Block editor' : 'Block editor'
+    const blockDescription = zh ? '視覺化排版、拖拉區塊與斜線指令。' : 'Visual writing with blocks, drag handles, and slash commands.'
+    const markdownTitle = zh ? 'Markdown editor' : 'Markdown editor'
+    const markdownDescription = zh ? '適合熟悉 Markdown 的快速純文字編輯。' : 'Fast plain-text editing for Markdown users.'
+    return `
+<div class="modal editor-preference-modal" role="dialog" aria-modal="true" aria-labelledby="editor-preference-title" aria-describedby="editor-preference-description" aria-hidden="true" data-editor-preference-dialog${autoOpen ? ' data-editor-preference-auto-open="true"' : ''}>
+    <div class="modal-mask" data-editor-preference-close></div>
+    <form class="editor-preference-content" data-editor-preference-form>
+        ${autoOpen ? '' : `<button type="button" class="close-btn editor-preference-close" data-editor-preference-close aria-label="${zh ? '關閉' : 'Close'}">×</button>`}
+        <h2 id="editor-preference-title">${title}</h2>
+        <p id="editor-preference-description">${description}</p>
+        <fieldset class="editor-preference-options">
+            <legend class="sr-only">${title}</legend>
+            <label class="editor-preference-option is-selected">
+                <input type="radio" name="editor-format" value="block" checked>
+                <span><strong>${blockTitle}</strong><small>${blockDescription}</small></span>
+            </label>
+            <label class="editor-preference-option">
+                <input type="radio" name="editor-format" value="markdown">
+                <span><strong>${markdownTitle}</strong><small>${markdownDescription}</small></span>
+            </label>
+        </fieldset>
+        <label class="editor-preference-remember"><input type="checkbox" data-editor-preference-remember><span>${zh ? '記住我的選擇' : 'Remember my choice'}</span></label>
+        <div class="editor-preference-actions">
+            ${autoOpen ? '' : `<button type="button" class="opt-button" data-editor-preference-close>${zh ? '取消' : 'Cancel'}</button>`}
+            <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm>${zh ? '繼續' : 'Continue'}</button>
+        </div>
+    </form>
+</div>`
 }
 
 export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {

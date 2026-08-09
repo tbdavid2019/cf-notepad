@@ -213,7 +213,8 @@ export const getEditorCss = () => `
 .block-editor-pane { background: var(--editor-surface, #fff); }
 .block-editor { width: 100%; max-width: none; padding: 0; }
 .block-editor-pane .block-editor { overflow: auto; }
-.david-blocknote-view.bn-mantine { min-height: 100%; padding: 34px clamp(20px, 6vw, 76px) 80px; background: var(--editor-surface, #fff); color: var(--text-color, #24292f); }
+.david-blocknote-app { min-height: 100%; }
+.david-blocknote-view.bn-mantine { min-height: 100%; padding: 34px clamp(20px, 6vw, 76px) 80px; background: var(--bn-colors-editor-background, var(--editor-surface, #fff)); color: var(--bn-colors-editor-text, var(--text-color, #24292f)); }
 .david-blocknote-view .bn-editor { min-height: calc(100vh - 230px); padding: 0; font-family: var(--editor-font-family); font-size: 17px; line-height: 1.8; }
 .david-blocknote-view .bn-side-menu { z-index: 12; }
 .david-blocknote-view .bn-suggestion-menu { max-height: min(420px, calc(100dvh - 28px)); }

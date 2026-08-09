@@ -9,6 +9,7 @@ const AGENT_SKILL_PATH = `/.well-known/agent-skills/${AGENT_SKILL_NAME}/SKILL.md
 const API_CATALOG_PATH = '/.well-known/api-catalog'
 const API_DOCS_PATH = '/docs/api'
 const AUTH_MD_PATH = '/auth.md'
+const LLMS_TXT_PATH = '/llms.txt'
 const OPENAPI_PATH = '/openapi.json'
 const API_HEALTH_PATH = '/api/health'
 const AGENT_SKILLS_INDEX_PATH = '/.well-known/agent-skills/index.json'
@@ -38,6 +39,7 @@ This service exposes note publishing and reading APIs for agents.
 - API docs: \`/docs/api\`
 - OpenAPI description: \`/openapi.json\`
 - Agent skill: \`/.well-known/agent-skills/david888-wiki-publisher/SKILL.md\`
+- LLM entry point: \`/llms.txt\`
 
 ## Practical Guidance
 
@@ -45,6 +47,33 @@ This service exposes note publishing and reading APIs for agents.
 - Use the REST API for agent writes and reads.
 - If a protected note returns \`401\` or \`403\`, request the note password from the user.
 `
+
+export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
+    const siteOrigin = String(origin || 'https://wiki.david888.com').replace(/\/$/, '')
+    return `# DAVID888 WIKI
+
+> DAVID888 WIKI is a private-first wiki for creating, publishing, and sharing Markdown and Block notes.
+
+Use the Agent Skill and API documentation for programmatic access. Treat note passwords, editor URLs, and unpublished content as private. When creating or updating a public note, return its public share URL to the user rather than its edit URL.
+
+## Agent integration
+
+- [Agent Skill](${siteOrigin}${AGENT_SKILL_PATH}): Instructions for agents that read, write, publish, upload, and share notes.
+- [API documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
+- [OpenAPI description](${siteOrigin}${OPENAPI_PATH}): Machine-readable API contract.
+- [Authentication guidance](${siteOrigin}${AUTH_MD_PATH}): Note-level password access model and its limitations.
+
+## Discovery
+
+- [API catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset for API discovery.
+- [Agent Skills index](${siteOrigin}${AGENT_SKILLS_INDEX_PATH}): Published agent skill metadata.
+- [robots.txt](${siteOrigin}/robots.txt): Crawler access policy and content signals.
+
+## Optional
+
+- [Public sitemap](${siteOrigin}${SITEMAP_PATH}): Publicly indexed share pages only.
+`
+}
 
 export function getDiscoveryLinks() {
     return [
@@ -97,6 +126,7 @@ export function buildRobotsTxt(origin = '') {
         'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /llms.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -111,6 +141,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /llms.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -123,6 +154,7 @@ export function buildRobotsTxt(origin = '') {
         'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
+        'Allow: /llms.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -136,6 +168,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
+        'Allow: /llms.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -148,6 +181,7 @@ export function buildRobotsTxt(origin = '') {
         'Content-Signal: ai-train=no, search=yes, ai-input=no',
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
+        'Allow: /llms.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -468,6 +502,7 @@ export function getDiscoveryConstants() {
         API_CATALOG_PROFILE,
         API_DOCS_PATH,
         AUTH_MD_PATH,
+        LLMS_TXT_PATH,
         API_HEALTH_PATH,
         OPENAPI_PATH,
         SITEMAP_PATH,

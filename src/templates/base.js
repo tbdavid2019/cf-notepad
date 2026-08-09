@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL, SVG_ICONS } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -407,6 +407,7 @@ ${getMarkdownCss()}
     \u003c/script\u003e
     ` : ''}
     ${MODAL(lang, { noteHistoryEnabled: ext.noteHistoryEnabled === true && isEdit })}
+    ${isEmbed ? '' : EDITOR_PREFERENCE_MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
@@ -3077,6 +3078,7 @@ ${getMarkdownCss()}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
+    ${isEmbed ? '' : '<script type="module" src="/js/editor-preference.mjs"></script>'}
     ${annotationsUiEnabled ? '<script type="module" src="/js/share-annotations.mjs"></script>' : ''}
     <script>
         if ('serviceWorker' in navigator) {

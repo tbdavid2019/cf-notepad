@@ -11,6 +11,33 @@ const root = document.querySelector('#block-editor')
 const source = document.querySelector('#contents')
 if (!root || !source) throw new Error('BlockNote editor requires #block-editor and #contents')
 
+const resolveBlockNoteTheme = () => {
+    const selectedTheme = document.documentElement.getAttribute('data-ui-theme')
+    if (selectedTheme === 'dark') return 'dark'
+    if (selectedTheme === 'light') return 'light'
+    return window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+}
+
+function useBlockNoteTheme() {
+    const [theme, setTheme] = useState(resolveBlockNoteTheme)
+
+    useEffect(() => {
+        const syncTheme = () => setTheme(resolveBlockNoteTheme())
+        const rootThemeObserver = new MutationObserver(syncTheme)
+        const mediaQuery = window.matchMedia?.('(prefers-color-scheme: dark)')
+        rootThemeObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['data-ui-theme'] })
+        mediaQuery?.addEventListener?.('change', syncTheme)
+        window.addEventListener('cf-notepad-ui-theme-change', syncTheme)
+        return () => {
+            rootThemeObserver.disconnect()
+            mediaQuery?.removeEventListener?.('change', syncTheme)
+            window.removeEventListener('cf-notepad-ui-theme-change', syncTheme)
+        }
+    }, [])
+
+    return theme
+}
+
 const EMBED_KINDS = {
     youtube: { title: 'YouTube', detail: '嵌入 YouTube 影片', icon: '▶' },
     pdf: { title: 'PDF', detail: '嵌入 PDF 文件', icon: 'PDF' },
@@ -160,6 +187,7 @@ function BlockNoteEditorApp() {
         try { return tiptapToBlockNoteDocument(JSON.parse(source.value || '{}')) } catch { return [{ type: 'paragraph' }] }
     }, [])
     const [dialog, setDialog] = useState(null)
+    const blockNoteTheme = useBlockNoteTheme()
     const editor = useCreateBlockNote({ schema, initialContent, uploadFile })
 
     useEffect(() => {
@@ -192,12 +220,12 @@ function BlockNoteEditorApp() {
         source.dispatchEvent(new Event('input', { bubbles: true }))
     }
 
-    return <>
-        <BlockNoteView editor={editor} theme="light" slashMenu={false} onChange={save} className="david-blocknote-view">
+    return <div className="david-blocknote-app" data-blocknote-theme={blockNoteTheme}>
+        <BlockNoteView editor={editor} theme={blockNoteTheme} slashMenu={false} onChange={save} className="david-blocknote-view">
             <SuggestionMenuController triggerCharacter="/" getItems={async query => filterSuggestionItems(items, query)} />
         </BlockNoteView>
         {dialog && <EmbedDialog state={dialog} editor={editor} onClose={() => setDialog(null)} />}
-    </>
+    </div>
 }
 
 const reactRoot = createRoot(root)

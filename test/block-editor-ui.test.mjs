@@ -43,6 +43,16 @@ test('BlockNote editor uses the ready-made side menu, slash menu, and formatting
     assert.match(source, /davidEmbed/)
 })
 
+test('BlockNote follows the application dark-mode setting instead of being fixed to light', () => {
+    const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
+
+    assert.match(source, /resolveBlockNoteTheme/)
+    assert.match(source, /MutationObserver/)
+    assert.match(source, /prefers-color-scheme: dark/)
+    assert.match(source, /theme=\{blockNoteTheme\}/)
+    assert.doesNotMatch(source, /theme="light"/)
+})
+
 test('BlockNote editor provides editable embed cards and does not use browser prompt dialogs', () => {
     const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
 

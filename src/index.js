@@ -27,6 +27,7 @@ import {
     buildAgentSkillsIndex,
     buildApiCatalog,
     buildOpenApiDocument,
+    buildLlmsTxt,
     buildRobotsTxt,
     buildSitemapXml,
     createMarkdownResponse,
@@ -71,6 +72,7 @@ const {
     API_CATALOG_PROFILE,
     API_DOCS_PATH,
     AUTH_MD_PATH,
+    LLMS_TXT_PATH,
     API_HEALTH_PATH,
     OPENAPI_PATH,
 } = getDiscoveryConstants()
@@ -406,14 +408,11 @@ async function getEditorPublicationStats(path, metadata = {}) {
 
 const homePage = request => {
     const originUrl = new URL(request.url)
-    const nextUrl = new URL(genRandomStr(getSlugLength()), originUrl)
-    nextUrl.searchParams.set('new', '1')
     const canonicalUrl = new URL('/', originUrl)
     const ogImageUrl = getOgImageUrl(originUrl)
 
     return returnPage('Home', {
         lang: getI18n(request),
-        nextUrl: nextUrl.href,
         canonicalUrl: canonicalUrl.href,
         ogImageUrl,
     })
@@ -1098,6 +1097,16 @@ router.get('/robots.txt', (request) => createDiscoveryResponse(
 router.head('/robots.txt', (request) => createDiscoveryResponse(
     buildRobotsTxt(new URL(request.url).origin),
     'text/plain; charset=UTF-8',
+))
+
+router.get(LLMS_TXT_PATH, () => createDiscoveryResponse(
+    buildLlmsTxt('https://wiki.david888.com'),
+    'text/markdown; charset=UTF-8',
+))
+
+router.head(LLMS_TXT_PATH, () => createDiscoveryResponse(
+    buildLlmsTxt('https://wiki.david888.com'),
+    'text/markdown; charset=UTF-8',
 ))
 
 router.get('/sitemap.xml', async (request) => {

@@ -186,6 +186,36 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .tips { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ccc; font-size: 32px; pointer-events: none; }
 .modal { display: none; }
 .modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; }
+.editor-preference-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1001;
+    width: min(480px, calc(100vw - 32px));
+    box-sizing: border-box;
+    padding: 26px;
+    border: 1px solid var(--toolbar-border, #e2dacd);
+    border-radius: 14px;
+    background: var(--toolbar-bg, #fff);
+    color: var(--toolbar-text, #24292f);
+    box-shadow: 0 18px 48px rgba(37, 35, 32, 0.24);
+}
+.editor-preference-content h2 { margin: 0 30px 8px 0; font-size: 20px; }
+.editor-preference-content > p { margin: 0 0 18px; color: var(--toolbar-muted, #6b6965); font-size: 14px; line-height: 1.55; }
+.editor-preference-close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; line-height: 1; }
+.editor-preference-close:focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
+.editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+.editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 13px; border: 1px solid var(--toolbar-border, #e2dacd); border-radius: 10px; cursor: pointer; transition: border-color 0.16s ease, background 0.16s ease; }
+.editor-preference-option:has(input:checked), .editor-preference-option.is-selected { border-color: var(--toolbar-accent, #c8654b); background: color-mix(in srgb, var(--toolbar-bg-hover, #f5f0e8) 78%, transparent); }
+.editor-preference-option input { margin: 3px 0 0; accent-color: var(--toolbar-accent, #c8654b); }
+.editor-preference-option span { display: grid; gap: 3px; }
+.editor-preference-option strong { font-size: 14px; }
+.editor-preference-option small { color: var(--toolbar-muted, #6b6965); font-size: 12px; line-height: 1.45; }
+.editor-preference-remember { display: inline-flex; align-items: center; gap: 8px; margin: 16px 0 0; font-size: 13px; cursor: pointer; }
+.editor-preference-remember input { accent-color: var(--toolbar-accent, #c8654b); }
+.editor-preference-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+.editor-preference-actions .opt-button { min-width: 76px; }
 .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
 .embed-modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel-bg, #fff); color: var(--text-color, #222); padding: 24px; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,0.22); z-index: 1001; width: min(620px, calc(100vw - 32px)); box-sizing: border-box; }
 .embed-modal-content h2 { margin: 0 0 8px; }
@@ -586,17 +616,18 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     display: none !important;
 }
 
-/* New note: compact icon on phones, explicit action label on desktop. */
+/* New note: primary action uses the remembered editor, menu exposes alternatives. */
+.new-note-actions { display: inline-flex; align-items: center; }
+.new-note-primary-link { width: auto !important; min-width: var(--toolbar-height); padding: 0 9px !important; gap: 4px; border-radius: 6px 0 0 6px !important; border-right: 0 !important; text-decoration: none; }
+.new-note-primary-link .toolbar-button-label { display: inline !important; }
 .new-note-dropdown .dropdown-menu {
     min-width: 184px;
 }
 .new-note-menu-trigger {
-    width: auto !important;
-    gap: 4px;
-    padding: 0 9px !important;
-}
-.new-note-menu-trigger .toolbar-button-label {
-    display: inline !important;
+    width: 24px !important;
+    min-width: 24px !important;
+    padding: 0 !important;
+    border-radius: 0 6px 6px 0 !important;
 }
 .new-note-plus {
     font-size: 18px;

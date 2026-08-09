@@ -36,11 +36,12 @@ test('share pages expose the requested Open Graph site name', () => {
     assert.match(indexSource, /siteName: 'DAVID888 WIKI'/)
 })
 
-test('homepage exposes stable DAVID888 WIKI Open Graph metadata while opening a new note', () => {
+test('homepage exposes stable DAVID888 WIKI Open Graph metadata and the editor choice flow', () => {
     assert.match(indexSource, /const homePage = request =>/)
     assert.match(indexSource, /router\.get\('\/', homePage\)/)
     assert.match(pagesTemplateSource, /<meta property="og:site_name" content="DAVID888 WIKI" \/>/)
-    assert.match(pagesTemplateSource, /window\.location\.replace\(/)
+    assert.match(pagesTemplateSource, /EDITOR_PREFERENCE_MODAL\(lang, \{ autoOpen: true \}\)/)
+    assert.match(pagesTemplateSource, /src="\/js\/editor-preference\.mjs"/)
     assert.match(pagesTemplateSource, /<link rel="canonical" href=/)
     assert.match(pagesTemplateSource, /property="og:image:width" content="1200"/)
 })

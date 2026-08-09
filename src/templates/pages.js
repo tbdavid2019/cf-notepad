@@ -4,6 +4,7 @@
  */
 import { SUPPORTED_LANG } from '../constant'
 import { HTML } from './base'
+import { EDITOR_PREFERENCE_MODAL } from './common.js'
 
 const escapeHtml = value => String(value || '')
     .replace(/&/g, '&amp;')
@@ -12,14 +13,12 @@ const escapeHtml = value => String(value || '')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#39;')
 
-const escapeScriptJson = value => JSON.stringify(String(value || '')).replace(/</g, '\\u003c')
-
 export const NeedPasswd = data => HTML({ tips: SUPPORTED_LANG[data.lang].tipEncrypt, showPwPrompt: true, ...data })
 export const Page404 = data => HTML({ tips: SUPPORTED_LANG[data.lang].tip404, ...data })
 
-export const Home = ({ nextUrl, canonicalUrl, ogImageUrl }) => `
+export const Home = ({ lang = 'zh-TW', canonicalUrl, ogImageUrl }) => `
 <!DOCTYPE html>
-<html lang="en">
+<html lang="${lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'}">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -47,19 +46,38 @@ export const Home = ({ nextUrl, canonicalUrl, ogImageUrl }) => `
     <meta name="twitter:image" content="${escapeHtml(ogImageUrl)}" />
     <meta name="twitter:image:alt" content="DAVID888 WIKI social card" />
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"DAVID888 WIKI","description":"DAVID888 WIKI is a fast Markdown wiki for writing, publishing, and sharing notes.","url":"${escapeHtml(canonicalUrl)}","image":"${escapeHtml(ogImageUrl)}"}</script>
+    <style>
+        :root { color-scheme: light; font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        body { min-height: 100vh; margin: 0; background: #f8f7f3; color: #2c2a29; }
+        .home-shell { display: grid; min-height: 100vh; place-items: center; padding: 24px; box-sizing: border-box; }
+        .home-brand { text-align: center; color: #716c65; font-size: 14px; letter-spacing: .04em; }
+        .modal { display: none; }
+        .modal-mask { position: fixed; inset: 0; z-index: 1000; background: rgba(37, 35, 32, .48); }
+        .editor-preference-content { position: fixed; top: 50%; left: 50%; z-index: 1001; width: min(480px, calc(100vw - 32px)); box-sizing: border-box; padding: 26px; transform: translate(-50%, -50%); border: 1px solid #e2dacd; border-radius: 14px; background: #fff; box-shadow: 0 18px 48px rgba(37,35,32,.24); }
+        .editor-preference-content h2 { margin: 0 0 8px; font-size: 20px; }
+        .editor-preference-content > p { margin: 0 0 18px; color: #6b6965; font-size: 14px; line-height: 1.55; }
+        .editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
+        .editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 13px; border: 1px solid #e2dacd; border-radius: 10px; cursor: pointer; }
+        .editor-preference-option:has(input:checked), .editor-preference-option.is-selected { border-color: #c8654b; background: #faf2ed; }
+        .editor-preference-option input { margin-top: 3px; accent-color: #c8654b; }
+        .editor-preference-option span { display: grid; gap: 3px; }
+        .editor-preference-option strong { font-size: 14px; }
+        .editor-preference-option small { color: #6b6965; font-size: 12px; line-height: 1.45; }
+        .editor-preference-remember { display: inline-flex; gap: 8px; align-items: center; margin-top: 16px; font-size: 13px; cursor: pointer; }
+        .editor-preference-remember input { accent-color: #c8654b; }
+        .editor-preference-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
+        .opt-button { min-width: 76px; height: 36px; padding: 0 12px; border: 1px solid #d8d0c4; border-radius: 7px; background: #fff; color: #2c2a29; font-weight: 700; cursor: pointer; }
+        .opt-button-accent { border-color: #c8654b; background: #c8654b; color: #fff; }
+        .opt-button:focus-visible, .editor-preference-option:has(input:focus-visible) { outline: 2px solid #c8654b; outline-offset: 2px; }
+        .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
+    </style>
 </head>
 <body>
-    <main>
-        <h1>DAVID888 WIKI</h1>
-        <p>Markdown wiki for You</p>
-        <a href="${escapeHtml(nextUrl)}">Open a new note</a>
-    </main>
-    <script>
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('/sw.js').catch(() => {})
-        }
-        window.location.replace(${escapeScriptJson(nextUrl)})
-    </script>
+    <main class="home-shell"><p class="home-brand">DAVID888 WIKI</p></main>
+    ${EDITOR_PREFERENCE_MODAL(lang, { autoOpen: true })}
+    <script type="module" src="/js/editor-preference.mjs"></script>
+    <script>if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {})</script>
 </body>
 </html>
 `
