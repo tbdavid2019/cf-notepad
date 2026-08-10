@@ -2125,13 +2125,16 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body h1 {
 
 body.preview-device-mobile:not(.share-view) #preview-md.markdown-body table,
 body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body table {
-    display: table !important;
+    display: block !important;
     width: 100% !important;
     min-width: 0 !important;
     max-width: 100% !important;
-    table-layout: fixed !important;
-    overflow: hidden !important;
-    font-size: 11px !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    box-sizing: border-box !important;
+    font-size: 12px !important;
 }
 
 body.preview-device-mobile:not(.share-view) #preview-md.markdown-body th,
@@ -2139,10 +2142,11 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body td,
 body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th,
 body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body td {
     min-width: 0 !important;
-    padding: 6px 5px !important;
+    padding: 6px 6px !important;
     white-space: normal !important;
     overflow-wrap: anywhere !important;
     word-break: break-word !important;
+    box-sizing: border-box !important;
 }
 
 body.preview-device-mobile:not(.share-view) #preview-md.markdown-body td code,
@@ -2155,13 +2159,20 @@ body.preview-device-mobile:not(.share-view) #preview-plain.markdown-body th code
 }
 
 body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > pre,
-body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table,
 body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-preview {
     margin-left: -18px !important;
     margin-right: -18px !important;
     border-radius: 0 !important;
     width: calc(100% + 36px) !important;
     max-width: calc(100% + 36px) !important;
+}
+
+body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
 }
 
 .mobile-ascii-diagram {
@@ -2528,18 +2539,25 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         min-height: 0 !important;
     }
 
-    /* Polaris Bleed-inspired full-width tables & code blocks on mobile */
+    /* Polaris Bleed-inspired full-width code blocks & media on mobile */
     body.share-view #preview-md.markdown-body > pre,
-    body.share-view #preview-md.markdown-body > table,
     body.share-view #preview-md.markdown-body > .media-preview,
     body:not(.share-view) #preview-md.markdown-body > pre,
-    body:not(.share-view) #preview-md.markdown-body > table,
     body:not(.share-view) #preview-md.markdown-body > .media-preview {
         margin-left: -30px !important;
         margin-right: -30px !important;
         border-radius: 0 !important;
         width: calc(100% + 60px) !important;
         max-width: calc(100% + 60px) !important;
+    }
+
+    body.share-view #preview-md.markdown-body > table,
+    body:not(.share-view) #preview-md.markdown-body > table {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        box-sizing: border-box !important;
     }
 
     .footer {
@@ -2689,14 +2707,16 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     }
 
     body.share-view .markdown-body table {
-
-        display: table !important;
+        display: block !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100% !important;
-        table-layout: fixed !important;
-        overflow: hidden !important;
-        font-size: 11px !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        box-sizing: border-box !important;
+        font-size: 12px !important;
     }
 
     body.share-view .markdown-body th,
@@ -2825,6 +2845,10 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
 }
 
 @media print {
+    @page {
+        margin: 12mm 15mm;
+    }
+
     /* Hide non-printable elements */
     .footer,
     .share-footer,
@@ -2858,6 +2882,7 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .share-menu-dropdown,
     .reading-progress-container,
     #reading-progress-bar,
+    .scroll-indicator-arrow,
     .annotation-rail-button,
     .annotation-selection-button,
     .annotation-sidebar,
@@ -2865,8 +2890,18 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .annotation-card,
     .share-annotations-layer,
     #share-annotations-root,
+    #share-annotation-root,
     .share-annotations-trigger,
     .share-annotations-popover,
+    .tiptap-block-handle,
+    .david888-drag-handle,
+    .tiptap-add-block,
+    .tiptap-editor-toolbar,
+    .tiptap-slash-menu,
+    .tiptap-block-menu,
+    .tiptap-bubble-menu,
+    .david-blocknote-view .bn-side-menu,
+    .david-blocknote-view .bn-toolbar,
     [class*="webtalk"],
     [id*="webtalk"] {
         display: none !important;
@@ -2879,6 +2914,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         overflow: visible !important;
         background: #fff !important;
         color: #000 !important;
+        margin: 0 !important;
+        padding: 0 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
     }
@@ -2888,7 +2925,9 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
     .layer_1,
     .layer_2,
     .layer_3,
-    .preview-pane {
+    .preview-pane,
+    .tiptap-editor-shell,
+    .david-blocknote-view {
         height: auto !important;
         min-height: 0 !important;
         overflow: visible !important;
@@ -2899,6 +2938,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         box-shadow: none !important;
         padding: 0 !important;
         margin: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
     }
 
     /* Print content page formatting */
@@ -2912,8 +2953,9 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         background: transparent !important;
         color: #000 !important;
         max-width: 100% !important;
-        font-size: 12pt !important;
-        line-height: 1.6 !important;
+        width: 100% !important;
+        font-size: 11pt !important;
+        line-height: 1.5 !important;
     }
 
     .markdown-body {
@@ -2947,7 +2989,9 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         table-layout: auto !important;
         border-collapse: collapse !important;
         word-break: break-word !important;
+        overflow-wrap: anywhere !important;
         overflow: visible !important;
+        box-shadow: none !important;
     }
 
     .markdown-body table th,
@@ -2959,6 +3003,7 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > .media-p
         overflow-wrap: anywhere !important;
         white-space: normal !important;
         box-sizing: border-box !important;
+        max-width: none !important;
     }
 
     /* Keep page breaks clean */

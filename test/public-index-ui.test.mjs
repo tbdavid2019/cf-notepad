@@ -229,6 +229,7 @@ test('editor toolbar exposes AI controls without duplicating them in the footer'
 
 test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and reader controls', () => {
     assert.match(baseCssSource, /@media print \{/)
+    assert.match(baseCssSource, /@page \{\s*margin:\s*12mm 15mm;/)
     assert.match(baseCssSource, /\.bottom-sheet,/)
     assert.match(baseCssSource, /#mobile-bottom-sheet,/)
     assert.match(baseCssSource, /\.floating-tooltip,/)
@@ -236,7 +237,15 @@ test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and r
     assert.match(baseCssSource, /#reader-controls,/)
     assert.match(baseCssSource, /\.share-footer,/)
     assert.match(baseCssSource, /\.annotation-rail-button,/)
+    assert.match(baseCssSource, /\.david888-drag-handle,/)
+    assert.match(baseCssSource, /\.tiptap-block-handle,/)
     assert.match(baseCssSource, /body\.share-view #preview-md\.markdown-body > table,/)
     assert.match(baseCssSource, /margin-left:\s*0\s*!important;/)
     assert.match(baseCssSource, /\.markdown-body table td/)
 })
+
+test('mobile view tables use container-bound width and horizontal scroll without negative margins', () => {
+    assert.match(baseCssSource, /body\.share-view \.markdown-body table \{\s*display:\s*block !important;\s*width:\s*100% !important;\s*min-width:\s*0 !important;\s*max-width:\s*100% !important;\s*overflow-x:\s*auto !important;/)
+    assert.match(baseCssSource, /body\.share-view #preview-md\.markdown-body > table,\s*body:not\(\.share-view\) #preview-md\.markdown-body > table \{\s*margin-left:\s*0 !important;/)
+})
+

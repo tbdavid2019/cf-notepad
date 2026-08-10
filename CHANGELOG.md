@@ -11,6 +11,12 @@
   - Added dynamic origin resolution for `/llms.txt` and `/llms-full.txt` worker responses.
   - Updated `robots.txt` crawler policies and documented `/llms-full.txt` in project `README.md`.
 
+### Fixed
+
+- **Mobile RWD Table Border Clipping & Print Formatting Reset**
+  - Resolved table clipping in mobile responsive view by removing negative margins (`margin-left: -30px`) and setting container-bound width (`100%`) with responsive horizontal overflow (`overflow-x: auto`).
+  - Fixed print mechanism (`@media print`) by adding standard `@page` margins (`12mm 15mm`), hiding block editor drag handles (`.david888-drag-handle`, `.tiptap-block-handle`), resetting table box shadows, and preventing right-edge text clipping in PDF exports and printed pages.
+
 ## [2026-08-09]
 
 ### Added

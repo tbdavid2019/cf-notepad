@@ -499,7 +499,11 @@
     .annotation-sidebar,
     .annotation-popover,
     .annotation-card,
-    #share-annotations-root {
+    .share-annotations-layer,
+    #share-annotations-root,
+    #share-annotation-root,
+    .share-annotations-trigger,
+    .share-annotations-popover {
         display: none !important;
     }
 }
