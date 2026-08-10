@@ -8,6 +8,7 @@ import {
     AUTH_MD_MARKDOWN,
     applyDiscoveryHeaders,
     buildLlmsTxt,
+    buildLlmsFullTxt,
     buildMarkdownDocument,
     buildAgentSkillsIndex,
     buildApiCatalog,
@@ -38,16 +39,32 @@ test('robots.txt publishes explicit crawler rules for discovery and AI agents', 
     assert.match(robots, /User-agent: Google-Extended/)
 })
 
-test('llms.txt is a concise canonical index of public agent resources', () => {
+test('llms.txt is a concise canonical index of public agent resources following llmstxt.org standard', () => {
     const llms = buildLlmsTxt('https://wiki.david888.com')
 
     assert.match(llms, /^# DAVID888 WIKI/m)
+    assert.match(llms, /## 核心服務與頁面 \(Core Services & Pages\)/)
+    assert.match(llms, /## AI Agent & API Discovery/)
+    assert.match(llms, /## 研發團隊與維護資訊 \(Development & Maintenance\)/)
+    assert.match(llms, /## Extended Documentation/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/agent-skills\/david888-wiki-publisher\/SKILL\.md/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/docs\/api/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/openapi\.json/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/api-catalog/)
-    assert.match(llms, /public share URL/i)
+    assert.match(llms, /https:\/\/wiki\.david888\.com\/llms-full\.txt/)
     assert.doesNotMatch(llms, /admin333|SCN_ADMIN|password=/i)
+})
+
+test('llms-full.txt provides extended system documentation, API schemas, and architecture breakdown', () => {
+    const llmsFull = buildLlmsFullTxt('https://wiki.david888.com')
+
+    assert.match(llmsFull, /^# DAVID888 WIKI \(Serverless Cloud Notepad\) - Comprehensive Specification & System Guide/m)
+    assert.match(llmsFull, /## 1\. Overview & Architecture/)
+    assert.match(llmsFull, /## 2\. Core Routes & Services/)
+    assert.match(llmsFull, /## 3\. Agent Integration & Machine APIs/)
+    assert.match(llmsFull, /## 4\. Security & Access Control Model/)
+    assert.match(llmsFull, /## 5\. Development & Maintenance Team Credits/)
+    assert.match(llmsFull, /https:\/\/wiki\.david888\.com\/api\/{path}/)
 })
 
 test('sitemap xml includes canonical share URLs and optional lastmod dates', () => {
@@ -135,11 +152,12 @@ test('markdown negotiation helper only activates on text/markdown requests', () 
     assert.match(markdown, /^---\ntitle: "Doc"\ncanonical_url: "https:\/\/example.com\/doc"\n---\n\n# Title$/)
 })
 
-test('discovery headers expose api catalog and API docs links', () => {
+test('discovery headers expose llms-txt, api catalog, and API docs links', () => {
     const headers = applyDiscoveryHeaders(new Headers())
     const values = headers.get('Link')
 
     assert.ok(values)
+    assert.match(values, /rel="llms-txt"/)
     assert.match(values, /rel="api-catalog"/)
     assert.match(values, /rel="service-doc"/)
     assert.match(values, /rel="service-desc"/)
@@ -150,6 +168,8 @@ test('worker registers discovery routes before dynamic note routes', () => {
     assert.match(indexSource, /router\.head\('\/robots\.txt'/)
     assert.match(indexSource, /router\.get\(LLMS_TXT_PATH/)
     assert.match(indexSource, /router\.head\(LLMS_TXT_PATH/)
+    assert.match(indexSource, /router\.get\(LLMS_FULL_TXT_PATH/)
+    assert.match(indexSource, /router\.head\(LLMS_FULL_TXT_PATH/)
     assert.match(indexSource, /router\.get\('\/sitemap\.xml'/)
     assert.match(indexSource, /router\.head\('\/sitemap\.xml'/)
     assert.match(indexSource, /router\.get\(API_CATALOG_PATH/)

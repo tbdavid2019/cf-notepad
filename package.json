@@ -1,7 +1,7 @@
 {
-  "name": "serverless-cloud-notepad",
+  "name": "cf-notepad",
   "version": "1.0.0",
-  "author": "s0urce",
+  "author": "DAVID888 <tbdavid2019>",
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.28.1",

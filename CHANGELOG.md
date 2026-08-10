@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-08-10]
+
+### Added
+
+- **llms.txt Standard Integration & Extended Documentation (`llms-full.txt`)**
+  - Updated `/llms.txt` according to `llmstxt.org` specification, organizing core pages, agent skills, API discovery, development team info, and extended documentation links.
+  - Added `/llms-full.txt` dynamic worker endpoint and static fallback file (`static/llms-full.txt`) providing comprehensive system architecture, route indexes, REST API contracts, and security policies.
+  - Updated discovery headers to inject `Link: </llms.txt>; rel="llms-txt"; type="text/markdown"`.
+  - Added dynamic origin resolution for `/llms.txt` and `/llms-full.txt` worker responses.
+  - Updated `robots.txt` crawler policies and documented `/llms-full.txt` in project `README.md`.
+
 ## [2026-08-09]
 
 ### Added

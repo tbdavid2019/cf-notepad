@@ -10,6 +10,7 @@ const API_CATALOG_PATH = '/.well-known/api-catalog'
 const API_DOCS_PATH = '/docs/api'
 const AUTH_MD_PATH = '/auth.md'
 const LLMS_TXT_PATH = '/llms.txt'
+const LLMS_FULL_TXT_PATH = '/llms-full.txt'
 const OPENAPI_PATH = '/openapi.json'
 const API_HEALTH_PATH = '/api/health'
 const AGENT_SKILLS_INDEX_PATH = '/.well-known/agent-skills/index.json'
@@ -52,31 +53,123 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
     const siteOrigin = String(origin || 'https://wiki.david888.com').replace(/\/$/, '')
     return `# DAVID888 WIKI
 
-> DAVID888 WIKI is a private-first wiki for creating, publishing, and sharing Markdown and Block notes.
+> DAVID888 WIKI (Serverless Cloud Notepad) is a private-first serverless wiki and notepad built on Cloudflare Workers, KV, R2, and D1, providing high-performance Markdown and BlockNote editing, real-time collaboration, and agent publishing interfaces.
 
-Use the Agent Skill and API documentation for programmatic access. Treat note passwords, editor URLs, and unpublished content as private. When creating or updating a public note, return its public share URL to the user rather than its edit URL.
+## 核心服務與頁面 (Core Services & Pages)
 
-## Agent integration
+- [Home / Editor](${siteOrigin}/): Main note workspace and editor with custom themes and real-time autosave.
+- [Block Note Editor](${siteOrigin}/new/block): Instantiate a new rich BlockNote document.
+- [Markdown Note Editor](${siteOrigin}/new/markdown): Instantiate a new standard Markdown document.
+
+## AI Agent & API Discovery
 
 - [Agent Skill](${siteOrigin}${AGENT_SKILL_PATH}): Instructions for agents that read, write, publish, upload, and share notes.
-- [API documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
-- [OpenAPI description](${siteOrigin}${OPENAPI_PATH}): Machine-readable API contract.
-- [Authentication guidance](${siteOrigin}${AUTH_MD_PATH}): Note-level password access model and its limitations.
+- [Agent Skills Index](${siteOrigin}${AGENT_SKILLS_INDEX_PATH}): Index of machine-readable agent skills (v0.2.0 schema).
+- [API Catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset catalog for API discovery.
+- [API Documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
+- [OpenAPI Specification](${siteOrigin}${OPENAPI_PATH}): Machine-readable OpenAPI 3.1.0 contract.
+- [Authentication Guidance](${siteOrigin}${AUTH_MD_PATH}): Note-level password access control model details.
+- [Robots Policy](${siteOrigin}/robots.txt): Machine access controls and AI content signals.
+- [Public Sitemap](${siteOrigin}${SITEMAP_PATH}): Publicly indexed share pages only.
 
-## Discovery
+## 研發團隊與維護資訊 (Development & Maintenance)
 
-- [API catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset for API discovery.
-- [Agent Skills index](${siteOrigin}${AGENT_SKILLS_INDEX_PATH}): Published agent skill metadata.
-- [robots.txt](${siteOrigin}/robots.txt): Crawler access policy and content signals.
+> 本站點與 AI Agent 服務由 DAVID888 (tbdavid2019) 傾力設計、開發與持續維護。
 
-## Optional
+- [GitHub Repository](https://github.com/tbdavid2019/cf-notepad): Official project repository.
+- [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019): Lead Architecture & Core Developer.
 
-- [Public sitemap](${siteOrigin}${SITEMAP_PATH}): Publicly indexed share pages only.
+## Extended Documentation
+
+- [LLMs Full Documentation](${siteOrigin}${LLMS_FULL_TXT_PATH}): Full site architecture, API schemas, and extended agent guidance.
+`
+}
+
+export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
+    const siteOrigin = String(origin || 'https://wiki.david888.com').replace(/\/$/, '')
+    return `# DAVID888 WIKI (Serverless Cloud Notepad) - Comprehensive Specification & System Guide
+
+> DAVID888 WIKI is a high-performance, private-first serverless wiki and notepad built for Cloudflare Workers. It supports bi-directional Markdown and BlockNote WYSIWYG editing, real-time autosave, ECharts/Mermaid/Graphviz diagram rendering, WebMCP local context tools, and machine-first REST APIs for AI Agents.
+
+---
+
+## 1. Overview & Architecture
+
+- **Platform**: Cloudflare Workers + KV + R2 + D1 (SQLite)
+- **Primary Domain**: \`${siteOrigin}\`
+- **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (for BlockNote editor), Mermaid.js, ECharts, MathJax
+- **Backend Stack**: \`itty-router\` on Cloudflare Worker runtime
+- **Data Persistence**:
+  - \`NOTES\` KV Namespace: Note content & metadata storage
+  - \`SHARE\` KV Namespace: Public share slug mapping
+  - \`IMAGES\` R2 Bucket: Image & asset upload storage (\`s3.wiki.david888.com\`)
+  - \`NOTE_HISTORY_DB\` D1 Database: Revision history snapshots (up to 10 versions per note)
+
+---
+
+## 2. Core Routes & Services (完整頁面路線)
+
+- **Editor / Homepage**: \`${siteOrigin}/\`
+  Main note workspace. Automatically redirects or opens an existing/new note slug.
+- **New Block Note**: \`${siteOrigin}/new/block\`
+  Allocates a random short slug (4 chars) and initializes a BlockNote rich document.
+- **New Markdown Note**: \`${siteOrigin}/new/markdown\`
+  Allocates a random short slug and initializes a raw Markdown document.
+- **Read & Edit Note**: \`${siteOrigin}/{slug}\`
+  View or edit a note at \`/{slug}\`. Supports passcodes for view-locking (\`vpw\`) and edit-locking (\`pw\`).
+- **Public Share View**: \`${siteOrigin}/share/{shareSlug}\`
+  Clean, read-only public presentation view for shared notes with custom theme and reading progress.
+
+---
+
+## 3. Agent Integration & Machine APIs (AI & REST 介面說明)
+
+### REST API Endpoints
+- **Read Note**: \`GET ${siteOrigin}/api/{path}\`
+  Returns raw note Markdown or JSON metadata.
+- **Write / Append Note**: \`POST ${siteOrigin}/api/{path}\`
+  Accepts \`application/json\`, \`text/markdown\`, or \`multipart/form-data\`.
+  Payload fields: \`text\` / \`content\`, \`append\` (boolean), \`share\` (boolean), \`publicIndex\` (boolean), \`pw\`, \`vpw\`, \`theme\`, \`width\`.
+- **Upload Image**: \`POST ${siteOrigin}/api/upload\`
+  Uploads an image file to R2 storage and returns the image CDN URL.
+- **Note Revision History**:
+  - List versions: \`GET ${siteOrigin}/api/{path}/history\`
+  - Read version: \`GET ${siteOrigin}/api/{path}/history/{versionId}\`
+  - Restore version: \`POST ${siteOrigin}/api/{path}/history/{versionId}/restore\`
+- **Health Check**: \`GET ${siteOrigin}${API_HEALTH_PATH}\`
+
+### Agent Discovery & Protocols
+- **Agent Skill File**: \`${siteOrigin}${AGENT_SKILL_PATH}\`
+- **Agent Skills Index**: \`${siteOrigin}${AGENT_SKILLS_INDEX_PATH}\`
+- **RFC 9727 API Catalog**: \`${siteOrigin}${API_CATALOG_PATH}\`
+- **OpenAPI 3.1.0 Contract**: \`${siteOrigin}${OPENAPI_PATH}\`
+- **API Documentation**: \`${siteOrigin}${API_DOCS_PATH}\`
+- **Auth Guidance**: \`${siteOrigin}${AUTH_MD_PATH}\`
+- **LLM Entry Index**: \`${siteOrigin}${LLMS_TXT_PATH}\`
+
+---
+
+## 4. Security & Access Control Model
+
+- **Public Access**: Notes without \`pw\` or \`vpw\` are readable by anyone with the link.
+- **View Lock (\`vpw\`)**: Password required to view or read the note content.
+- **Edit Lock (\`pw\`)**: Password required to modify, overwrite, or delete the note.
+- **Agent Password Auth**: Passwords can be supplied via \`Authorization: Bearer <pw>\` header, \`?pw=<pw>\` query parameter, or JSON body.
+
+---
+
+## 5. Development & Maintenance Team Credits
+
+> 本專案由 DAVID888 (tbdavid2019) 傾力設計、開發與維護。
+
+- **Repository**: [github.com/tbdavid2019/cf-notepad](https://github.com/tbdavid2019/cf-notepad)
+- **Maintainer**: [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019) - Lead Architecture & Developer
 `
 }
 
 export function getDiscoveryLinks() {
     return [
+        { href: LLMS_TXT_PATH, rel: 'llms-txt', type: 'text/markdown' },
         { href: API_CATALOG_PATH, rel: 'api-catalog' },
         { href: API_DOCS_PATH, rel: 'service-doc', type: 'text/markdown' },
         { href: OPENAPI_PATH, rel: 'service-desc', type: 'application/openapi+json' },
@@ -127,6 +220,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
         'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -142,6 +236,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
         'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -155,6 +250,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -169,6 +265,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /.well-known/api-catalog',
         'Allow: /.well-known/agent-skills/',
         'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -182,6 +279,7 @@ export function buildRobotsTxt(origin = '') {
         'Allow: /share/',
         'Allow: /.well-known/api-catalog',
         'Allow: /llms.txt',
+        'Allow: /llms-full.txt',
         'Allow: /auth.md',
         'Allow: /docs/api',
         'Allow: /openapi.json',
@@ -503,6 +601,7 @@ export function getDiscoveryConstants() {
         API_DOCS_PATH,
         AUTH_MD_PATH,
         LLMS_TXT_PATH,
+        LLMS_FULL_TXT_PATH,
         API_HEALTH_PATH,
         OPENAPI_PATH,
         SITEMAP_PATH,

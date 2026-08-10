@@ -141,6 +141,7 @@ npm run deploy
 - `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`：LLM Agent Skill 規格書。
 - `GET /auth.md`：API 認證說明規範。
 - `GET /llms.txt`：面向 LLM 的精簡網站導覽，連結公開 Skill、API 文件與規格。
+- `GET /llms-full.txt`：面向 LLM 的完整網站架構、API 規範與系統說明文件。
 - `GET /robots.txt`：AI 爬蟲規則與聲明。
 - `Accept: text/markdown` 標頭：請求 `/share/...` 或 `/:path` 時直接回傳原始 Markdown。
 
@@ -271,6 +272,7 @@ npm run deploy
 - `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`: LLM Agent Skill spec.
 - `GET /auth.md`: Authentication specification.
 - `GET /llms.txt`: Concise LLM entry point linking to the public Skill, API docs, and specifications.
+- `GET /llms-full.txt`: Comprehensive LLM site architecture, API specs, and extended system documentation.
 - `GET /robots.txt`: AI Crawler rules.
 - `Accept: text/markdown`: Requesting `/share/...` or `/:path` returns raw Markdown.
 
@@ -288,5 +290,4 @@ Keep agent guidance synchronized across `skills/SKILL.md`, `LLM_API_DOCS.md`, an
 `node scripts/generate-agent-skill.mjs` also copies the locked `@firecrawl/anydoc-wasm` JavaScript and `.wasm` files from `node_modules` to `static/wasm/`; this runs automatically before tests and deployment. Do not hand-edit those generated static files.
 
 ---
-*Forked from [s0urcelab/serverless-cloud-notepad](https://github.com/s0urcelab/serverless-cloud-notepad).*  
 *See full developer logs in [CHANGELOG.md](./CHANGELOG.md).*

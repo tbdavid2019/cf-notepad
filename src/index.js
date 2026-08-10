@@ -28,6 +28,7 @@ import {
     buildApiCatalog,
     buildOpenApiDocument,
     buildLlmsTxt,
+    buildLlmsFullTxt,
     buildRobotsTxt,
     buildSitemapXml,
     createMarkdownResponse,
@@ -73,6 +74,7 @@ const {
     API_DOCS_PATH,
     AUTH_MD_PATH,
     LLMS_TXT_PATH,
+    LLMS_FULL_TXT_PATH,
     API_HEALTH_PATH,
     OPENAPI_PATH,
 } = getDiscoveryConstants()
@@ -1261,13 +1263,23 @@ router.head('/robots.txt', (request) => createDiscoveryResponse(
     'text/plain; charset=UTF-8',
 ))
 
-router.get(LLMS_TXT_PATH, () => createDiscoveryResponse(
-    buildLlmsTxt('https://wiki.david888.com'),
+router.get(LLMS_TXT_PATH, (request) => createDiscoveryResponse(
+    buildLlmsTxt(new URL(request.url).origin),
     'text/markdown; charset=UTF-8',
 ))
 
-router.head(LLMS_TXT_PATH, () => createDiscoveryResponse(
-    buildLlmsTxt('https://wiki.david888.com'),
+router.head(LLMS_TXT_PATH, (request) => createDiscoveryResponse(
+    buildLlmsTxt(new URL(request.url).origin),
+    'text/markdown; charset=UTF-8',
+))
+
+router.get(LLMS_FULL_TXT_PATH, (request) => createDiscoveryResponse(
+    buildLlmsFullTxt(new URL(request.url).origin),
+    'text/markdown; charset=UTF-8',
+))
+
+router.head(LLMS_FULL_TXT_PATH, (request) => createDiscoveryResponse(
+    buildLlmsFullTxt(new URL(request.url).origin),
     'text/markdown; charset=UTF-8',
 ))
 

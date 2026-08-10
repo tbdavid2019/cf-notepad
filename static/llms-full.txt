@@ -1,0 +1,77 @@
+# DAVID888 WIKI (Serverless Cloud Notepad) - Comprehensive Specification & System Guide
+
+> DAVID888 WIKI is a high-performance, private-first serverless wiki and notepad built for Cloudflare Workers. It supports bi-directional Markdown and BlockNote WYSIWYG editing, real-time autosave, ECharts/Mermaid/Graphviz diagram rendering, WebMCP local context tools, and machine-first REST APIs for AI Agents.
+
+---
+
+## 1. Overview & Architecture
+
+- **Platform**: Cloudflare Workers + KV + R2 + D1 (SQLite)
+- **Primary Domain**: `https://wiki.david888.com`
+- **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (for BlockNote editor), Mermaid.js, ECharts, MathJax
+- **Backend Stack**: `itty-router` on Cloudflare Worker runtime
+- **Data Persistence**:
+  - `NOTES` KV Namespace: Note content & metadata storage
+  - `SHARE` KV Namespace: Public share slug mapping
+  - `IMAGES` R2 Bucket: Image & asset upload storage (`s3.wiki.david888.com`)
+  - `NOTE_HISTORY_DB` D1 Database: Revision history snapshots (up to 10 versions per note)
+
+---
+
+## 2. Core Routes & Services (完整頁面路線)
+
+- **Editor / Homepage**: `https://wiki.david888.com/`
+  Main note workspace. Automatically redirects or opens an existing/new note slug.
+- **New Block Note**: `https://wiki.david888.com/new/block`
+  Allocates a random short slug (4 chars) and initializes a BlockNote rich document.
+- **New Markdown Note**: `https://wiki.david888.com/new/markdown`
+  Allocates a random short slug and initializes a raw Markdown document.
+- **Read & Edit Note**: `https://wiki.david888.com/{slug}`
+  View or edit a note at `/{slug}`. Supports passcodes for view-locking (`vpw`) and edit-locking (`pw`).
+- **Public Share View**: `https://wiki.david888.com/share/{shareSlug}`
+  Clean, read-only public presentation view for shared notes with custom theme and reading progress.
+
+---
+
+## 3. Agent Integration & Machine APIs (AI & REST 介面說明)
+
+### REST API Endpoints
+- **Read Note**: `GET https://wiki.david888.com/api/{path}`
+  Returns raw note Markdown or JSON metadata.
+- **Write / Append Note**: `POST https://wiki.david888.com/api/{path}`
+  Accepts `application/json`, `text/markdown`, or `multipart/form-data`.
+  Payload fields: `text` / `content`, `append` (boolean), `share` (boolean), `publicIndex` (boolean), `pw`, `vpw`, `theme`, `width`.
+- **Upload Image**: `POST https://wiki.david888.com/api/upload`
+  Uploads an image file to R2 storage and returns the image CDN URL.
+- **Note Revision History**:
+  - List versions: `GET https://wiki.david888.com/api/{path}/history`
+  - Read version: `GET https://wiki.david888.com/api/{path}/history/{versionId}`
+  - Restore version: `POST https://wiki.david888.com/api/{path}/history/{versionId}/restore`
+- **Health Check**: `GET https://wiki.david888.com/api/health`
+
+### Agent Discovery & Protocols
+- **Agent Skill File**: `https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`
+- **Agent Skills Index**: `https://wiki.david888.com/.well-known/agent-skills/index.json`
+- **RFC 9727 API Catalog**: `https://wiki.david888.com/.well-known/api-catalog`
+- **OpenAPI 3.1.0 Contract**: `https://wiki.david888.com/openapi.json`
+- **API Documentation**: `https://wiki.david888.com/docs/api`
+- **Auth Guidance**: `https://wiki.david888.com/auth.md`
+- **LLM Entry Index**: `https://wiki.david888.com/llms.txt`
+
+---
+
+## 4. Security & Access Control Model
+
+- **Public Access**: Notes without `pw` or `vpw` are readable by anyone with the link.
+- **View Lock (`vpw`)**: Password required to view or read the note content.
+- **Edit Lock (`pw`)**: Password required to modify, overwrite, or delete the note.
+- **Agent Password Auth**: Passwords can be supplied via `Authorization: Bearer <pw>` header, `?pw=<pw>` query parameter, or JSON body.
+
+---
+
+## 5. Development & Maintenance Team Credits
+
+> 本專案由 DAVID888 (tbdavid2019) 傾力設計、開發與維護。
+
+- **Repository**: [github.com/tbdavid2019/cf-notepad](https://github.com/tbdavid2019/cf-notepad)
+- **Maintainer**: [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019) - Lead Architecture & Developer

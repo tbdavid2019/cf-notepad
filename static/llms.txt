@@ -1,0 +1,31 @@
+# DAVID888 WIKI
+
+> DAVID888 WIKI (Serverless Cloud Notepad) is a private-first serverless wiki and notepad built on Cloudflare Workers, KV, R2, and D1, providing high-performance Markdown and BlockNote editing, real-time collaboration, and agent publishing interfaces.
+
+## 核心服務與頁面 (Core Services & Pages)
+
+- [Home / Editor](https://wiki.david888.com/): Main note workspace and editor with custom themes and real-time autosave.
+- [Block Note Editor](https://wiki.david888.com/new/block): Instantiate a new rich BlockNote document.
+- [Markdown Note Editor](https://wiki.david888.com/new/markdown): Instantiate a new standard Markdown document.
+
+## AI Agent & API Discovery
+
+- [Agent Skill](https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md): Instructions for agents that read, write, publish, upload, and share notes.
+- [Agent Skills Index](https://wiki.david888.com/.well-known/agent-skills/index.json): Index of machine-readable agent skills (v0.2.0 schema).
+- [API Catalog](https://wiki.david888.com/.well-known/api-catalog): RFC 9727 Linkset catalog for API discovery.
+- [API Documentation](https://wiki.david888.com/docs/api): Concise Markdown reference for the REST API.
+- [OpenAPI Specification](https://wiki.david888.com/openapi.json): Machine-readable OpenAPI 3.1.0 contract.
+- [Authentication Guidance](https://wiki.david888.com/auth.md): Note-level password access control model details.
+- [Robots Policy](https://wiki.david888.com/robots.txt): Machine access controls and AI content signals.
+- [Public Sitemap](https://wiki.david888.com/sitemap.xml): Publicly indexed share pages only.
+
+## 研發團隊與維護資訊 (Development & Maintenance)
+
+> 本站點與 AI Agent 服務由 DAVID888 (tbdavid2019) 傾力設計、開發與持續維護。
+
+- [GitHub Repository](https://github.com/tbdavid2019/cf-notepad): Official project repository.
+- [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019): Lead Architecture & Core Developer.
+
+## Extended Documentation
+
+- [LLMs Full Documentation](https://wiki.david888.com/llms-full.txt): Full site architecture, API schemas, and extended agent guidance.
