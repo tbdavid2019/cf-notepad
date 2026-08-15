@@ -71,26 +71,42 @@ test('presentation engine supports KaTeX, Mermaid, ECharts, and Slidev layouts',
     assert.match(baseCssSource, /\.slidev-layout-three-cols/)
 })
 
-test('all script tags in rendered HTML have zero syntax errors', async () => {
+test('all script tags in rendered HTML have zero syntax errors across all page configurations', async () => {
     const { HTML } = await import('../src/templates/base.js')
-    const html = HTML({
-        lang: 'zh-TW',
-        title: 'test',
-        content: '# Title\n\n---\n\n## Slide 2',
-        ext: {},
-        tips: '',
-        isEdit: false,
-        showPwPrompt: false,
-        path: 'test',
-        shareId: 'test'
-    })
-    const scripts = html.match(/<script[\s\S]*?<\/script>/g) || []
-    assert.ok(scripts.length > 0)
-    for (const s of scripts) {
-        if (s.includes('text/template') || s.includes('type="module"')) continue
-        const code = s.replace(/<script[^>]*>/i, '').replace(/<\/script>$/i, '')
-        assert.doesNotThrow(() => {
-            new Function(code)
+    const configs = [
+        { isEdit: true, title: 'Edit Mode', content: '# Hello\nworld' },
+        { isEdit: false, shareId: 'share-123', title: 'Share Mode', content: '# Slide 1\n---\n# Slide 2' },
+        { isEdit: false, shareId: 'share-123', autoPresent: true, presentationEntry: true, title: 'Present Mode', content: '# Presentation' },
+        { isEdit: true, isBlockDocument: true, title: 'Block Edit', content: '[]' },
+        { isEdit: false, isBlockDocument: true, shareId: 'share-456', title: 'Block View', content: '[]' }
+    ]
+
+    for (const cfg of configs) {
+        const html = HTML({
+            lang: 'zh-TW',
+            title: cfg.title,
+            content: cfg.content,
+            ext: { enableR2: true },
+            tips: '',
+            isEdit: cfg.isEdit,
+            isBlockDocument: cfg.isBlockDocument,
+            showPwPrompt: false,
+            path: 'test-path',
+            shareId: cfg.shareId,
+            autoPresent: cfg.autoPresent,
+            presentationEntry: cfg.presentationEntry
         })
+        const scripts = html.match(/<script[\s\S]*?<\/script>/g) || []
+        assert.ok(scripts.length > 0)
+        for (const s of scripts) {
+            if (s.includes('text/template') || s.includes('type="module"')) continue
+            const code = s.replace(/<script[^>]*>/i, '').replace(/<\/script>$/i, '')
+            if (!code.trim()) continue
+            try {
+                new Function(code)
+            } catch (err) {
+                assert.fail(`Syntax error in script tag for config ${JSON.stringify(cfg)}: ${err.message}\nCode:\n${code}`)
+            }
+        }
     }
 })

@@ -4837,7 +4837,7 @@ themeCss + '\\n' +
             var isDirectPresentUrl = window.location.pathname.endsWith('/present');
             var shouldReturnToShare = APP_STATE.autoPresent || isDirectPresentUrl;
             if (shouldReturnToShare) {
-                var targetPath = APP_STATE.sharePath || window.location.pathname.replace(/\/present\/?$/, '') || '/';
+                var targetPath = APP_STATE.sharePath || window.location.pathname.replace(new RegExp('\\\\/present\\\\/?$'), '') || '/';
                 window.location.replace(targetPath);
             }
         };
