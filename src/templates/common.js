@@ -379,18 +379,29 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
         <div class="footer-sections">
             <div class="footer-section footer-section-create">
                 <div class="footer-section-body">
-                    <div class="new-note-actions">
-                        <a id="new-note-link" class="toolbar-icon-button new-note-primary-link" href="#choose-editor" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}">
-                            <span class="new-note-plus" aria-hidden="true">＋</span>
-                        </a>
-                        <div class="dropdown-container new-note-dropdown">
-                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" title="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" aria-label="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" aria-haspopup="menu" aria-expanded="false">
-                                <span aria-hidden="true">▾</span>
+                    <div class="footer-control-group">
+                        <div class="dropdown-container new-note-dropdown" id="new-note-dropdown">
+                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button dropdown-trigger new-note-menu-trigger" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
+                                <span class="new-note-plus" aria-hidden="true">＋</span>
+                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
+                                <span class="toolbar-button-caret" aria-hidden="true">▾</span>
                             </button>
-                            <div class="dropdown-menu" role="menu">
+                            <div class="dropdown-menu new-note-dropdown-menu" role="menu">
                                 <div class="dropdown-menu-label">${createSectionTitle}</div>
-                                <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">${SVG_ICONS.sparkles}<span class="dropdown-item-copy"><strong>${newBlockTitle}</strong><small>${newBlockDescription}</small></span></a>
-                                <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">${SVG_ICONS.editLock}<span class="dropdown-item-copy"><strong>${newMarkdownTitle}</strong><small>${newMarkdownDescription}</small></span></a>
+                                <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">
+                                    ${SVG_ICONS.editLock}
+                                    <span class="dropdown-item-copy">
+                                        <strong>${newMarkdownTitle}</strong>
+                                        <small>${newMarkdownDescription}</small>
+                                    </span>
+                                </a>
+                                <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">
+                                    ${SVG_ICONS.sparkles}
+                                    <span class="dropdown-item-copy">
+                                        <strong>${newBlockTitle}</strong>
+                                        <small>${newBlockDescription}</small>
+                                    </span>
+                                </a>
                                 ${!isBlockEditor ? `
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>

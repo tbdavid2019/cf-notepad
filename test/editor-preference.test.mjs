@@ -41,13 +41,10 @@ test('editor preference defaults to Markdown and supports persistent choices in 
 test('primary new-note action asks for a format when no preference exists and supports one-click card action', () => {
     const window = createWindow(`${FOOTER({ lang: 'zh-TW', isEdit: true, mode: 'md', editorFormat: 'markdown' })}${EDITOR_PREFERENCE_MODAL('zh-TW')}`)
     const navigations = []
-    initializeEditorPreference(window.document, window, { navigate: format => navigations.push(format) })
+    const controller = initializeEditorPreference(window.document, window, { navigate: format => navigations.push(format) })
 
-    const primary = window.document.querySelector('#new-note-link')
     const dialog = window.document.querySelector('[data-editor-preference-dialog]')
-    assert.equal(primary.getAttribute('href'), '#choose-editor')
-
-    primary.click()
+    controller.open({ startNewNote: true })
     assert.equal(dialog.getAttribute('aria-hidden'), 'false')
 
     // Click direct card button for markdown
@@ -57,12 +54,11 @@ test('primary new-note action asks for a format when no preference exists and su
     assert.deepEqual(navigations, ['markdown'])
 })
 
-test('footer setting changes the one-click new-note target without converting the current note', () => {
+test('footer setting changes the default new-note format preference', () => {
     const window = createWindow(`${FOOTER({ lang: 'zh-TW', isEdit: true, mode: 'md', editorFormat: 'markdown' })}${EDITOR_PREFERENCE_MODAL('zh-TW')}`)
     const { document } = window
     initializeEditorPreference(document, window, { navigate: () => assert.fail('settings should not navigate') })
 
-    const primary = document.querySelector('#new-note-link')
     const settings = document.querySelector('#editor-preference-btn')
     settings.click()
     assert.equal(document.querySelector('[data-editor-preference-dialog]').getAttribute('aria-hidden'), 'false')
@@ -71,7 +67,6 @@ test('footer setting changes the one-click new-note target without converting th
     document.querySelector('[data-editor-preference-remember]').checked = true
     document.querySelector('[data-editor-preference-form]').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
 
-    assert.equal(primary.getAttribute('href'), '/new/markdown')
     assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), 'markdown')
     assert.equal(document.querySelector('[data-editor-preference-dialog]').getAttribute('aria-hidden'), 'true')
     assert.equal(document.activeElement, settings)

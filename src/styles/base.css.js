@@ -694,37 +694,27 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     display: none !important;
 }
 
-/* New note: primary action uses the remembered editor, menu exposes alternatives. */
-.new-note-actions { display: inline-flex; align-items: center; }
-.new-note-primary-link { width: 32px !important; min-width: 32px !important; padding: 0 !important; border-radius: 6px 0 0 6px !important; border-right: 0 !important; text-decoration: none; justify-content: center; }
-.new-note-dropdown .dropdown-menu {
-    min-width: 190px;
-}
-.new-note-menu-trigger {
-    width: 22px !important;
-    min-width: 22px !important;
-    padding: 0 !important;
-    border-radius: 0 6px 6px 0 !important;
-}
-.new-note-plus {
-    font-size: 17px;
-    font-weight: 500;
-    line-height: 1;
-}
-
-/* Export, Copy & Theme dropdowns */
+/* New note, Export, Copy & Theme dropdowns */
+.new-note-dropdown .dropdown-menu,
 .export-dropdown .dropdown-menu,
 .copy-dropdown .dropdown-menu {
     min-width: 220px;
 }
+.new-note-menu-trigger,
 .export-menu-trigger,
 .copy-menu-trigger {
     gap: 4px;
 }
+.new-note-menu-trigger .toolbar-button-caret,
 .export-menu-trigger .toolbar-button-caret,
 .copy-menu-trigger .toolbar-button-caret {
     font-size: 11px;
     opacity: 0.7;
+}
+.new-note-plus {
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1;
 }
 
 .theme-dropdown .dropdown-menu {
