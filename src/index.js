@@ -1241,9 +1241,17 @@ router.post('/api/shares/:shareId/annotations/:threadId/messages', async request
     }
 })
 
-router.post('/api/shares/:shareId/ai-assistant', async (request, { env }) => {
+router.post('/api/shares/:shareId/ai-assistant', async (request, context = {}) => {
+    const ai = context?.env?.AI || globalThis.AI
+    const shareKv = context?.env?.SHARE || getShareNamespace()
     const shareId = decodeURIComponent(request.params.shareId)
-    const path = await env.SHARE.get(shareId)
+    let path = shareKv ? await shareKv.get(shareId) : null
+    if (!path) {
+        const directNote = await queryNote(shareId)
+        if (directNote?.metadata?.share === true) {
+            path = shareId
+        }
+    }
     if (!path) {
         return returnJSON(404, 'Share not found', { status: 404 })
     }
@@ -1259,7 +1267,7 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, { env }) => {
         }
     }
 
-    if (!env.AI) {
+    if (!ai) {
         return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
     }
 
@@ -1292,7 +1300,7 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, { env }) => {
             }
         ]
         try {
-            const aiResponse = await runAiWithTimeout(env.AI, model, {
+            const aiResponse = await runAiWithTimeout(ai, model, {
                 messages,
                 reasoning_effort: 'low',
                 max_completion_tokens: 4096,
@@ -1317,7 +1325,7 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, { env }) => {
             { role: 'user', content: prompt }
         ]
         try {
-            const aiResponse = await runAiWithTimeout(env.AI, model, {
+            const aiResponse = await runAiWithTimeout(ai, model, {
                 messages,
                 reasoning_effort: 'low',
                 max_completion_tokens: 4096,

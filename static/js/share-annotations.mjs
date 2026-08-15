@@ -877,6 +877,24 @@ function initShareAnnotations() {
         }
     }
 
+    const formatAiResult = text => {
+        if (typeof window.marked?.parse === 'function') {
+            try {
+                return window.marked.parse(text)
+            } catch {}
+        }
+        if (typeof window.renderMarkdown === 'function') {
+            try {
+                return window.renderMarkdown(text)
+            } catch {}
+        }
+        const div = document.createElement('div')
+        div.textContent = text
+        let html = div.innerHTML
+        html = html.replace(/\n/g, '<br>')
+        return html
+    }
+
     const showAiResult = (text, copySuccessMsg) => {
         const loading = aiPopover.querySelector('.selection-ai-loading')
         const resultView = aiPopover.querySelector('.selection-ai-result-view')
@@ -887,7 +905,20 @@ function initShareAnnotations() {
         loading.style.display = 'none'
         askView.style.display = 'none'
         resultView.style.display = 'block'
-        resultContent.textContent = text
+        resultContent.innerHTML = formatAiResult(text)
+
+        if (typeof window.renderMathInElement === 'function') {
+            try {
+                window.renderMathInElement(resultContent, {
+                    delimiters: [
+                        { left: '$$', right: '$$', display: true },
+                        { left: '$', right: '$', display: false },
+                    ],
+                    throwOnError: false,
+                })
+            } catch {}
+        }
+
         positionAiPopover()
 
         copyResultBtn.onclick = async () => {
@@ -909,7 +940,7 @@ function initShareAnnotations() {
         loading.style.display = 'none'
         askView.style.display = 'none'
         resultView.style.display = 'block'
-        resultContent.innerHTML = `<span style="color:#d9534f;">⚠️ ${errorMessage}</span>`
+        resultContent.innerHTML = `<span style="color:#d9534f;font-weight:600;">⚠️ ${errorMessage}</span>`
         positionAiPopover()
     }
 
@@ -934,10 +965,10 @@ function initShareAnnotations() {
                     }),
                 },
             )
-            if (data.code === 0 && data.data?.result) {
-                showAiResult(data.data.result, copySuccessMsg)
+            if (data?.result) {
+                showAiResult(data.result, copySuccessMsg)
             } else {
-                showAiError(data.message || copy.aiError)
+                showAiError(data?.message || copy.aiError)
             }
         } catch (err) {
             showAiError(err.message || copy.aiError)
