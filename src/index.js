@@ -18,7 +18,7 @@ import {
 } from './note_meta'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
-import { driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
+import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,

@@ -4,6 +4,7 @@ import * as TEMPL from './template'
 import { SUPPORTED_LANG, getGaMeasurementId, getSalt, getSecret } from './constant'
 import { resolvePasswordRole } from './password_policy.mjs'
 import { getNoteHistoryConfig, deleteNoteHistoryVersions } from './note_history.mjs'
+import { driverQueryNote } from './storage_driver.mjs'
 
 const getNotesNamespace = () => globalThis.NOTES
 const getShareNamespace = () => globalThis.SHARE
@@ -128,8 +129,6 @@ export async function checkAuth(cookie, path) {
     }
     return { valid: false, role: null }
 }
-
-import { driverQueryNote } from './storage_driver.mjs'
 
 export async function queryNote(key) {
     return await driverQueryNote(key)
