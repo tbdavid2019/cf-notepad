@@ -1978,10 +1978,15 @@ ${getMarkdownCss()}
             let targetLanguage = ''
             let bilingual = false
             if (isTranslate) {
+                const textToAnalyze = hasSelection ? rawText.slice(selectionStart, selectionEnd) : rawText
+                const isChinese = /\\p{Script=Han}/u.test(textToAnalyze)
+                const defaultTargetLang = isChinese
+                    ? (APP_STATE.lang === 'zh-TW' ? '英文' : 'English')
+                    : (APP_STATE.lang === 'zh-TW' ? '繁體中文' : 'Traditional Chinese')
                 const targetPrompt = APP_STATE.lang === 'zh-TW'
-                    ? '請輸入目標語言，例如：繁體中文、英文、日文'
-                    : 'Enter the target language, for example: Traditional Chinese, English, or Japanese'
-                targetLanguage = window.prompt(targetPrompt, APP_STATE.lang === 'zh-TW' ? '繁體中文' : 'English')
+                    ? '請輸入目標語言，例如：英文、繁體中文、日文'
+                    : 'Enter the target language, for example: English, Traditional Chinese, or Japanese'
+                targetLanguage = window.prompt(targetPrompt, defaultTargetLang)
                 if (targetLanguage === null || !targetLanguage.trim()) return;
                 bilingual = window.confirm(APP_STATE.lang === 'zh-TW'
                     ? '要保留原文並產生雙語版本嗎？\\n選擇「確定」＝雙語；「取消」＝只翻譯。'

@@ -172,3 +172,4 @@ dist
 
 wrangler.toml
 .DS_Store
+orca-paste-*

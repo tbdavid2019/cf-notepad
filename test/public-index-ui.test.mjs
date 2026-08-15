@@ -202,6 +202,8 @@ test('editor toolbar exposes AI controls without duplicating them in the footer'
     assert.match(baseTemplateSource, /runAiAssistant\('format'\)/)
     assert.match(baseTemplateSource, /runAiAssistant\('edit'\)/)
     assert.match(baseTemplateSource, /runAiAssistant\('translate'\)/)
+    assert.match(baseTemplateSource, /const isChinese = /)
+    assert.match(baseTemplateSource, /const defaultTargetLang = isChinese/)
     assert.match(baseTemplateSource, /res\.err === 0 && res\.data\?\.result/)
     assert.match(baseTemplateSource, /\$textarea\.value = res\.data\.result/)
     assert.match(indexSource, /router\.post\('\/:path\/ai-format'/)
