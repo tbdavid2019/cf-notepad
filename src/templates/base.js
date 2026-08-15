@@ -3954,7 +3954,9 @@ themeCss + '\\n' +
         function initUiTheme() {
             const $themeBtn = document.getElementById('ui-theme-toggle-btn');
             const root = document.documentElement;
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            const mediaQuery = typeof window.matchMedia === 'function'
+                ? window.matchMedia('(prefers-color-scheme: dark)')
+                : { matches: false, addEventListener: () => {} };
 
             function getSavedTheme() {
                 try { return localStorage.getItem(UI_THEME_STORAGE_KEY) || 'auto'; } catch(e) { return 'auto'; }
