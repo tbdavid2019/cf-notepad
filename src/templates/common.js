@@ -73,6 +73,8 @@ export const SVG_ICONS = {
     github: `<svg class="svg-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2C6.48 2 2 6.58 2 12.23c0 4.52 2.87 8.35 6.84 9.71.5.1.68-.22.68-.48 0-.24-.01-1.02-.01-1.85-2.78.62-3.37-1.2-3.37-1.2-.45-1.18-1.11-1.49-1.11-1.49-.91-.64.07-.63.07-.63 1 .07 1.53 1.06 1.53 1.06.9 1.56 2.35 1.11 2.92.85.09-.67.35-1.12.64-1.38-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.31.1-2.73 0 0 .84-.28 2.75 1.05A9.28 9.28 0 0 1 12 6.8c.85 0 1.71.12 2.51.35 1.91-1.33 2.75-1.05 2.75-1.05.55 1.42.2 2.47.1 2.73.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.07.36.32.68.92.68 1.86 0 1.35-.01 2.43-.01 2.76 0 .27.18.59.69.48A10.23 10.23 0 0 0 22 12.23C22 6.58 17.52 2 12 2Z"/></svg>`,
     save: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>`,
     type: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
+    palette: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>`,
+    width: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"/><path d="m18 15 3-3-3-3"/><path d="m6 9-3 3 3 3"/></svg>`,
     languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`
 }
 
@@ -161,6 +163,185 @@ export const SWITCHER = (text, open, className = '') => `
 </label>
 <span class="footer-control-label">${text}</span>
 `
+
+export const COPY_DROPDOWN_MENU = (lang) => {
+    const isZh = lang === 'zh-TW'
+    return `
+        <div class="footer-control-group">
+            <div class="dropdown-container copy-dropdown" id="copy-dropdown">
+                <button type="button" id="copy-menu-btn" class="toolbar-icon-button dropdown-trigger copy-menu-trigger copy-md-button" data-tooltip="${isZh ? '複製內容' : 'Copy Content'}" title="${isZh ? '複製內容' : 'Copy Content'}" aria-label="${isZh ? '複製內容' : 'Copy Content'}" aria-haspopup="menu" aria-expanded="false">
+                    <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
+                    <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
+                    <span class="toolbar-button-label">${isZh ? '複製' : 'Copy'}</span>
+                    <span class="toolbar-button-caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="dropdown-menu copy-dropdown-menu" role="menu">
+                    <div class="dropdown-menu-label">${isZh ? '整篇內容複製到' : 'Copy Document To'}</div>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-all-richtext-btn" role="menuitem">
+                        ${SVG_ICONS.magic}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '一般富文字 (Rich Text)' : 'Rich Text (Formatted)'}</strong>
+                            <small>${isZh ? '含樣式與表格 · 貼入 Word / Docs / Notes' : 'With styles · Paste to Word / Docs / Notes'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-all-md-btn" role="menuitem">
+                        ${SVG_ICONS.copy}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '純 Markdown' : 'Plain Markdown'}</strong>
+                            <small>${isZh ? '乾淨原始碼 · 貼入 Obsidian / GitHub / AI' : 'Clean text · Paste to Obsidian / GitHub / AI'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-all-notion-btn" role="menuitem">
+                        ${SVG_ICONS.task}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? 'Notion 相容格式' : 'Notion Format'}</strong>
+                            <small>${isZh ? '公式相容 $$ · 自動轉換區塊與 Callout' : 'Formula $$ compatible · Paste as blocks'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-all-jira-btn" role="menuitem">
+                        ${SVG_ICONS.rule}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? 'Jira / Confluence' : 'Jira / Confluence'}</strong>
+                            <small>${isZh ? '轉換為 h1.、{code}、||標頭|| 標記' : 'Converts to h1., {code}, ||header|| markup'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-all-feishu-btn" role="menuitem">
+                        ${SVG_ICONS.sparkles}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '飛書 / Lark' : 'Feishu / Lark'}</strong>
+                            <small>${isZh ? '相容飛書文檔結構 · 公式與表格不跑版' : 'Feishu Docs compatible · Intact formulas'}</small>
+                        </span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-menu-label">${isZh ? '圖片複製' : 'Image Copy'}</div>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="copy-image-btn" role="menuitem">
+                        ${SVG_ICONS.image}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '複製長圖 (Image)' : 'Copy Long Image'}</strong>
+                            <small>${isZh ? '2x 高解析度複製至剪貼簿' : 'Copy 2x high-res image to clipboard'}</small>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `
+}
+
+export const EXPORT_DROPDOWN_MENU = (lang) => {
+    const isZh = lang === 'zh-TW'
+    return `
+        <div class="footer-control-group">
+            <div class="dropdown-container export-dropdown" id="export-dropdown">
+                <button type="button" id="export-menu-btn" class="toolbar-icon-button dropdown-trigger export-menu-trigger" data-tooltip="${isZh ? '檔案導出' : 'File Export'}" title="${isZh ? '檔案導出' : 'File Export'}" aria-label="${isZh ? '檔案導出' : 'File Export'}" aria-haspopup="menu" aria-expanded="false">
+                    ${SVG_ICONS.export}
+                    <span class="toolbar-button-label">${isZh ? '匯出' : 'Export'}</span>
+                    <span class="toolbar-button-caret" aria-hidden="true">▾</span>
+                </button>
+                <div class="dropdown-menu export-dropdown-menu" role="menu">
+                    <div class="dropdown-menu-label">${isZh ? '檔案導出' : 'File Export'}</div>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="export-image-btn" role="menuitem">
+                        ${SVG_ICONS.image}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '匯出長圖 (.png)' : 'Export Image (.png)'}</strong>
+                            <small>${isZh ? '生成 2x 高解析度長圖' : 'Generate 2x retina long image'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="export-md-btn" role="menuitem">
+                        ${SVG_ICONS.editLock}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '匯出 Markdown (.md)' : 'Export Markdown (.md)'}</strong>
+                            <small>${isZh ? '下載原始 Markdown 檔案' : 'Download clean Markdown file'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="export-html-btn" role="menuitem">
+                        ${SVG_ICONS.globe}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '匯出 HTML 網頁 (.html)' : 'Export HTML (.html)'}</strong>
+                            <small>${isZh ? '含排版與公式的單一離線網頁' : 'Standalone offline webpage with styles'}</small>
+                        </span>
+                    </button>
+                    <div class="dropdown-divider"></div>
+                    <div class="dropdown-menu-label">${isZh ? '列印與 PDF' : 'Print & PDF'}</div>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="export-pdf-btn" role="menuitem">
+                        ${SVG_ICONS.pdf}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '另存 PDF / 列印預覽' : 'Save as PDF / Print Preview'}</strong>
+                            <small>${isZh ? '最佳化 A4 列印排版與 PDF 輸出' : 'Optimized A4 print & PDF export'}</small>
+                        </span>
+                    </button>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="print-preview-btn" role="menuitem" style="display:none;">
+                        ${SVG_ICONS.pdf}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '列印預覽 (Print)' : 'Print Preview'}</strong>
+                            <small>${isZh ? '呼叫系統列印對話框' : 'Open system print dialog'}</small>
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    `
+}
+
+export const THEME_DROPDOWN_MENU = (lang, currentTheme, getThemeLabel) => {
+    const isZh = lang === 'zh-TW'
+    const activeTheme = currentTheme || 'claude-canvas'
+    return `
+        <div class="footer-control-group">
+            <div class="dropdown-container theme-dropdown" id="theme-dropdown">
+                <button type="button" id="theme-menu-btn" class="toolbar-icon-button dropdown-trigger theme-menu-trigger" data-tooltip="${isZh ? '排版樣式' : 'Typography theme'}" title="${isZh ? '排版樣式' : 'Typography theme'}" aria-label="${isZh ? '排版樣式' : 'Typography theme'}" aria-haspopup="menu" aria-expanded="false">
+                    ${SVG_ICONS.palette}
+                    <span class="toolbar-button-label">${isZh ? '樣式' : 'Theme'}</span>
+                </button>
+                <div class="dropdown-menu theme-dropdown-menu" role="menu">
+                    <div class="dropdown-menu-label">${isZh ? '排版樣式' : 'Theme Style'}</div>
+                    ${Object.keys(THEMES).map(themeName => {
+                        const isActive = themeName === activeTheme
+                        const label = getThemeLabel(themeName)
+                        return `
+                            <button type="button" class="dropdown-item theme-item ${isActive ? 'is-active' : ''}" data-theme-name="${themeName}" role="menuitem">
+                                <span class="theme-item-name">${label}</span>
+                                ${isActive ? `<span class="theme-item-check" aria-hidden="true">✓</span>` : ''}
+                            </button>
+                        `
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `
+}
+export const WIDTH_DROPDOWN_MENU = (lang, currentWidth) => {
+    const isZh = lang === 'zh-TW'
+    const activeWidth = currentWidth || DEFAULT_PREVIEW_WIDTH
+    const widthOptions = [
+        { value: '100%', zh: '100% · 全寬', en: '100% · Full' },
+        { value: '960px', zh: '960px · 緊湊', en: '960px · Compact' },
+        { value: '1200px', zh: '1200px · 標準', en: '1200px · Standard' },
+        { value: '1440px', zh: '1440px · 寬版', en: '1440px · Wide' },
+    ]
+    return `
+        <div class="footer-control-group">
+            <div class="dropdown-container width-dropdown" id="width-dropdown">
+                <button type="button" id="width-menu-btn" class="toolbar-icon-button dropdown-trigger width-menu-trigger" data-tooltip="${isZh ? '預覽寬度' : 'Preview width'}" title="${isZh ? '預覽寬度' : 'Preview width'}" aria-label="${isZh ? '預覽寬度' : 'Preview width'}" aria-haspopup="menu" aria-expanded="false">
+                    ${SVG_ICONS.width}
+                    <span class="toolbar-button-label">${isZh ? '寬度' : 'Width'}</span>
+                </button>
+                <div class="dropdown-menu width-dropdown-menu" role="menu">
+                    <div class="dropdown-menu-label">${isZh ? '預覽寬度' : 'Preview Width'}</div>
+                    ${widthOptions.map(opt => {
+                        const isActive = opt.value === activeWidth
+                        const label = isZh ? opt.zh : opt.en
+                        return `
+                            <button type="button" class="dropdown-item width-item ${isActive ? 'is-active' : ''}" data-width-value="${opt.value}" role="menuitem">
+                                <span class="width-item-name">${label}</span>
+                                ${isActive ? `<span class="width-item-check" aria-hidden="true">✓</span>` : ''}
+                            </button>
+                        `
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+    `
+}
 
 export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, path, theme, width, sharePath, noteHistoryEnabled, publicIndex, authPath, autosave, viewCount, annotationsEnabled, editorFormat = 'markdown' }) => {
     const t = getLangText(lang)
@@ -338,22 +519,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.import}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
                         </button>
-                        <button type="button" id="export-md-btn" class="toolbar-icon-button" data-tooltip="${t.exportMarkdown}" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
-                            ${SVG_ICONS.export}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
-                        </button>
-                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" data-tooltip="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
-                            <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
-                            <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
-                        </button>
+                        ${EXPORT_DROPDOWN_MENU(lang)}
+                        ${COPY_DROPDOWN_MENU(lang)}
                         <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
-                        </button>
-                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
-                            ${SVG_ICONS.pdf}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
                         </button>
                         <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
                             <div class="footer-preview-group footer-control-group">
@@ -413,15 +583,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
                             : `<a href="/${path}" class="toolbar-icon-button readonly-edit-link" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
                         }
-                        <button type="button" id="export-md-btn" class="toolbar-icon-button" data-tooltip="${t.exportMarkdown}" title="${t.exportMarkdown}" aria-label="${t.exportMarkdown}">
-                            ${SVG_ICONS.export}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯出' : 'Export'}</span>
-                        </button>
-                        <button type="button" id="copy-md-btn" class="toolbar-icon-button copy-md-button" data-tooltip="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" title="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}" aria-label="${lang === 'zh-TW' ? '複製內容' : 'Copy content'}">
-                            <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
-                            <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
-                        </button>
+                        ${EXPORT_DROPDOWN_MENU(lang)}
+                        ${COPY_DROPDOWN_MENU(lang)}
                         <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
@@ -436,10 +599,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
                         </button>
                         ` : ''}
-                        <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
-                            ${SVG_ICONS.pdf}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
-                        </button>
                     ` : '')}
                     <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" data-tooltip="${moreToolsTitle}" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
                         ${SVG_ICONS.more}
@@ -486,19 +645,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                     </div>
                     ${!isEdit || mode === 'md' ? `
-                        <div class="footer-control-group">
-                            <wa-select id="preview-width-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${t.width}" value="${effectiveWidth}">
-                                <wa-option value="100%" ${effectiveWidth === '100%' ? 'selected' : ''}>${t.width}: ${t.full}</wa-option>
-                                <wa-option value="960px" ${effectiveWidth === '960px' ? 'selected' : ''}>${t.width}: 960</wa-option>
-                                <wa-option value="1200px" ${effectiveWidth === '1200px' ? 'selected' : ''}>${t.width}: 1200</wa-option>
-                                <wa-option value="1440px" ${effectiveWidth === '1440px' ? 'selected' : ''}>${t.width}: 1440</wa-option>
-                            </wa-select>
-                        </div>
-                        <div class="footer-control-group">
-                            <wa-select id="theme-selector" class="footer-select" size="s" appearance="outlined" placement="top" aria-label="${lang === 'zh-TW' ? '主題' : 'Theme'}" value="${theme || 'claude-canvas'}">
-                                ${Object.keys(THEMES).map(themeName => `<wa-option value="${themeName}" ${themeName === (theme || 'claude-canvas') ? 'selected' : ''}>${getThemeLabel(themeName)}</wa-option>`).join('')}
-                            </wa-select>
-                        </div>
+                        ${WIDTH_DROPDOWN_MENU(lang, effectiveWidth)}
+                        ${THEME_DROPDOWN_MENU(lang, theme, getThemeLabel)}
                     ` : ''}
                     ${sharePath ? `
                         <div id="share-analytics-hook">
@@ -628,15 +776,28 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
 export const MATH_FORMAT_MODAL = (lang) => {
     const zh = lang === 'zh-TW'
     const title = zh ? '公式複製格式' : 'Formula Copy Format'
-    const description = zh ? '選擇點擊公式時複製的格式' : 'Choose the format copied when clicking a math formula'
-    const latexTitle = 'LaTeX'
-    const latexDesc = zh ? '包含 $ 符號 · 適合 Markdown 筆記、論文寫作、LaTeX 編輯器' : 'With $ delimiters · For Markdown notes, papers, and LaTeX editors'
+    const description = zh ? '選擇點擊 KaTeX 數學公式時預設複製的格式' : 'Choose default format when clicking a KaTeX formula'
+    
+    const autoTitle = zh ? '自動判斷' : 'Auto Detect'
+    const autoDesc = zh ? '行內公式含 $，獨立區塊含 $$ · 智慧相容多數編輯器' : 'Inline with $, display with $$ · Universal compatibility'
+
+    const latexTitle = 'LaTeX (含 $)'
+    const latexDesc = zh ? '一律包含 $ 或 $$ · 適合 Markdown 筆記、論文寫作、LaTeX 編輯器' : 'Always with $ delimiters · For Markdown notes and LaTeX editors'
+
+    const plainTitle = zh ? 'LaTeX 純文字' : 'LaTeX Plain'
+    const plainDesc = zh ? '乾淨原始碼 (無 $) · 適合 Desmos、WolframAlpha 等計算工具' : 'Raw formula without $ · For Desmos, WolframAlpha, and math tools'
+
+    const notionTitle = zh ? 'Notion (雙 $)' : 'Notion ($$)'
+    const notionDesc = zh ? '一律使用 $$...$$ · 適合直接貼入 Notion 行內或區塊公式' : 'Always uses $$...$$ · For Notion inline or block equations'
+
     const mathmlTitle = 'MathML (Word)'
     const mathmlDesc = zh ? 'XML 結構 · 直接貼入 Microsoft Word 轉為原生公式物件' : 'XML format · Paste directly into Microsoft Word as native equation'
-    const plainTitle = zh ? 'LaTeX (純文字，無 $ 符號)' : 'LaTeX (Plain text, no $)'
-    const plainDesc = zh ? '乾淨原始碼 · 適合 Desmos、WolframAlpha 等數學計算工具' : 'Clean raw code · For Desmos, WolframAlpha, and math tools'
-    const notionTitle = zh ? 'Notion (雙$格式)' : 'Notion ($$ format)'
-    const notionDesc = zh ? '一律使用 $$...$$ · 適合直接貼入 Notion 行內或區塊公式' : 'Always uses $$...$$ · For Notion inline or block equations'
+
+    const pngTitle = zh ? '圖片 PNG' : 'Image PNG'
+    const pngDesc = zh ? '2x 高解析透明 PNG 圖片 · 貼入不支援 LaTeX 的通訊與辦公軟體' : '2x high-res PNG image · Paste into apps without LaTeX support'
+
+    const svgTitle = zh ? 'SVG (進階)' : 'SVG Vector'
+    const svgDesc = zh ? '乾淨向量 SVG 原始碼 · 適合 Illustrator、Figma 與網頁設計' : 'Clean vector SVG markup · For Illustrator, Figma, and web design'
 
     return `
 <div id="math-format-modal" class="modal math-format-modal" role="dialog" aria-modal="true" aria-labelledby="math-format-title" aria-describedby="math-format-description" aria-hidden="true" style="display:none;">
@@ -650,21 +811,33 @@ export const MATH_FORMAT_MODAL = (lang) => {
         <p id="math-format-description">${description}</p>
         <fieldset class="editor-preference-options">
             <legend class="sr-only">${title}</legend>
+            <label class="editor-preference-option is-selected" data-math-option="auto">
+                <input type="radio" name="math-copy-format" value="auto" checked>
+                <span><strong>${autoTitle}</strong><small>${autoDesc}</small></span>
+            </label>
             <label class="editor-preference-option" data-math-option="latex">
                 <input type="radio" name="math-copy-format" value="latex">
                 <span><strong>${latexTitle}</strong><small>${latexDesc}</small></span>
-            </label>
-            <label class="editor-preference-option" data-math-option="mathml">
-                <input type="radio" name="math-copy-format" value="mathml">
-                <span><strong>${mathmlTitle}</strong><small>${mathmlDesc}</small></span>
             </label>
             <label class="editor-preference-option" data-math-option="latex-plain">
                 <input type="radio" name="math-copy-format" value="latex-plain">
                 <span><strong>${plainTitle}</strong><small>${plainDesc}</small></span>
             </label>
-            <label class="editor-preference-option is-selected" data-math-option="notion">
-                <input type="radio" name="math-copy-format" value="notion" checked>
+            <label class="editor-preference-option" data-math-option="notion">
+                <input type="radio" name="math-copy-format" value="notion">
                 <span><strong>${notionTitle}</strong><small>${notionDesc}</small></span>
+            </label>
+            <label class="editor-preference-option" data-math-option="mathml">
+                <input type="radio" name="math-copy-format" value="mathml">
+                <span><strong>${mathmlTitle}</strong><small>${mathmlDesc}</small></span>
+            </label>
+            <label class="editor-preference-option" data-math-option="png">
+                <input type="radio" name="math-copy-format" value="png">
+                <span><strong>${pngTitle}</strong><small>${pngDesc}</small></span>
+            </label>
+            <label class="editor-preference-option" data-math-option="svg">
+                <input type="radio" name="math-copy-format" value="svg">
+                <span><strong>${svgTitle}</strong><small>${svgDesc}</small></span>
             </label>
         </fieldset>
         <div class="editor-preference-actions">

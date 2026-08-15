@@ -1916,36 +1916,7 @@ ${getMarkdownCss()}
             })
         }
 
-        const getMarkdownFilename = () => {
-            const source = APP_STATE.title || APP_STATE.path || 'note'
-            const sanitized = String(source)
-                .trim()
-                .replace(/[\\/:*?"<>|]+/g, '-')
-                .replace(/\s+/g, '-')
-                .replace(/-+/g, '-')
-                .replace(/^-|-$/g, '')
-            return (sanitized || 'note') + '.md'
-        }
-
-        if ($exportMdBtn) {
-            $exportMdBtn.addEventListener('click', () => {
-                const blob = new Blob([getCurrentMarkdownForExport()], { type: 'text/markdown;charset=utf-8' })
-                const url = URL.createObjectURL(blob)
-                const link = document.createElement('a')
-                link.href = url
-                link.download = getMarkdownFilename()
-                document.body.appendChild(link)
-                link.click()
-                link.remove()
-                window.setTimeout(() => URL.revokeObjectURL(url), 0)
-            })
-        }
-
-        if ($exportPdfBtn) {
-            $exportPdfBtn.addEventListener('click', () => {
-                window.print()
-            })
-        }
+        window.getCurrentMarkdownForExport = getCurrentMarkdownForExport
 
         const $editorAiFormatBtn = document.querySelector('#editor-ai-format-btn')
         const $editorAiEditBtn = document.querySelector('#editor-ai-edit-btn')
@@ -2589,8 +2560,8 @@ ${getMarkdownCss()}
 
         const publishCurrentNote = (preferences = defaultPublishPreferences) => {
             const wasPublished = APP_STATE.isPublished === true
-            const currentWidth = APP_STATE.noteSettings.width || (previewWidthSelector ? previewWidthSelector.value : '') || (APP_STATE.isEdit ? '1200px' : '100%')
-            const currentTheme = themeSelector?.value || themeSelector?.getAttribute('value') || APP_STATE.theme
+            const currentWidth = APP_STATE.noteSettings.width || (APP_STATE.isEdit ? '1200px' : '100%')
+            const currentTheme = APP_STATE.theme || 'claude-canvas'
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3292,8 +3263,22 @@ ${getMarkdownCss()}
         function applyPreviewWidth(value) {
             const width = value || DEFAULT_PREVIEW_WIDTH;
             previewWidthRoot.style.setProperty('--preview-max-width', width);
-            if (previewWidthSelector && previewWidthSelector.value !== width) {
-                previewWidthSelector.value = width;
+            const widthDropdown = document.getElementById('width-dropdown');
+            if (widthDropdown) {
+                widthDropdown.querySelectorAll('.width-item').forEach(el => {
+                    const active = el.dataset.widthValue === width;
+                    el.classList.toggle('is-active', active);
+                    let check = el.querySelector('.width-item-check');
+                    if (active && !check) {
+                        const checkEl = document.createElement('span');
+                        checkEl.className = 'width-item-check';
+                        checkEl.setAttribute('aria-hidden', 'true');
+                        checkEl.textContent = '✓';
+                        el.appendChild(checkEl);
+                    } else if (!active && check) {
+                        check.remove();
+                    }
+                });
             }
         }
 
@@ -3399,19 +3384,25 @@ ${getMarkdownCss()}
             applyShareFont(initialShareFont);
         }
 
-        if (previewWidthSelector) {
-            const handleWidthChange = function() {
-                const width = this.value;
+        const widthDropdown = document.getElementById('width-dropdown');
+        if (widthDropdown) {
+            widthDropdown.addEventListener('click', (e) => {
+                const item = e.target.closest('.width-item');
+                if (!item) return;
+                const width = item.dataset.widthValue;
                 if (!width) return;
                 APP_STATE.noteSettings.width = width;
                 applyPreviewWidth(width);
                 if (canPersistSettings) {
                     window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
-                    persistSetting({ width }).catch(err => errHandle(err.message || err));
+                    persistSetting({ width }).catch(err => errHandle(err?.message || err));
                 }
-            };
-            previewWidthSelector.addEventListener('change', handleWidthChange);
-            previewWidthSelector.addEventListener('wa-change', handleWidthChange);
+                if (typeof window.showToast === 'function') {
+                    const widthLabel = item.querySelector('.width-item-name')?.textContent || width;
+                    const isZh = APP_STATE.lang === 'zh-TW';
+                    window.showToast(isZh ? ('已套用寬度：' + widthLabel) : ('Applied width: ' + widthLabel));
+                }
+            });
         }
 
         if (languageSelector) {
@@ -3431,22 +3422,420 @@ ${getMarkdownCss()}
             });
         }
 
-        if (themeSelector) {
-            syncThemeSelectorTitle();
-            themeSelector.addEventListener('change', function() {
-                const theme = this.value;
-                themeStyleNode.textContent = THEMES[theme];
-                syncThemeSelectorTitle();
-                if (canPersistSettings) persistSetting({ theme }).catch(err => errHandle(err.message || err));
-            });
-        }
+        function initExportAndThemeControls() {
+            const isZh = APP_STATE.lang === 'zh-TW';
 
-        // Web Awesome loads asynchronously. Re-apply values after the custom element upgrades.
-        if (window.customElements?.whenDefined) {
-            window.customElements.whenDefined('wa-select').then(() => {
-                applyPreviewWidth(initialPreviewWidth);
-                syncThemeSelectorTitle();
-            }).catch(() => {});
+            // 1. Theme Dropdown Logic
+            const themeDropdown = document.getElementById('theme-dropdown');
+            if (themeDropdown) {
+                themeDropdown.addEventListener('click', (e) => {
+                    const item = e.target.closest('.theme-item');
+                    if (!item) return;
+                    const theme = item.dataset.themeName;
+                    if (!theme || !THEMES[theme]) return;
+
+                    APP_STATE.theme = theme;
+                    if (themeStyleNode) themeStyleNode.textContent = THEMES[theme];
+
+                    themeDropdown.querySelectorAll('.theme-item').forEach(el => {
+                        const active = el.dataset.themeName === theme;
+                        el.classList.toggle('is-active', active);
+                        let check = el.querySelector('.theme-item-check');
+                        if (active && !check) {
+                            const checkEl = document.createElement('span');
+                            checkEl.className = 'theme-item-check';
+                            checkEl.setAttribute('aria-hidden', 'true');
+                            checkEl.textContent = '✓';
+                            el.appendChild(checkEl);
+                        } else if (!active && check) {
+                            check.remove();
+                        }
+                    });
+
+                    if (canPersistSettings) persistSetting({ theme }).catch(err => console.warn('Theme persist failed:', err?.message || err));
+                    if (typeof window.showToast === 'function') {
+                        const themeLabel = item.querySelector('.theme-item-name')?.textContent || theme;
+                        window.showToast(isZh ? ('已套用樣式：' + themeLabel) : ('Applied theme: ' + themeLabel));
+                    }
+                });
+            }
+
+            // 2. Export Helper & Filename
+            const triggerDownload = (blobOrDataUrl, filename) => {
+                const link = document.createElement('a');
+                let url = '';
+                let isObjectUrl = false;
+                if (typeof blobOrDataUrl === 'string') {
+                    url = blobOrDataUrl;
+                } else if (blobOrDataUrl instanceof Blob) {
+                    url = URL.createObjectURL(blobOrDataUrl);
+                    isObjectUrl = true;
+                }
+                link.href = url;
+                link.download = filename;
+                link.style.display = 'none';
+                document.body.appendChild(link);
+                link.click();
+                setTimeout(() => {
+                    link.remove();
+                    if (isObjectUrl) URL.revokeObjectURL(url);
+                }, 1000);
+            };
+
+            const getExportFilename = (ext = 'md') => {
+                let title = '';
+                if (APP_STATE.editorFormat === 'block' && typeof window.blockEditor?.getText === 'function') {
+                    const text = window.blockEditor.getText() || '';
+                    title = text.split(/[\\r\\n]+/)[0]?.trim() || '';
+                } else if (typeof $textarea !== 'undefined' && $textarea) {
+                    title = $textarea.value.split(/[\\r\\n]+/)[0]?.trim() || '';
+                } else {
+                    const heading = document.querySelector('#preview-md h1, #preview-plain h1, .markdown-body h1');
+                    if (heading) title = heading.textContent.trim();
+                }
+                title = title.replace(/^#+\\s*/, '').trim();
+                const source = title || APP_STATE.title || APP_STATE.path || 'note';
+                const sanitized = String(source)
+                    .trim()
+                    .replace(/[\\\\/:*?"<>|]+/g, '-')
+                    .replace(/\\s+/g, '-')
+                    .replace(/-+/g, '-')
+                    .replace(/^-|-$/g, '')
+                    .slice(0, 60);
+                return (sanitized || 'note') + '.' + ext;
+            };
+
+            // 3. Export Markdown Content Helper
+            const getExportMarkdown = () => {
+                if (typeof window.getCurrentMarkdownForExport === 'function') {
+                    return window.getCurrentMarkdownForExport();
+                }
+                if (typeof $textarea !== 'undefined' && $textarea) {
+                    return $textarea.value || '';
+                }
+                const rawEl = document.querySelector('#raw-markdown-content, #source-content, pre#contents');
+                if (rawEl) return rawEl.textContent || '';
+                return document.querySelector('.markdown-body, #preview-md')?.innerText || '';
+            };
+
+            const getExportHtmlContent = () => {
+                if (APP_STATE.editorFormat === 'block') {
+                    const blockEditorEl = document.querySelector('.bn-editor, .tiptap, .ProseMirror');
+                    if (blockEditorEl) return blockEditorEl.innerHTML;
+                }
+                const previewEl = document.querySelector('#preview-md, #preview-plain, .markdown-body');
+                return previewEl ? previewEl.innerHTML : '';
+            };
+
+            // 4. Export Markdown (.md)
+            const exportMdBtn = document.getElementById('export-md-btn');
+            if (exportMdBtn) {
+                exportMdBtn.addEventListener('click', () => {
+                    const content = getExportMarkdown();
+                    const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+                    triggerDownload(blob, getExportFilename('md'));
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? '已下載 Markdown 檔案' : 'Markdown file downloaded');
+                    }
+                });
+            }
+
+            // 5. Export HTML (.html)
+            const exportHtmlBtn = document.getElementById('export-html-btn');
+            if (exportHtmlBtn) {
+                exportHtmlBtn.addEventListener('click', () => {
+                    const currentThemeName = APP_STATE.theme || 'claude-canvas';
+                    const themeCss = (typeof THEMES !== 'undefined' && THEMES[currentThemeName]) ? THEMES[currentThemeName] : '';
+                    const bodyHtml = getExportHtmlContent();
+                    const filename = getExportFilename('html');
+                    const title = filename.replace(/\\.html$/, '');
+
+                    const standaloneHtml = '<!DOCTYPE html>\\n' +
+'<html lang="' + (APP_STATE.lang || 'zh-TW') + '">\\n' +
+'<head>\\n' +
+'<meta charset="UTF-8">\\n' +
+'<meta name="viewport" content="width=device-width, initial-scale=1.0">\\n' +
+'<title>' + title + '</title>\\n' +
+'<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">\\n' +
+'<style>\\n' +
+'* { box-sizing: border-box; }\\n' +
+'body {\\n' +
+'    margin: 0;\\n' +
+'    padding: 40px 20px;\\n' +
+'    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;\\n' +
+'    background: #fdfdfd;\\n' +
+'    color: #1f2328;\\n' +
+'    display: flex;\\n' +
+'    justify-content: center;\\n' +
+'    min-height: 100vh;\\n' +
+'}\\n' +
+'.export-container {\\n' +
+'    width: 100%;\\n' +
+'    max-width: 860px;\\n' +
+'    margin: 0 auto;\\n' +
+'}\\n' +
+'.markdown-body {\\n' +
+'    line-height: 1.65;\\n' +
+'    word-wrap: break-word;\\n' +
+'}\\n' +
+themeCss + '\\n' +
+'</style>\\n' +
+'</head>\\n' +
+'<body>\\n' +
+'<div class="export-container">\\n' +
+'    <article class="markdown-body">\\n' +
+'        ' + bodyHtml + '\\n' +
+'    </article>\\n' +
+'</div>\\n' +
+'</body>\\n' +
+'</html>';
+
+                    const blob = new Blob([standaloneHtml], { type: 'text/html;charset=utf-8' });
+                    triggerDownload(blob, filename);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? '已下載獨立 HTML 網頁' : 'HTML webpage downloaded');
+                    }
+                });
+            }
+
+            // 6. Print & Save as PDF
+            const exportPdfBtn = document.getElementById('export-pdf-btn');
+            const printPreviewBtn = document.getElementById('print-preview-btn');
+            const handlePrint = () => {
+                window.print();
+            };
+            if (exportPdfBtn) exportPdfBtn.addEventListener('click', handlePrint);
+            if (printPreviewBtn) printPreviewBtn.addEventListener('click', handlePrint);
+
+            // 7. Image Export & Copy Image (html2canvas with offscreen sandbox)
+            const exportImageBtn = document.getElementById('export-image-btn');
+            const copyImageBtn = document.getElementById('copy-image-btn');
+
+            async function generateImage({ copyToClipboard = false }) {
+                try {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? '正在產生 2x 高解析度長圖...' : 'Generating 2x high-res image...');
+                    }
+
+                    if (!window.html2canvas) {
+                        await new Promise((resolve, reject) => {
+                            const script = document.createElement('script');
+                            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                            script.onload = resolve;
+                            script.onerror = () => reject(new Error('Failed to load html2canvas library'));
+                            document.head.appendChild(script);
+                        });
+                    }
+
+                    const sourceEl = document.querySelector('#preview-md, #preview-plain, .markdown-body');
+                    if (!sourceEl) throw new Error('Content element not found');
+
+                    const currentThemeName = APP_STATE.theme || 'claude-canvas';
+                    const themeCss = (typeof THEMES !== 'undefined' && THEMES[currentThemeName]) ? THEMES[currentThemeName] : '';
+
+                    // Create an isolated sandbox element at document root with non-negative coordinates
+                    const sandbox = document.createElement('div');
+                    sandbox.className = 'export-image-sandbox';
+                    sandbox.style.cssText = 'position: absolute; top: 0; left: 0; width: 840px; margin: 0; padding: 48px 40px; background: #ffffff; box-sizing: border-box; z-index: -9999; opacity: 0.001; pointer-events: none; overflow: visible;';
+
+                    const styleEl = document.createElement('style');
+                    styleEl.textContent = '.export-image-sandbox { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2328; background: #ffffff; } ' +
+                        '.export-image-sandbox .markdown-body { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: transparent !important; } ' +
+                        themeCss;
+                    sandbox.appendChild(styleEl);
+
+                    const cloneEl = sourceEl.cloneNode(true);
+                    cloneEl.id = 'export-image-render-target';
+                    cloneEl.style.overflow = 'visible';
+                    cloneEl.style.maxHeight = 'none';
+                    cloneEl.style.height = 'auto';
+                    sandbox.appendChild(cloneEl);
+
+                    document.body.appendChild(sandbox);
+
+                    if (document.fonts && document.fonts.ready) {
+                        await document.fonts.ready;
+                    }
+
+                    const canvas = await window.html2canvas(sandbox, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: false,
+                        logging: false,
+                        backgroundColor: '#ffffff',
+                        scrollX: 0,
+                        scrollY: 0,
+                    });
+
+                    sandbox.remove();
+
+                    if (copyToClipboard) {
+                        if (canvas.toBlob && navigator.clipboard?.write && window.ClipboardItem) {
+                            canvas.toBlob(async (blob) => {
+                                if (blob) {
+                                    try {
+                                        await navigator.clipboard.write([
+                                            new ClipboardItem({ 'image/png': blob })
+                                        ]);
+                                        if (typeof window.showToast === 'function') {
+                                            window.showToast(isZh ? '長圖已成功複製至剪貼簿！' : 'Image copied to clipboard!');
+                                        }
+                                        return;
+                                    } catch (e) {
+                                        console.warn('Clipboard write failed, fallback to download:', e);
+                                    }
+                                }
+                                const dataUrl = canvas.toDataURL('image/png');
+                                triggerDownload(dataUrl, getExportFilename('png'));
+                                if (typeof window.showToast === 'function') {
+                                    window.showToast(isZh ? '剪貼簿不支援直接寫入，已自動下載長圖' : 'Clipboard not supported, image downloaded');
+                                }
+                            }, 'image/png');
+                        } else {
+                            const dataUrl = canvas.toDataURL('image/png');
+                            triggerDownload(dataUrl, getExportFilename('png'));
+                        }
+                    } else {
+                        const dataUrl = canvas.toDataURL('image/png');
+                        triggerDownload(dataUrl, getExportFilename('png'));
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '長圖已成功下載！' : 'Image downloaded successfully!');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Image export failed:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? ('圖片產生失敗：' + (err.message || err)) : ('Failed to generate image: ' + (err.message || err)));
+                    }
+                }
+            }
+
+            if (exportImageBtn) {
+                exportImageBtn.addEventListener('click', () => generateImage({ copyToClipboard: false }));
+            }
+            if (copyImageBtn) {
+                copyImageBtn.addEventListener('click', () => generateImage({ copyToClipboard: true }));
+            }
+
+            // 8. Copy Entire Document to Targets
+            const copyAllRichtextBtn = document.getElementById('copy-all-richtext-btn');
+            if (copyAllRichtextBtn) {
+                copyAllRichtextBtn.addEventListener('click', async () => {
+                    const bodyHtml = getExportHtmlContent();
+                    const currentThemeName = APP_STATE.theme || 'claude-canvas';
+                    const themeCss = (typeof THEMES !== 'undefined' && THEMES[currentThemeName]) ? THEMES[currentThemeName] : '';
+                    const styledHtml = '<div class="markdown-body" style="line-height:1.65;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">' +
+                        '<style>' + themeCss + '</style>' + bodyHtml + '</div>';
+                    const plainText = getExportMarkdown();
+                    try {
+                        if (window.ClipboardItem && navigator.clipboard?.write) {
+                            const htmlBlob = new Blob([styledHtml], { type: 'text/html' });
+                            const textBlob = new Blob([plainText], { type: 'text/plain' });
+                            await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+                        } else if (navigator.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(plainText);
+                        }
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '已複製一般富文字 (含排版樣式)' : 'Rich text copied to clipboard');
+                        }
+                    } catch (e) {
+                        console.error('Failed to copy rich text:', e);
+                    }
+                });
+            }
+
+            const copyAllMdBtn = document.getElementById('copy-all-md-btn');
+            if (copyAllMdBtn) {
+                copyAllMdBtn.addEventListener('click', async () => {
+                    const md = getExportMarkdown();
+                    try {
+                        await navigator.clipboard.writeText(md);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '已複製純 Markdown' : 'Plain Markdown copied');
+                        }
+                    } catch (e) {
+                        console.error('Failed to copy markdown:', e);
+                    }
+                });
+            }
+
+            const copyAllNotionBtn = document.getElementById('copy-all-notion-btn');
+            if (copyAllNotionBtn) {
+                copyAllNotionBtn.addEventListener('click', async () => {
+                    const md = getExportMarkdown();
+                    const notionMd = md.replace(/\\$([^\\$\\r\\n]+)\\$/g, '$$$$' + '$1' + '$$$$');
+                    const bodyHtml = getExportHtmlContent();
+                    try {
+                        if (window.ClipboardItem && navigator.clipboard?.write) {
+                            const htmlBlob = new Blob(['<div class="markdown-body">' + bodyHtml + '</div>'], { type: 'text/html' });
+                            const textBlob = new Blob([notionMd], { type: 'text/plain' });
+                            await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+                        } else if (navigator.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(notionMd);
+                        }
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '已複製 Notion 相容格式' : 'Notion format copied');
+                        }
+                    } catch (e) {
+                        console.error('Failed to copy Notion format:', e);
+                    }
+                });
+            }
+
+            const copyAllJiraBtn = document.getElementById('copy-all-jira-btn');
+            if (copyAllJiraBtn) {
+                copyAllJiraBtn.addEventListener('click', async () => {
+                    const md = getExportMarkdown();
+                    let jira = md;
+                    jira = jira.replace(/\`\`\`([^\\r\\n]*)[\\r\\n]+([\\s\\S]*?)\`\`\`/g, (m, lang, code) => {
+                        return (lang ? ('{code:' + lang.trim() + '}\\n') : '{code}\\n') + code.trim() + '\\n{code}';
+                    });
+                    jira = jira.replace(/\`([^\`]+)\`/g, '{{' + '$1' + '}}');
+                    jira = jira.replace(/^######\\s+(.*)$/gm, 'h6. ' + '$1');
+                    jira = jira.replace(/^#####\\s+(.*)$/gm, 'h5. ' + '$1');
+                    jira = jira.replace(/^####\\s+(.*)$/gm, 'h4. ' + '$1');
+                    jira = jira.replace(/^###\\s+(.*)$/gm, 'h3. ' + '$1');
+                    jira = jira.replace(/^##\\s+(.*)$/gm, 'h2. ' + '$1');
+                    jira = jira.replace(/^#\\s+(.*)$/gm, 'h1. ' + '$1');
+                    jira = jira.replace(/^>\\s+(.*)$/gm, '{quote}' + '$1' + '{quote}');
+                    jira = jira.replace(/\\*\\*([\\s\\S]*?)\\*\\*/g, '*' + '$1' + '*');
+                    jira = jira.replace(/__([\\s\\S]*?)__/g, '*' + '$1' + '*');
+                    jira = jira.replace(/~~(.*?)~~/g, '-' + '$1' + '-');
+                    jira = jira.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '[' + '$1' + '|' + '$2' + ']');
+                    jira = jira.replace(/^(\\*{3,}|-{3,}|_{3,})$/gm, '----');
+                    try {
+                        await navigator.clipboard.writeText(jira);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '已複製 Jira / Confluence 標記格式' : 'Jira / Confluence markup copied');
+                        }
+                    } catch (e) {
+                        console.error('Failed to copy Jira markup:', e);
+                    }
+                });
+            }
+
+            const copyAllFeishuBtn = document.getElementById('copy-all-feishu-btn');
+            if (copyAllFeishuBtn) {
+                copyAllFeishuBtn.addEventListener('click', async () => {
+                    const bodyHtml = getExportHtmlContent();
+                    const plainText = getExportMarkdown();
+                    const feishuHtml = '<div style="font-size:16px;line-height:1.75;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">' + bodyHtml + '</div>';
+                    try {
+                        if (window.ClipboardItem && navigator.clipboard?.write) {
+                            const htmlBlob = new Blob([feishuHtml], { type: 'text/html' });
+                            const textBlob = new Blob([plainText], { type: 'text/plain' });
+                            await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+                        } else if (navigator.clipboard?.writeText) {
+                            await navigator.clipboard.writeText(plainText);
+                        }
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? '已複製飛書 / Lark 相容格式' : 'Feishu / Lark format copied');
+                        }
+                    } catch (e) {
+                        console.error('Failed to copy Feishu format:', e);
+                    }
+                });
+            }
         }
 
         const UI_THEME_STORAGE_KEY = 'cf-notepad-ui-theme';
@@ -3517,9 +3906,9 @@ ${getMarkdownCss()}
             const MATH_FORMAT_STORAGE_KEY = 'cf-notepad:math-copy-format';
             const getSavedMathFormat = () => {
                 try {
-                    return localStorage.getItem(MATH_FORMAT_STORAGE_KEY) || 'notion';
+                    return localStorage.getItem(MATH_FORMAT_STORAGE_KEY) || 'auto';
                 } catch (e) {
-                    return 'notion';
+                    return 'auto';
                 }
             };
 
@@ -3573,7 +3962,7 @@ ${getMarkdownCss()}
 
                 $mathFormatForm.addEventListener('submit', e => {
                     e.preventDefault();
-                    const selected = $mathFormatForm.querySelector('input[name="math-copy-format"]:checked')?.value || 'notion';
+                    const selected = $mathFormatForm.querySelector('input[name="math-copy-format"]:checked')?.value || 'auto';
                     try {
                         localStorage.setItem(MATH_FORMAT_STORAGE_KEY, selected);
                     } catch (err) {}
@@ -3585,14 +3974,17 @@ ${getMarkdownCss()}
                 });
             }
 
-            async function copyMath(tex, mathMl, isDisplay) {
+            async function copyMath(tex, mathMl, isDisplay, katexElem) {
                 const format = getSavedMathFormat();
                 const zh = APP_STATE.lang === 'zh-TW';
                 let textToCopy = '';
                 let label = '';
                 let isHtml = false;
 
-                if (format === 'latex') {
+                if (format === 'auto') {
+                    textToCopy = isDisplay ? ('$$' + tex + '$$') : ('$' + tex + '$');
+                    label = zh ? '自動判斷' : 'Auto';
+                } else if (format === 'latex') {
                     textToCopy = isDisplay ? ('$$' + tex + '$$') : ('$' + tex + '$');
                     label = 'LaTeX';
                 } else if (format === 'latex-plain') {
@@ -3602,9 +3994,52 @@ ${getMarkdownCss()}
                     textToCopy = mathMl || ('<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><annotation encoding="application/x-tex">' + tex + '</annotation></semantics></math>');
                     label = zh ? 'MathML (Word)' : 'MathML (Word)';
                     isHtml = true;
+                } else if (format === 'png') {
+                    if (katexElem) {
+                        try {
+                            if (!window.html2canvas) {
+                                await new Promise((resolve, reject) => {
+                                    const script = document.createElement('script');
+                                    script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                                    script.onload = resolve;
+                                    script.onerror = () => reject(new Error('Failed to load html2canvas'));
+                                    document.head.appendChild(script);
+                                });
+                            }
+                            const canvas = await window.html2canvas(katexElem, {
+                                scale: 2,
+                                backgroundColor: null,
+                                logging: false,
+                                useCORS: true,
+                            });
+                            if (canvas.toBlob && navigator.clipboard?.write && window.ClipboardItem) {
+                                canvas.toBlob(async (blob) => {
+                                    if (blob) {
+                                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                                        if (typeof window.showToast === 'function') {
+                                            window.showToast(zh ? '已複製公式 PNG 圖片' : 'Formula PNG copied');
+                                        }
+                                    }
+                                }, 'image/png');
+                                return;
+                            }
+                        } catch (pngErr) {
+                            console.error('PNG formula export failed:', pngErr);
+                        }
+                    }
+                    textToCopy = isDisplay ? ('$$' + tex + '$$') : ('$' + tex + '$');
+                    label = 'LaTeX (PNG fallback)';
+                } else if (format === 'svg') {
+                    const svgNode = katexElem?.querySelector('svg');
+                    if (svgNode) {
+                        textToCopy = svgNode.outerHTML;
+                    } else {
+                        textToCopy = '<svg xmlns="http://www.w3.org/2000/svg"><text y="20">' + tex + '</text></svg>';
+                    }
+                    label = zh ? 'SVG 向量' : 'SVG Vector';
                 } else {
                     textToCopy = '$$' + tex + '$$';
-                    label = zh ? 'Notion 雙$格式' : 'Notion $$';
+                    label = zh ? 'Notion (雙 $)' : 'Notion ($$)';
                 }
 
                 try {
@@ -3655,16 +4090,17 @@ ${getMarkdownCss()}
                 event.preventDefault();
                 event.stopPropagation();
 
-                copyMath(tex, mathMl, isDisplay);
+                copyMath(tex, mathMl, isDisplay, katexElem);
 
                 katexElem.classList.add('katex-copied');
                 setTimeout(() => katexElem.classList.remove('katex-copied'), 600);
             });
         }
 
+        initExportAndThemeControls();
         initUiTheme();
         initMathCopy();
-        initWebMcp()
+        initWebMcp();
     </script>
     <div id="presentation-container"></div>
     \u003cscript\u003e

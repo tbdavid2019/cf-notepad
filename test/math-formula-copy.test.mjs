@@ -8,23 +8,28 @@ const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', impo
 const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
 
-test('MATH_FORMAT_MODAL renders all 4 copy formats with applicable scenario descriptions', () => {
+test('MATH_FORMAT_MODAL renders all 7 copy formats with applicable scenario descriptions', () => {
     const modalZh = MATH_FORMAT_MODAL('zh-TW')
     assert.match(modalZh, /id="math-format-modal"/)
+    assert.match(modalZh, /value="auto"/)
     assert.match(modalZh, /value="latex"/)
     assert.match(modalZh, /value="mathml"/)
     assert.match(modalZh, /value="latex-plain"/)
     assert.match(modalZh, /value="notion"/)
-    assert.match(modalZh, /LaTeX \(純文字，無 \$ 符號\)/)
-    assert.match(modalZh, /Notion \(雙\$格式\)/)
+    assert.match(modalZh, /value="png"/)
+    assert.match(modalZh, /value="svg"/)
+    assert.match(modalZh, /LaTeX 純文字/)
+    assert.match(modalZh, /Notion \(雙 \$\)/)
     assert.match(modalZh, /Microsoft Word/)
     assert.match(modalZh, /Desmos/)
     assert.match(modalZh, /Markdown 筆記/)
 
     const modalEn = MATH_FORMAT_MODAL('en-US')
     assert.match(modalEn, /Formula Copy Format/)
-    assert.match(modalEn, /Notion \(\$\$ format\)/)
+    assert.match(modalEn, /Notion \(\$\$\)/)
     assert.match(modalEn, /MathML \(Word\)/)
+    assert.match(modalEn, /Image PNG/)
+    assert.match(modalEn, /SVG Vector/)
 })
 
 test('FOOTER and base template wire math format trigger button and modal', () => {

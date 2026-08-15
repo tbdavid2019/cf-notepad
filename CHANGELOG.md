@@ -4,19 +4,36 @@
 
 ### Added
 
-- **Smart Bidirectional Language Auto-Detection for AI Translation**
-  - AI translation (`@cf/openai/gpt-oss-120b`) now automatically inspects the source language of selected text or full notes using Han character detection (`\p{Script=Han}`).
-  - Automatically defaults the target language to **English** (`英文` / `English`) when Chinese content is detected, and to **Traditional Chinese** (`繁體中文` / `Traditional Chinese`) when English or other non-Chinese languages are selected.
-  - Retains prompt customization and bilingual output (`bilingual: true`) options.
+- **Unified Export & One-Click Copy Matrix (`[ ⭳ 匯出 ▾ ]`) & Dynamic Long Image Engine**
+  - Consolidated export, document copying, and print controls in Edit and Share modes into a single, cohesive **`[ ⭳ 匯出 ▾ ]`** dropdown menu.
+  - **長圖導出 (.png)**: Integrated dynamic on-demand loading of `html2canvas` in an isolated rendering sandbox with 2x Retina pixel ratio for full-height, unclipped image exports of Markdown and mathematical equations.
+  - **複製圖片 (Copy Image)**: One-click copy of the rendered 2x long image directly to system clipboard (`image/png`).
+  - **整篇內容複製到 (Copy Document To)**:
+    - **一般富文字 (Rich Text)**: Inlines full typography theme styles to paste directly into Microsoft Word, Google Docs, Apple Notes, and Email.
+    - **純 Markdown**: Clean raw Markdown copy for Obsidian, VS Code, GitHub, and ChatGPT.
+    - **Notion 相容格式**: Auto-formats equation delimiters (`$$...$$`) and blocks for instant Notion block creation.
+    - **Jira / Confluence**: Converts Markdown headings (`h1.`), code blocks (`{code}`), quotes (`{quote}`), tables, and bold/italic into native Jira Wiki Markup.
+    - **飛書 / Lark**: Inlines clean document structures and formula notations for seamless pasting into Feishu Cloud Docs.
+  - **匯出 Markdown (.md)**: Clean, instant download of note source Markdown.
+  - **匯出 HTML 網頁 (.html)**: Self-contained, standalone offline webpage export containing the active typography theme CSS and KaTeX math fonts.
+  - **另存 PDF / 列印預覽**: Direct shortcut to browser print engine with A4 print-optimized styling.
 
-- **Math Formula Click-to-Copy & Multi-Format Selector (Share & Preview Modes)**
-  - Clicking any rendered KaTeX formula in Share mode or Editor Preview now instantly copies the formatted equation to the clipboard with toast feedback and visual highlight animation.
-  - Added **Formula Copy Format (`公式複製格式`)** configuration modal (`#math-format-btn` in footer toolbar and settings), supporting 4 versatile output formats with scenario descriptions:
-    1. **LaTeX**: Standard `$inline$` and `$$block$$` delimiters (ideal for Markdown notes, academic papers, and LaTeX editors).
-    2. **MathML (Word)**: Native XML math structure written to clipboard as HTML/text (ideal for direct pasting into Microsoft Word as equation objects).
-    3. **LaTeX (Plain text, no $)**: Clean raw TeX syntax without delimiters (ideal for Desmos, WolframAlpha, and mathematical tools).
-    4. **Notion ($$ format)**: Standard `$$equation$$` wrapping (ideal for Notion inline/block equation blocks).
-  - User format selection is persisted to `localStorage` (`cf-notepad:math-copy-format`, defaulting to Notion format).
+- **Theme Palette & Preview Width Dropdown Menus (`[ 🎨 主題 ▾ ]` & `[ ⬌ 寬度 ▾ ]`)**
+  - Replaced native select controls with sleek, unified dropdown menus (`#theme-dropdown` and `#width-dropdown`) in the appearance toolbar section.
+  - **Width Dropdown**: Provides instant selection between 100% (全寬), 960px (緊湊), 1200px (標準), and 1440px (寬版) with active checkmark indicators (`✓`) and instant layout adjustments.
+  - **Theme Dropdown**: Displays all 20 curated Markdown typography styles in a scrollable menu with active checkmark indicators (`✓`) and live CSS switching.
+
+- **Math Formula Click-to-Copy & 7 Output Formats (Share & Preview Modes)**
+  - Clicking any rendered KaTeX formula in Share mode or Editor Preview instantly copies the equation with toast feedback and visual highlight animation.
+  - Added **Formula Copy Format (`公式複製格式`)** configuration modal (`#math-format-btn` in footer toolbar and settings), supporting 7 versatile output formats:
+    1. **自動判斷 (Auto)**: Inline with `$...$`, display blocks with `$$...$$`.
+    2. **LaTeX (含 $)**: Always with `$` or `$$` delimiters.
+    3. **LaTeX 純文字**: Raw formula syntax without `$` (ideal for Desmos, WolframAlpha).
+    4. **Notion (雙 $)**: Always with `$$...$$` delimiters for Notion equations.
+    5. **MathML (Word)**: Native XML math structure written to clipboard as HTML/text.
+    6. **圖片 PNG**: 2x high-resolution transparent PNG image blob copied to clipboard.
+    7. **SVG (進階)**: Clean vector SVG markup for Illustrator, Figma, and web design.
+  - User format selection is persisted to `localStorage` (`cf-notepad:math-copy-format`, defaulting to `auto`).
 
 - **Wikipedia-Inspired Dual-Card Editor Onboarding & Markdown Default**
   - Redesigned editor preference modal (`EDITOR_PREFERENCE_MODAL`) into side-by-side interactive cards with zero-friction one-click action buttons (`以 Markdown 開始` / `以 Block 開始`).

@@ -27,10 +27,9 @@ test('share desktop and mobile actions all expose localized floating tooltip tex
     const document = renderFooter()
     const selectors = [
         '.readonly-edit-link',
-        '#export-md-btn',
-        '#copy-md-btn',
+        '#export-menu-btn',
+        '#copy-menu-btn',
         '#copy-embed-code-btn',
-        '#export-pdf-btn',
         '#mobile-more-btn',
     ]
 

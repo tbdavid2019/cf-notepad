@@ -712,6 +712,94 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     line-height: 1;
 }
 
+/* Export, Copy & Theme dropdowns */
+.export-dropdown .dropdown-menu,
+.copy-dropdown .dropdown-menu {
+    min-width: 220px;
+}
+.export-menu-trigger,
+.copy-menu-trigger {
+    gap: 4px;
+}
+.export-menu-trigger .toolbar-button-caret,
+.copy-menu-trigger .toolbar-button-caret {
+    font-size: 11px;
+    opacity: 0.7;
+}
+
+.theme-dropdown .dropdown-menu {
+    min-width: 220px;
+    max-height: 360px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+.theme-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between !important;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--toolbar-text, #24292f);
+    border-radius: 4px;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.theme-item:hover,
+.theme-item:focus {
+    background: var(--toolbar-hover, #f3f4f6);
+}
+.theme-item.is-active {
+    font-weight: 600;
+    color: var(--accent-color, #0969da);
+}
+.theme-item-name {
+    text-align: left;
+}
+.theme-item-check {
+    font-weight: bold;
+    color: var(--accent-color, #0969da);
+    margin-left: 8px;
+}
+
+.width-dropdown .dropdown-menu {
+    min-width: 175px;
+}
+.width-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between !important;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    border: 0;
+    background: transparent;
+    width: 100%;
+    box-sizing: border-box;
+    color: var(--toolbar-text, #24292f);
+    border-radius: 4px;
+    transition: background 0.1s ease, color 0.1s ease;
+}
+.width-item:hover,
+.width-item:focus {
+    background: var(--toolbar-hover, #f3f4f6);
+}
+.width-item.is-active {
+    font-weight: 600;
+    color: var(--accent-color, #0969da);
+}
+.width-item-name {
+    text-align: left;
+}
+.width-item-check {
+    font-weight: bold;
+    color: var(--accent-color, #0969da);
+    margin-left: 8px;
+}
+
 /* Mobile more button: hidden on desktop, shown on mobile */
 .mobile-more-btn {
     display: none !important;

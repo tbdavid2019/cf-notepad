@@ -1,0 +1,142 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import { readFileSync } from 'node:fs'
+import { JSDOM } from 'jsdom'
+import { FOOTER, EXPORT_DROPDOWN_MENU, COPY_DROPDOWN_MENU, THEME_DROPDOWN_MENU, WIDTH_DROPDOWN_MENU, MATH_FORMAT_MODAL } from '../src/templates/common.js'
+import { THEMES } from '../src/theme_data.js'
+
+const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
+const commonTemplateSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
+const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.meta.url), 'utf8')
+
+test('EXPORT_DROPDOWN_MENU renders file export items', () => {
+    const htmlZh = EXPORT_DROPDOWN_MENU('zh-TW')
+    const domZh = new JSDOM(htmlZh)
+    const docZh = domZh.window.document
+
+    assert.ok(docZh.querySelector('#export-dropdown'))
+    assert.ok(docZh.querySelector('#export-menu-btn'))
+    assert.ok(docZh.querySelector('#export-image-btn'))
+    assert.ok(docZh.querySelector('#export-md-btn'))
+    assert.ok(docZh.querySelector('#export-html-btn'))
+    assert.ok(docZh.querySelector('#export-pdf-btn'))
+    assert.ok(docZh.querySelector('#print-preview-btn'))
+
+    assert.match(docZh.querySelector('#export-image-btn').textContent, /長圖/)
+    assert.match(docZh.querySelector('#export-html-btn').textContent, /HTML/)
+
+    const htmlEn = EXPORT_DROPDOWN_MENU('en-US')
+    const domEn = new JSDOM(htmlEn)
+    const docEn = domEn.window.document
+
+    assert.match(docEn.querySelector('#export-image-btn').textContent, /Export Image/)
+})
+
+test('COPY_DROPDOWN_MENU renders complete clipboard copy matrix', () => {
+    const htmlZh = COPY_DROPDOWN_MENU('zh-TW')
+    const domZh = new JSDOM(htmlZh)
+    const docZh = domZh.window.document
+
+    assert.ok(docZh.querySelector('#copy-dropdown'))
+    assert.ok(docZh.querySelector('#copy-menu-btn'))
+    assert.ok(docZh.querySelector('#copy-all-richtext-btn'))
+    assert.ok(docZh.querySelector('#copy-all-md-btn'))
+    assert.ok(docZh.querySelector('#copy-all-notion-btn'))
+    assert.ok(docZh.querySelector('#copy-all-jira-btn'))
+    assert.ok(docZh.querySelector('#copy-all-feishu-btn'))
+    assert.ok(docZh.querySelector('#copy-image-btn'))
+
+    assert.match(docZh.querySelector('#copy-image-btn').textContent, /複製長圖/)
+    assert.match(docZh.querySelector('#copy-all-jira-btn').textContent, /Jira/)
+    assert.match(docZh.querySelector('#copy-all-feishu-btn').textContent, /飛書/)
+
+    const htmlEn = COPY_DROPDOWN_MENU('en-US')
+    const domEn = new JSDOM(htmlEn)
+    const docEn = domEn.window.document
+
+    assert.match(docEn.querySelector('#copy-image-btn').textContent, /Copy Long Image/)
+    assert.match(docEn.querySelector('#copy-all-jira-btn').textContent, /Jira/)
+})
+
+test('MATH_FORMAT_MODAL renders all 7 formula copy formats', () => {
+    const htmlZh = MATH_FORMAT_MODAL('zh-TW')
+    const domZh = new JSDOM(htmlZh)
+    const docZh = domZh.window.document
+
+    const options = Array.from(docZh.querySelectorAll('input[name="math-copy-format"]')).map(el => el.value)
+    assert.deepEqual(options, ['auto', 'latex', 'latex-plain', 'notion', 'mathml', 'png', 'svg'])
+})
+
+test('WIDTH_DROPDOWN_MENU renders all width options with active checkmark', () => {
+    const html = WIDTH_DROPDOWN_MENU('zh-TW', '960px')
+    const dom = new JSDOM(html)
+    const doc = dom.window.document
+
+    const widthItems = doc.querySelectorAll('.width-item')
+    assert.equal(widthItems.length, 4)
+
+    const activeItem = doc.querySelector('.width-item.is-active')
+    assert.ok(activeItem)
+    assert.equal(activeItem.dataset.widthValue, '960px')
+    assert.match(activeItem.querySelector('.width-item-check').textContent, /✓/)
+})
+
+test('THEME_DROPDOWN_MENU renders all 20 themes with active checkmark', () => {
+    const getThemeLabel = (name) => name
+    const html = THEME_DROPDOWN_MENU('zh-TW', 'tokyo-night', getThemeLabel)
+    const dom = new JSDOM(html)
+    const doc = dom.window.document
+
+    const themeItems = doc.querySelectorAll('.theme-item')
+    assert.equal(themeItems.length, Object.keys(THEMES).length)
+
+    const activeItem = doc.querySelector('.theme-item.is-active')
+    assert.ok(activeItem)
+    assert.equal(activeItem.dataset.themeName, 'tokyo-night')
+    assert.match(activeItem.querySelector('.theme-item-check').textContent, /✓/)
+})
+
+test('FOOTER incorporates unified export, copy, width, and theme dropdown in edit and share modes', () => {
+    const editFooterHtml = FOOTER({
+        lang: 'zh-TW',
+        isEdit: true,
+        mode: 'md',
+        theme: 'claude-canvas',
+        width: '100%',
+    })
+    const editDom = new JSDOM(editFooterHtml)
+    assert.ok(editDom.window.document.querySelector('#export-dropdown'))
+    assert.ok(editDom.window.document.querySelector('#copy-dropdown'))
+    assert.ok(editDom.window.document.querySelector('#width-dropdown'))
+    assert.ok(editDom.window.document.querySelector('#theme-dropdown'))
+
+    const shareFooterHtml = FOOTER({
+        lang: 'zh-TW',
+        isEdit: false,
+        path: 'my-note',
+        sharePath: 'share/xyz',
+        theme: 'claude-canvas',
+        width: '100%',
+    })
+    const shareDom = new JSDOM(shareFooterHtml)
+    assert.ok(shareDom.window.document.querySelector('#export-dropdown'))
+    assert.ok(shareDom.window.document.querySelector('#copy-dropdown'))
+    assert.ok(shareDom.window.document.querySelector('#width-dropdown'))
+    assert.ok(shareDom.window.document.querySelector('#theme-dropdown'))
+})
+
+test('base template contains dynamic html2canvas loader and offline html export logic', () => {
+    assert.match(baseTemplateSource, /function initExportAndThemeControls/)
+    assert.match(baseTemplateSource, /html2canvas@1\.4\.1/)
+    assert.match(baseTemplateSource, /scale:\s*2/)
+    assert.match(baseTemplateSource, /exportHtmlBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /exportImageBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /copyImageBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /copyAllJiraBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /copyAllFeishuBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /copyAllNotionBtn\.addEventListener\('click'/)
+    assert.match(baseCssSource, /\.export-dropdown/)
+    assert.match(baseCssSource, /\.copy-dropdown/)
+    assert.match(baseCssSource, /\.theme-dropdown/)
+    assert.match(baseCssSource, /\.width-dropdown/)
+})

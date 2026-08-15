@@ -68,7 +68,7 @@ test('publishing remembers one unified set of choices and applies it atomically'
 })
 
 test('markdown export prefers the note title for the downloaded filename', () => {
-    assert.match(baseTemplateSource, /const source = APP_STATE\.title \|\| APP_STATE\.path \|\| 'note'/)
+    assert.match(baseTemplateSource, /const source = (title \|\| )?APP_STATE\.title \|\| APP_STATE\.path \|\| 'note'/)
 })
 
 test('publishing can persist the current editor content in the same request', () => {
