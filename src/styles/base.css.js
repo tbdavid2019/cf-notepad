@@ -1135,6 +1135,62 @@ html[data-ui-theme="dark"] .share-menu-trigger.is-published {
     line-height: 1;
     pointer-events: none;
 }
+.sync-status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 28px;
+    padding: 0 10px;
+    border: 1px solid var(--toolbar-border, #e6dfd8);
+    border-radius: 9999px;
+    background: var(--toolbar-bg, #faf9f5);
+    color: var(--toolbar-fg, #2b2a27);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    user-select: none;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+.sync-status-badge:hover {
+    border-color: var(--toolbar-accent, #cc785c);
+    background: color-mix(in srgb, var(--toolbar-bg, #faf9f5) 90%, var(--toolbar-accent, #cc785c));
+    transform: translateY(-0.5px);
+}
+.sync-status-badge:active {
+    transform: scale(0.97);
+}
+.sync-status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: #10b981;
+    display: inline-block;
+    flex-shrink: 0;
+    transition: background-color 0.25s ease, transform 0.25s ease;
+}
+.sync-status-badge[data-status="local"] .sync-status-dot {
+    background: #10b981;
+}
+.sync-status-badge[data-status="cloud-synced"] .sync-status-dot {
+    background: #3b82f6;
+}
+.sync-status-badge[data-status="syncing"] .sync-status-dot {
+    background: #f59e0b;
+    animation: sync-dot-pulse 1s infinite alternate;
+}
+.sync-status-badge[data-status="pending"] .sync-status-dot {
+    background: #f97316;
+}
+.sync-status-badge[data-status="error"] .sync-status-dot {
+    background: #ef4444;
+}
+@keyframes sync-dot-pulse {
+    from { opacity: 0.4; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1.2); }
+}
 .save-control-group {
     display: inline-flex;
     align-items: center;

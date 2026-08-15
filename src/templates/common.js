@@ -526,6 +526,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     <span class="sr-only">${t.historyTitle}</span>
                                 </button>
                             ` : ''}
+                            <button type="button" id="sync-status-badge" class="sync-status-badge" data-status="local" data-tooltip="${lang === 'zh-TW' ? '本機已即時保存 (0ms)。點擊立即同步至雲端' : 'Saved locally (0ms). Click to sync to cloud'}" title="${lang === 'zh-TW' ? '本機已即時保存 (0ms)。點擊立即同步至雲端' : 'Saved locally (0ms). Click to sync to cloud'}" aria-label="${lang === 'zh-TW' ? '同步狀態' : 'Sync status'}">
+                                <span class="sync-status-dot"></span>
+                                <span class="sync-status-text">${lang === 'zh-TW' ? '本機已存' : 'Saved locally'}</span>
+                            </button>
                             <button type="button" id="save-note-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" title="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}" aria-label="${lang === 'zh-TW' ? '儲存文章' : 'Save note'}">
                                 ${SVG_ICONS.save}
                                 <span class="toolbar-button-label">${lang === 'zh-TW' ? '儲存' : 'Save'}</span>
@@ -533,7 +537,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${RAIL_SWITCH({
                                 id: 'autosave-toggle', // id="autosave-toggle"
                                 className: 'autosave-rail-switch',
-                                checked: autosave === true && share === true,
+                                checked: autosave !== false && share === true,
                                 disabled: share !== true,
                                 ariaLabel: lang === 'zh-TW' ? '啟用文章自動儲存' : 'Enable note autosave',
                                 checkedTitle: share ? (lang === 'zh-TW' ? '停止輸入 10 秒後自動儲存' : 'Save automatically after 10 seconds of inactivity') : (lang === 'zh-TW' ? '請先發布文章才能啟用 autosave' : 'Publish this note before enabling autosave'),

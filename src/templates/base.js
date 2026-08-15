@@ -819,7 +819,7 @@ ${getMarkdownCss()}
         isNewEntry: isEdit === true && ext.isNewEntry === true,
         theme: pageTheme,
         isPublished: ext.share === true,
-        autosave: ext.autosave === true && ext.share === true,
+        autosave: ext.autosave !== false && ext.share === true,
         noteHistoryEnabled: ext.noteHistoryEnabled === true,
         publicIndex: ext.publicIndex === true,
         versionCount: Number.isSafeInteger(ext.versionCount) && ext.versionCount >= 0 ? ext.versionCount : null,
@@ -1675,11 +1675,27 @@ ${getMarkdownCss()}
         let saveQueued = false
         let allowUnload = false
         const hasUnsavedChanges = () => Boolean($textarea && $textarea.value !== savedContent)
-        const showSaveStatus = (message, isError = false) => {
-            if (!$loading) return
-            $loading.setAttribute('aria-label', message)
-            $loading.dataset.saveStatus = isError ? 'error' : 'saved'
+        const $syncStatusBadge = document.querySelector('#sync-status-badge')
+        const $syncStatusText = $syncStatusBadge?.querySelector('.sync-status-text')
+
+        const showSaveStatus = (message, isError = false, statusType = 'local') => {
+            if ($loading) {
+                $loading.setAttribute('aria-label', message)
+                $loading.dataset.saveStatus = isError ? 'error' : 'saved'
+            }
+            if ($syncStatusBadge && $syncStatusText) {
+                $syncStatusText.textContent = message
+                $syncStatusBadge.dataset.status = isError ? 'error' : statusType
+                $syncStatusBadge.title = message + (APP_STATE.lang === 'zh-TW' ? ' (點擊立即同步至雲端)' : ' (Click to sync to cloud)')
+            }
         }
+
+        if ($syncStatusBadge) {
+            $syncStatusBadge.addEventListener('click', () => {
+                saveCurrentNote()
+            })
+        }
+
         const getSaveBlockedMessage = () => APP_STATE.lang === 'zh-TW'
             ? '文章尚未發布，請先發布後再儲存；若不想公開閱讀，可以啟用閱讀鎖。'
             : 'Publish this note before saving. If you do not want public reading, enable the read lock.'
@@ -1698,7 +1714,7 @@ ${getMarkdownCss()}
                 return false
             }
             if (!hasUnsavedChanges()) {
-                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '內容已是最新' : 'Content is already saved')
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '內容已是最新' : 'Content is already saved', false, 'cloud-synced')
                 return true
             }
             if (saveInFlight) {
@@ -1709,6 +1725,7 @@ ${getMarkdownCss()}
             const content = $textarea.value
             clearAutosaveTimer()
             $loading.style.display = 'inline-block'
+            showSaveStatus(APP_STATE.lang === 'zh-TW' ? '雲端同步中...' : 'Syncing...', false, 'syncing')
             saveInFlight = fetchJson('', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -1721,7 +1738,7 @@ ${getMarkdownCss()}
                     syncPublicationStatus()
                     refreshPublicationVersionCount()
                     const syncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                    showSaveStatus((APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步 ' : '☁️ Cloud synced ') + syncTime)
+                    showSaveStatus((APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步 ' : '☁️ Cloud synced ') + syncTime, false, 'cloud-synced')
                     window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已同步至雲端' : 'Note synced to cloud')
                     if (window.offlineStore) {
                         const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
@@ -1736,7 +1753,7 @@ ${getMarkdownCss()}
                     return true
                 })
                 .catch(error => {
-                    showSaveStatus(error.message || 'save failed', true)
+                    showSaveStatus(error.message || 'save failed', true, 'error')
                     if (window.offlineStore) {
                         const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
                         window.offlineStore.saveNote(APP_STATE.path, {
@@ -1778,7 +1795,7 @@ ${getMarkdownCss()}
                     syncStatus: hasUnsavedChanges() ? (APP_STATE.isPublished ? 'pending' : 'draft') : 'synced'
                 })
                 if (hasUnsavedChanges()) {
-                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存' : '🟢 Saved locally')
+                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存' : '🟢 Saved locally', false, 'local')
                 }
             }, 300)
         }
