@@ -4394,8 +4394,10 @@ themeCss + '\\n' +
             var pageIndicator = toolbar.querySelector('#ptb-page-indicator');
 
             var updateSlideCount = function() {
-                var indices = reveal.getIndices();
-                var total = reveal.getTotalSlides();
+                var indices = reveal.getIndices ? reveal.getIndices() : { h: 0 };
+                var total = (typeof reveal.getTotalSlides === 'function')
+                    ? reveal.getTotalSlides()
+                    : (reveal.getSlides ? reveal.getSlides().length : 1);
                 if (curSlideEl) curSlideEl.textContent = (indices.h + 1);
                 if (totalSlidesEl) totalSlidesEl.textContent = total;
             };
@@ -4419,8 +4421,10 @@ themeCss + '\\n' +
             };
 
             pageIndicator.onclick = function() {
-                var total = reveal.getTotalSlides();
-                var cur = reveal.getIndices().h + 1;
+                var total = (typeof reveal.getTotalSlides === 'function')
+                    ? reveal.getTotalSlides()
+                    : (reveal.getSlides ? reveal.getSlides().length : 1);
+                var cur = (reveal.getIndices ? reveal.getIndices().h : 0) + 1;
                 var target = window.prompt(APP_STATE.lang === 'zh-TW' ? ('請輸入要跳轉的頁碼 (1 - ' + total + '):') : ('Jump to slide (1 - ' + total + '):'), cur);
                 if (target !== null) {
                     var p = parseInt(target, 10);
@@ -4495,7 +4499,7 @@ themeCss + '\\n' +
                         allowTaint: true,
                         backgroundColor: null
                     });
-                    var curIndex = reveal.getIndices().h + 1;
+                    var curIndex = (reveal.getIndices ? reveal.getIndices().h : 0) + 1;
                     var a = document.createElement('a');
                     a.download = 'slide-' + curIndex + '.png';
                     a.href = canvas.toDataURL('image/png');
@@ -4513,7 +4517,7 @@ themeCss + '\\n' +
 
             copyLinkBtn.onclick = async function() {
                 exportMenu.hidden = true;
-                var curIndex = reveal.getIndices().h;
+                var curIndex = reveal.getIndices ? reveal.getIndices().h : 0;
                 var slideUrl = (APP_STATE.presentationPath ? (window.location.origin + APP_STATE.presentationPath) : window.location.href.split('#')[0]) + '#/' + curIndex;
                 try {
                     await navigator.clipboard.writeText(slideUrl);
@@ -4542,10 +4546,10 @@ themeCss + '\\n' +
             
             if (APP_STATE.isBlock) {
                 content = APP_STATE.blockMarkdown || '';
-            } else if (edit && !edit.classList.contains('hide')) {
+            } else if (edit && edit.value && edit.value.trim()) {
                 content = edit.value;
-            } else if (share) {
-                content = share.innerText || share.textContent || '';
+            } else if (share && (share.textContent || '').trim()) {
+                content = share.textContent;
             }
 
             if (!content || !content.trim()) { window.showAppDialog({ title: getI18n('present'), message: getI18n('presentationUnavailable'), kind: 'error' }); return; }
@@ -4643,9 +4647,11 @@ themeCss + '\\n' +
             try {
                 await loadAssets();
                 if (_reveal) { try { _reveal.destroy(); } catch(e) {} }
-                var plugins = [RevealMarkdown];
-                if (window.RevealHighlight) plugins.push(RevealHighlight);
-                _reveal = new Reveal(container.querySelector('.reveal'), {
+                var plugins = [];
+                if (window.RevealMarkdown) plugins.push(window.RevealMarkdown);
+                if (window.RevealHighlight) plugins.push(window.RevealHighlight);
+                var RevealConstructor = window.Reveal || Reveal;
+                _reveal = new RevealConstructor(container.querySelector('.reveal'), {
                     plugins: plugins,
                     center: false, hash: true, transition: 'fade',
                     width: 1280, height: 720, margin: 0.035,
@@ -4713,11 +4719,14 @@ themeCss + '\\n' +
             window.initPresentation();
         }
 
-        // Bind present button — only exists when mode === 'md' or in share view
-        (function() {
-            var btn = document.getElementById('present-btn');
-            if (btn) btn.onclick = window.initPresentation;
-        })();
+        // Bind present buttons via event delegation and direct lookup
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('#present-btn, .publication-present-btn');
+            if (btn) {
+                e.preventDefault();
+                window.initPresentation();
+            }
+        });
         maybeAutoStart();
 
         document.addEventListener('keydown', function(e) {
