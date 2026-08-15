@@ -140,3 +140,10 @@ test('base template contains dynamic html2canvas loader and offline html export 
     assert.match(baseCssSource, /\.theme-dropdown/)
     assert.match(baseCssSource, /\.width-dropdown/)
 })
+
+test('theme and width selectors use document event delegation for floating portal dropdown menus', () => {
+    assert.match(baseTemplateSource, /item\.dataset\.widthValue/)
+    assert.match(baseTemplateSource, /item\.dataset\.themeName/)
+    assert.match(baseTemplateSource, /document\.addEventListener\('click',\s*\(e\)\s*=>\s*\{[\s\S]*closest\('\.theme-item'\)/)
+    assert.match(baseTemplateSource, /document\.addEventListener\('click',\s*\(e\)\s*=>\s*\{[\s\S]*closest\('\.width-item'\)/)
+})

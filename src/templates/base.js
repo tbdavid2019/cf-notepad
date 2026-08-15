@@ -3501,26 +3501,24 @@ ${getMarkdownCss()}
             applyShareFont(initialShareFont);
         }
 
-        const widthDropdown = document.getElementById('width-dropdown');
-        if (widthDropdown) {
-            widthDropdown.addEventListener('click', (e) => {
-                const item = e.target.closest('.width-item');
-                if (!item) return;
-                const width = item.dataset.widthValue;
-                if (!width) return;
-                APP_STATE.noteSettings.width = width;
-                applyPreviewWidth(width);
-                if (canPersistSettings) {
-                    window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
-                    persistSetting({ width }).catch(err => errHandle(err?.message || err));
-                }
-                if (typeof window.showToast === 'function') {
-                    const widthLabel = item.querySelector('.width-item-name')?.textContent || width;
-                    const isZh = APP_STATE.lang === 'zh-TW';
-                    window.showToast(isZh ? ('已套用寬度：' + widthLabel) : ('Applied width: ' + widthLabel));
-                }
-            });
-        }
+        // Width Selector Dropdown (Delegated on document to support floating portal menus)
+        document.addEventListener('click', (e) => {
+            const item = e.target.closest('.width-item');
+            if (!item) return;
+            const width = item.dataset.widthValue;
+            if (!width) return;
+            APP_STATE.noteSettings.width = width;
+            applyPreviewWidth(width);
+            if (canPersistSettings) {
+                window.localStorage.setItem(PREVIEW_WIDTH_STORAGE_KEY, width);
+                persistSetting({ width }).catch(err => errHandle(err?.message || err));
+            }
+            if (typeof window.showToast === 'function') {
+                const widthLabel = item.querySelector('.width-item-name')?.textContent || width;
+                const isZh = APP_STATE.lang === 'zh-TW';
+                window.showToast(isZh ? ('已套用寬度：' + widthLabel) : ('Applied width: ' + widthLabel));
+            }
+        });
 
         if (languageSelector) {
             setRailSwitchState(languageSelector, APP_STATE.lang === 'zh-TW');
@@ -3542,40 +3540,37 @@ ${getMarkdownCss()}
         function initExportAndThemeControls() {
             const isZh = APP_STATE.lang === 'zh-TW';
 
-            // 1. Theme Dropdown Logic
-            const themeDropdown = document.getElementById('theme-dropdown');
-            if (themeDropdown) {
-                themeDropdown.addEventListener('click', (e) => {
-                    const item = e.target.closest('.theme-item');
-                    if (!item) return;
-                    const theme = item.dataset.themeName;
-                    if (!theme || !THEMES[theme]) return;
+            // 1. Theme Dropdown Logic (Delegated on document to support floating portal menus)
+            document.addEventListener('click', (e) => {
+                const item = e.target.closest('.theme-item');
+                if (!item) return;
+                const theme = item.dataset.themeName;
+                if (!theme || !THEMES[theme]) return;
 
-                    APP_STATE.theme = theme;
-                    if (themeStyleNode) themeStyleNode.textContent = THEMES[theme];
+                APP_STATE.theme = theme;
+                if (themeStyleNode) themeStyleNode.textContent = THEMES[theme];
 
-                    themeDropdown.querySelectorAll('.theme-item').forEach(el => {
-                        const active = el.dataset.themeName === theme;
-                        el.classList.toggle('is-active', active);
-                        let check = el.querySelector('.theme-item-check');
-                        if (active && !check) {
-                            const checkEl = document.createElement('span');
-                            checkEl.className = 'theme-item-check';
-                            checkEl.setAttribute('aria-hidden', 'true');
-                            checkEl.textContent = '✓';
-                            el.appendChild(checkEl);
-                        } else if (!active && check) {
-                            check.remove();
-                        }
-                    });
-
-                    if (canPersistSettings) persistSetting({ theme }).catch(err => console.warn('Theme persist failed:', err?.message || err));
-                    if (typeof window.showToast === 'function') {
-                        const themeLabel = item.querySelector('.theme-item-name')?.textContent || theme;
-                        window.showToast(isZh ? ('已套用樣式：' + themeLabel) : ('Applied theme: ' + themeLabel));
+                document.querySelectorAll('.theme-item').forEach(el => {
+                    const active = el.dataset.themeName === theme;
+                    el.classList.toggle('is-active', active);
+                    let check = el.querySelector('.theme-item-check');
+                    if (active && !check) {
+                        const checkEl = document.createElement('span');
+                        checkEl.className = 'theme-item-check';
+                        checkEl.setAttribute('aria-hidden', 'true');
+                        checkEl.textContent = '✓';
+                        el.appendChild(checkEl);
+                    } else if (!active && check) {
+                        check.remove();
                     }
                 });
-            }
+
+                if (canPersistSettings) persistSetting({ theme }).catch(err => console.warn('Theme persist failed:', err?.message || err));
+                if (typeof window.showToast === 'function') {
+                    const themeLabel = item.querySelector('.theme-item-name')?.textContent || theme;
+                    window.showToast(isZh ? ('已套用樣式：' + themeLabel) : ('Applied theme: ' + themeLabel));
+                }
+            });
 
             // 2. Export Helper & Filename
             const triggerDownload = (blobOrDataUrl, filename) => {

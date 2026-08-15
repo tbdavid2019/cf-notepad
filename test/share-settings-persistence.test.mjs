@@ -53,7 +53,7 @@ test('share appearance changes stay local and only edit pages persist settings',
 test('editor persists default preview width to APP_STATE and server when publishing or changing selector', () => {
     assert.match(baseTemplateSource, /APP_STATE\.noteSettings\.width = initialPreviewWidth/)
     assert.match(baseTemplateSource, /publishCurrentNote[\s\S]*width:\s*currentWidth/)
-    assert.match(baseTemplateSource, /widthDropdown\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /item\.dataset\.widthValue/)
     assert.match(baseTemplateSource, /function initUiTheme/)
     assert.match(baseTemplateSource, /document\.getElementById\('ui-theme-toggle-btn'\)/)
 })

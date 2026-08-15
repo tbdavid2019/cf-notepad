@@ -16,7 +16,7 @@ test('appearance selectors use width and theme dropdowns', () => {
     assert.match(commonTemplateSource, /data-width-value="\$\{opt\.value\}"/)
     assert.match(baseTemplateSource, /webawesome\.css/)
     assert.match(baseTemplateSource, /webawesome\.loader\.js/)
-    assert.match(baseTemplateSource, /widthDropdown\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /item\.dataset\.widthValue/)
     assert.match(baseCssSource, /\.width-dropdown/)
     assert.match(baseCssSource, /\.theme-dropdown/)
 })
