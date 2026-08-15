@@ -4567,10 +4567,8 @@ themeCss + '\\n' +
                                  '<div class="presentation-orientation-hint" role="status">' + orientationHint + '</div>' +
                                  '<div class="reveal"><div class="slides"></div></div>';
             
-            document.getElementById('presentation-close-btn').onclick = window.exitPresentation;
-            
             var slidesDiv = container.querySelector('.slides');
-            var chunks = content.split(/\\r?\\n\\s*---\\s*\\r?\\n/);
+            var chunks = content.split(new RegExp('\\\\r?\\\\n\\\\s*---\\\\s*\\\\r?\\\\n'));
 
             chunks.forEach(function(c, chunkIndex) {
                 var processed = c.trim();
@@ -4578,13 +4576,16 @@ themeCss + '\\n' +
                 var slideBg = '';
 
                 // 1. Cover layout
-                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && /^#\s+[^\n]+(?:\n\s*|\n[^\n#]+)?$/.test(processed))) {
+                var coverRe1 = new RegExp('<!--\\\\s*layout:\\\\s*cover\\\\s*-->', 'gi');
+                var coverRe2 = new RegExp('<!--\\\\s*cover\\\\s*-->', 'gi');
+                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && processed.startsWith('# ') && !processed.includes('\n## '))) {
                     isCover = true;
-                    processed = processed.replace(/<!--\s*layout:\s*cover\s*-->/gi, '').replace(/<!--\s*cover\s*-->/gi, '');
+                    processed = processed.replace(coverRe1, '').replace(coverRe2, '');
                 }
 
                 // 2. Custom slide background
-                var bgMatch = processed.match(/<!--\s*(?:bg|background):\s*(.+?)\s*-->/i);
+                var bgRe = new RegExp('<!--\\\\s*(?:bg|background):\\\\s*(.+?)\\\\s*-->', 'i');
+                var bgMatch = processed.match(bgRe);
                 if (bgMatch) {
                     slideBg = bgMatch[1].trim();
                     processed = processed.replace(bgMatch[0], '');
@@ -4598,8 +4599,8 @@ themeCss + '\\n' +
                         var left3 = tParts[1].trim();
                         var center3 = tParts[2].trim();
                         var right3 = tParts[3].trim();
-                        processed = (before3 ? before3 + '\\n\\n' : '') +
-                            '\\u003cdiv class="slidev-layout-three-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left3 + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-center"\\u003e\\n\\n' + center3 + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right3 + '\\n\\n\\u003c/div\\u003e\\u003c/div\\u003e';
+                        processed = (before3 ? before3 + '\n\n' : '') +
+                            '<div class="slidev-layout-three-cols"><div class="col-left">\n\n' + left3 + '\n\n</div><div class="col-center">\n\n' + center3 + '\n\n</div><div class="col-right">\n\n' + right3 + '\n\n</div></div>';
                     }
                 } else if (processed.includes('::left::') && processed.includes('::right::')) {
                     // Layouts: Two Columns (::left:: / ::right::)
@@ -4608,8 +4609,8 @@ themeCss + '\\n' +
                         var before = parts[0].trim();
                         var left = parts[1].trim();
                         var right = parts[2].trim();
-                        processed = (before ? before + '\\n\\n' : '') + 
-                            '\\u003cdiv class="slidev-layout-two-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right + '\\n\\n\\u003c/div\\u003e\\u003c/div\\u003e';
+                        processed = (before ? before + '\n\n' : '') + 
+                            '<div class="slidev-layout-two-cols"><div class="col-left">\n\n' + left + '\n\n</div><div class="col-right">\n\n' + right + '\n\n</div></div>';
                     }
                 }
 
@@ -4618,7 +4619,7 @@ themeCss + '\\n' +
                 processed = processed.replace(fencePattern, String.fromCharCode(96,96,96) + '$1 data-line-numbers="$2"');
 
                 // 5. Click Animations: {v-click} -> Reveal fragments
-                processed = processed.replace(/\{v-click\}/g, '\\u003c!-- .element: class="fragment" --\\u003e');
+                processed = processed.split('{v-click}').join('<!-- .element: class="fragment" -->');
 
                 var sec = document.createElement('section');
                 sec.setAttribute('data-markdown', '');

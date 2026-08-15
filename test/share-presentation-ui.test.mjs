@@ -70,3 +70,27 @@ test('presentation engine supports KaTeX, Mermaid, ECharts, and Slidev layouts',
     assert.match(baseCssSource, /\.slidev-layout-cover/)
     assert.match(baseCssSource, /\.slidev-layout-three-cols/)
 })
+
+test('all script tags in rendered HTML have zero syntax errors', async () => {
+    const { HTML } = await import('../src/templates/base.js')
+    const html = HTML({
+        lang: 'zh-TW',
+        title: 'test',
+        content: '# Title\n\n---\n\n## Slide 2',
+        ext: {},
+        tips: '',
+        isEdit: false,
+        showPwPrompt: false,
+        path: 'test',
+        shareId: 'test'
+    })
+    const scripts = html.match(/<script[\s\S]*?<\/script>/g) || []
+    assert.ok(scripts.length > 0)
+    for (const s of scripts) {
+        if (s.includes('text/template') || s.includes('type="module"')) continue
+        const code = s.replace(/<script[^>]*>/i, '').replace(/<\/script>$/i, '')
+        assert.doesNotThrow(() => {
+            new Function(code)
+        })
+    }
+})
