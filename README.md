@@ -218,6 +218,20 @@ npm run deploy
 - `GET /robots.txt`：AI 爬蟲規則與聲明。
 - `Accept: text/markdown` 標頭：請求 `/share/...` 或 `/:path` 時直接回傳原始 Markdown。
 
+### 🛠️ Markdown 轉換與無狀態工具 API
+
+- `POST /api/markdown/render`：傳入 Markdown 渲染為包含主題樣式的 HTML。
+- `POST /api/markdown/parse`：傳入 HTML 字串或網頁 URL 轉換為乾淨 Markdown。
+- `POST /api/markdown/extract`：提取 Markdown 純文字、文章標題、標題大綱清單、超連結與字數統計。
+- `POST /api/markdown/lint`：檢查 Markdown 語法問題（未閉合程式碼區塊、缺少空白標題、損毀連結、未加引號之 Mermaid 節點）並輸出修復後的 Markdown。
+
+### 💬 劃線註解與討論串 API
+
+- `GET /api/shares/:shareId/annotations`：獲取公開分享頁面的所有劃線討論串。
+- `POST /api/shares/:shareId/annotations`：對特定段落新增劃線討論串。
+- `POST /api/shares/:shareId/annotations/:threadId/messages`：回覆特定劃線討論串。
+- `POST /api/shares/:shareId/ai-assistant`：針對文章或劃線段落向 AI 提問。
+
 ---
 
 ---

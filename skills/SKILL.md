@@ -134,6 +134,80 @@ curl -X POST "https://wiki.david888.com/api/<path>?append=true" \
   --data-binary @update.md
 ```
 
+### 4. Markdown Processing Utilities (Stateless)
+
+#### 4.1 Render Markdown to HTML (`POST /api/markdown/render`)
+```bash
+curl -X POST "https://wiki.david888.com/api/markdown/render" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "markdown": "# Hello World\nThis is **bold** text.",
+    "theme": "claude-canvas",
+    "fullHtml": false
+  }'
+```
+Returns: `{"err": 0, "data": {"html": "<div class=\"markdown-body\">...</div>", "theme": "claude-canvas", "fullHtml": false}}`
+
+#### 4.2 Parse HTML / Webpage to Markdown (`POST /api/markdown/parse`)
+```bash
+# Convert raw HTML
+curl -X POST "https://wiki.david888.com/api/markdown/parse" \
+  -H "Content-Type: application/json" \
+  -d '{"html": "<h1>Title</h1><p>Paragraph</p>"}'
+
+# Or fetch & convert from URL
+curl -X POST "https://wiki.david888.com/api/markdown/parse" \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://example.com/article"}'
+```
+Returns: `{"err": 0, "data": {"markdown": "# Title\n\nParagraph"}}`
+
+#### 4.3 Extract Text & Structure (`POST /api/markdown/extract`)
+```bash
+curl -X POST "https://wiki.david888.com/api/markdown/extract" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown": "# Title\nParagraph content with [Link](https://example.com)"}'
+```
+Returns: `{"err": 0, "data": {"title": "Title", "text": "...", "headings": [...], "links": [...], "images": [...], "stats": {"characters": 120, "words": 25, "lines": 5, "readingTimeMinutes": 1}}}`
+
+#### 4.4 Lint & Auto-fix Markdown (`POST /api/markdown/lint`)
+```bash
+curl -X POST "https://wiki.david888.com/api/markdown/lint" \
+  -H "Content-Type: application/json" \
+  -d '{"markdown": "#HeadingWithoutSpace\n```\nUnclosed code"}'
+```
+Returns: `{"err": 0, "data": {"valid": false, "issues": [...], "fixedMarkdown": "# HeadingWithoutSpace\n```\nUnclosed code\n```"}}`
+
+### 5. Line-Anchored Annotations & Discussions (`/api/shares/:shareId/annotations`)
+
+#### 5.1 List Annotations
+```bash
+curl -X GET "https://wiki.david888.com/api/shares/<shareId>/annotations"
+```
+
+#### 5.2 Create an Annotation Thread
+```bash
+curl -X POST "https://wiki.david888.com/api/shares/<shareId>/annotations" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "anchor": {
+      "selectedText": "Target passage text",
+      "prefix": "Text before target...",
+      "suffix": "...text after target",
+      "sourceRevision": "<currentRevision>"
+    },
+    "authorName": "David",
+    "body": "Annotation comment body"
+  }'
+```
+
+#### 5.3 Reply to an Annotation Thread
+```bash
+curl -X POST "https://wiki.david888.com/api/shares/<shareId>/annotations/<threadId>/messages" \
+  -H "Content-Type: application/json" \
+  -d '{"authorName": "Alice", "body": "Reply comment text"}'
+```
+
 ## Common Scenarios & Templates
 
 ### A. Saving a Research Report

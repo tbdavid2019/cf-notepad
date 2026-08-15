@@ -253,7 +253,88 @@ flowchart LR
 
 If the user asks for slides, prefer slide-oriented markdown over a flat article.
 
-### 4. Note History (`/api/:path/history...`)
+### 4. Markdown Processing Utilities (Stateless)
+
+Stateless text transformation and validation endpoints that require no authentication or storage:
+
+#### 4.1 Render Markdown to HTML (`POST /api/markdown/render`)
+- **Headers:** `Content-Type: application/json` or `text/markdown`
+- **Request JSON Body:**
+  ```json
+  {
+    "markdown": "# Title\n**Bold** text.",
+    "theme": "claude-canvas",
+    "fullHtml": false,
+    "title": "My Document"
+  }
+  ```
+- **Returns:** `{"err": 0, "data": {"html": "<div class=\"markdown-body\">...</div>", "theme": "claude-canvas", "fullHtml": false}}`
+
+#### 4.2 Parse HTML / URL to Markdown (`POST /api/markdown/parse`)
+- **Headers:** `Content-Type: application/json` or `text/html`
+- **Request JSON Body:**
+  ```json
+  { "html": "<h1>Title</h1><p>Body</p>" }
+  ```
+  or
+  ```json
+  { "url": "https://example.com/page" }
+  ```
+- **Returns:** `{"err": 0, "data": {"markdown": "# Title\n\nBody"}}`
+
+#### 4.3 Extract Text & Metadata (`POST /api/markdown/extract`)
+- **Request JSON Body:**
+  ```json
+  { "markdown": "# Title\nBody text with [Link](https://example.com)" }
+  ```
+- **Returns:**
+  ```json
+  {
+    "err": 0,
+    "data": {
+      "title": "Title",
+      "text": "Title Body text with Link",
+      "headings": [{"level": 1, "text": "Title"}],
+      "links": [{"text": "Link", "url": "https://example.com"}],
+      "images": [],
+      "stats": {
+        "characters": 25,
+        "words": 6,
+        "lines": 2,
+        "readingTimeMinutes": 1
+      }
+    }
+  }
+  ```
+
+#### 4.4 Lint & Auto-fix Markdown (`POST /api/markdown/lint`)
+- **Request JSON Body:**
+  ```json
+  { "markdown": "#HeadingWithoutSpace\n```\nUnclosed fence" }
+  ```
+- **Returns:**
+  ```json
+  {
+    "err": 0,
+    "data": {
+      "valid": false,
+      "issues": [
+        {"line": 1, "type": "heading-missing-space", "message": "Heading hashes '#{1,6}' should be followed by a space."},
+        {"line": 2, "type": "unclosed-code-fence", "message": "Unclosed code fence starting at line 2."}
+      ],
+      "fixedMarkdown": "# HeadingWithoutSpace\n```\nUnclosed fence\n```"
+    }
+  }
+  ```
+
+### 5. Line-Anchored Annotations (`/api/shares/:shareId/annotations`)
+
+When annotations are enabled on a shared note:
+- `GET /api/shares/<shareId>/annotations`: List annotation threads.
+- `POST /api/shares/<shareId>/annotations`: Create a new annotation thread on an anchored text slice.
+- `POST /api/shares/<shareId>/annotations/<threadId>/messages`: Add a reply message to a thread.
+
+### 6. Note History (`/api/:path/history...`)
 
 If the server operator has enabled note history, the following endpoints are available for edit-authorized users:
 

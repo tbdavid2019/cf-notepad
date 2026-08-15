@@ -2,8 +2,18 @@
 
 ## [2026-08-16]
 
-### Added
-
+- **🛠️ Markdown 轉換與無狀態分析工具 API**
+  - **`POST /api/markdown/render`**：支援 Markdown 渲染為 HTML，支援指定 20 款 CSS 主題、整頁 HTML 包裝與自訂標題。
+  - **`POST /api/markdown/parse`**：支援 HTML 字串或網頁 URL 解析轉換為乾淨 Markdown。
+  - **`POST /api/markdown/extract`**：提取 Markdown 純文字、文章標題、大綱目錄 (Headings)、超連結、圖片與精準字數/預估閱讀時間統計。
+  - **`POST /api/markdown/lint`**：自動檢查 Markdown 語法問題（未閉合程式碼區塊、標題缺少空格、空連結、未加引號 Mermaid 節點）並輸出自動修復的 Markdown。
+- **💬 劃線註解與討論串 REST API (D1 持久化)**
+  - `GET /api/shares/:shareId/annotations`：獲取公開分享頁面的所有劃線註解與討論串。
+  - `POST /api/shares/:shareId/annotations`：傳入段落錨點（`selectedText`、`prefix`、`suffix`）建立劃線註解討論串。
+  - `POST /api/shares/:shareId/annotations/:threadId/messages`：回覆特定討論串。
+  - `POST /api/shares/:shareId/ai-assistant`：針對文章或劃線段落進行 AI 概念解釋與問答。
+- **🤖 LLM 標準索引 (`/llms.txt` & `/llms-full.txt`)**
+  - 符合 llmstxt.org 標準，提供面向 AI Agent 與 LLM 的精簡與完整架構索引、OpenAPI 規格與 Skill 文檔指引。
 - **📱 PWA 支援、檔案關聯 (File Handling API) 與離線工作區 (Offline Workspace)**
   - **📂 檔案關聯 (File Handling API)**：
     - 在 `app.webmanifest` 與 Worker 路由中註冊 `file_handlers`（關聯 `.md`、`.markdown`、`.txt` 檔案）。

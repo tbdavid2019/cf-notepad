@@ -132,6 +132,16 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
   Payload fields: \`text\` / \`content\`, \`append\` (boolean), \`share\` (boolean), \`publicIndex\` (boolean), \`pw\`, \`vpw\`, \`theme\`, \`width\`.
 - **Upload Image**: \`POST ${siteOrigin}/api/upload\`
   Uploads an image file to R2 storage and returns the image CDN URL.
+- **Markdown Utilities (Stateless)**:
+  - Render to HTML: \`POST ${siteOrigin}/api/markdown/render\`
+  - Parse HTML/URL: \`POST ${siteOrigin}/api/markdown/parse\`
+  - Extract Structure: \`POST ${siteOrigin}/api/markdown/extract\`
+  - Lint & Fix: \`POST ${siteOrigin}/api/markdown/lint\`
+- **Line-Anchored Annotations**:
+  - List annotations: \`GET ${siteOrigin}/api/shares/{shareId}/annotations\`
+  - Create thread: \`POST ${siteOrigin}/api/shares/{shareId}/annotations\`
+  - Reply to thread: \`POST ${siteOrigin}/api/shares/{shareId}/annotations/{threadId}/messages\`
+  - Ask AI Assistant: \`POST ${siteOrigin}/api/shares/{shareId}/ai-assistant\`
 - **Note Revision History**:
   - List versions: \`GET ${siteOrigin}/api/{path}/history\`
   - Read version: \`GET ${siteOrigin}/api/{path}/history/{versionId}\`
@@ -486,6 +496,64 @@ export function buildOpenApiDocument(origin) {
                     },
                 },
             },
+            '/api/markdown/render': {
+                post: {
+                    summary: 'Render Markdown text into styled HTML',
+                    responses: {
+                        '200': {
+                            description: 'Rendered HTML output.',
+                        },
+                    },
+                },
+            },
+            '/api/markdown/parse': {
+                post: {
+                    summary: 'Convert HTML or webpage URL into Markdown',
+                    responses: {
+                        '200': {
+                            description: 'Converted Markdown text.',
+                        },
+                    },
+                },
+            },
+            '/api/markdown/extract': {
+                post: {
+                    summary: 'Extract plain text, headings, links, and word count stats from Markdown',
+                    responses: {
+                        '200': {
+                            description: 'Extracted structured data.',
+                        },
+                    },
+                },
+            },
+            '/api/markdown/lint': {
+                post: {
+                    summary: 'Validate and auto-fix Markdown syntax issues',
+                    responses: {
+                        '200': {
+                            description: 'Lint results with issues and fixed markdown.',
+                        },
+                    },
+                },
+            },
+            '/api/shares/{shareId}/annotations': {
+                get: {
+                    summary: 'List line-anchored annotations for a shared note',
+                    responses: {
+                        '200': {
+                            description: 'Annotation thread list.',
+                        },
+                    },
+                },
+                post: {
+                    summary: 'Create a new line-anchored annotation thread',
+                    responses: {
+                        '201': {
+                            description: 'Created annotation thread.',
+                        },
+                    },
+                },
+            },
             [API_HEALTH_PATH]: {
                 get: {
                     summary: 'Health check',
@@ -536,6 +604,21 @@ export function buildApiCatalog(origin) {
                 item: [
                     {
                         href: `${origin}/api/{path}`,
+                    },
+                    {
+                        href: `${origin}/api/markdown/render`,
+                    },
+                    {
+                        href: `${origin}/api/markdown/parse`,
+                    },
+                    {
+                        href: `${origin}/api/markdown/extract`,
+                    },
+                    {
+                        href: `${origin}/api/markdown/lint`,
+                    },
+                    {
+                        href: `${origin}/api/shares/{shareId}/annotations`,
                     },
                 ],
                 'service-desc': [

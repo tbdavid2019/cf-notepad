@@ -43,6 +43,16 @@
   Payload fields: `text` / `content`, `append` (boolean), `share` (boolean), `publicIndex` (boolean), `pw`, `vpw`, `theme`, `width`.
 - **Upload Image**: `POST https://wiki.david888.com/api/upload`
   Uploads an image file to R2 storage and returns the image CDN URL.
+- **Markdown Utilities (Stateless)**:
+  - Render to HTML: `POST https://wiki.david888.com/api/markdown/render`
+  - Parse HTML/URL: `POST https://wiki.david888.com/api/markdown/parse`
+  - Extract Structure: `POST https://wiki.david888.com/api/markdown/extract`
+  - Lint & Fix: `POST https://wiki.david888.com/api/markdown/lint`
+- **Line-Anchored Annotations**:
+  - List annotations: `GET https://wiki.david888.com/api/shares/{shareId}/annotations`
+  - Create thread: `POST https://wiki.david888.com/api/shares/{shareId}/annotations`
+  - Reply to thread: `POST https://wiki.david888.com/api/shares/{shareId}/annotations/{threadId}/messages`
+  - Ask AI Assistant: `POST https://wiki.david888.com/api/shares/{shareId}/ai-assistant`
 - **Note Revision History**:
   - List versions: `GET https://wiki.david888.com/api/{path}/history`
   - Read version: `GET https://wiki.david888.com/api/{path}/history/{versionId}`

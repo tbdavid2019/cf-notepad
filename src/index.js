@@ -17,6 +17,7 @@ import {
     resolveLockedEditorFormat,
 } from './note_meta'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
+import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -894,6 +895,119 @@ router.get('/api/url2md', async (request) => {
         const requestUrl = new URL(request.url)
         const url = requestUrl.searchParams.get('url') || ''
         return await processUrlToMarkdown(url)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+// Markdown utility endpoints
+router.post('/api/markdown/render', async (request) => {
+    try {
+        let markdown = ''
+        let options = {}
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            markdown = body.markdown ?? body.text ?? ''
+            options = {
+                theme: body.theme || 'claude-canvas',
+                fullHtml: body.fullHtml === true,
+                title: body.title || 'Document',
+            }
+        } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
+            markdown = await request.text().catch(() => '')
+            const url = new URL(request.url)
+            options = {
+                theme: url.searchParams.get('theme') || 'claude-canvas',
+                fullHtml: url.searchParams.get('fullHtml') === 'true',
+                title: url.searchParams.get('title') || 'Document',
+            }
+        } else {
+            const formData = await request.formData().catch(() => null)
+            if (formData) {
+                markdown = (formData.get('markdown') || formData.get('text') || '')
+                options = {
+                    theme: formData.get('theme') || 'claude-canvas',
+                    fullHtml: formData.get('fullHtml') === 'true',
+                    title: formData.get('title') || 'Document',
+                }
+            }
+        }
+
+        const html = renderMarkdownToHtml(markdown, options)
+        return returnJSON(0, { html, theme: options.theme, fullHtml: options.fullHtml })
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.post('/api/markdown/parse', async (request) => {
+    try {
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            if (body.url) {
+                return await processUrlToMarkdown(body.url)
+            }
+            const html = body.html || body.text || ''
+            const markdown = parseHtmlToMarkdown(html)
+            return returnJSON(0, { markdown })
+        } else if (contentType.includes('text/html')) {
+            const html = await request.text().catch(() => '')
+            const markdown = parseHtmlToMarkdown(html)
+            return returnJSON(0, { markdown })
+        } else {
+            const formData = await request.formData().catch(() => null)
+            const url = formData ? formData.get('url') : ''
+            if (url) {
+                return await processUrlToMarkdown(url)
+            }
+            const html = formData ? (formData.get('html') || formData.get('text') || '') : ''
+            const markdown = parseHtmlToMarkdown(html)
+            return returnJSON(0, { markdown })
+        }
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.post('/api/markdown/extract', async (request) => {
+    try {
+        let markdown = ''
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            markdown = body.markdown ?? body.text ?? ''
+        } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
+            markdown = await request.text().catch(() => '')
+        } else {
+            const formData = await request.formData().catch(() => null)
+            markdown = formData ? (formData.get('markdown') || formData.get('text') || '') : ''
+        }
+
+        const data = extractMarkdownData(markdown)
+        return returnJSON(0, data)
+    } catch (e) {
+        return returnJSON(500, e.message)
+    }
+})
+
+router.post('/api/markdown/lint', async (request) => {
+    try {
+        let markdown = ''
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            markdown = body.markdown ?? body.text ?? ''
+        } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
+            markdown = await request.text().catch(() => '')
+        } else {
+            const formData = await request.formData().catch(() => null)
+            markdown = formData ? (formData.get('markdown') || formData.get('text') || '') : ''
+        }
+
+        const result = lintMarkdownText(markdown)
+        return returnJSON(0, result)
     } catch (e) {
         return returnJSON(500, e.message)
     }
