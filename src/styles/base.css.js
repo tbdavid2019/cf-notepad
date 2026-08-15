@@ -190,11 +190,11 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     position: fixed;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
     z-index: 1001;
-    width: min(480px, calc(100vw - 32px));
+    width: min(560px, calc(100vw - 32px));
     box-sizing: border-box;
     padding: 26px;
+    transform: translate(-50%, -50%);
     border: 1px solid var(--toolbar-border, #e2dacd);
     border-radius: 14px;
     background: var(--toolbar-bg, #fff);
@@ -206,9 +206,17 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .editor-preference-close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; line-height: 1; }
 .editor-preference-close:focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
 .editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
-.editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 13px; border: 1px solid var(--toolbar-border, #e2dacd); border-radius: 10px; cursor: pointer; transition: border-color 0.16s ease, background 0.16s ease; }
+.editor-preference-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+.editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 14px; border: 1.5px solid var(--toolbar-border, #e2dacd); border-radius: 12px; cursor: pointer; transition: border-color 0.16s ease, background 0.16s ease, transform 0.14s ease, box-shadow 0.14s ease; background: var(--toolbar-bg, #fff); }
+.editor-preference-option:hover { border-color: var(--toolbar-accent, #c8654b); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
 .editor-preference-option:has(input:checked), .editor-preference-option.is-selected { border-color: var(--toolbar-accent, #c8654b); background: color-mix(in srgb, var(--toolbar-bg-hover, #f5f0e8) 78%, transparent); }
+.editor-preference-option.is-recommended { border-color: var(--toolbar-accent, #c8654b); }
 .editor-preference-option input { margin: 3px 0 0; accent-color: var(--toolbar-accent, #c8654b); }
+.editor-preference-copy { display: flex !important; flex-direction: column; gap: 6px; width: 100%; }
+.editor-preference-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+.editor-preference-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.06); color: var(--toolbar-muted, #6b6965); white-space: nowrap; }
+.editor-preference-badge-accent { background: color-mix(in srgb, var(--toolbar-accent, #c8654b) 16%, transparent); color: var(--toolbar-accent, #c8654b); }
+.editor-card-action { margin-top: 6px; width: 100%; font-size: 13px; height: 32px; }
 .editor-preference-option span { display: grid; gap: 3px; }
 .editor-preference-option strong { font-size: 14px; }
 .editor-preference-option small { color: var(--toolbar-muted, #6b6965); font-size: 12px; line-height: 1.45; }
@@ -216,6 +224,36 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .editor-preference-remember input { accent-color: var(--toolbar-accent, #c8654b); }
 .editor-preference-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; }
 .editor-preference-actions .opt-button { min-width: 76px; }
+.katex, .katex-display {
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.16s ease, outline-color 0.16s ease, transform 0.1s ease;
+}
+.katex:hover {
+    background-color: color-mix(in srgb, var(--toolbar-accent, #c8654b) 12%, transparent);
+    outline: 1px dashed var(--toolbar-accent, #c8654b);
+    outline-offset: 2px;
+}
+.katex-display:hover {
+    background-color: color-mix(in srgb, var(--toolbar-accent, #c8654b) 8%, transparent);
+    outline: 1px dashed var(--toolbar-accent, #c8654b);
+    outline-offset: 4px;
+}
+.katex.katex-copied, .katex-display.katex-copied {
+    background-color: rgba(46, 160, 67, 0.22) !important;
+    outline: 2px solid #2ea043 !important;
+    animation: katex-copied-pulse 0.45s ease-out;
+}
+@keyframes katex-copied-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.025); }
+    100% { transform: scale(1); }
+}
+.math-icon-badge {
+    font-weight: 700;
+    font-style: italic;
+    font-family: "KaTeX_Math", "Times New Roman", Cambria, Georgia, serif;
+}
 .modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1001; width: 400px; display: flex; gap: 10px; }
 .embed-modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--panel-bg, #fff); color: var(--text-color, #222); padding: 24px; border-radius: 10px; box-shadow: 0 8px 28px rgba(0,0,0,0.22); z-index: 1001; width: min(620px, calc(100vw - 32px)); box-sizing: border-box; }
 .embed-modal-content h2 { margin: 0 0 8px; }
@@ -658,19 +696,18 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 
 /* New note: primary action uses the remembered editor, menu exposes alternatives. */
 .new-note-actions { display: inline-flex; align-items: center; }
-.new-note-primary-link { width: auto !important; min-width: var(--toolbar-height); padding: 0 9px !important; gap: 4px; border-radius: 6px 0 0 6px !important; border-right: 0 !important; text-decoration: none; }
-.new-note-primary-link .toolbar-button-label { display: inline !important; }
+.new-note-primary-link { width: 32px !important; min-width: 32px !important; padding: 0 !important; border-radius: 6px 0 0 6px !important; border-right: 0 !important; text-decoration: none; justify-content: center; }
 .new-note-dropdown .dropdown-menu {
-    min-width: 184px;
+    min-width: 190px;
 }
 .new-note-menu-trigger {
-    width: 24px !important;
-    min-width: 24px !important;
+    width: 22px !important;
+    min-width: 22px !important;
     padding: 0 !important;
     border-radius: 0 6px 6px 0 !important;
 }
 .new-note-plus {
-    font-size: 18px;
+    font-size: 17px;
     font-weight: 500;
     line-height: 1;
 }

@@ -54,12 +54,11 @@ test('footer provides a primary new-note action, explicit format choices, and a 
 
     assert.equal(firstSection?.classList.contains('footer-section-create'), true)
     assert.equal(trigger?.classList.contains('dropdown-trigger'), true)
-    assert.equal(primaryLink?.textContent.trim(), '＋ 新增')
-    assert.equal(primaryLink?.getAttribute('href'), '/new/block')
+    assert.equal(primaryLink?.textContent.trim(), '＋')
+    assert.equal(primaryLink?.getAttribute('href'), '#choose-editor')
     assert.equal(document.querySelector('#new-markdown-note-link')?.getAttribute('href'), '/new/markdown')
     assert.equal(document.querySelector('#new-block-note-link')?.getAttribute('href'), '/new/block')
     assert.match(document.querySelector('#editor-preference-btn')?.textContent || '', /預設編輯器/)
-    assert.match(baseCssSource, /@media \(max-width: 640px\)[\s\S]*\.footer-section-create \.toolbar-button-label\s*\{\s*display: none/)
 })
 
 test('Block note menus expose imports that convert content into blocks', () => {

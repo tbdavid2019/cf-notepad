@@ -1,6 +1,6 @@
 export const EDITOR_PREFERENCE_STORAGE_KEY = 'cf-notepad:editor-preference'
 export const EDITOR_SESSION_PREFERENCE_KEY = 'cf-notepad:editor-session-preference'
-export const DEFAULT_EDITOR_FORMAT = 'block'
+export const DEFAULT_EDITOR_FORMAT = 'markdown'
 
 const isEditorFormat = value => value === 'block' || value === 'markdown'
 
@@ -18,24 +18,18 @@ const storageRemove = (storage, key) => {
 
 export function hasEditorPreference(windowRef = window) {
     const remembered = storageGet(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY)
-    if (isEditorFormat(remembered)) return true
-
-    return isEditorFormat(storageGet(windowRef.sessionStorage, EDITOR_SESSION_PREFERENCE_KEY))
+    return isEditorFormat(remembered)
 }
 
 export function getEditorPreference(windowRef = window) {
     const remembered = storageGet(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY)
     if (isEditorFormat(remembered)) return { format: remembered, remembered: true }
 
-    const session = storageGet(windowRef.sessionStorage, EDITOR_SESSION_PREFERENCE_KEY)
-    if (isEditorFormat(session)) return { format: session, remembered: false }
-
     return { format: DEFAULT_EDITOR_FORMAT, remembered: false }
 }
 
 export function saveEditorPreference(format, { remember = false, windowRef = window } = {}) {
     if (!isEditorFormat(format)) throw new TypeError('Invalid editor format')
-    storageSet(windowRef.sessionStorage, EDITOR_SESSION_PREFERENCE_KEY, format)
     if (remember) storageSet(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY, format)
     else storageRemove(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY)
     return { format, remembered: remember }
@@ -69,6 +63,7 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     const rememberInput = modal.querySelector('[data-editor-preference-remember]')
     const closeButtons = [...modal.querySelectorAll('[data-editor-preference-close]')]
     const options = [...modal.querySelectorAll('input[name="editor-format"]')]
+    const cardActions = [...modal.querySelectorAll('[data-editor-format-choice]')]
     const autoOpen = modal.dataset.editorPreferenceAutoOpen === 'true'
     let trigger = null
     let keyHandler = null
@@ -124,6 +119,24 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     }
 
     options.forEach(option => option.addEventListener('change', syncOptionState))
+    cardActions.forEach(button => button.addEventListener('click', event => {
+        event.preventDefault()
+        const format = button.dataset.editorFormatChoice || DEFAULT_EDITOR_FORMAT
+        const option = options.find(item => item.value === format)
+        if (option) option.checked = true
+        syncOptionState()
+        const preference = saveEditorPreference(format, {
+            remember: rememberInput?.checked === true,
+            windowRef,
+        })
+        applyPrimaryLink(preference.format)
+        if (autoOpen || pendingNewNote) {
+            pendingNewNote = false
+            goToNewNote(preference.format)
+        } else {
+            close()
+        }
+    }))
     primaryLinks.forEach(link => link.addEventListener('click', event => {
         if (hasEditorPreference(windowRef)) return
         event.preventDefault()
@@ -150,7 +163,7 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
 
     if (autoOpen) {
         const preference = currentPreference()
-        if (preference.remembered || storageGet(windowRef.sessionStorage, EDITOR_SESSION_PREFERENCE_KEY)) goToNewNote(preference.format)
+        if (preference.remembered) goToNewNote(preference.format)
         else open({ opener: null })
     }
 

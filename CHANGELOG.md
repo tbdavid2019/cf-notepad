@@ -9,8 +9,25 @@
   - Automatically defaults the target language to **English** (`英文` / `English`) when Chinese content is detected, and to **Traditional Chinese** (`繁體中文` / `Traditional Chinese`) when English or other non-Chinese languages are selected.
   - Retains prompt customization and bilingual output (`bilingual: true`) options.
 
+- **Math Formula Click-to-Copy & Multi-Format Selector (Share & Preview Modes)**
+  - Clicking any rendered KaTeX formula in Share mode or Editor Preview now instantly copies the formatted equation to the clipboard with toast feedback and visual highlight animation.
+  - Added **Formula Copy Format (`公式複製格式`)** configuration modal (`#math-format-btn` in footer toolbar and settings), supporting 4 versatile output formats with scenario descriptions:
+    1. **LaTeX**: Standard `$inline$` and `$$block$$` delimiters (ideal for Markdown notes, academic papers, and LaTeX editors).
+    2. **MathML (Word)**: Native XML math structure written to clipboard as HTML/text (ideal for direct pasting into Microsoft Word as equation objects).
+    3. **LaTeX (Plain text, no $)**: Clean raw TeX syntax without delimiters (ideal for Desmos, WolframAlpha, and mathematical tools).
+    4. **Notion ($$ format)**: Standard `$$equation$$` wrapping (ideal for Notion inline/block equation blocks).
+  - User format selection is persisted to `localStorage` (`cf-notepad:math-copy-format`, defaulting to Notion format).
+
+- **Wikipedia-Inspired Dual-Card Editor Onboarding & Markdown Default**
+  - Redesigned editor preference modal (`EDITOR_PREFERENCE_MODAL`) into side-by-side interactive cards with zero-friction one-click action buttons (`以 Markdown 開始` / `以 Block 開始`).
+  - Set **Markdown 編輯器** as the recommended default format (`DEFAULT_EDITOR_FORMAT = 'markdown'`) with prominent badge highlighting.
+  - Fixed preference session persistence: when "記住我的選擇" is not checked, every click on the "＋" New Note button reliably prompts the format selection modal.
+
 ### Changed
 
+- **Streamlined Footer Toolbar & Natural Math Button Placement**
+  - Moved the **`fx 公式`** (Math Formula Copy Format) button directly next to the **`複製 (Copy)`** button in both Edit and Share modes for cohesive content action grouping.
+  - Simplified the **`＋`** New Note button into a balanced, compact icon button by removing the redundant text label, creating a clean split button alongside the `▾` creation menu.
 - **Clean Git Working Tree for Screenshot Paste Files**
   - Added `orca-paste-*` pattern to `.gitignore` to prevent chat screenshot artifacts from cluttering source control.
 

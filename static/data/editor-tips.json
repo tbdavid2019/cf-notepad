@@ -50,6 +50,11 @@
       "id": "document-import",
       "zh-TW": "小訣竅：按 Footer 匯入按鈕或「＋ 新增」選單，可直接將 Word (.docx)、PPT (.pptx)、Excel (.xlsx)、PDF 或 Markdown 檔案於瀏覽器內自動轉為 Markdown。",
       "en-US": "Tip: Use the Footer Import button or '+ New' menu to automatically convert Word (.docx), PPT (.pptx), Excel (.xlsx), PDF, or Markdown files to Markdown directly inside your browser."
+    },
+    {
+      "id": "math-copy",
+      "zh-TW": "小訣竅：在分享頁或預覽區直接點擊數學公式即可快速複製；透過底欄的「公式」按鈕可切換 LaTeX、MathML (Word)、純文字或 Notion 格式。",
+      "en-US": "Tip: Click any math equation in preview or share view to copy it instantly. Use the 'Math' button in the footer to choose LaTeX, MathML (Word), Plain, or Notion format."
     }
   ]
 }

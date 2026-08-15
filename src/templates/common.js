@@ -199,11 +199,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-create">
                 <div class="footer-section-body">
                     <div class="new-note-actions">
-                        <a id="new-note-link" class="toolbar-icon-button new-note-primary-link" href="/new/block" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}">
-                            <span class="new-note-plus" aria-hidden="true">＋</span> <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
+                        <a id="new-note-link" class="toolbar-icon-button new-note-primary-link" href="#choose-editor" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}">
+                            <span class="new-note-plus" aria-hidden="true">＋</span>
                         </a>
                         <div class="dropdown-container new-note-dropdown">
-                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" title="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" aria-label="${lang === 'zh-TW' ? '選擇新增方式' : 'Choose note type'}" aria-haspopup="menu" aria-expanded="false">
+                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button new-note-menu-trigger dropdown-trigger" data-tooltip="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" title="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" aria-label="${lang === 'zh-TW' ? '選擇新增方式與匯入' : 'Choose note type & import'}" aria-haspopup="menu" aria-expanded="false">
                                 <span aria-hidden="true">▾</span>
                             </button>
                             <div class="dropdown-menu" role="menu">
@@ -347,6 +347,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
                         </button>
+                        <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
+                            <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
+                        </button>
                         <button type="button" id="export-pdf-btn" class="toolbar-icon-button" data-tooltip="${t.exportPdf}" title="${t.exportPdf}" aria-label="${t.exportPdf}">
                             ${SVG_ICONS.pdf}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '列印' : 'Print'}</span>
@@ -417,6 +421,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="copy-button-icon copy-button-icon-default">${SVG_ICONS.copy}</span>
                             <span class="copy-button-icon copy-button-icon-success" aria-hidden="true">${SVG_ICONS.check}</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '複製' : 'Copy'}</span>
+                        </button>
+                        <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
+                            <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
                         </button>
                         <button type="button" id="present-btn" class="toolbar-icon-button" data-tooltip="${t.presentTitle}" title="${t.presentTitle}" aria-label="${t.presentTitle}">
                             ${SVG_ICONS.play}
@@ -565,11 +573,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
     const zh = lang === 'zh-TW'
     const title = zh ? '選擇你的編輯方式' : 'Choose your editor'
-    const description = zh ? '這只會決定新筆記的預設方式，不會變更既有筆記。' : 'This sets the default for new notes only. Existing notes are never converted.'
-    const blockTitle = zh ? 'Block editor' : 'Block editor'
-    const blockDescription = zh ? '視覺化排版、拖拉區塊與斜線指令。' : 'Visual writing with blocks, drag handles, and slash commands.'
-    const markdownTitle = zh ? 'Markdown editor' : 'Markdown editor'
-    const markdownDescription = zh ? '適合熟悉 Markdown 的快速純文字編輯。' : 'Fast plain-text editing for Markdown users.'
+    const description = zh ? '這會決定新筆記的預設方式，隨時可於底欄設定中切換。' : 'This sets your default for new notes. You can change it anytime in settings.'
+    const markdownTitle = zh ? 'Markdown 編輯器' : 'Markdown editor'
+    const markdownBadge = zh ? '推薦預設' : 'Recommended'
+    const markdownDescription = zh ? '純文字高效寫作，支援即時雙向預覽、數學公式與快捷語法。' : 'Fast plain-text writing with live side-by-side preview and math formulas.'
+    const markdownAction = zh ? '以 Markdown 開始' : 'Start with Markdown'
+    
+    const blockTitle = zh ? '視覺化區塊 (Block)' : 'Visual Block editor'
+    const blockBadge = zh ? 'Notion 風格' : 'Notion style'
+    const blockDescription = zh ? '所見即所得排版、拖拉區塊與 Slash 斜線指令。' : 'What-you-see-is-what-you-get, drag handles, and slash commands.'
+    const blockAction = zh ? '以 Block 開始' : 'Start with Block'
+
     return `
 <div class="modal editor-preference-modal" role="dialog" aria-modal="true" aria-labelledby="editor-preference-title" aria-describedby="editor-preference-description" aria-hidden="true" data-editor-preference-dialog${autoOpen ? ' data-editor-preference-auto-open="true"' : ''}>
     <div class="modal-mask" data-editor-preference-close></div>
@@ -577,21 +591,85 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
         ${autoOpen ? '' : `<button type="button" class="close-btn editor-preference-close" data-editor-preference-close aria-label="${zh ? '關閉' : 'Close'}">×</button>`}
         <h2 id="editor-preference-title">${title}</h2>
         <p id="editor-preference-description">${description}</p>
-        <fieldset class="editor-preference-options">
+        <fieldset class="editor-preference-options editor-preference-grid">
             <legend class="sr-only">${title}</legend>
-            <label class="editor-preference-option is-selected">
-                <input type="radio" name="editor-format" value="block" checked>
-                <span><strong>${blockTitle}</strong><small>${blockDescription}</small></span>
+            <label class="editor-preference-option is-selected is-recommended" data-editor-card="markdown">
+                <input type="radio" name="editor-format" value="markdown" checked>
+                <span class="editor-preference-copy">
+                    <span class="editor-preference-header">
+                        <strong>${markdownTitle}</strong>
+                        <span class="editor-preference-badge editor-preference-badge-accent">${markdownBadge}</span>
+                    </span>
+                    <small>${markdownDescription}</small>
+                    <button type="button" class="opt-button opt-button-accent editor-card-action" data-editor-format-choice="markdown">${markdownAction}</button>
+                </span>
             </label>
-            <label class="editor-preference-option">
-                <input type="radio" name="editor-format" value="markdown">
-                <span><strong>${markdownTitle}</strong><small>${markdownDescription}</small></span>
+            <label class="editor-preference-option" data-editor-card="block">
+                <input type="radio" name="editor-format" value="block">
+                <span class="editor-preference-copy">
+                    <span class="editor-preference-header">
+                        <strong>${blockTitle}</strong>
+                        <span class="editor-preference-badge">${blockBadge}</span>
+                    </span>
+                    <small>${blockDescription}</small>
+                    <button type="button" class="opt-button editor-card-action" data-editor-format-choice="block">${blockAction}</button>
+                </span>
             </label>
         </fieldset>
         <label class="editor-preference-remember"><input type="checkbox" data-editor-preference-remember><span>${zh ? '記住我的選擇' : 'Remember my choice'}</span></label>
         <div class="editor-preference-actions">
             ${autoOpen ? '' : `<button type="button" class="opt-button" data-editor-preference-close>${zh ? '取消' : 'Cancel'}</button>`}
-            <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm>${zh ? '繼續' : 'Continue'}</button>
+            <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm>${zh ? '確定' : 'Save'}</button>
+        </div>
+    </form>
+</div>`
+}
+
+export const MATH_FORMAT_MODAL = (lang) => {
+    const zh = lang === 'zh-TW'
+    const title = zh ? '公式複製格式' : 'Formula Copy Format'
+    const description = zh ? '選擇點擊公式時複製的格式' : 'Choose the format copied when clicking a math formula'
+    const latexTitle = 'LaTeX'
+    const latexDesc = zh ? '包含 $ 符號 · 適合 Markdown 筆記、論文寫作、LaTeX 編輯器' : 'With $ delimiters · For Markdown notes, papers, and LaTeX editors'
+    const mathmlTitle = 'MathML (Word)'
+    const mathmlDesc = zh ? 'XML 結構 · 直接貼入 Microsoft Word 轉為原生公式物件' : 'XML format · Paste directly into Microsoft Word as native equation'
+    const plainTitle = zh ? 'LaTeX (純文字，無 $ 符號)' : 'LaTeX (Plain text, no $)'
+    const plainDesc = zh ? '乾淨原始碼 · 適合 Desmos、WolframAlpha 等數學計算工具' : 'Clean raw code · For Desmos, WolframAlpha, and math tools'
+    const notionTitle = zh ? 'Notion (雙$格式)' : 'Notion ($$ format)'
+    const notionDesc = zh ? '一律使用 $$...$$ · 適合直接貼入 Notion 行內或區塊公式' : 'Always uses $$...$$ · For Notion inline or block equations'
+
+    return `
+<div id="math-format-modal" class="modal math-format-modal" role="dialog" aria-modal="true" aria-labelledby="math-format-title" aria-describedby="math-format-description" aria-hidden="true" style="display:none;">
+    <div class="modal-mask" id="math-format-mask"></div>
+    <form class="editor-preference-content math-format-content" id="math-format-form">
+        <button type="button" class="close-btn editor-preference-close" id="math-format-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <h2 id="math-format-title" style="display:flex; align-items:center; gap:8px;">
+            <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:18px;color:var(--toolbar-accent,#c8654b);">fx</span>
+            <span>${title}</span>
+        </h2>
+        <p id="math-format-description">${description}</p>
+        <fieldset class="editor-preference-options">
+            <legend class="sr-only">${title}</legend>
+            <label class="editor-preference-option" data-math-option="latex">
+                <input type="radio" name="math-copy-format" value="latex">
+                <span><strong>${latexTitle}</strong><small>${latexDesc}</small></span>
+            </label>
+            <label class="editor-preference-option" data-math-option="mathml">
+                <input type="radio" name="math-copy-format" value="mathml">
+                <span><strong>${mathmlTitle}</strong><small>${mathmlDesc}</small></span>
+            </label>
+            <label class="editor-preference-option" data-math-option="latex-plain">
+                <input type="radio" name="math-copy-format" value="latex-plain">
+                <span><strong>${plainTitle}</strong><small>${plainDesc}</small></span>
+            </label>
+            <label class="editor-preference-option is-selected" data-math-option="notion">
+                <input type="radio" name="math-copy-format" value="notion" checked>
+                <span><strong>${notionTitle}</strong><small>${notionDesc}</small></span>
+            </label>
+        </fieldset>
+        <div class="editor-preference-actions">
+            <button type="button" class="opt-button" id="math-format-cancel-btn">${zh ? '取消' : 'Cancel'}</button>
+            <button type="submit" class="opt-button opt-button-accent" id="math-format-confirm-btn">${zh ? '儲存設定' : 'Save'}</button>
         </div>
     </form>
 </div>`

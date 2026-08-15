@@ -53,13 +53,21 @@ export const Home = ({ lang = 'zh-TW', canonicalUrl, ogImageUrl }) => `
         .home-brand { text-align: center; color: #716c65; font-size: 14px; letter-spacing: .04em; }
         .modal { display: none; }
         .modal-mask { position: fixed; inset: 0; z-index: 1000; background: rgba(37, 35, 32, .48); }
-        .editor-preference-content { position: fixed; top: 50%; left: 50%; z-index: 1001; width: min(480px, calc(100vw - 32px)); box-sizing: border-box; padding: 26px; transform: translate(-50%, -50%); border: 1px solid #e2dacd; border-radius: 14px; background: #fff; box-shadow: 0 18px 48px rgba(37,35,32,.24); }
+        .editor-preference-content { position: fixed; top: 50%; left: 50%; z-index: 1001; width: min(560px, calc(100vw - 32px)); box-sizing: border-box; padding: 26px; transform: translate(-50%, -50%); border: 1px solid #e2dacd; border-radius: 14px; background: #fff; box-shadow: 0 18px 48px rgba(37,35,32,.24); }
         .editor-preference-content h2 { margin: 0 0 8px; font-size: 20px; }
         .editor-preference-content > p { margin: 0 0 18px; color: #6b6965; font-size: 14px; line-height: 1.55; }
         .editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
-        .editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 13px; border: 1px solid #e2dacd; border-radius: 10px; cursor: pointer; }
+        .editor-preference-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
+        .editor-preference-option { display: flex; gap: 11px; align-items: flex-start; padding: 14px; border: 1.5px solid #e2dacd; border-radius: 12px; cursor: pointer; background: #fff; transition: border-color 0.16s ease, background 0.16s ease, transform 0.14s ease, box-shadow 0.14s ease; }
+        .editor-preference-option:hover { border-color: #c8654b; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); }
         .editor-preference-option:has(input:checked), .editor-preference-option.is-selected { border-color: #c8654b; background: #faf2ed; }
+        .editor-preference-option.is-recommended { border-color: #c8654b; }
         .editor-preference-option input { margin-top: 3px; accent-color: #c8654b; }
+        .editor-preference-copy { display: flex !important; flex-direction: column; gap: 6px; width: 100%; }
+        .editor-preference-header { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .editor-preference-badge { font-size: 11px; font-weight: 600; padding: 2px 7px; border-radius: 999px; background: rgba(0, 0, 0, 0.06); color: #6b6965; white-space: nowrap; }
+        .editor-preference-badge-accent { background: #fae8e3; color: #c8654b; }
+        .editor-card-action { margin-top: 6px; width: 100%; font-size: 13px; height: 32px; }
         .editor-preference-option span { display: grid; gap: 3px; }
         .editor-preference-option strong { font-size: 14px; }
         .editor-preference-option small { color: #6b6965; font-size: 12px; line-height: 1.45; }

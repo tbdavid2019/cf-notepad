@@ -15,25 +15,30 @@ import {
 
 const createWindow = html => new JSDOM(html, { url: 'https://wiki.david888.com/' }).window
 
-test('editor preference defaults to Block and supports persistent or session-only choices', () => {
+test('editor preference defaults to Markdown and supports persistent choices in localStorage', () => {
     const window = createWindow('')
 
-    assert.deepEqual(getEditorPreference(window), { format: DEFAULT_EDITOR_FORMAT, remembered: false })
+    assert.equal(DEFAULT_EDITOR_FORMAT, 'markdown')
+    assert.deepEqual(getEditorPreference(window), { format: 'markdown', remembered: false })
     assert.equal(hasEditorPreference(window), false)
 
-    saveEditorPreference('markdown', { remember: false, windowRef: window })
+    saveEditorPreference('block', { remember: false, windowRef: window })
     assert.deepEqual(getEditorPreference(window), { format: 'markdown', remembered: false })
-    assert.equal(hasEditorPreference(window), true)
+    assert.equal(hasEditorPreference(window), false)
     assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), null)
-    assert.equal(window.sessionStorage.getItem(EDITOR_SESSION_PREFERENCE_KEY), 'markdown')
 
     saveEditorPreference('block', { remember: true, windowRef: window })
     assert.deepEqual(getEditorPreference(window), { format: 'block', remembered: true })
+    assert.equal(hasEditorPreference(window), true)
     assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), 'block')
+
+    saveEditorPreference('markdown', { remember: true, windowRef: window })
+    assert.deepEqual(getEditorPreference(window), { format: 'markdown', remembered: true })
+    assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), 'markdown')
     assert.throws(() => saveEditorPreference('html', { windowRef: window }), /Invalid editor format/)
 })
 
-test('primary new-note action asks for a format when no preference exists', () => {
+test('primary new-note action asks for a format when no preference exists and supports one-click card action', () => {
     const window = createWindow(`${FOOTER({ lang: 'zh-TW', isEdit: true, mode: 'md', editorFormat: 'markdown' })}${EDITOR_PREFERENCE_MODAL('zh-TW')}`)
     const navigations = []
     initializeEditorPreference(window.document, window, { navigate: format => navigations.push(format) })
@@ -45,8 +50,10 @@ test('primary new-note action asks for a format when no preference exists', () =
     primary.click()
     assert.equal(dialog.getAttribute('aria-hidden'), 'false')
 
-    window.document.querySelector('input[value="markdown"]').click()
-    window.document.querySelector('[data-editor-preference-form]').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
+    // Click direct card button for markdown
+    const mdButton = window.document.querySelector('[data-editor-format-choice="markdown"]')
+    assert.ok(mdButton)
+    mdButton.click()
     assert.deepEqual(navigations, ['markdown'])
 })
 
@@ -70,7 +77,7 @@ test('footer setting changes the one-click new-note target without converting th
     assert.equal(document.activeElement, settings)
 })
 
-test('homepage asks only until it has a session or remembered editor choice', () => {
+test('homepage asks until it has a remembered editor choice', () => {
     const firstWindow = createWindow(EDITOR_PREFERENCE_MODAL('zh-TW', { autoOpen: true }))
     const firstNavigations = []
     initializeEditorPreference(firstWindow.document, firstWindow, { navigate: format => firstNavigations.push(format) })
@@ -80,10 +87,10 @@ test('homepage asks only until it has a session or remembered editor choice', ()
     assert.equal(firstNavigations.length, 0)
 
     firstWindow.document.querySelector('input[value="markdown"]').click()
+    firstWindow.document.querySelector('[data-editor-preference-remember]').checked = true
     firstWindow.document.querySelector('[data-editor-preference-form]').dispatchEvent(new firstWindow.Event('submit', { bubbles: true, cancelable: true }))
     assert.deepEqual(firstNavigations, ['markdown'])
-    assert.equal(firstWindow.sessionStorage.getItem(EDITOR_SESSION_PREFERENCE_KEY), 'markdown')
-    assert.equal(firstWindow.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), null)
+    assert.equal(firstWindow.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), 'markdown')
 
     const secondNavigations = []
     initializeEditorPreference(firstWindow.document, firstWindow, { navigate: format => secondNavigations.push(format) })

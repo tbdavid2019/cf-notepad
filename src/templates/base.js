@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, URL_IMPORT_MODAL, SVG_ICONS } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, MATH_FORMAT_MODAL, URL_IMPORT_MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -409,6 +409,7 @@ ${getMarkdownCss()}
     ${MODAL(lang, { noteHistoryEnabled: ext.noteHistoryEnabled === true && isEdit })}
     ${isEmbed ? '' : EDITOR_PREFERENCE_MODAL(lang)}
     ${URL_IMPORT_MODAL(lang)}
+    ${MATH_FORMAT_MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
@@ -3512,7 +3513,157 @@ ${getMarkdownCss()}
             }
         }
 
+        function initMathCopy() {
+            const MATH_FORMAT_STORAGE_KEY = 'cf-notepad:math-copy-format';
+            const getSavedMathFormat = () => {
+                try {
+                    return localStorage.getItem(MATH_FORMAT_STORAGE_KEY) || 'notion';
+                } catch (e) {
+                    return 'notion';
+                }
+            };
+
+            const $mathFormatModal = document.querySelector('#math-format-modal');
+            const $mathFormatMask = document.querySelector('#math-format-mask');
+            const $mathFormatCloseBtn = document.querySelector('#math-format-close-btn');
+            const $mathFormatCancelBtn = document.querySelector('#math-format-cancel-btn');
+            const $mathFormatForm = document.querySelector('#math-format-form');
+            const $mathFormatTriggers = document.querySelectorAll('.math-format-trigger, #math-format-btn');
+
+            function syncModalOptions(format) {
+                if (!$mathFormatForm) return;
+                const radios = $mathFormatForm.querySelectorAll('input[name="math-copy-format"]');
+                radios.forEach(radio => {
+                    radio.checked = radio.value === format;
+                    const optionLabel = radio.closest('.editor-preference-option');
+                    if (optionLabel) optionLabel.classList.toggle('is-selected', radio.checked);
+                });
+            }
+
+            function openMathFormatModal() {
+                if (!$mathFormatModal) return;
+                const currentFormat = getSavedMathFormat();
+                syncModalOptions(currentFormat);
+                $mathFormatModal.style.display = 'block';
+                $mathFormatModal.setAttribute('aria-hidden', 'false');
+                const checkedRadio = $mathFormatForm?.querySelector('input[name="math-copy-format"]:checked');
+                if (checkedRadio) checkedRadio.focus();
+            }
+
+            function closeMathFormatModal() {
+                if (!$mathFormatModal) return;
+                $mathFormatModal.style.display = 'none';
+                $mathFormatModal.setAttribute('aria-hidden', 'true');
+            }
+
+            $mathFormatTriggers.forEach(btn => btn.addEventListener('click', openMathFormatModal));
+            if ($mathFormatMask) $mathFormatMask.addEventListener('click', closeMathFormatModal);
+            if ($mathFormatCloseBtn) $mathFormatCloseBtn.addEventListener('click', closeMathFormatModal);
+            if ($mathFormatCancelBtn) $mathFormatCancelBtn.addEventListener('click', closeMathFormatModal);
+
+            if ($mathFormatForm) {
+                const radios = $mathFormatForm.querySelectorAll('input[name="math-copy-format"]');
+                radios.forEach(radio => {
+                    radio.addEventListener('change', () => {
+                        radios.forEach(r => {
+                            r.closest('.editor-preference-option')?.classList.toggle('is-selected', r.checked);
+                        });
+                    });
+                });
+
+                $mathFormatForm.addEventListener('submit', e => {
+                    e.preventDefault();
+                    const selected = $mathFormatForm.querySelector('input[name="math-copy-format"]:checked')?.value || 'notion';
+                    try {
+                        localStorage.setItem(MATH_FORMAT_STORAGE_KEY, selected);
+                    } catch (err) {}
+                    closeMathFormatModal();
+                    if (typeof window.showToast === 'function') {
+                        const msg = APP_STATE.lang === 'zh-TW' ? '已更新公式複製格式' : 'Formula copy format updated';
+                        window.showToast(msg);
+                    }
+                });
+            }
+
+            async function copyMath(tex, mathMl, isDisplay) {
+                const format = getSavedMathFormat();
+                const zh = APP_STATE.lang === 'zh-TW';
+                let textToCopy = '';
+                let label = '';
+                let isHtml = false;
+
+                if (format === 'latex') {
+                    textToCopy = isDisplay ? ('$$' + tex + '$$') : ('$' + tex + '$');
+                    label = 'LaTeX';
+                } else if (format === 'latex-plain') {
+                    textToCopy = tex;
+                    label = zh ? 'LaTeX 純文字' : 'LaTeX Plain';
+                } else if (format === 'mathml') {
+                    textToCopy = mathMl || ('<math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><annotation encoding="application/x-tex">' + tex + '</annotation></semantics></math>');
+                    label = zh ? 'MathML (Word)' : 'MathML (Word)';
+                    isHtml = true;
+                } else {
+                    textToCopy = '$$' + tex + '$$';
+                    label = zh ? 'Notion 雙$格式' : 'Notion $$';
+                }
+
+                try {
+                    if (isHtml && window.ClipboardItem && navigator.clipboard && navigator.clipboard.write) {
+                        const htmlBlob = new Blob([textToCopy], { type: 'text/html' });
+                        const textBlob = new Blob([textToCopy], { type: 'text/plain' });
+                        await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlBlob, 'text/plain': textBlob })]);
+                    } else if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(textToCopy);
+                    } else {
+                        const textarea = document.createElement('textarea');
+                        textarea.value = textToCopy;
+                        textarea.style.position = 'fixed';
+                        textarea.style.opacity = '0';
+                        document.body.appendChild(textarea);
+                        textarea.select();
+                        document.execCommand('copy');
+                        document.body.removeChild(textarea);
+                    }
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? ('已複製公式 (' + label + ')') : ('Formula copied (' + label + ')'));
+                    }
+                } catch (err) {
+                    console.error('Failed to copy math formula:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '複製公式失敗' : 'Failed to copy formula');
+                    }
+                }
+            }
+
+            document.addEventListener('click', event => {
+                const selection = window.getSelection();
+                if (selection && !selection.isCollapsed && selection.toString().trim()) return;
+
+                if (event.target.closest('.modal, .markdown-editor-toolbar, .footer, button, a, input, textarea, select')) return;
+
+                const katexElem = event.target.closest('.katex');
+                if (!katexElem) return;
+
+                const isDisplay = !!katexElem.closest('.katex-display') || katexElem.classList.contains('katex-display');
+                const annotation = katexElem.querySelector('annotation[encoding="application/x-tex"]');
+                const tex = annotation ? annotation.textContent.trim() : katexElem.textContent.trim();
+                const mathMlElem = katexElem.querySelector('.katex-mathml math');
+                const mathMl = mathMlElem ? mathMlElem.outerHTML : '';
+
+                if (!tex) return;
+
+                event.preventDefault();
+                event.stopPropagation();
+
+                copyMath(tex, mathMl, isDisplay);
+
+                katexElem.classList.add('katex-copied');
+                setTimeout(() => katexElem.classList.remove('katex-copied'), 600);
+            });
+        }
+
         initUiTheme();
+        initMathCopy();
         initWebMcp()
     </script>
     <div id="presentation-container"></div>
