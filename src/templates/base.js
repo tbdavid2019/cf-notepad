@@ -4695,11 +4695,19 @@ themeCss + '\\n' +
         };
 
         window.exitPresentation = function() {
+            if (document.fullscreenElement) {
+                try {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(function() {});
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                } catch(e) {}
+            }
             var c = document.getElementById('presentation-container');
-            var shouldReturnToShare = APP_STATE.autoPresent && APP_STATE.sharePath && window.location.pathname === APP_STATE.presentationPath;
-            c.classList.remove('active');
-            c.classList.remove('presentation-authoring');
-            c.classList.remove('laser-active');
+            if (c) {
+                c.classList.remove('active');
+                c.classList.remove('presentation-authoring');
+                c.classList.remove('laser-active');
+                c.innerHTML = '';
+            }
             if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
             if (_tableResizeHandler) {
                 window.removeEventListener('resize', _tableResizeHandler);
@@ -4707,10 +4715,13 @@ themeCss + '\\n' +
             }
             _echartsInstances.forEach(function(inst) { try { inst.dispose(); } catch(e) {} });
             _echartsInstances = [];
-            c.innerHTML = '';
             document.body.style.overflow = '';
+
+            var isDirectPresentUrl = window.location.pathname.endsWith('/present');
+            var shouldReturnToShare = APP_STATE.autoPresent || isDirectPresentUrl;
             if (shouldReturnToShare) {
-                window.location.replace(APP_STATE.sharePath);
+                var targetPath = APP_STATE.sharePath || window.location.pathname.replace(/\/present\/?$/, '') || '/';
+                window.location.replace(targetPath);
             }
         };
 
@@ -4720,8 +4731,15 @@ themeCss + '\\n' +
             window.initPresentation();
         }
 
-        // Bind present buttons via event delegation and direct lookup
+        // Bind present and exit buttons via event delegation
         document.addEventListener('click', function(e) {
+            var exitBtn = e.target.closest('#ptb-exit, #presentation-close-btn, .presentation-tb-exit');
+            if (exitBtn) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.exitPresentation();
+                return;
+            }
             var btn = e.target.closest('#present-btn, .publication-present-btn');
             if (btn) {
                 e.preventDefault();
@@ -4731,7 +4749,7 @@ themeCss + '\\n' +
         maybeAutoStart();
 
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && document.getElementById('presentation-container').classList.contains('active')) {
+            if (e.key === 'Escape' && document.getElementById('presentation-container') && document.getElementById('presentation-container').classList.contains('active')) {
                 window.exitPresentation();
             }
         });
