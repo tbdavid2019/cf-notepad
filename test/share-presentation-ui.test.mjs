@@ -47,3 +47,26 @@ test('portrait phones receive a landscape presentation hint', () => {
     assert.match(baseTemplateSource, /請將裝置旋轉為橫向/)
     assert.match(baseCssSource, /@media \(orientation: portrait\) and \(max-width: 720px\)/)
 })
+
+test('presentation engine supports floating toolbar, laser pointer, and export menu', () => {
+    assert.match(baseTemplateSource, /presentation-toolbar/)
+    assert.match(baseTemplateSource, /id="ptb-overview"/)
+    assert.match(baseTemplateSource, /id="ptb-laser"/)
+    assert.match(baseTemplateSource, /id="ptb-fullscreen"/)
+    assert.match(baseTemplateSource, /id="ptb-export-pdf"/)
+    assert.match(baseTemplateSource, /id="ptb-export-slide-png"/)
+    assert.match(baseCssSource, /\.presentation-toolbar \{[\s\S]*position: fixed/)
+    assert.match(baseCssSource, /#presentation-laser-dot/)
+})
+
+test('presentation engine supports KaTeX, Mermaid, ECharts, and Slidev layouts', () => {
+    assert.match(baseTemplateSource, /renderMathInElement/)
+    assert.match(baseTemplateSource, /language-mermaid/)
+    assert.match(baseTemplateSource, /language-echarts/)
+    assert.match(baseTemplateSource, /slidev-layout-cover/)
+    assert.match(baseTemplateSource, /slidev-layout-three-cols/)
+    assert.match(baseTemplateSource, /data-line-numbers/)
+    assert.match(baseTemplateSource, /data-presentation-theme/)
+    assert.match(baseCssSource, /\.slidev-layout-cover/)
+    assert.match(baseCssSource, /\.slidev-layout-three-cols/)
+})

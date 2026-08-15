@@ -4104,28 +4104,41 @@ themeCss + '\\n' +
     </script>
     <div id="presentation-container"></div>
     \u003cscript\u003e
-    // --- Presentation Mode Engine (Final Robust Version) ---
+    // --- Presentation Mode Engine (Upgraded Slidev-Lite & Multi-Tool Engine) ---
     (function() {
         var _loaded = false;
         var _reveal = null;
         var _autoStarted = false;
         var _tableResizeHandler = null;
+        var _echartsInstances = [];
 
         function loadAssets() {
             return new Promise(function(resolve, reject) {
                 if (_loaded) return resolve();
-                ['reveal.css', 'theme/black.css'].forEach(function(p) {
+                var cssLinks = ['reveal.css', 'theme/black.css'];
+                cssLinks.forEach(function(p) {
                     var l = document.createElement('link');
                     l.rel = 'stylesheet';
                     l.href = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/' + p;
                     document.head.appendChild(l);
                 });
+                var highlightCss = document.createElement('link');
+                highlightCss.rel = 'stylesheet';
+                highlightCss.href = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css';
+                document.head.appendChild(highlightCss);
+
                 var s = document.createElement('script');
                 s.src = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js';
                 s.onload = function() {
                     var m = document.createElement('script');
                     m.src = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/markdown/markdown.js';
-                    m.onload = function() { _loaded = true; resolve(); };
+                    m.onload = function() {
+                        var h = document.createElement('script');
+                        h.src = 'https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js';
+                        h.onload = function() { _loaded = true; resolve(); };
+                        h.onerror = function() { _loaded = true; resolve(); };
+                        document.head.appendChild(h);
+                    };
                     m.onerror = reject;
                     document.head.appendChild(m);
                 };
@@ -4192,6 +4205,93 @@ themeCss + '\\n' +
             });
         }
 
+        async function renderPresentationComponents(container) {
+            // 1. Math formulas (KaTeX)
+            if (typeof window.renderMathInElement === 'function') {
+                try {
+                    window.renderMathInElement(container.querySelector('.reveal .slides'), {
+                        delimiters: [
+                            { left: '$$', right: '$$', display: true },
+                            { left: '$', right: '$', display: false }
+                        ],
+                        throwOnError: false
+                    });
+                } catch (e) {
+                    console.warn('Presentation KaTeX Render Error:', e);
+                }
+            }
+
+            // 2. Mermaid Diagrams
+            var mermaidBlocks = container.querySelectorAll('.reveal pre code.language-mermaid, .reveal code.language-mermaid');
+            if (mermaidBlocks.length > 0) {
+                try {
+                    var mermaidModule = await import('https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs');
+                    var mermaid = mermaidModule.default || mermaidModule;
+                    var isDarkTheme = APP_STATE.uiTheme === 'dark' || APP_STATE.theme === 'tokyo-night' || APP_STATE.theme === 'ayu-dark' || APP_STATE.theme === 'terminal';
+                    mermaid.initialize({
+                        startOnLoad: false,
+                        theme: isDarkTheme ? 'dark' : 'default',
+                        securityLevel: 'loose',
+                        fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+                    });
+                    for (var i = 0; i < mermaidBlocks.length; i++) {
+                        var codeEl = mermaidBlocks[i];
+                        var preEl = codeEl.closest('pre') || codeEl;
+                        var code = (codeEl.textContent || '').trim();
+                        if (!code) continue;
+                        var mid = 'pres-mermaid-' + Date.now() + '-' + i;
+                        try {
+                            var mRes = await mermaid.render(mid, code);
+                            var wrap = document.createElement('div');
+                            wrap.className = 'presentation-diagram-fit';
+                            wrap.innerHTML = mRes.svg;
+                            preEl.parentNode.replaceChild(wrap, preEl);
+                        } catch (err) {
+                            console.warn('Mermaid render error:', err);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Mermaid loader error:', err);
+                }
+            }
+
+            // 3. ECharts Diagrams
+            var echartsBlocks = container.querySelectorAll('.reveal pre code.language-echarts, .reveal code.language-echarts');
+            if (echartsBlocks.length > 0) {
+                try {
+                    if (!window.echarts) {
+                        await new Promise(function(resolve, reject) {
+                            var es = document.createElement('script');
+                            es.src = 'https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js';
+                            es.onload = resolve;
+                            es.onerror = reject;
+                            document.head.appendChild(es);
+                        });
+                    }
+                    for (var j = 0; j < echartsBlocks.length; j++) {
+                        var eCodeEl = echartsBlocks[j];
+                        var ePreEl = eCodeEl.closest('pre') || eCodeEl;
+                        var jsonStr = (eCodeEl.textContent || '').trim();
+                        if (!jsonStr) continue;
+                        try {
+                            var chartConfig = JSON.parse(jsonStr);
+                            var chartDiv = document.createElement('div');
+                            chartDiv.className = 'presentation-echarts-chart';
+                            ePreEl.parentNode.replaceChild(chartDiv, ePreEl);
+                            var isDarkTheme = APP_STATE.uiTheme === 'dark' || APP_STATE.theme === 'tokyo-night';
+                            var chartInst = window.echarts.init(chartDiv, isDarkTheme ? 'dark' : null);
+                            chartInst.setOption(chartConfig);
+                            _echartsInstances.push(chartInst);
+                        } catch (err) {
+                            console.warn('ECharts parse error:', err);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('ECharts loader error:', err);
+                }
+            }
+        }
+
         function fitPresentationSlides(container) {
             var reveal = container.querySelector('.reveal');
             if (!reveal) return;
@@ -4228,6 +4328,7 @@ themeCss + '\\n' +
             });
 
             fitPresentationTables(container);
+            _echartsInstances.forEach(function(c) { try { c.resize(); } catch(e) {} });
         }
 
         function schedulePresentationFit(container) {
@@ -4238,8 +4339,203 @@ themeCss + '\\n' +
             });
         }
 
+        function setupPresentationToolbar(container, reveal) {
+            var isZh = APP_STATE.lang === 'zh-TW';
+            var toolbar = document.createElement('div');
+            toolbar.id = 'presentation-toolbar';
+            toolbar.className = 'presentation-toolbar';
+            toolbar.setAttribute('role', 'toolbar');
+            toolbar.setAttribute('aria-label', 'Presentation Controls');
+            toolbar.innerHTML = 
+                '<div class="presentation-toolbar-group">' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-prev" title="' + (isZh ? '上一頁 (Page Up / ←)' : 'Previous (Page Up / ←)') + '">◀</button>' +
+                    '<div class="presentation-tb-page" id="ptb-page-indicator" title="' + (isZh ? '點擊輸入頁碼跳轉' : 'Click to jump to slide') + '">' +
+                        '<span id="ptb-cur-slide">1</span> / <span id="ptb-total-slides">1</span>' +
+                    '</div>' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-next" title="' + (isZh ? '下一頁 (Space / →)' : 'Next (Space / →)') + '">▶</button>' +
+                '</div>' +
+                '<div class="presentation-toolbar-divider"></div>' +
+                '<div class="presentation-toolbar-group">' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-overview" title="' + (isZh ? '投影片總覽 (O / ESC)' : 'Slide Overview (O / ESC)') + '">🔲 ' + (isZh ? '大綱' : 'Overview') + '</button>' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-laser" title="' + (isZh ? '雷射筆模式 (L)' : 'Laser Pointer (L)') + '">🔴 ' + (isZh ? '雷射筆' : 'Laser') + '</button>' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-pause" title="' + (isZh ? '黑屏暫停 (B / .)' : 'Pause Blackout (B / .)') + '">⚫ ' + (isZh ? '暫停' : 'Pause') + '</button>' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-fullscreen" title="' + (isZh ? '全螢幕 (F)' : 'Fullscreen (F)') + '">⛶ ' + (isZh ? '全螢幕' : 'Fullscreen') + '</button>' +
+                '</div>' +
+                '<div class="presentation-toolbar-divider"></div>' +
+                '<div class="presentation-toolbar-group">' +
+                    '<button type="button" class="presentation-tb-btn" id="ptb-export-btn" title="' + (isZh ? '導出簡報' : 'Export Slides') + '">⭳ ' + (isZh ? '導出' : 'Export') + ' ▾</button>' +
+                    '<div id="ptb-export-menu" class="presentation-export-menu" hidden>' +
+                        '<button type="button" class="presentation-export-item" id="ptb-export-pdf">📄 ' + (isZh ? '另存 PDF 簡報' : 'Print / Save as PDF') + '</button>' +
+                        '<button type="button" class="presentation-export-item" id="ptb-export-slide-png">🖼️ ' + (isZh ? '導出當前頁圖片 (PNG)' : 'Export Current Slide (PNG)') + '</button>' +
+                        '<button type="button" class="presentation-export-item" id="ptb-copy-present-link">🔗 ' + (isZh ? '複製目前投影片連結' : 'Copy Slide Link') + '</button>' +
+                    '</div>' +
+                    '<button type="button" class="presentation-tb-btn presentation-tb-exit" id="ptb-exit" title="' + (isZh ? '結束演示 (ESC)' : 'Exit Presentation (ESC)') + '">✕ ' + (isZh ? '退出' : 'Exit') + '</button>' +
+                '</div>';
+            container.appendChild(toolbar);
+
+            var laserDot = document.createElement('div');
+            laserDot.id = 'presentation-laser-dot';
+            container.appendChild(laserDot);
+
+            var curSlideEl = toolbar.querySelector('#ptb-cur-slide');
+            var totalSlidesEl = toolbar.querySelector('#ptb-total-slides');
+            var prevBtn = toolbar.querySelector('#ptb-prev');
+            var nextBtn = toolbar.querySelector('#ptb-next');
+            var overviewBtn = toolbar.querySelector('#ptb-overview');
+            var laserBtn = toolbar.querySelector('#ptb-laser');
+            var pauseBtn = toolbar.querySelector('#ptb-pause');
+            var fsBtn = toolbar.querySelector('#ptb-fullscreen');
+            var exportBtn = toolbar.querySelector('#ptb-export-btn');
+            var exportMenu = toolbar.querySelector('#ptb-export-menu');
+            var exportPdfBtn = toolbar.querySelector('#ptb-export-pdf');
+            var exportPngBtn = toolbar.querySelector('#ptb-export-slide-png');
+            var copyLinkBtn = toolbar.querySelector('#ptb-copy-present-link');
+            var exitBtn = toolbar.querySelector('#ptb-exit');
+            var pageIndicator = toolbar.querySelector('#ptb-page-indicator');
+
+            var updateSlideCount = function() {
+                var indices = reveal.getIndices();
+                var total = reveal.getTotalSlides();
+                if (curSlideEl) curSlideEl.textContent = (indices.h + 1);
+                if (totalSlidesEl) totalSlidesEl.textContent = total;
+            };
+            updateSlideCount();
+            reveal.on('slidechanged', updateSlideCount);
+
+            prevBtn.onclick = function() { reveal.prev(); };
+            nextBtn.onclick = function() { reveal.next(); };
+            overviewBtn.onclick = function() { reveal.toggleOverview(); };
+            pauseBtn.onclick = function() { reveal.togglePause(); };
+            exitBtn.onclick = window.exitPresentation;
+
+            fsBtn.onclick = function() {
+                if (!document.fullscreenElement) {
+                    if (container.requestFullscreen) container.requestFullscreen().catch(function() {});
+                    else if (container.webkitRequestFullscreen) container.webkitRequestFullscreen();
+                } else {
+                    if (document.exitFullscreen) document.exitFullscreen().catch(function() {});
+                    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+                }
+            };
+
+            pageIndicator.onclick = function() {
+                var total = reveal.getTotalSlides();
+                var cur = reveal.getIndices().h + 1;
+                var target = window.prompt(APP_STATE.lang === 'zh-TW' ? ('請輸入要跳轉的頁碼 (1 - ' + total + '):') : ('Jump to slide (1 - ' + total + '):'), cur);
+                if (target !== null) {
+                    var p = parseInt(target, 10);
+                    if (Number.isInteger(p) && p >= 1 && p <= total) {
+                        reveal.slide(p - 1);
+                    }
+                }
+            };
+
+            var laserActive = false;
+            var toggleLaser = function() {
+                laserActive = !laserActive;
+                laserBtn.classList.toggle('active', laserActive);
+                container.classList.toggle('laser-active', laserActive);
+            };
+            laserBtn.onclick = toggleLaser;
+
+            var hideTimer = null;
+            function showToolbarTemporarily() {
+                toolbar.classList.remove('toolbar-hidden');
+                if (hideTimer) clearTimeout(hideTimer);
+                hideTimer = setTimeout(function() {
+                    if (!exportMenu.hidden) return;
+                    toolbar.classList.add('toolbar-hidden');
+                }, 2800);
+            }
+            showToolbarTemporarily();
+
+            container.addEventListener('mousemove', function(e) {
+                if (laserActive) {
+                    laserDot.style.left = e.clientX + 'px';
+                    laserDot.style.top = e.clientY + 'px';
+                }
+                showToolbarTemporarily();
+            });
+
+            exportBtn.onclick = function(e) {
+                e.stopPropagation();
+                exportMenu.hidden = !exportMenu.hidden;
+            };
+            document.addEventListener('click', function(e) {
+                if (!exportBtn.contains(e.target) && !exportMenu.contains(e.target)) {
+                    exportMenu.hidden = true;
+                }
+            });
+
+            exportPdfBtn.onclick = function() {
+                exportMenu.hidden = true;
+                window.print();
+            };
+
+            exportPngBtn.onclick = async function() {
+                exportMenu.hidden = true;
+                var curSection = container.querySelector('.reveal .slides section.present');
+                if (!curSection) return;
+                if (typeof window.showToast === 'function') {
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '正在產生當前投影片圖片...' : 'Generating slide image...');
+                }
+                try {
+                    if (!window.html2canvas) {
+                        await new Promise(function(resolve, reject) {
+                            var script = document.createElement('script');
+                            script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                            script.onload = resolve;
+                            script.onerror = function() { reject(new Error('Failed to load html2canvas')); };
+                            document.head.appendChild(script);
+                        });
+                    }
+                    var canvas = await window.html2canvas(curSection, {
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        backgroundColor: null
+                    });
+                    var curIndex = reveal.getIndices().h + 1;
+                    var a = document.createElement('a');
+                    a.download = 'slide-' + curIndex + '.png';
+                    a.href = canvas.toDataURL('image/png');
+                    a.click();
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(APP_STATE.lang === 'zh-TW' ? '投影片圖片導出成功' : 'Slide image exported');
+                    }
+                } catch (err) {
+                    console.error('Slide export error:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Export failed: ' + err.message);
+                    }
+                }
+            };
+
+            copyLinkBtn.onclick = async function() {
+                exportMenu.hidden = true;
+                var curIndex = reveal.getIndices().h;
+                var slideUrl = (APP_STATE.presentationPath ? (window.location.origin + APP_STATE.presentationPath) : window.location.href.split('#')[0]) + '#/' + curIndex;
+                try {
+                    await navigator.clipboard.writeText(slideUrl);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(APP_STATE.lang === 'zh-TW' ? '已複製當前投影片連結' : 'Slide link copied');
+                    }
+                } catch (e) {
+                    window.prompt(APP_STATE.lang === 'zh-TW' ? '請複製投影片連結：' : 'Copy slide link:', slideUrl);
+                }
+            };
+
+            document.addEventListener('keydown', function(e) {
+                if (!container.classList.contains('active')) return;
+                if (e.key === 'l' || e.key === 'L') {
+                    toggleLaser();
+                } else if (e.key === 'f' || e.key === 'F') {
+                    if (fsBtn) fsBtn.click();
+                }
+            });
+        }
+
         window.initPresentation = async function() {
-            console.log('initPresentation triggered');
             var content = '';
             var edit = document.getElementById('contents');
             var share = document.getElementById('bot-accessible-content');
@@ -4259,37 +4555,81 @@ themeCss + '\\n' +
                 ? '請將裝置旋轉為橫向，以清楚檢視 16:9 投影片'
                 : 'Rotate your device to landscape to view the 16:9 slides';
             container.classList.toggle('presentation-authoring', !!(edit && !edit.classList.contains('hide')));
-            container.innerHTML = '\u003cbutton type="button" id="presentation-close-btn"\u003e✕ ' + getI18n('presentationClose') + '\u003c/button\u003e' +
-                                 '\u003cdiv class="presentation-orientation-hint" role="status"\u003e' + orientationHint + '\u003c/div\u003e' +
-                                 '\u003cdiv class="reveal"\u003e\u003cdiv class="slides"\u003e\u003c/div\u003e\u003c/div\u003e';
+            
+            var currentTheme = (typeof APP_STATE !== 'undefined' && APP_STATE.theme) ? APP_STATE.theme : 'tokyo-night';
+            container.setAttribute('data-presentation-theme', currentTheme);
+
+            container.innerHTML = '<button type="button" id="presentation-close-btn">✕ ' + getI18n('presentationClose') + '</button>' +
+                                 '<div class="presentation-orientation-hint" role="status">' + orientationHint + '</div>' +
+                                 '<div class="reveal"><div class="slides"></div></div>';
             
             document.getElementById('presentation-close-btn').onclick = window.exitPresentation;
             
             var slidesDiv = container.querySelector('.slides');
-            // Split by standalone '---' - Use 4 backslashes for double escaping in template literal
             var chunks = content.split(/\\r?\\n\\s*---\\s*\\r?\\n/);
-            console.log('Slides split into ' + chunks.length + ' chunks');
 
-            chunks.forEach(function(c) {
+            chunks.forEach(function(c, chunkIndex) {
                 var processed = c.trim();
-                
-                // 1. Layouts: ::left:: / ::right::
-                if (processed.includes('::left::') && processed.includes('::right::')) {
+                var isCover = false;
+                var slideBg = '';
+
+                // 1. Cover layout
+                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && /^#\s+[^\n]+(?:\n\s*|\n[^\n#]+)?$/.test(processed))) {
+                    isCover = true;
+                    processed = processed.replace(/<!--\s*layout:\s*cover\s*-->/gi, '').replace(/<!--\s*cover\s*-->/gi, '');
+                }
+
+                // 2. Custom slide background
+                var bgMatch = processed.match(/<!--\s*(?:bg|background):\s*(.+?)\s*-->/i);
+                if (bgMatch) {
+                    slideBg = bgMatch[1].trim();
+                    processed = processed.replace(bgMatch[0], '');
+                }
+
+                // 3. Layouts: Three Columns (::left:: / ::center:: / ::right::)
+                if (processed.includes('::left::') && (processed.includes('::center::') || processed.includes('::middle::')) && processed.includes('::right::')) {
+                    var tParts = processed.split(/::left::|::center::|::middle::|::right::/);
+                    if (tParts.length >= 4) {
+                        var before3 = tParts[0].trim();
+                        var left3 = tParts[1].trim();
+                        var center3 = tParts[2].trim();
+                        var right3 = tParts[3].trim();
+                        processed = (before3 ? before3 + '\\n\\n' : '') +
+                            '\\u003cdiv class="slidev-layout-three-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left3 + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-center"\\u003e\\n\\n' + center3 + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right3 + '\\n\\n\\u003c/div\\u003e\\u003c/div\\u003e';
+                    }
+                } else if (processed.includes('::left::') && processed.includes('::right::')) {
+                    // Layouts: Two Columns (::left:: / ::right::)
                     var parts = processed.split(/::left::|::right::/);
                     if (parts.length >= 3) {
                         var before = parts[0].trim();
                         var left = parts[1].trim();
                         var right = parts[2].trim();
                         processed = (before ? before + '\\n\\n' : '') + 
-                            '\\u003cdiv class="slidev-layout-two-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right + '\\n\\n\\u003c/div\\u003e\\n\\u003c/div\\u003e';
+                            '\\u003cdiv class="slidev-layout-two-cols"\\u003e\\u003cdiv class="col-left"\\u003e\\n\\n' + left + '\\n\\n\\u003c/div\\u003e\\u003cdiv class="col-right"\\u003e\\n\\n' + right + '\\n\\n\\u003c/div\\u003e\\u003c/div\\u003e';
                     }
                 }
 
-                // 2. Click Animations: {v-click} -> Reveal fragments
+                // 4. Code Block line focus: code fences with line numbers
+                var fencePattern = new RegExp('(?:' + String.fromCharCode(96) + '{3}|~{3})([a-zA-Z0-9_-]+)\\\\s*(?:\\\\[|\\\\{)([^\\\\]\\\\}]+)(?:\\\\]|\\\\})', 'g');
+                processed = processed.replace(fencePattern, String.fromCharCode(96,96,96) + '$1 data-line-numbers="$2"');
+
+                // 5. Click Animations: {v-click} -> Reveal fragments
                 processed = processed.replace(/\{v-click\}/g, '\\u003c!-- .element: class="fragment" --\\u003e');
 
                 var sec = document.createElement('section');
                 sec.setAttribute('data-markdown', '');
+                if (isCover) {
+                    sec.className = 'slidev-layout-cover';
+                }
+                if (slideBg) {
+                    if (slideBg.startsWith('http') || slideBg.startsWith('/')) {
+                        sec.setAttribute('data-background-image', slideBg);
+                    } else if (slideBg.includes('gradient')) {
+                        sec.setAttribute('data-background-gradient', slideBg);
+                    } else {
+                        sec.setAttribute('data-background-color', slideBg);
+                    }
+                }
                 var script = document.createElement('script');
                 script.type = 'text/template';
                 script.textContent = processed;
@@ -4303,19 +4643,31 @@ themeCss + '\\n' +
             try {
                 await loadAssets();
                 if (_reveal) { try { _reveal.destroy(); } catch(e) {} }
+                var plugins = [RevealMarkdown];
+                if (window.RevealHighlight) plugins.push(RevealHighlight);
                 _reveal = new Reveal(container.querySelector('.reveal'), {
-                    plugins: [RevealMarkdown],
+                    plugins: plugins,
                     center: false, hash: true, transition: 'fade',
                     width: 1280, height: 720, margin: 0.035,
                     minScale: 0.2, maxScale: 2,
                     controls: true, progress: true, slideNumber: true
                 });
                 if (_reveal.on) {
-                    _reveal.on('ready', function() { schedulePresentationFit(container); });
-                    _reveal.on('slidechanged', function() { schedulePresentationFit(container); });
-                    _reveal.on('resize', function() { schedulePresentationFit(container); });
+                    _reveal.on('ready', function() {
+                        renderPresentationComponents(container);
+                        schedulePresentationFit(container);
+                    });
+                    _reveal.on('slidechanged', function() {
+                        schedulePresentationFit(container);
+                    });
+                    _reveal.on('resize', function() {
+                        schedulePresentationFit(container);
+                    });
                 }
                 await _reveal.initialize();
+                setupPresentationToolbar(container, _reveal);
+                await renderPresentationComponents(container);
+
                 container.querySelectorAll('.slides img, .slides video, .slides iframe').forEach(function(media) {
                     if (media.tagName === 'IMG' && media.complete) return;
                     media.addEventListener('load', function() { schedulePresentationFit(container); }, { once: true });
@@ -4328,7 +4680,6 @@ themeCss + '\\n' +
                 _tableResizeHandler = function() { schedulePresentationFit(container); };
                 window.addEventListener('resize', _tableResizeHandler);
                 schedulePresentationFit(container);
-                console.log('Reveal.js initialized (Slidev-Lite mode)');
             } catch(e) {
                 console.error('Presentation error:', e);
                 window.showAppDialog({ title: getI18n('present'), message: getI18n('presentationFailed') + e, kind: 'error' });
@@ -4341,11 +4692,14 @@ themeCss + '\\n' +
             var shouldReturnToShare = APP_STATE.autoPresent && APP_STATE.sharePath && window.location.pathname === APP_STATE.presentationPath;
             c.classList.remove('active');
             c.classList.remove('presentation-authoring');
+            c.classList.remove('laser-active');
             if (_reveal) { try { _reveal.destroy(); } catch(e) {} _reveal = null; }
             if (_tableResizeHandler) {
                 window.removeEventListener('resize', _tableResizeHandler);
                 _tableResizeHandler = null;
             }
+            _echartsInstances.forEach(function(inst) { try { inst.dispose(); } catch(e) {} });
+            _echartsInstances = [];
             c.innerHTML = '';
             document.body.style.overflow = '';
             if (shouldReturnToShare) {

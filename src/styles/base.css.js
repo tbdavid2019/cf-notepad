@@ -2602,7 +2602,92 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     transform-origin: top left;
 }
 
-/* Layouts */
+/* Diagram and ECharts Fitting in Presentation */
+.presentation-diagram-fit {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    max-width: 100%;
+    max-height: 380px;
+    margin: 0.6em auto;
+    overflow: hidden;
+}
+.presentation-diagram-fit svg {
+    max-width: 100% !important;
+    max-height: 380px !important;
+    height: auto !important;
+}
+.presentation-echarts-chart {
+    width: 100%;
+    height: 360px;
+    margin: 0.6em auto;
+}
+
+/* Theme Adaptations for Presentation */
+#presentation-container[data-presentation-theme="retro"] .reveal .slides {
+    background: #fbf7ee;
+    border-color: #d6ccb8;
+    box-shadow: 0 28px 70px rgba(78, 62, 42, 0.22);
+}
+#presentation-container[data-presentation-theme="retro"] .reveal .slides section {
+    color: #2b251f;
+}
+#presentation-container[data-presentation-theme="retro"] .reveal h1,
+#presentation-container[data-presentation-theme="retro"] .reveal h2,
+#presentation-container[data-presentation-theme="retro"] .reveal h3 {
+    color: #8b3a2b;
+}
+#presentation-container[data-presentation-theme="retro"] .reveal blockquote {
+    border-left-color: #8b3a2b;
+    background: rgba(139, 58, 43, 0.08);
+    color: #4a3c31;
+}
+
+#presentation-container[data-presentation-theme="notion-clean"] .reveal .slides,
+#presentation-container[data-presentation-theme="ayu-light"] .reveal .slides,
+#presentation-container[data-presentation-theme="newsprint"] .reveal .slides {
+    background: #ffffff;
+    border-color: #e2e8f0;
+    box-shadow: 0 28px 70px rgba(0, 0, 0, 0.12);
+}
+#presentation-container[data-presentation-theme="notion-clean"] .reveal .slides section,
+#presentation-container[data-presentation-theme="ayu-light"] .reveal .slides section,
+#presentation-container[data-presentation-theme="newsprint"] .reveal .slides section {
+    color: #1e293b;
+}
+#presentation-container[data-presentation-theme="notion-clean"] .reveal h1,
+#presentation-container[data-presentation-theme="notion-clean"] .reveal h2,
+#presentation-container[data-presentation-theme="notion-clean"] .reveal h3 {
+    color: #0f172a;
+}
+
+#presentation-container[data-presentation-theme="green-simple"] .reveal .slides {
+    background: #f4fbf7;
+    border-color: #c2e8d4;
+}
+#presentation-container[data-presentation-theme="green-simple"] .reveal .slides section {
+    color: #1a3328;
+}
+#presentation-container[data-presentation-theme="green-simple"] .reveal h1,
+#presentation-container[data-presentation-theme="green-simple"] .reveal h2,
+#presentation-container[data-presentation-theme="green-simple"] .reveal h3 {
+    color: #1b6848;
+}
+
+#presentation-container[data-presentation-theme="tokyo-night"] .reveal .slides {
+    background: #1a1b26;
+    border-color: #2f354f;
+}
+#presentation-container[data-presentation-theme="tokyo-night"] .reveal .slides section {
+    color: #a9b1d6;
+}
+#presentation-container[data-presentation-theme="tokyo-night"] .reveal h1,
+#presentation-container[data-presentation-theme="tokyo-night"] .reveal h2,
+#presentation-container[data-presentation-theme="tokyo-night"] .reveal h3 {
+    color: #7aa2f7;
+}
+
+/* Layouts: Two Columns, Three Columns, and Cover */
 .slidev-layout-two-cols {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -2610,10 +2695,197 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     align-items: start;
     width: 100%;
 }
-
 .col-left, .col-right {
     min-width: 0;
     width: 100%;
+}
+
+.slidev-layout-three-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1.5em;
+    align-items: start;
+    width: 100%;
+}
+.slidev-layout-three-cols .col-left,
+.slidev-layout-three-cols .col-center,
+.slidev-layout-three-cols .col-right {
+    min-width: 0;
+    width: 100%;
+}
+
+.slidev-layout-cover {
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: center !important;
+    align-items: center !important;
+    text-align: center !important;
+    padding: 60px 80px !important;
+}
+.slidev-layout-cover h1 {
+    font-size: 2.2em !important;
+    margin-bottom: 0.3em !important;
+    text-align: center !important;
+}
+.slidev-layout-cover h2,
+.slidev-layout-cover h3 {
+    font-weight: 400 !important;
+    opacity: 0.88;
+    text-align: center !important;
+}
+.slidev-layout-cover p {
+    text-align: center !important;
+}
+
+/* Laser Pointer */
+#presentation-laser-dot {
+    position: fixed;
+    width: 12px;
+    height: 12px;
+    background: #ef4444;
+    border-radius: 50%;
+    box-shadow: 0 0 10px #ef4444, 0 0 20px #f87171, 0 0 3px #fff;
+    pointer-events: none;
+    z-index: 10002;
+    transform: translate(-50%, -50%);
+    display: none;
+    transition: opacity 80ms ease;
+}
+#presentation-container.laser-active {
+    cursor: none !important;
+}
+#presentation-container.laser-active #presentation-laser-dot {
+    display: block;
+}
+
+/* Presentation Bottom Floating Toolbar */
+.presentation-toolbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10001;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 8px;
+    background: rgba(15, 23, 42, 0.88);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: opacity 300ms ease, transform 300ms ease;
+    user-select: none;
+}
+.presentation-toolbar.toolbar-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(12px);
+}
+.presentation-toolbar:hover,
+.presentation-toolbar:focus-within {
+    opacity: 1 !important;
+    pointer-events: auto !important;
+    transform: translateX(-50%) translateY(0) !important;
+}
+.presentation-toolbar-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    position: relative;
+}
+.presentation-toolbar-divider {
+    width: 1px;
+    height: 18px;
+    background: rgba(255, 255, 255, 0.18);
+    margin: 0 4px;
+}
+.presentation-tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 32px;
+    padding: 0 10px;
+    background: transparent;
+    color: #e2e8f0;
+    border: 0;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 120ms ease;
+    white-space: nowrap;
+}
+.presentation-tb-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+.presentation-tb-btn.active {
+    background: rgba(239, 68, 68, 0.25);
+    color: #fca5a5;
+    box-shadow: 0 0 8px rgba(239, 68, 68, 0.3);
+}
+.presentation-tb-btn.presentation-tb-exit {
+    color: #fca5a5;
+}
+.presentation-tb-btn.presentation-tb-exit:hover {
+    background: rgba(239, 68, 68, 0.22);
+    color: #fff;
+}
+.presentation-tb-page {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 30px;
+    padding: 0 8px;
+    color: #94a3b8;
+    font-size: 13px;
+    font-family: monospace;
+    cursor: pointer;
+    border-radius: 6px;
+}
+.presentation-tb-page:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+.presentation-export-menu {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    min-width: 190px;
+    background: rgba(20, 26, 40, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    z-index: 10005;
+}
+.presentation-export-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: left;
+    transition: all 120ms ease;
+}
+.presentation-export-item:hover {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
 }
 
 .presentation-orientation-hint {
