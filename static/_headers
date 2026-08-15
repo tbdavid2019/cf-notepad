@@ -1,0 +1,9 @@
+/llms.txt
+  Content-Type: text/markdown; charset=utf-8
+  Link: </llms.txt>; rel="llms-txt"; type="text/markdown"
+  Cache-Control: public, max-age=3600
+
+/llms-full.txt
+  Content-Type: text/markdown; charset=utf-8
+  Link: </llms.txt>; rel="llms-txt"; type="text/markdown"
+  Cache-Control: public, max-age=3600
