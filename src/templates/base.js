@@ -4578,7 +4578,7 @@ themeCss + '\\n' +
                 // 1. Cover layout
                 var coverRe1 = new RegExp('<!--\\\\s*layout:\\\\s*cover\\\\s*-->', 'gi');
                 var coverRe2 = new RegExp('<!--\\\\s*cover\\\\s*-->', 'gi');
-                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && processed.startsWith('# ') && !processed.includes('\n## '))) {
+                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && processed.startsWith('# ') && !processed.includes('\\n## '))) {
                     isCover = true;
                     processed = processed.replace(coverRe1, '').replace(coverRe2, '');
                 }
@@ -4599,8 +4599,8 @@ themeCss + '\\n' +
                         var left3 = tParts[1].trim();
                         var center3 = tParts[2].trim();
                         var right3 = tParts[3].trim();
-                        processed = (before3 ? before3 + '\n\n' : '') +
-                            '<div class="slidev-layout-three-cols"><div class="col-left">\n\n' + left3 + '\n\n</div><div class="col-center">\n\n' + center3 + '\n\n</div><div class="col-right">\n\n' + right3 + '\n\n</div></div>';
+                        processed = (before3 ? before3 + '\\n\\n' : '') +
+                            '<div class="slidev-layout-three-cols"><div class="col-left">\\n\\n' + left3 + '\\n\\n</div><div class="col-center">\\n\\n' + center3 + '\\n\\n</div><div class="col-right">\\n\\n' + right3 + '\\n\\n</div></div>';
                     }
                 } else if (processed.includes('::left::') && processed.includes('::right::')) {
                     // Layouts: Two Columns (::left:: / ::right::)
@@ -4609,8 +4609,8 @@ themeCss + '\\n' +
                         var before = parts[0].trim();
                         var left = parts[1].trim();
                         var right = parts[2].trim();
-                        processed = (before ? before + '\n\n' : '') + 
-                            '<div class="slidev-layout-two-cols"><div class="col-left">\n\n' + left + '\n\n</div><div class="col-right">\n\n' + right + '\n\n</div></div>';
+                        processed = (before ? before + '\\n\\n' : '') + 
+                            '<div class="slidev-layout-two-cols"><div class="col-left">\\n\\n' + left + '\\n\\n</div><div class="col-right">\\n\\n' + right + '\\n\\n</div></div>';
                     }
                 }
 
