@@ -426,58 +426,91 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                 <div class="footer-section-body">
                     ${isEdit ? `
                         <div class="footer-control-group">
-                            <div class="dropdown-container share-dropdown share-state-toggle">
-                                ${RAIL_SWITCH({
-                                    className: `share-state-switcher opt-share ${share ? 'share-published' : ''}`,
-                                    checked: share,
-                                    checkedTitle: lang === 'zh-TW' ? '發布' : 'Publish',
-                                    uncheckedTitle: lang === 'zh-TW' ? '發布' : 'Publish',
-                                    checkedText: lang === 'zh-TW' ? '已發布' : 'Live',
-                                    uncheckedText: lang === 'zh-TW' ? '待發布' : 'Draft',
-                                    ariaLabel: t.shareLinkTitle,
-                                })}
-                                <button type="button" id="share-menu-btn" class="toolbar-icon-button share-menu-trigger dropdown-trigger share-menu-small" data-tooltip="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" title="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-label="${lang === 'zh-TW' ? '分享選項' : 'Share options'}" aria-haspopup="menu" aria-expanded="false">
-                                    ${SVG_ICONS.more}
+                            <div class="dropdown-container share-dropdown" id="share-dropdown">
+                                <button type="button" id="share-menu-btn" class="toolbar-icon-button dropdown-trigger share-menu-trigger opt-share ${share && shareId ? 'is-published' : ''}" data-tooltip="${lang === 'zh-TW' ? '發布與分享選項' : 'Publish & Share options'}" title="${lang === 'zh-TW' ? '發布與分享選項' : 'Publish & Share options'}" aria-label="${lang === 'zh-TW' ? '發布與分享選項' : 'Publish & Share options'}" aria-haspopup="menu" aria-expanded="false">
+                                    <span class="share-button-icon">${SVG_ICONS.globe}</span>
+                                    <span class="toolbar-button-label" id="share-btn-label">${share && shareId ? (lang === 'zh-TW' ? '已發布' : 'Live') : (lang === 'zh-TW' ? '發布' : 'Publish')}</span>
+                                    <span class="toolbar-button-caret" aria-hidden="true">▾</span>
                                 </button>
-                                <div class="dropdown-menu" role="menu">
+                                <div class="dropdown-menu share-dropdown-menu" role="menu">
                                     <div class="share-menu-published" ${share && shareId ? '' : 'hidden'}>
-                                    <a id="share-open-link" class="dropdown-item" href="${shareId ? '/share/' + encodeURIComponent(shareId) : '#'}" target="_blank" rel="noreferrer">
-                                        ${SVG_ICONS.link} <span>${lang === 'zh-TW' ? '打開分享頁面' : 'Open share'}</span>
-                                    </a>
-                                    <a id="share-present-open-link" class="dropdown-item" href="${shareId ? '/share/' + encodeURIComponent(shareId) + '/present' : '#'}" target="_blank" rel="noreferrer">
-                                        ${SVG_ICONS.play} <span>${lang === 'zh-TW' ? '打開簡報頁面' : 'Open presentation'}</span>
-                                    </a>
-                                    <button type="button" id="copy-share-btn" class="dropdown-item" title="${copyShareTitle}">
-                                        ${SVG_ICONS.copy} <span>${copyShareTitle}</span>
-                                    </button>
-                                    <button type="button" id="copy-present-share-btn" class="dropdown-item" title="${copyPresentTitle}">
-                                        ${SVG_ICONS.play} <span>${copyPresentTitle}</span>
-                                    </button>
-                                    <div class="dropdown-divider"></div>
-                                    <div class="dropdown-item-toggle">
-                                        <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
-                                        <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
-                                    </div>
-                                    <div class="dropdown-item-toggle">
-                                        <span>${t.annotations}</span>
-                                        <button
-                                            type="button"
-                                            id="annotations-enabled-btn"
-                                            class="opt-button annotations-enabled-btn ${annotationsEnabled === true ? 'opt-button-accent' : ''}"
-                                            data-annotations-enabled="${annotationsEnabled === true ? 'true' : 'false'}"
-                                            aria-pressed="${annotationsEnabled === true ? 'true' : 'false'}"
-                                            title="${annotationsEnabled === true ? t.annotationsDisable : t.annotationsEnable}"
-                                        >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
-                                    </div>
-                                    <div class="dropdown-divider"></div>
-                                    <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
-                                        ${SVG_ICONS.close} <span>${unpublishTitle}</span>
-                                    </button>
+                                        <div class="dropdown-menu-label">${lang === 'zh-TW' ? '已發布連結' : 'Published Links'}</div>
+                                        <a id="share-open-link" class="dropdown-item dropdown-item-rich" href="${shareId ? '/share/' + encodeURIComponent(shareId) : '#'}" target="_blank" rel="noreferrer">
+                                            ${SVG_ICONS.link}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '打開分享頁面' : 'Open Share Page'}</strong>
+                                                <small>${lang === 'zh-TW' ? '在獨立分頁檢視閱讀頁面' : 'View in new tab'}</small>
+                                            </span>
+                                        </a>
+                                        <a id="share-present-open-link" class="dropdown-item dropdown-item-rich" href="${shareId ? '/share/' + encodeURIComponent(shareId) + '/present' : '#'}" target="_blank" rel="noreferrer">
+                                            ${SVG_ICONS.play}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '打開簡報模式' : 'Open Presentation'}</strong>
+                                                <small>${lang === 'zh-TW' ? '全螢幕 Slidev 投影片' : 'Fullscreen presentation'}</small>
+                                            </span>
+                                        </a>
+                                        <button type="button" id="copy-share-btn" class="dropdown-item dropdown-item-rich" title="${copyShareTitle}">
+                                            ${SVG_ICONS.copy}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${copyShareTitle}</strong>
+                                                <small>${lang === 'zh-TW' ? '複製閱讀頁面網址' : 'Copy share URL'}</small>
+                                            </span>
+                                        </button>
+                                        <button type="button" id="copy-present-share-btn" class="dropdown-item dropdown-item-rich" title="${copyPresentTitle}">
+                                            ${SVG_ICONS.play}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${copyPresentTitle}</strong>
+                                                <small>${lang === 'zh-TW' ? '複製簡報播放網址' : 'Copy presentation URL'}</small>
+                                            </span>
+                                        </button>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-menu-label">${lang === 'zh-TW' ? '分享設定' : 'Share Settings'}</div>
+                                        <div class="dropdown-item-toggle">
+                                            <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
+                                            <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
+                                        </div>
+                                        <div class="dropdown-item-toggle">
+                                            <span>${t.annotations}</span>
+                                            <button
+                                                type="button"
+                                                id="annotations-enabled-btn"
+                                                class="opt-button annotations-enabled-btn ${annotationsEnabled === true ? 'opt-button-accent' : ''}"
+                                                data-annotations-enabled="${annotationsEnabled === true ? 'true' : 'false'}"
+                                                aria-pressed="${annotationsEnabled === true ? 'true' : 'false'}"
+                                                title="${annotationsEnabled === true ? t.annotationsDisable : t.annotationsEnable}"
+                                            >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
+                                        </div>
+                                        <div class="dropdown-divider"></div>
+                                        <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
+                                            ${SVG_ICONS.close} <span>${unpublishTitle}</span>
+                                        </button>
                                     </div>
                                     <div class="share-menu-unpublished" ${share && shareId ? 'hidden' : ''}>
-                                    <button type="button" class="dropdown-item share-publish-menu-btn">
-                                        ${SVG_ICONS.globe} <span>${lang === 'zh-TW' ? '發布並建立分享連結' : 'Publish and create share link'}</span>
-                                    </button>
+                                        <div class="dropdown-menu-label">${lang === 'zh-TW' ? '發布選項' : 'Publish Options'}</div>
+                                        <button type="button" class="dropdown-item dropdown-item-rich share-publish-menu-btn" id="share-publish-menu-btn">
+                                            ${SVG_ICONS.globe}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '發布此筆記' : 'Publish Note'}</strong>
+                                                <small>${lang === 'zh-TW' ? '產生公開閱讀與簡報連結' : 'Generate public share & presentation links'}</small>
+                                            </span>
+                                        </button>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-menu-label">${lang === 'zh-TW' ? '發布預設設定' : 'Publish Default Settings'}</div>
+                                        <div class="dropdown-item-toggle">
+                                            <span>${lang === 'zh-TW' ? '公開索引' : 'Public Index'}</span>
+                                            <button type="button" id="public-index-btn" class="opt-button public-index-btn ${publicIndex === true ? 'opt-button-accent' : ''}" data-public-index="${publicIndex === true ? 'true' : 'false'}">${publicIndex === true ? t.publicIndexOn : t.publicIndexOff}</button>
+                                        </div>
+                                        <div class="dropdown-item-toggle">
+                                            <span>${t.annotations}</span>
+                                            <button
+                                                type="button"
+                                                id="annotations-enabled-btn"
+                                                class="opt-button annotations-enabled-btn ${annotationsEnabled === true ? 'opt-button-accent' : ''}"
+                                                data-annotations-enabled="${annotationsEnabled === true ? 'true' : 'false'}"
+                                                aria-pressed="${annotationsEnabled === true ? 'true' : 'false'}"
+                                                title="${annotationsEnabled === true ? t.annotationsDisable : t.annotationsEnable}"
+                                            >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

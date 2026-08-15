@@ -2573,12 +2573,23 @@ ${getMarkdownCss()}
         }
 
         function syncShareStateUI() {
+            const isPublished = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId)
             const switcher = document.querySelector('.share-state-switcher')
-            const isPublished = APP_STATE.isPublished
             if (switcher) {
                 switcher.classList.toggle('is-checked', isPublished)
                 switcher.classList.toggle('share-published', isPublished)
                 switcher.setAttribute('aria-pressed', isPublished ? 'true' : 'false')
+            }
+            const shareBtn = document.getElementById('share-menu-btn')
+            const shareBtnLabel = document.getElementById('share-btn-label')
+            const isZh = APP_STATE.lang === 'zh-TW'
+            if (shareBtn) {
+                shareBtn.classList.toggle('is-published', isPublished)
+            }
+            if (shareBtnLabel) {
+                shareBtnLabel.textContent = isPublished
+                    ? (isZh ? '已發布' : 'Live')
+                    : (isZh ? '發布' : 'Publish')
             }
             syncShareMenuUI()
             if ($autosaveToggle) {
@@ -3029,16 +3040,23 @@ ${getMarkdownCss()}
                 }
             })
         }
-        if ($unpublishBtn) {
-            $unpublishBtn.addEventListener('click', async () => {
-                if (!await confirmUnpublish()) return
+        // Share Actions (Delegated on document to support floating portal menus)
+        document.addEventListener('click', async (e) => {
+            const unpublishBtn = e.target.closest('.unpublish-btn');
+            if (unpublishBtn) {
+                e.preventDefault();
+                if (!await confirmUnpublish()) return;
                 fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
                     .then(res => { if (res.err !== 0) { return errHandle(res.msg); } allowUnload = true; window.location.reload(); }).catch(err => errHandle(err));
-            });
-        }
-        if ($sharePublishMenuBtn) {
-            $sharePublishMenuBtn.addEventListener('click', openPublishOptions)
-        }
+                return;
+            }
+            const publishMenuBtn = e.target.closest('.share-publish-menu-btn');
+            if (publishMenuBtn) {
+                e.preventDefault();
+                openPublishOptions();
+                return;
+            }
+        });
 
         if ($saveNoteBtn) {
             $saveNoteBtn.addEventListener('click', () => saveCurrentNote())
@@ -3066,19 +3084,6 @@ ${getMarkdownCss()}
             }
             $autosaveToggle.addEventListener('click', handleAutosaveToggle)
             $autosaveToggle.addEventListener('change', handleAutosaveToggle)
-        }
-
-        if ($shareBtn) {
-            $shareBtn.onclick = async function () {
-                if (APP_STATE.isPublished) {
-                    if (!await confirmUnpublish()) return
-                    fetchJson(window.location.pathname + '/setting', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ share: false }) })
-                        .then(res => { if (res.err !== 0) { return errHandle(res.msg) } APP_STATE.isPublished = false; allowUnload = true; window.location.reload(); })
-                        .catch(err => errHandle(err))
-                } else {
-                    openPublishOptions();
-                }
-            }
         }
 
         if ($textarea) {

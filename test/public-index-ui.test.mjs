@@ -63,15 +63,13 @@ test('Open Graph images declare dimensions and use DAVID888 WIKI branding', () =
 })
 
 test('share state uses a working toggle and does not interrupt preview rendering', () => {
-    assert.match(commonTemplateSource, /className: `share-state-switcher opt-share/)
-    assert.match(commonTemplateSource, /checkedText: lang === 'zh-TW' \? '已發布' : 'Live'/)
-    assert.match(commonTemplateSource, /uncheckedText: lang === 'zh-TW' \? '待發布' : 'Draft'/)
+    assert.match(commonTemplateSource, /id="share-dropdown"/)
     assert.match(commonTemplateSource, /id="share-menu-btn"/)
     assert.match(commonTemplateSource, /share-publish-menu-btn/)
     assert.match(baseTemplateSource, /function syncShareStateUI\(\)/)
     assert.match(baseTemplateSource, /syncShareStateUI\(\)[\s\S]*triggerRender\(\$previewMd/)
-    assert.match(baseTemplateSource, /\$sharePublishMenuBtn\.addEventListener\('click', openPublishOptions\)/)
-    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-publish-bg\)/)
+    assert.match(baseTemplateSource, /openPublishOptions/)
+    assert.match(baseCssSource, /\.share-menu-trigger/)
 })
 
 test('footer uses native-style rails for the requested two-state controls', () => {

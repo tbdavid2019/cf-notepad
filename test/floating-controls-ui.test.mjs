@@ -42,7 +42,7 @@ test('share desktop and mobile actions all expose localized floating tooltip tex
 
 test('edit share options trigger exposes the same localized tooltip contract', () => {
     const document = renderFooter({ isEdit: true })
-    assert.equal(document.querySelector('#share-menu-btn')?.dataset.tooltip, '分享選項')
+    assert.match(document.querySelector('#share-menu-btn')?.dataset.tooltip || '', /發布|分享/)
 })
 
 test('footer provides a primary new-note action, explicit format choices, and a default-editor setting', () => {

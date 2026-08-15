@@ -658,58 +658,32 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Share Dropdown Specifics */
-.share-dropdown .dropdown-menu {
-    min-width: 220px;
-}
-
-/* Share button: icon control */
-.footer-section-publish .toolbar-button-label {
-    display: none !important;
-}
-.footer-section-publish .toolbar-icon-button {
-    width: var(--toolbar-height) !important;
-    padding: 0 !important;
-}
-
-/* Share dropdown: direct link + menu trigger */
-.share-dropdown {
-    display: inline-flex;
-    align-items: center;
-    gap: 0;
-}
-.share-direct-link {
-    border-radius: 6px 0 0 6px !important;
-    border-right: 1px solid var(--toolbar-border, #e6dfd8) !important;
-}
-.share-menu-trigger {
-    width: 28px !important;
-    padding: 0 !important;
-    border-radius: 0 6px 6px 0 !important;
-    display: inline-flex !important;
-    align-items: center;
-    justify-content: center;
-}
-.share-menu-trigger .toolbar-button-label {
-    display: none !important;
-}
-
-/* New note, Export, Copy & Theme dropdowns */
+/* Share, New note, Export, Copy & Theme dropdowns */
+.share-dropdown .dropdown-menu,
 .new-note-dropdown .dropdown-menu,
 .export-dropdown .dropdown-menu,
 .copy-dropdown .dropdown-menu {
     min-width: 220px;
 }
+.share-menu-trigger,
 .new-note-menu-trigger,
 .export-menu-trigger,
 .copy-menu-trigger {
     gap: 4px;
 }
+.share-menu-trigger .toolbar-button-caret,
 .new-note-menu-trigger .toolbar-button-caret,
 .export-menu-trigger .toolbar-button-caret,
 .copy-menu-trigger .toolbar-button-caret {
     font-size: 11px;
     opacity: 0.7;
+}
+.share-menu-trigger.is-published {
+    color: var(--toolbar-publish-active-color, #1a7f37);
+    font-weight: 600;
+}
+html[data-ui-theme="dark"] .share-menu-trigger.is-published {
+    color: #3fb950;
 }
 .new-note-plus {
     font-size: 15px;
