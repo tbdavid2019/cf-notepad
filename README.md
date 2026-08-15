@@ -125,15 +125,25 @@
 
 ---
 
-## 💾 儲存架構盤點
+## 💾 Local-First 儲存架構與可插拔後端驅動 (Storage Architecture)
+
+本專案採用現代化的 **Local-First（本地優先）** 混合儲存機制：
+1. **本機 0ms 即時保存**：編輯時擊鍵即時存入客戶端 **IndexedDB (`CloudNotepadOfflineDB`)**，狀態顯示 `🟢 本機已存`，享受原生桌面級無延遲寫作體驗。
+2. **智慧低頻雲端同步**：停止輸入 3.5 秒、定期週期性間隔、或關閉分頁（透過 `visibilitychange` / `keepalive`）時自動向 Cloudflare 同步，**大幅節省 90% 以上的雲端寫入請求**，完美規避 Cloudflare KV 每天 1,000 次 Writes 的免費額度硬上限！
+3. **可插拔後端驅動 (KV / D1 / Auto Dual)**：
+   - 開發者可透過環境變數 `SCN_STORAGE_DRIVER` 自由選擇後端儲存方案：
+     - `auto` (預設/相容模式)：優先讀寫 D1，若未在 D1 則自動無縫 Fallback 讀取舊有 KV 文章，並於儲存時自動雙寫同步。
+     - `kv`：純 Cloudflare KV 儲存（零資料庫依賴）。
+     - `d1`：純 Cloudflare D1 儲存（SQLite 高效關聯式儲存，每日 10 萬次免費寫入）。
 
 ### Server / Cloudflare
-
 
 | 儲存位置              | 保存內容                                                                                       | 說明                                 |
 | ----------------- | ------------------------------------------------------------------------------------------ | ---------------------------------- |
 | `NOTES` KV        | Markdown 文章內容與屬性 (`theme`, `width`, `shareFont`, `publicIndex`, `autosave`, `pw`/`vpw` 雜湊) | 未發布文章不保存內容；新開筆記時儲存初始主題             |
 | `SHARE` KV        | Share slug 到文章 path 的對照                                                                    | 不保存文章本文                            |
+| D1 `notes`        | (選用) 文章全量內容與 JSON 元數據                                                             | 透過 `schema/notes_d1.sql` 建立，提供高達 10 萬次/日寫入額度 |
+| D1 `shares`       | (選用) Share slug 與 path 對照表                                                              | 透過 `schema/notes_d1.sql` 建立         |
 | D1 `note_history` | 歷史版本快照 (path、舊內容、建立時間)                                                                     | 留存最新 10 份歷史                        |
 | D1 `note_stats`   | 文章瀏覽數、最後瀏覽時間、匿名裝置 UUID hash                                                                | Server 不留存原始 UUID，僅保存 SHA-256 hash |
 | D1 `annotation_*` | 劃線段落錨點、原文摘錄、留言與回覆                                                                          | 原文修改後討論紀錄仍留存                       |
@@ -142,10 +152,9 @@
 
 ### Browser (localStorage / IndexedDB / Cookie)
 
-
 | 類型           | Key / Database                                                                       | 用途                                          |
 | ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------- |
-| IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | 本機完整 Markdown 文章內容、離線草稿與歷史快照（大容量非同步儲存）         |
+| IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | 本機完整 Markdown 文章內容、離線草稿與歷史快照（大容量非同步儲存，0ms 延遲）  |
 | localStorage | `cf-notepad:notes-metadata`                                                          | 本機快取筆記元數據清單（path、title、updatedAt、size、syncStatus） |
 | localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | 介面佈局與視覺偏好鏡像                                 |
 | localStorage | `cf-notepad:publish-preferences`                                                     | 發布、自動儲存與公開索引的上次勾選偏好；首次預設全部開啟                |

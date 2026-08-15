@@ -129,12 +129,10 @@ export async function checkAuth(cookie, path) {
     return { valid: false, role: null }
 }
 
+import { driverQueryNote } from './storage_driver.mjs'
+
 export async function queryNote(key) {
-    const result = await getNotesNamespace().getWithMetadata(key)
-    return {
-        value: result.value || '',
-        metadata: result.metadata || {},
-    }
+    return await driverQueryNote(key)
 }
 
 export async function deleteNoteHistoryForPath(path) {

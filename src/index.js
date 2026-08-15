@@ -18,6 +18,7 @@ import {
 } from './note_meta'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
+import { driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
 import { summarizeHistoryContent } from './note_history_presenter'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -232,7 +233,7 @@ async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 120000) {
 async function generateUniqueShareSlug() {
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const candidate = genRandomStr(SHARE_SLUG_LENGTH)
-        const existing = await getShareNamespace().get(candidate)
+        const existing = await driverQueryShare(candidate)
         if (!existing) return candidate
     }
     throw new Error('Failed to generate unique share slug')
@@ -256,17 +257,17 @@ async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
     const legacyShareId = await MD5(path)
 
     if (metadata.share === true) {
-        await getShareNamespace().put(legacyShareId, path)
+        await driverPutShare(legacyShareId, path)
         if (metadata.shareSlug) {
-            await getShareNamespace().put(metadata.shareSlug, path)
+            await driverPutShare(metadata.shareSlug, path)
         }
     } else {
-        await getShareNamespace().delete(legacyShareId)
+        await driverDeleteShare(legacyShareId)
         if (previousMetadata.shareSlug) {
-            await getShareNamespace().delete(previousMetadata.shareSlug)
+            await driverDeleteShare(previousMetadata.shareSlug)
         }
         if (metadata.shareSlug && metadata.shareSlug !== previousMetadata.shareSlug) {
-            await getShareNamespace().delete(metadata.shareSlug)
+            await driverDeleteShare(metadata.shareSlug)
         }
     }
 }
@@ -326,7 +327,7 @@ async function persistNoteContent({
     metadata,
     previousContent,
 }) {
-    await getNotesNamespace().put(path, content, { metadata })
+    await driverPutNote(path, content, metadata)
 
     const historyConfig = getNoteHistoryConfig()
     if (!historyConfig.enabled || !historyConfig.db) {
@@ -428,12 +429,10 @@ async function createNewNote(request, editorFormat) {
     const originUrl = new URL(request.url)
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const path = genRandomStr(getSlugLength())
-        const existing = await getNotesNamespace().getWithMetadata(path)
+        const existing = await driverQueryNote(path)
         if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
 
-        await getNotesNamespace().put(path, '', {
-            metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined },
-        })
+        await driverPutNote(path, '', { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined })
         const nextUrl = new URL(`/${path}`, originUrl)
         nextUrl.searchParams.set('new', '1')
         return Response.redirect(nextUrl.href, 302)
@@ -653,7 +652,7 @@ const handleAdminPost = async (request) => {
                         // Delete all selected notes
                         await Promise.all(paths.map(async (path) => {
                             const { metadata } = await queryNote(path)
-                            await getNotesNamespace().delete(path)
+                            await driverDeleteNote(path)
                             await syncShareMappings(path, { share: false }, metadata || {})
                             await deleteNoteHistoryForPath(path)
                         }))
@@ -719,7 +718,7 @@ const handleAdminPost = async (request) => {
                 const path = formData.get('path')
                 if (isValidAdminNotePath(path)) {
                     const { metadata } = await queryNote(path)
-                    await getNotesNamespace().delete(path)
+                    await driverDeleteNote(path)
                     await syncShareMappings(path, { share: false }, metadata || {})
                     await deleteNoteHistoryForPath(path)
                 } else {
@@ -1022,11 +1021,12 @@ router.post('/api/new-note', async (request) => {
 
         for (let attempt = 0; attempt < 12; attempt += 1) {
             const path = genRandomStr(getSlugLength())
-            const existing = await getNotesNamespace().getWithMetadata(path)
+            const existing = await driverQueryNote(path)
             if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
 
-            await getNotesNamespace().put(path, content, {
-                metadata: { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined },
+            await driverPutNote(path, content, {
+                editorFormat,
+                blockDocumentVersion: editorFormat === 'block' ? 2 : undefined
             })
 
             const nextUrl = new URL(`/${path}`, originUrl)
@@ -1043,7 +1043,7 @@ router.post('/api/new-note', async (request) => {
 
 router.post('/share/:shareId/auth', async request => {
     const { shareId } = request.params
-    const path = await getShareNamespace().get(shareId)
+    const path = await driverQueryShare(shareId)
 
     if (!!path) {
         if (request.headers.get('Content-Type') === 'application/json') {
@@ -1074,7 +1074,7 @@ async function renderSharePage(request, presentationMode = false, execution = {}
     const lang = getI18n(request)
     const { shareId } = request.params
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
-    const path = await getShareNamespace().get(shareId)
+    const path = await driverQueryShare(shareId)
     const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
     const authPath = `${sharePath}/auth`
@@ -1213,7 +1213,7 @@ router.head('/share/:shareId/present', async (request, execution) => {
 
 router.get('/api/shares/:shareId/annotations', async request => {
     const { shareId } = request.params
-    const path = await getShareNamespace().get(shareId)
+    const path = await driverQueryShare(shareId)
     if (!path) return returnJSON(404, 'Share not found', { status: 404 })
 
     const { value, metadata } = await queryNote(path)
@@ -1274,7 +1274,7 @@ async function getWritableAnnotationContext(request) {
     }
 
     const { shareId } = request.params
-    const path = await getShareNamespace().get(shareId)
+    const path = await driverQueryShare(shareId)
     if (!path) {
         return {
             response: returnJSON(404, 'Share not found', { status: 404 }),
@@ -1773,9 +1773,7 @@ router.post('/api/:path/history/:versionId/restore', async (request) => {
             updateAt: dayjs().unix(),
         }
 
-        await getNotesNamespace().put(path, restoredContent, {
-            metadata: nextMetadata,
-        })
+        await driverPutNote(path, restoredContent, nextMetadata)
 
         const fullUrl = new URL(request.url)
         const responseData = {
@@ -2266,11 +2264,9 @@ router.post('/:path/pw', async request => {
                 const pwField = type === 'view' ? 'vpw' : 'pw'
                 const pw = passwd ? await saltPw(passwd) : undefined
                 try {
-                    await getNotesNamespace().put(path, value, {
-                        metadata: {
-                            ...metadata,
-                            [pwField]: pw,
-                        },
+                    await driverPutNote(path, value, {
+                        ...metadata,
+                        [pwField]: pw,
                     })
 
                     return returnJSON(0, null, {
@@ -2355,9 +2351,7 @@ router.post('/:path/setting', async request => {
                             previousContent: value,
                         })
                     } else {
-                        await getNotesNamespace().put(path, value, {
-                            metadata: nextMetadata,
-                        })
+                        await driverPutNote(path, value, nextMetadata)
                     }
 
                     if (share) {

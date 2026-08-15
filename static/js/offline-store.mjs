@@ -158,6 +158,25 @@ class OfflineNoteStore {
         return this.memoryFallback.get(path) || null
     }
 
+    async updateSyncStatus(path, syncStatus = 'synced') {
+        await this.init()
+        const meta = this.getMetadataMap()[path]
+        if (meta) {
+            meta.syncStatus = syncStatus
+            this.saveMetadata(path, meta)
+        }
+        if (this.db) {
+            try {
+                const note = await this.getNote(path)
+                if (note) {
+                    note.syncStatus = syncStatus
+                    const tx = this.db.transaction(STORE_NAME, 'readwrite')
+                    tx.objectStore(STORE_NAME).put(note)
+                }
+            } catch {}
+        }
+    }
+
     async deleteNote(path) {
         await this.init()
         this.removeMetadata(path)

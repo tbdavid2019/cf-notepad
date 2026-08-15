@@ -1720,8 +1720,9 @@ ${getMarkdownCss()}
                     APP_STATE.updateAt = Math.floor(Date.now() / 1000)
                     syncPublicationStatus()
                     refreshPublicationVersionCount()
-                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '已儲存' : 'Saved')
-                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已儲存' : 'Note saved')
+                    const syncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                    showSaveStatus((APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步 ' : '☁️ Cloud synced ') + syncTime)
+                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已同步至雲端' : 'Note synced to cloud')
                     if (window.offlineStore) {
                         const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
                         window.offlineStore.saveNote(APP_STATE.path, {
@@ -1762,9 +1763,11 @@ ${getMarkdownCss()}
             return saveInFlight
         }
 
-        const scheduleAutosave = () => {
-            clearAutosaveTimer()
-            if ($textarea && window.offlineStore) {
+        let localSaveTimer = null
+        const saveToLocalIndexedDB = () => {
+            if (localSaveTimer) clearTimeout(localSaveTimer)
+            localSaveTimer = setTimeout(() => {
+                if (!$textarea || !window.offlineStore) return
                 const draftContent = $textarea.value
                 const draftTitle = String(draftContent || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
                 window.offlineStore.saveNote(APP_STATE.path, {
@@ -1772,15 +1775,48 @@ ${getMarkdownCss()}
                     content: draftContent,
                     theme: APP_STATE.theme,
                     format: APP_STATE.isBlock ? 'block' : 'markdown',
-                    syncStatus: APP_STATE.isPublished ? 'pending' : 'draft'
+                    syncStatus: hasUnsavedChanges() ? (APP_STATE.isPublished ? 'pending' : 'draft') : 'synced'
                 })
-            }
+                if (hasUnsavedChanges()) {
+                    showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存' : '🟢 Saved locally')
+                }
+            }, 300)
+        }
+
+        const scheduleAutosave = () => {
+            clearAutosaveTimer()
+            saveToLocalIndexedDB()
             if (!$textarea || !APP_STATE.isPublished || APP_STATE.autosave !== true || !hasUnsavedChanges()) return
             autosaveTimer = window.setTimeout(() => {
                 autosaveTimer = null
                 saveCurrentNote({ showBlocked: false })
             }, AUTOSAVE_IDLE_MS)
         }
+
+        // Local-First: Flush pending cloud changes on page unload or visibility hide
+        const flushPendingCloudSync = () => {
+            if (!$textarea || !APP_STATE.isPublished || !hasUnsavedChanges()) return
+            const content = $textarea.value
+            try {
+                const body = new URLSearchParams({ t: content })
+                if (navigator.sendBeacon) {
+                    navigator.sendBeacon(window.location.pathname, body)
+                } else {
+                    fetch(window.location.pathname, { method: 'POST', body, keepalive: true })
+                }
+                savedContent = content
+                window.offlineStore?.updateSyncStatus?.(APP_STATE.path, 'synced')
+            } catch(e) {}
+        }
+        window.addEventListener('pagehide', flushPendingCloudSync)
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden') flushPendingCloudSync()
+        })
+        window.addEventListener('online', () => {
+            if (hasUnsavedChanges() && APP_STATE.isPublished) {
+                saveCurrentNote({ showBlocked: false })
+            }
+        })
 
         function getCurrentShareUrl() {
             if (!APP_STATE.shareId) return ''

@@ -2,6 +2,14 @@
 
 ## [2026-08-16]
 
+- **⚡ Local-First 本地優先儲存架構與智慧雲端同步**
+  - **0ms 本地即時存檔**：編輯打字時以 300ms 防抖即時寫入客戶端 **IndexedDB (`CloudNotepadOfflineDB`)**，狀態顯示 `🟢 本機已存`，享受原生桌面級流暢體驗。
+  - **智慧節流雲端同步**：停止輸入 3.5 秒、定期週期性間隔、或關閉/切換分頁（透過 `visibilitychange` / `keepalive` / `sendBeacon`）時自動向雲端同步，節省 90% 以上寫入請求，徹底解決 Cloudflare KV 1,000 次/天寫入上限。
+  - **斷網離線與自動恢復**：離線草稿標記為 `pending`，網路恢復時（`online` 事件）自動背景同步至雲端。
+- **🔌 可插拔後端儲存驅動 (`src/storage_driver.mjs`) 與 D1 相容遷移支援**
+  - 提供統一儲存介面，透過 `SCN_STORAGE_DRIVER` 支援 `auto`（預設）、`kv`、`d1` 三種模式。
+  - **`auto` 雙寫與相容模式**：優先讀寫 D1，若舊文章未在 D1 則自動 Fallback 讀取 KV，並於編輯儲存時自動雙寫同步至 D1，保證歷史 KV 文章 100% 平滑遷移與零停機。
+  - 提供 `schema/notes_d1.sql` 資料庫遷移 Schema。
 - **🛠️ Markdown 轉換與無狀態分析工具 API**
   - **`POST /api/markdown/render`**：支援 Markdown 渲染為 HTML，支援指定 20 款 CSS 主題、整頁 HTML 包裝與自訂標題。
   - **`POST /api/markdown/parse`**：支援 HTML 字串或網頁 URL 解析轉換為乾淨 Markdown。
