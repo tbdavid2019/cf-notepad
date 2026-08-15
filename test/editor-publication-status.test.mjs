@@ -47,7 +47,7 @@ test('dark UI theme distinguishes publish, layout, font, and language active sta
     assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-layout-bg: #1d70b0;/)
     assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-appearance-bg: #5366b6;/)
     assert.match(baseCssSource, /html\[data-ui-theme="dark"\][\s\S]*--toolbar-language-bg: #7058a4;/)
-    assert.match(baseCssSource, /\.share-state-switcher \{[\s\S]*--rail-checked-bg: var\(--toolbar-publish-bg\);/)
+    assert.match(baseCssSource, /\.share-menu-trigger\.is-published/)
     assert.match(baseCssSource, /#share-font-selector \.footer-rail-switch \{[\s\S]*--rail-checked-bg: var\(--toolbar-appearance-bg\);/)
     assert.match(baseCssSource, /#language-selector \.footer-rail-switch \{[\s\S]*--rail-checked-bg: var\(--toolbar-language-bg\);/)
 })

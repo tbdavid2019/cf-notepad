@@ -769,34 +769,20 @@ html[data-ui-theme="dark"] .share-menu-trigger.is-published {
     display: none !important;
 }
 
-/* Shared state indicator: green dot */
-.share-dropdown .dropdown-trigger::after {
+/* Shared state indicator: green dot on published state */
+.share-dropdown .share-menu-trigger.is-published::after {
     content: '';
     position: absolute;
-    top: 6px;
-    right: 6px;
-    width: 8px;
-    height: 8px;
+    top: 5px;
+    right: 5px;
+    width: 6px;
+    height: 6px;
     border-radius: 50%;
     background: #2da44e;
-    border: 1.5px solid var(--toolbar-bg, #faf9f5);
+    border: 1px solid var(--toolbar-bg, #faf9f5);
 }
 .share-dropdown {
     position: relative;
-}
-.share-state-toggle {
-    display: flex;
-    align-items: center;
-    gap: 2px;
-    padding: 0;
-}
-.share-state-switcher {
-    --rail-checked-bg: var(--toolbar-publish-bg);
-    flex-shrink: 0;
-}
-.share-menu-small {
-    padding: 2px 4px;
-    min-width: auto;
 }
 
 .selection-ai-menu {
