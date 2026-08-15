@@ -1316,10 +1316,10 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, context = {}) =
         }
     } else if (mode === 'ask' || mode === 'explain') {
         const model = '@cf/openai/gpt-oss-120b'
-        const systemPrompt = 'You are a knowledgeable and clear AI reading assistant for a knowledge base and note system. Help the reader understand the selected text, equation, code snippet, or concepts. Explain clearly and concisely in Traditional Chinese (繁體中文) using clean Markdown. If formulas are involved, format them using KaTeX ($...$ or $$...$$).'
+        const systemPrompt = 'You are a knowledgeable, helpful, and concise AI assistant for a Wiki and knowledge base system. Answer the reader clearly in Traditional Chinese (繁體中文) based on their question and the selected text snippet. Use clean Markdown (headings, bullet points, bold text, code blocks) and format math equations using KaTeX ($...$ or $$...$$).'
         const prompt = userInstruction
-            ? `【讀者問題】：${userInstruction}\n\n【選取的內容片段】：\n${normalizedText}`
-            : `請詳細解釋以下選取的內容或公式的核心概念與意義：\n\n${normalizedText}`
+            ? `【讀者提問】：\n${userInstruction}\n\n【讀者選取的內文片段】：\n"""\n${normalizedText}\n"""\n\n請直接且詳細地回答讀者的提問。`
+            : `【讀者選取的內文片段】：\n"""\n${normalizedText}\n"""\n\n請為讀者詳細解釋這段內容或公式的核心意義、邏輯與背景概念。`
         const messages = [
             { role: 'system', content: systemPrompt },
             { role: 'user', content: prompt }

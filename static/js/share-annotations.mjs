@@ -580,6 +580,10 @@ function initShareAnnotations() {
             <button type="button" class="selection-ai-close-btn" aria-label="${copy.close}">✕</button>
         </div>
         <div class="selection-ai-popover-body">
+            <div class="selection-ai-quote-preview">
+                <span class="selection-ai-quote-icon" aria-hidden="true">📌</span>
+                <span class="selection-ai-quote-text"></span>
+            </div>
             <div class="selection-ai-loading" style="display:none;">
                 <div class="selection-ai-spinner"></div>
                 <span class="selection-ai-loading-text">${copy.aiThinking}</span>
@@ -858,8 +862,12 @@ function initShareAnnotations() {
         const loading = aiPopover.querySelector('.selection-ai-loading')
         const resultView = aiPopover.querySelector('.selection-ai-result-view')
         const askView = aiPopover.querySelector('.selection-ai-ask-view')
+        const quoteTextEl = aiPopover.querySelector('.selection-ai-quote-text')
 
         if (titleEl && title) titleEl.textContent = title
+        if (quoteTextEl && state.pendingAnchor?.exact) {
+            quoteTextEl.textContent = state.pendingAnchor.exact
+        }
         loading.style.display = showLoading ? 'flex' : 'none'
         resultView.style.display = 'none'
         askView.style.display = showAskView ? 'block' : 'none'
@@ -878,19 +886,24 @@ function initShareAnnotations() {
     }
 
     const formatAiResult = text => {
-        if (typeof window.marked?.parse === 'function') {
-            try {
-                return window.marked.parse(text)
-            } catch {}
-        }
+        if (!text) return ''
         if (typeof window.renderMarkdown === 'function') {
             try {
-                return window.renderMarkdown(text)
+                const rendered = window.renderMarkdown(text)
+                if (typeof rendered === 'string') return rendered
+            } catch {}
+        }
+        if (typeof window.marked?.parse === 'function') {
+            try {
+                const rendered = window.marked.parse(text, { async: false })
+                if (typeof rendered === 'string') return rendered
             } catch {}
         }
         const div = document.createElement('div')
         div.textContent = text
         let html = div.innerHTML
+        html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        html = html.replace(/`([^`]+)`/g, '<code style="background:rgba(0,0,0,0.06);padding:1px 4px;border-radius:3px;font-family:monospace;">$1</code>')
         html = html.replace(/\n/g, '<br>')
         return html
     }

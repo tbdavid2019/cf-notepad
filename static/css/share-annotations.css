@@ -281,6 +281,39 @@
     overflow-y: auto;
 }
 
+.selection-ai-quote-preview {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 7px 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: var(--text-color, #444);
+    background: rgba(200, 101, 75, 0.07);
+    border-inline-start: 3px solid var(--toolbar-accent, #c8654b);
+    border-radius: 4px;
+    word-break: break-word;
+}
+
+[data-ui-theme="dark"] .selection-ai-quote-preview {
+    color: #ccc;
+    background: rgba(200, 101, 75, 0.14);
+}
+
+.selection-ai-quote-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.selection-ai-quote-text {
+    flex: 1;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
 .selection-ai-loading {
     display: flex;
     align-items: center;
