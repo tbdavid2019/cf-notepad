@@ -3218,7 +3218,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     z-index: 1200;
 }
 
-.pwa-install-prompt[hidden] {
+.pwa-install-prompt[hidden],
+.pwa-install-manual-btn[hidden] {
     display: none !important;
 }
 

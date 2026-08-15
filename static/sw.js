@@ -1,4 +1,4 @@
-const CACHE_NAME = 'david888-wiki-shell-v3'
+const CACHE_NAME = 'david888-wiki-shell-v4'
 const OFFLINE_URL = '/_pwa-offline'
 const PRECACHE_URLS = [
     OFFLINE_URL,

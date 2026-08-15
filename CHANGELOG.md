@@ -36,6 +36,10 @@
   - **⌨️ 快捷鍵支援 (`Cmd/Ctrl + S` & `Cmd/Ctrl + O`)**：
     - `Cmd/Ctrl + S`：於編輯模式即時將文章儲存至本機 IndexedDB 與雲端（若已發布）；於檢視/分享模式觸發 Markdown 檔案下載。
     - `Cmd/Ctrl + O`：於編輯模式快速喚起系統檔案選擇器，載入本地 Markdown 檔案。
+  - **📱 常駐 PWA 主動安裝按鈕 (`#pwa-install-manual-btn`)**：
+    - 於頁面右下角工具列（GitHub 按鈕旁）新增常駐「安裝 App」按鈕。
+    - 支援主動呼叫瀏覽器原生安裝確認彈窗（`deferredInstallPrompt`），即使先前已關閉頂部提示橫幅亦可隨時手動安裝。
+    - 針對 Safari / iOS 提供安裝指引提示（「分享 ➔ 加入主畫面」），並於獨立 App 模式（Standalone）下自動隱藏。
   - **🌐 連線狀態即時感應**：監聽 `online` 與 `offline` 事件，斷網時自動進入離線本地保護模式，聯網恢復時自動提示並增量同步修改。
 
 ## [2026-08-15]

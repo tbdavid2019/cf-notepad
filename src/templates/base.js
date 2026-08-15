@@ -122,21 +122,6 @@ const EDITOR_PUBLICATION_STATUS = ({ lang, ext = {}, shareId = '' }) => {
     </aside>`
 }
 
-const PWA_INSTALL_PROMPT = lang => {
-    const zh = lang === 'zh-TW'
-    const title = zh ? '安裝 DAVID888 WIKI' : 'Install DAVID888 WIKI'
-    const action = zh ? '安裝 App' : 'Install app'
-    const dismiss = zh ? '稍後' : 'Later'
-
-    return `
-    <aside id="pwa-install-prompt" class="pwa-install-prompt" hidden aria-live="polite">
-        <span class="pwa-install-title">${title}</span>
-        <button type="button" id="pwa-install-button" class="pwa-install-button">${action}</button>
-        <button type="button" id="pwa-install-dismiss" class="pwa-install-dismiss" aria-label="${dismiss}" onclick="try{localStorage.setItem('cf-notepad:pwa-install-dismissed',String(Date.now()))}catch(e){}this.closest('#pwa-install-prompt').hidden = true">×</button>
-    </aside>
-    `
-}
-
 export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPwPrompt, path, shareId }) => {
     const gaMeasurementId = ext.gaMeasurementId ? String(ext.gaMeasurementId).trim() : ''
     const initialShareFont = ext.shareFont === 'maple' ? 'maple' : 'jetbrains'
@@ -211,6 +196,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <meta name="robots" content="${escapeHtml(ext.meta?.robots || 'noindex,nofollow')}" />
     <meta name="theme-color" content="#0f172a" />
     <link rel="manifest" href="/app.webmanifest" />
+    <script>window.__deferredPwaPrompt=null;window.addEventListener('beforeinstallprompt',function(e){e.preventDefault();window.__deferredPwaPrompt=e;if(typeof window.__onPwaPromptReady==='function'){window.__onPwaPromptReady(e);}});</script>
     ${isSharePage ? `<meta name="webtalk-page-id" content="${escapeHtml(shareId)}" />` : ''}
     ${webtalkScript}
     ${ogSiteNameMeta}
@@ -390,7 +376,6 @@ ${getMarkdownCss()}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
-    ${isEmbed ? '' : PWA_INSTALL_PROMPT(lang)}
     <div id="loading"></div>
     ${isEmbed ? `
     <script>
@@ -3288,8 +3273,12 @@ ${getMarkdownCss()}
 
         // --- Toast Notification Utility ---
         window.showToast = (message) => {
-            const container = document.getElementById('toast-container');
-            if (!container) return;
+            let container = document.getElementById('toast-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'toast-container';
+                document.body.appendChild(container);
+            }
             
             const toast = document.createElement('div');
             toast.className = 'toast';
@@ -3308,8 +3297,51 @@ ${getMarkdownCss()}
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 250);
-            }, 2000);
-        }
+            }, 3500);
+        };
+
+        // --- PWA Manual Install Handler ---
+        window.__handlePwaInstall = async function(btn) {
+            const isZh = (document.documentElement.lang || APP_STATE.lang || '').toLowerCase().startsWith('zh');
+            const ua = navigator.userAgent || '';
+            const platform = navigator.platform || '';
+            const maxTouch = navigator.maxTouchPoints || 0;
+            const isIOS = /iPad|iPhone|iPod/.test(ua) || (platform === 'MacIntel' && maxTouch > 1);
+            const isMacSafari = /Safari/.test(ua) && !/Chrome|Chromium|Edg|OPR|Brave/.test(ua);
+            const isStandalone = (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+
+            const promptEvent = window.__deferredPwaPrompt;
+
+            if (promptEvent) {
+                if (btn) btn.disabled = true;
+                try {
+                    await promptEvent.prompt();
+                    const choice = await promptEvent.userChoice;
+                    if (choice && choice.outcome === 'accepted') {
+                        window.__deferredPwaPrompt = null;
+                        window.showToast(isZh ? '🎉 正在安裝 DAVID888 WIKI App...' : '🎉 Installing App...');
+                    }
+                } catch (e) {
+                    console.warn('Install prompt error:', e);
+                } finally {
+                    if (btn) btn.disabled = false;
+                }
+                return;
+            }
+
+            let message = '';
+            if (isStandalone) {
+                message = isZh ? '✅ 目前已在 App 獨立視窗中運行' : '✅ Already running in standalone app mode';
+            } else if (isIOS) {
+                message = isZh ? '📱 iOS 請點擊 Safari 底部的「分享」按鈕 ➔ 選擇「加入主畫面」' : '📱 iOS: Tap Share in Safari ➔ Add to Home Screen';
+            } else if (isMacSafari) {
+                message = isZh ? '🖥️ macOS Safari：請至上方選單「檔案」➔「加入 Dock」或使用 Chrome 瀏覽器' : '🖥️ macOS Safari: Go to File ➔ Add to Dock, or use Chrome';
+            } else {
+                message = isZh ? '💡 請點擊瀏覽器網址列右側的「⊕ 安裝」圖示，或在選單中選擇「安裝應用程式」' : '💡 Click the install icon in address bar or select "Install" in browser menu';
+            }
+
+            window.showToast(message);
+        };
 
         // --- PWA File Handling & Local File Opener ---
         window.__openLocalFileContent = async function({ name, text }) {

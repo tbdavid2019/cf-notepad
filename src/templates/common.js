@@ -75,7 +75,8 @@ export const SVG_ICONS = {
     type: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg>`,
     palette: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>`,
     width: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"/><path d="m18 15 3-3-3-3"/><path d="m6 9-3 3 3 3"/></svg>`,
-    languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`
+    languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
+    install: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3"></rect><path d="M12 7v8"></path><path d="m8.5 11.5 3.5 3.5 3.5-3.5"></path></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -715,6 +716,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ${SVG_ICONS.github}
                         <span class="toolbar-button-label">GitHub</span>
                     </a>
+                    <button type="button" id="pwa-install-manual-btn" class="toolbar-icon-button pwa-install-manual-btn" onclick="window.__handlePwaInstall ? window.__handlePwaInstall(this) : (window.showToast ? window.showToast('App 安裝中...') : alert('App'))" data-tooltip="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}" title="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}" aria-label="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}">
+                        ${SVG_ICONS.install}
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '安裝' : 'App'}</span>
+                    </button>
                     <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" data-tooltip="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
                         <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
                         <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
