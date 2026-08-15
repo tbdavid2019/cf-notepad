@@ -17,7 +17,8 @@ test('block edit pages use a WYSIWYG block canvas instead of the Markdown split 
     assert.match(page, /id="contents" class="contents hide"/)
     assert.doesNotMatch(page, /data-markdown-toolbar/)
     assert.doesNotMatch(page, /class="divide-line"/)
-    assert.doesNotMatch(page, /id="import-md-btn"/)
+    assert.match(page, /id="import-md-btn"/)
+    assert.match(page, /id="import-md-input"/)
     assert.doesNotMatch(page, /data-rail-checked-value="md"/)
     assert.match(page, /\/js\/block-editor\.bundle\.mjs/)
     assert.match(page, /\/js\/block-editor\.bundle\.css/)
@@ -41,6 +42,10 @@ test('BlockNote editor uses the ready-made side menu, slash menu, and formatting
     assert.match(source, /SuggestionMenuController/)
     assert.match(source, /getDefaultReactSlashMenuItems/)
     assert.match(source, /davidEmbed/)
+    assert.match(source, /tryParseMarkdownToBlocks/)
+    assert.match(source, /cf-notepad-block-import/)
+    assert.match(source, /tables: \{ headers: true, splitCells: true/)
+    assert.doesNotMatch(source, /flattenImportedTable/)
 })
 
 test('BlockNote follows the application dark-mode setting instead of being fixed to light', () => {

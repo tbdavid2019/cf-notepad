@@ -130,6 +130,35 @@ test('Tiptap block documents render semantic formatting and existing custom embe
     assert.match(blockToMarkdown(parsed), /# Rich title/)
 })
 
+test('Tiptap table documents render as tables and export basic tables as GFM Markdown', () => {
+    const document = {
+        type: 'doc',
+        content: [{
+            type: 'table',
+            attrs: { headerRows: 1 },
+            content: [
+                { type: 'tableRow', content: [
+                    { type: 'tableHeader', content: [{ type: 'text', text: 'Item' }] },
+                    { type: 'tableHeader', attrs: { textAlignment: 'right' }, content: [{ type: 'text', text: 'Qty' }] },
+                ] },
+                { type: 'tableRow', content: [
+                    { type: 'tableCell', content: [{ type: 'text', text: 'Pen' }] },
+                    { type: 'tableCell', content: [{ type: 'text', text: '12' }] },
+                ] },
+            ],
+        }],
+    }
+
+    const html = renderBlockToHtml(document)
+    const markdown = blockToMarkdown(document)
+    assert.match(html, /<table class="block-table">/)
+    assert.match(html, /<th>Item<\/th>/)
+    assert.match(html, /<td>12<\/td>/)
+    assert.match(markdown, /\| Item \| Qty \|/)
+    assert.match(markdown, /\| --- \| ---: \|/)
+    assert.match(markdown, /\| Pen \| 12 \|/)
+})
+
 test('block media renderers allow only http and https URLs', () => {
     const html = renderBlockToHtml({
         version: 1,

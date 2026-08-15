@@ -562,6 +562,33 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     text-align: left;
     white-space: nowrap;
 }
+.dropdown-menu-label {
+    padding: 5px 12px 3px;
+    color: var(--toolbar-muted, #6e7781);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+.dropdown-item-rich {
+    align-items: flex-start;
+}
+.dropdown-item-rich .dropdown-item-copy {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+    white-space: normal;
+}
+.dropdown-item-copy strong,
+.dropdown-item-copy small {
+    display: block;
+    white-space: nowrap;
+}
+.dropdown-item-copy small {
+    color: var(--toolbar-muted, #6e7781);
+    font-size: 11px;
+    font-weight: 400;
+}
 .dropdown-item:hover {
     background: var(--toolbar-bg-hover, #f5f0e8);
 }

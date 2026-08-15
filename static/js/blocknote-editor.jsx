@@ -85,6 +85,28 @@ const DavidEmbed = createReactBlockSpec({
 
 const schema = BlockNoteSchema.create().extend({ blockSpecs: { davidEmbed: DavidEmbed() } })
 
+const inlineContentToText = content => {
+    if (typeof content === 'string') return content
+    if (!Array.isArray(content)) return ''
+    return content.map(item => {
+        if (typeof item === 'string') return item
+        if (item?.type === 'link') return inlineContentToText(item.content)
+        return typeof item?.text === 'string' ? item.text : ''
+    }).join('')
+}
+
+const normalizeImportedBlocks = blocks => blocks.flatMap(block => {
+    if (block?.type !== 'codeBlock') return [block]
+
+    const language = String(block.props?.language || '').trim().toLowerCase()
+    if (!['mermaid', 'echarts', 'html'].includes(language)) return [block]
+
+    const sourceText = inlineContentToText(block.content)
+    if (language === 'mermaid') return [{ type: 'davidEmbed', props: { kind: 'mermaid', source: sourceText } }]
+    if (language === 'echarts') return [{ type: 'davidEmbed', props: { kind: 'echarts', optionJson: sourceText } }]
+    return [{ type: 'davidEmbed', props: { kind: 'raw', content: sourceText } }]
+})
+
 const safeHttpUrl = value => {
     try {
         const url = new URL(String(value || '').trim())
@@ -188,7 +210,12 @@ function BlockNoteEditorApp() {
     }, [])
     const [dialog, setDialog] = useState(null)
     const blockNoteTheme = useBlockNoteTheme()
-    const editor = useCreateBlockNote({ schema, initialContent, uploadFile })
+    const editor = useCreateBlockNote({
+        schema,
+        initialContent,
+        uploadFile,
+        tables: { headers: true, splitCells: true, cellBackgroundColor: true, cellTextColor: true },
+    })
 
     useEffect(() => {
         const open = event => {
@@ -198,6 +225,37 @@ function BlockNoteEditorApp() {
         window.addEventListener('david-blocknote-edit', open)
         return () => window.removeEventListener('david-blocknote-edit', open)
     }, [])
+
+    useEffect(() => {
+        const importMarkdown = event => {
+            const markdown = typeof event.detail?.markdown === 'string' ? event.detail.markdown : ''
+            if (!markdown.trim()) return
+
+            try {
+                const parsedBlocks = normalizeImportedBlocks(editor.tryParseMarkdownToBlocks(markdown))
+                if (!parsedBlocks.length) throw new Error('匯入內容沒有可用的區塊。')
+
+                if (event.detail?.mode === 'insert') {
+                    const reference = editor.getTextCursorPosition()?.block || editor.document.at(-1)
+                    if (!reference) throw new Error('找不到目前區塊。')
+                    editor.insertBlocks(parsedBlocks, reference.id, 'after')
+                } else {
+                    editor.replaceBlocks(editor.document, parsedBlocks)
+                }
+                save()
+            } catch (error) {
+                console.error('Block Markdown import failed:', error)
+                window.showAppDialog?.({
+                    title: '匯入失敗',
+                    message: error?.message || '無法將內容轉換成 Block 區塊。',
+                    kind: 'error',
+                })
+            }
+        }
+
+        window.addEventListener('cf-notepad-block-import', importMarkdown)
+        return () => window.removeEventListener('cf-notepad-block-import', importMarkdown)
+    }, [editor])
 
     const items = useMemo(() => [
         ...getDefaultReactSlashMenuItems(editor),

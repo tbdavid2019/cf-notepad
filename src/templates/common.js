@@ -173,16 +173,22 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const copyPresentTitle = lang === 'zh-TW' ? '複製簡報連結' : 'Copy presentation link'
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
+    const isBlockEditor = isEdit && editorFormat === 'block'
     const newNoteTitle = lang === 'zh-TW' ? '新增筆記' : 'New note'
     const newMarkdownTitle = lang === 'zh-TW' ? 'Markdown 筆記' : 'Markdown note'
+    const newMarkdownDescription = lang === 'zh-TW' ? '純文字編輯，適合匯入內容' : 'Plain-text editing for imported content'
     const newBlockTitle = lang === 'zh-TW' ? 'Block 筆記' : 'Block note'
+    const newBlockDescription = lang === 'zh-TW' ? '拖拉區塊與 Slash 指令' : 'Drag blocks and use slash commands'
+    const createSectionTitle = lang === 'zh-TW' ? '建立筆記' : 'Create note'
+    const importSectionTitle = isBlockEditor
+        ? (lang === 'zh-TW' ? '匯入內容（轉成 Block）' : 'Import content (Blocks)')
+        : (lang === 'zh-TW' ? '匯入內容（Markdown）' : 'Import content (Markdown)')
     const moreToolsTitle = lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'
     const safeViewCount = Number.isSafeInteger(viewCount) && viewCount >= 0 ? viewCount : null
     const formattedViewCount = safeViewCount === null ? '' : new Intl.NumberFormat(lang).format(safeViewCount)
     const viewCountText = safeViewCount === null
         ? ''
         : (lang === 'zh-TW' ? `${formattedViewCount} 次瀏覽` : `${formattedViewCount} views`)
-    const isBlockEditor = isEdit && editorFormat === 'block'
     const getThemeLabel = themeName => {
         const description = THEME_OPTION_LABELS[themeName]?.[lang] || ''
         return description ? `${themeName} · ${description}` : themeName
@@ -201,13 +207,26 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <span aria-hidden="true">▾</span>
                             </button>
                             <div class="dropdown-menu" role="menu">
-                                <a id="new-block-note-link" class="dropdown-item" href="/new/block">${SVG_ICONS.sparkles}<span>${newBlockTitle}</span></a>
-                                <a id="new-markdown-note-link" class="dropdown-item" href="/new/markdown">${SVG_ICONS.editLock}<span>${newMarkdownTitle}</span></a>
-                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importMarkdown}</span></button>
-                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${lang === 'zh-TW' ? '匯入網站' : 'Import Website'}</span></button>
+                                <div class="dropdown-menu-label">${createSectionTitle}</div>
+                                <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">${SVG_ICONS.sparkles}<span class="dropdown-item-copy"><strong>${newBlockTitle}</strong><small>${newBlockDescription}</small></span></a>
+                                <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">${SVG_ICONS.editLock}<span class="dropdown-item-copy"><strong>${newMarkdownTitle}</strong><small>${newMarkdownDescription}</small></span></a>
+                                ${!isBlockEditor ? `
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-menu-label">${importSectionTitle}</div>
+                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
+                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
+                                ` : ''}
+                                ${isBlockEditor ? `
+                                <div class="dropdown-divider"></div>
+                                <div class="dropdown-menu-label">${importSectionTitle}</div>
+                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
+                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
+                                ` : ''}
+                                <div class="dropdown-divider"></div>
                                 <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
                             </div>
                         </div>
+                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv" class="visually-hidden-file-input" aria-hidden="true">
                     </div>
                 </div>
             </div>
@@ -308,8 +327,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.readLock}
                             <span class="toolbar-button-label">${t.readLockTitle}</span>
                         </button>
+                        ${isBlockEditor ? `
+                        <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importFileBlock}" title="${t.importFileBlock}" aria-label="${t.importFileBlock}">
+                            ${SVG_ICONS.import}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
+                        </button>
+                        ` : ''}
                         ${!isBlockEditor ? `
-                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv" class="visually-hidden-file-input" aria-hidden="true">
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>

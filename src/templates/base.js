@@ -2129,7 +2129,7 @@ ${getMarkdownCss()}
             window.addEventListener('resize', hideSelectionAiMenu)
         }
 
-        const showImportOptionDialog = () => new Promise(resolve => {
+        const showImportOptionDialog = ({ block = false } = {}) => new Promise(resolve => {
             const modal = document.querySelector('.import-options-modal')
             if (!modal) {
                 resolve('replace')
@@ -2139,10 +2139,18 @@ ${getMarkdownCss()}
             const insertBtn = modal.querySelector('.import-action-insert')
             const replaceBtn = modal.querySelector('.import-action-replace')
             const mask = modal.querySelector('.modal-mask')
+            const message = modal.querySelector('#import-options-message')
 
             if (!cancelBtn || !insertBtn || !replaceBtn || !mask) {
                 resolve('replace')
                 return
+            }
+
+            const originalMessage = message?.textContent || ''
+            const originalInsertLabel = insertBtn.textContent || ''
+            if (block) {
+                if (message) message.textContent = getI18n('importBlockMessage')
+                insertBtn.textContent = getI18n('importActionInsertBlock')
             }
 
             let settled = false
@@ -2155,6 +2163,8 @@ ${getMarkdownCss()}
                 replaceBtn.removeEventListener('click', onReplace)
                 mask.removeEventListener('click', onCancel)
                 modal.removeEventListener('keydown', onKeyDown)
+                if (message) message.textContent = originalMessage
+                insertBtn.textContent = originalInsertLabel
                 resolve(choice)
             }
 
@@ -2181,6 +2191,53 @@ ${getMarkdownCss()}
             $dropdownImportDocBtn.addEventListener('click', () => {
                 $importMdInput.click()
             })
+        }
+
+        const isCurrentMarkdownEditor = () => APP_STATE.isEdit === true && APP_STATE.editorFormat === 'markdown' && Boolean($textarea)
+        const isCurrentBlockEditor = () => APP_STATE.isEdit === true && APP_STATE.editorFormat === 'block'
+        const blockNodeHasContent = node => {
+            if (!node || typeof node !== 'object') return false
+            if (typeof node.text === 'string' && node.text.trim()) return true
+            if (node.type && node.type !== 'doc' && node.type !== 'paragraph') return true
+            return Array.isArray(node.content) && node.content.some(blockNodeHasContent)
+        }
+        const blockEditorHasContent = () => {
+            if (!$textarea) return false
+            try {
+                const document = JSON.parse($textarea.value || '{}')
+                return Array.isArray(document.content) && document.content.some(blockNodeHasContent)
+            } catch {
+                return Boolean($textarea.value && $textarea.value.trim())
+            }
+        }
+        const createMarkdownNoteFromImport = async importedText => {
+            if (typeof window.showToast === 'function') window.showToast(getI18n('creatingMarkdownNote') || 'Creating Markdown note...')
+            const createRes = await fetch('/api/new-note', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: importedText, editorFormat: 'markdown' })
+            })
+            const createData = await createRes.json().catch(() => ({}))
+            if (createData && createData.data && createData.data.url) {
+                window.location.href = createData.data.url
+            } else {
+                window.location.href = '/new/markdown'
+            }
+        }
+        const importIntoBlockEditor = async (importedText, importedTitle = '') => {
+            let insertMode = 'replace'
+            if (blockEditorHasContent()) insertMode = await showImportOptionDialog({ block: true })
+            if (insertMode === 'cancel') return false
+
+            window.dispatchEvent(new CustomEvent('cf-notepad-block-import', {
+                detail: { markdown: importedText, mode: insertMode },
+            }))
+            if (typeof window.showToast === 'function') {
+                window.showToast(importedTitle
+                    ? '已成功匯入「' + importedTitle + '」，並轉換為 Block 區塊。'
+                    : '內容已成功轉換為 Block 區塊。')
+            }
+            return true
         }
 
         // URL to Markdown Import Modal Handler
@@ -2256,7 +2313,9 @@ ${getMarkdownCss()}
 
                     closeUrlImportModal()
 
-                    if ($textarea) {
+                    if (isCurrentBlockEditor()) {
+                        await importIntoBlockEditor(importedContent, importedTitle)
+                    } else if (isCurrentMarkdownEditor()) {
                         let insertMode = 'replace'
                         if ($textarea.value && $textarea.value.trim().length > 0) {
                             insertMode = await showImportOptionDialog()
@@ -2278,20 +2337,7 @@ ${getMarkdownCss()}
                             window.showToast(importedTitle ? ('已成功匯入「' + importedTitle + '」') : '網頁已成功轉為 Markdown 匯入！')
                         }
                     } else {
-                        if (typeof window.showToast === 'function') {
-                            window.showToast('正在建立新筆記...')
-                        }
-                        const createRes = await fetch('/api/new-note', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({ content: importedContent, editorFormat: 'markdown' })
-                        })
-                        const createData = await createRes.json().catch(() => ({}))
-                        if (createData && createData.data && createData.data.url) {
-                            window.location.href = createData.data.url
-                        } else {
-                            window.location.href = '/new/markdown'
-                        }
+                        await createMarkdownNoteFromImport(importedContent)
                     }
                 } catch (err) {
                     $urlImportStatus.style.background = 'rgba(239, 68, 68, 0.1)'
@@ -2302,8 +2348,8 @@ ${getMarkdownCss()}
             })
         }
 
-        if ($importMdBtn && $importMdInput && $textarea) {
-            $importMdBtn.addEventListener('click', () => {
+        if ($importMdInput) {
+            if ($importMdBtn) $importMdBtn.addEventListener('click', () => {
                 $importMdInput.click()
             })
             $importMdInput.addEventListener('change', async () => {
@@ -2311,7 +2357,7 @@ ${getMarkdownCss()}
                 if (!file) return;
 
                 let insertMode = 'replace';
-                if ($textarea.value && $textarea.value.trim().length > 0) {
+                if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
                     insertMode = await showImportOptionDialog();
                 }
 
@@ -2324,7 +2370,17 @@ ${getMarkdownCss()}
                 const ext = (fileName.includes('.') ? fileName.split('.').pop() : '').toLowerCase();
                 const isPlainMd = ['md', 'markdown', 'txt'].includes(ext) || file.type === 'text/markdown' || file.type === 'text/plain';
 
-                const applyImportedContent = (importedText, isDoc = false) => {
+                const applyImportedContent = async (importedText, isDoc = false) => {
+                    if (isCurrentBlockEditor()) {
+                        await importIntoBlockEditor(importedText)
+                        $importMdInput.value = ''
+                        return
+                    }
+                    if (!isCurrentMarkdownEditor()) {
+                        await createMarkdownNoteFromImport(importedText)
+                        return
+                    }
+
                     if (insertMode === 'insert') {
                         const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
                         const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
@@ -2353,7 +2409,7 @@ ${getMarkdownCss()}
 
                 if (isPlainMd) {
                     const reader = new FileReader()
-                    reader.onload = () => applyImportedContent(typeof reader.result === 'string' ? reader.result : '', false)
+                    reader.onload = () => applyImportedContent(typeof reader.result === 'string' ? reader.result : '', false).catch(handleImportError)
                     reader.onerror = () => handleImportError()
                     reader.readAsText(file, 'utf-8')
                 } else {
@@ -2385,7 +2441,7 @@ ${getMarkdownCss()}
                             throw new Error('Failed to convert document: Empty or invalid output.')
                         }
 
-                        applyImportedContent(markdown, true)
+                        await applyImportedContent(markdown, true)
                     } catch (err) {
                         console.error('Anydoc WASM conversion failed:', err)
                         handleImportError(err)

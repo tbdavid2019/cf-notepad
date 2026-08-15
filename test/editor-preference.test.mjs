@@ -8,6 +8,7 @@ import {
     EDITOR_PREFERENCE_STORAGE_KEY,
     EDITOR_SESSION_PREFERENCE_KEY,
     getEditorPreference,
+    hasEditorPreference,
     initializeEditorPreference,
     saveEditorPreference,
 } from '../static/js/editor-preference.mjs'
@@ -18,9 +19,11 @@ test('editor preference defaults to Block and supports persistent or session-onl
     const window = createWindow('')
 
     assert.deepEqual(getEditorPreference(window), { format: DEFAULT_EDITOR_FORMAT, remembered: false })
+    assert.equal(hasEditorPreference(window), false)
 
     saveEditorPreference('markdown', { remember: false, windowRef: window })
     assert.deepEqual(getEditorPreference(window), { format: 'markdown', remembered: false })
+    assert.equal(hasEditorPreference(window), true)
     assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), null)
     assert.equal(window.sessionStorage.getItem(EDITOR_SESSION_PREFERENCE_KEY), 'markdown')
 
@@ -28,6 +31,23 @@ test('editor preference defaults to Block and supports persistent or session-onl
     assert.deepEqual(getEditorPreference(window), { format: 'block', remembered: true })
     assert.equal(window.localStorage.getItem(EDITOR_PREFERENCE_STORAGE_KEY), 'block')
     assert.throws(() => saveEditorPreference('html', { windowRef: window }), /Invalid editor format/)
+})
+
+test('primary new-note action asks for a format when no preference exists', () => {
+    const window = createWindow(`${FOOTER({ lang: 'zh-TW', isEdit: true, mode: 'md', editorFormat: 'markdown' })}${EDITOR_PREFERENCE_MODAL('zh-TW')}`)
+    const navigations = []
+    initializeEditorPreference(window.document, window, { navigate: format => navigations.push(format) })
+
+    const primary = window.document.querySelector('#new-note-link')
+    const dialog = window.document.querySelector('[data-editor-preference-dialog]')
+    assert.equal(primary.getAttribute('href'), '#choose-editor')
+
+    primary.click()
+    assert.equal(dialog.getAttribute('aria-hidden'), 'false')
+
+    window.document.querySelector('input[value="markdown"]').click()
+    window.document.querySelector('[data-editor-preference-form]').dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }))
+    assert.deepEqual(navigations, ['markdown'])
 })
 
 test('footer setting changes the one-click new-note target without converting the current note', () => {

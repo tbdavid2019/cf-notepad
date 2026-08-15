@@ -62,6 +62,16 @@ test('footer provides a primary new-note action, explicit format choices, and a 
     assert.match(baseCssSource, /@media \(max-width: 640px\)[\s\S]*\.footer-section-create \.toolbar-button-label\s*\{\s*display: none/)
 })
 
+test('Block note menus expose imports that convert content into blocks', () => {
+    const document = renderFooter({ isEdit: true, editorFormat: 'block' })
+
+    assert.match(document.querySelector('#dropdown-import-doc-btn')?.textContent || '', /轉成 Block/)
+    assert.match(document.querySelector('#dropdown-import-url-btn')?.textContent || '', /轉成 Block/)
+    assert.ok(document.querySelector('#import-md-input'))
+    assert.ok(document.querySelector('#import-md-btn'))
+    assert.ok(document.querySelector('#new-block-note-link'))
+})
+
 test('scrolling toolbars delegate unclipped tooltips and dropdowns to a body-level floating layer', () => {
     assert.match(baseTemplateSource, /\/js\/floating-controls\.mjs/)
     assert.match(baseCssSource, /\.footer\s*\{[\s\S]*overflow-x:\s*auto;/)

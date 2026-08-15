@@ -142,7 +142,8 @@ test('footer exposes markdown import export and PDF tools without reusing existi
     assert.match(commonTemplateSource, /class="modal import-options-modal"/)
     assert.match(commonTemplateSource, /class="opt-button import-action-insert"/)
     assert.match(commonTemplateSource, /class="opt-button opt-button-accent import-action-replace"/)
-    assert.match(baseTemplateSource, /const showImportOptionDialog = \(\) =>/)
+    assert.match(baseTemplateSource, /const showImportOptionDialog = \(\{ block = false \} = \{\}\) =>/)
+    assert.match(baseTemplateSource, /cf-notepad-block-import/)
     assert.match(constantSource, /exportPdf: 'Print or export PDF'/)
 })
 
@@ -248,4 +249,3 @@ test('mobile view tables use container-bound width and horizontal scroll without
     assert.match(baseCssSource, /body\.share-view \.markdown-body table \{\s*display:\s*block !important;\s*width:\s*100% !important;\s*min-width:\s*0 !important;\s*max-width:\s*100% !important;\s*overflow-x:\s*auto !important;/)
     assert.match(baseCssSource, /body\.share-view #preview-md\.markdown-body > table,\s*body:not\(\.share-view\) #preview-md\.markdown-body > table \{\s*margin-left:\s*0 !important;/)
 })
-

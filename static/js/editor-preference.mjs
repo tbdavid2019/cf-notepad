@@ -16,6 +16,13 @@ const storageRemove = (storage, key) => {
     try { storage?.removeItem(key) } catch {}
 }
 
+export function hasEditorPreference(windowRef = window) {
+    const remembered = storageGet(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY)
+    if (isEditorFormat(remembered)) return true
+
+    return isEditorFormat(storageGet(windowRef.sessionStorage, EDITOR_SESSION_PREFERENCE_KEY))
+}
+
 export function getEditorPreference(windowRef = window) {
     const remembered = storageGet(windowRef.localStorage, EDITOR_PREFERENCE_STORAGE_KEY)
     if (isEditorFormat(remembered)) return { format: remembered, remembered: true }
@@ -46,9 +53,16 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     const applyPrimaryLink = format => {
         primaryLinks.forEach(link => link.setAttribute('href', `/new/${format}`))
     }
+    const requirePrimaryChoice = () => {
+        primaryLinks.forEach(link => {
+            link.setAttribute('href', '#choose-editor')
+            link.dataset.editorPreferenceRequired = 'true'
+        })
+    }
 
     const currentPreference = () => getEditorPreference(windowRef)
-    applyPrimaryLink(currentPreference().format)
+    if (hasEditorPreference(windowRef)) applyPrimaryLink(currentPreference().format)
+    else requirePrimaryChoice()
     if (!modal) return { open: () => {}, close: () => {}, getPreference: currentPreference }
 
     const form = modal.querySelector('[data-editor-preference-form]')
@@ -58,6 +72,7 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     const autoOpen = modal.dataset.editorPreferenceAutoOpen === 'true'
     let trigger = null
     let keyHandler = null
+    let pendingNewNote = false
 
     const selectedFormat = () => options.find(option => option.checked)?.value || DEFAULT_EDITOR_FORMAT
     const syncOptionState = () => options.forEach(option => {
@@ -75,11 +90,13 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
         modal.setAttribute('aria-hidden', 'true')
         if (keyHandler) modal.removeEventListener('keydown', keyHandler)
         keyHandler = null
+        pendingNewNote = false
         if (restoreFocus && trigger?.isConnected) trigger.focus()
         trigger = null
     }
-    const open = ({ opener = documentRef.activeElement } = {}) => {
+    const open = ({ opener = documentRef.activeElement, startNewNote = false } = {}) => {
         trigger = opener
+        pendingNewNote = startNewNote
         fill(currentPreference())
         modal.style.display = 'block'
         modal.setAttribute('aria-hidden', 'false')
@@ -107,6 +124,11 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     }
 
     options.forEach(option => option.addEventListener('change', syncOptionState))
+    primaryLinks.forEach(link => link.addEventListener('click', event => {
+        if (hasEditorPreference(windowRef)) return
+        event.preventDefault()
+        open({ opener: link, startNewNote: true })
+    }))
     settingsButtons.forEach(button => button.addEventListener('click', event => {
         event.preventDefault()
         open({ opener: button })
@@ -119,7 +141,10 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
             windowRef,
         })
         applyPrimaryLink(preference.format)
-        if (autoOpen) goToNewNote(preference.format)
+        if (autoOpen || pendingNewNote) {
+            pendingNewNote = false
+            goToNewNote(preference.format)
+        }
         else close()
     })
 

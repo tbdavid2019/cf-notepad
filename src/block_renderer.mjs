@@ -110,6 +110,16 @@ function renderTiptapNode(node = {}) {
         case 'listItem': return `<li>${content.map(renderTiptapNode).join('')}</li>`
         case 'taskList': return `<ul class="contains-task-list block-task-list">${content.map(renderTiptapNode).join('')}</ul>`
         case 'taskItem': return `<li class="task-list-item"><input type="checkbox" class="task-list-item-checkbox"${attrs.checked === true ? ' checked' : ''} disabled> ${content.map(renderTiptapNode).join('')}</li>`
+        case 'table': return `<div class="block-table-wrap"><table class="block-table">${content.map(renderTiptapNode).join('')}</table></div>`
+        case 'tableRow': return `<tr>${content.map(renderTiptapNode).join('')}</tr>`
+        case 'tableHeader':
+        case 'tableCell': {
+            const tag = node.type === 'tableHeader' ? 'th' : 'td'
+            const colspan = Number.isInteger(Number(attrs.colspan)) && Number(attrs.colspan) > 1 && Number(attrs.colspan) <= 100 ? ` colspan="${Number(attrs.colspan)}"` : ''
+            const rowspan = Number.isInteger(Number(attrs.rowspan)) && Number(attrs.rowspan) > 1 && Number(attrs.rowspan) <= 100 ? ` rowspan="${Number(attrs.rowspan)}"` : ''
+            const alignment = ['left', 'center', 'right', 'justify'].includes(attrs.textAlignment) ? ` style="text-align:${attrs.textAlignment}"` : ''
+            return `<${tag}${colspan}${rowspan}${alignment}>${renderTiptapInline(content)}</${tag}>`
+        }
         case 'codeBlock': {
             const language = text(attrs.language).replace(/[^a-zA-Z0-9_+-]/g, '')
             return `<pre><code${language ? ` class="language-${language}"` : ''}>${escapeHtml(content.map(item => text(item.text)).join(''))}</code></pre>`
@@ -141,6 +151,29 @@ function markdownTiptapInline(nodes = []) {
     }).join('')
 }
 
+function tableCellMarkdown(node = {}) {
+    return markdownTiptapInline(node.content || []).replace(/\n/g, '<br>').replace(/\|/g, '\\|')
+}
+
+function blockTableToMarkdown(node = {}) {
+    const rows = (node.content || []).filter(row => row?.type === 'tableRow')
+    if (rows.length === 0) return ''
+    const cells = rows.map(row => (row.content || []).filter(cell => cell?.type === 'tableCell' || cell?.type === 'tableHeader'))
+    const hasSpans = cells.some(row => row.some(cell => Number(cell?.attrs?.colspan) > 1 || Number(cell?.attrs?.rowspan) > 1))
+    const hasHeader = Number(node.attrs?.headerRows) > 0 || cells[0].some(cell => cell?.type === 'tableHeader')
+    if (hasSpans || !hasHeader) return renderTiptapNode(node)
+
+    const width = Math.max(...cells.map(row => row.length))
+    const normalize = row => Array.from({ length: width }, (_, index) => tableCellMarkdown(row[index]))
+    const header = normalize(cells[0])
+    const alignment = Array.from({ length: width }, (_, index) => {
+        const value = cells[0][index]?.attrs?.textAlignment
+        return value === 'left' ? ':---' : value === 'center' ? ':---:' : value === 'right' ? '---:' : '---'
+    })
+    const body = cells.slice(1).map(row => `| ${normalize(row).join(' | ')} |`)
+    return [`| ${header.join(' | ')} |`, `| ${alignment.join(' | ')} |`, ...body].join('\n')
+}
+
 function blockToMarkdownFromTiptap(node = {}) {
     const content = Array.isArray(node.content) ? node.content : []
     const attrs = node.attrs && typeof node.attrs === 'object' ? node.attrs : {}
@@ -154,6 +187,7 @@ function blockToMarkdownFromTiptap(node = {}) {
         case 'listItem': return content.map(blockToMarkdownFromTiptap).join('\n')
         case 'taskList': return content.map(blockToMarkdownFromTiptap).join('\n')
         case 'taskItem': return `- ${attrs.checked ? '[x]' : '[ ]'} ${content.map(blockToMarkdownFromTiptap).join('')}`
+        case 'table': return blockTableToMarkdown(node)
         case 'codeBlock': return `\`\`\`${text(attrs.language)}\n${content.map(item => text(item.text)).join('')}\n\`\`\``
         case 'horizontalRule': return '---'
         case 'image': return blockToMarkdown({ version: 1, blocks: [{ type: 'image', props: attrs }] })
