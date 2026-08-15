@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-08-15]
+
+### Added
+
+- **Smart Bidirectional Language Auto-Detection for AI Translation**
+  - AI translation (`@cf/openai/gpt-oss-120b`) now automatically inspects the source language of selected text or full notes using Han character detection (`\p{Script=Han}`).
+  - Automatically defaults the target language to **English** (`英文` / `English`) when Chinese content is detected, and to **Traditional Chinese** (`繁體中文` / `Traditional Chinese`) when English or other non-Chinese languages are selected.
+  - Retains prompt customization and bilingual output (`bilingual: true`) options.
+
+### Changed
+
+- **Clean Git Working Tree for Screenshot Paste Files**
+  - Added `orca-paste-*` pattern to `.gitignore` to prevent chat screenshot artifacts from cluttering source control.
+
 ## [2026-08-10]
 
 ### Added
