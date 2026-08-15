@@ -183,6 +183,36 @@ export const createOfflinePageResponse = () => {
             resize: none;
             outline: none;
         }
+        @media (max-width: 640px) {
+            header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                padding: 10px 14px;
+            }
+            .header-actions {
+                flex-wrap: wrap;
+                gap: 6px;
+            }
+            .header-actions .btn {
+                flex: 1;
+                min-width: 100px;
+                justify-content: center;
+                padding: 8px 10px;
+            }
+            main {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                max-height: 140px;
+                border-right: none;
+                border-bottom: 1px solid var(--border-color);
+            }
+            .editor-area {
+                padding: 10px;
+            }
+        }
         .toast {
             position: fixed;
             bottom: 20px;
