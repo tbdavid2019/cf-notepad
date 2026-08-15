@@ -112,7 +112,14 @@
   - **💬 註解**：一鍵開啟段落劃線討論側邊欄。
 - **段落劃線註解與精準連結**：讀者可在分享頁劃線進行段落討論與「複製精準連結」，開啟時會自動跳轉並高亮指定段落。
 - **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
-- **PWA 獨立應用與離線防護**：支援 Android / Mac / 桌面版瀏覽器安裝為 PWA 獨立 App；斷網時顯示離線防護頁面。
+- **PWA 獨立應用、檔案關聯 (File Handling) 與離線工作區 (Offline Workspace)**：
+  - **可安裝 (Add to Home Screen)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式。
+  - **檔案關聯 (File Handling API)**：作業系統（macOS Finder 或 Windows 檔案總管）中右鍵點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
+  - **離線工作區 (Offline Workspace)**：斷網時自動進入離線編輯模式，支援建立離線草稿、檢視所有本機快取筆記與匯出 `.md`。
+  - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），在無痕模式或不支援時自動降級至記憶體快取。
+  - **快捷鍵支援**：
+    - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
+    - `Cmd/Ctrl + O`：編輯模式快速選擇本機 Markdown 檔案載入。
 
 ![權限防護設計](image-2.png)
 
@@ -133,15 +140,18 @@
 | `IMAGES` R2       | 圖片上傳儲存桶                                                                                    | 文章內僅保存公開圖片 URL                     |
 
 
-### Browser (localStorage / Cookie)
+### Browser (localStorage / IndexedDB / Cookie)
 
 
-| 類型           | Key                                                                                  | 用途                                          |
+| 類型           | Key / Database                                                                       | 用途                                          |
 | ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------- |
+| IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | 本機完整 Markdown 文章內容、離線草稿與歷史快照（大容量非同步儲存）         |
+| localStorage | `cf-notepad:notes-metadata`                                                          | 本機快取筆記元數據清單（path、title、updatedAt、size、syncStatus） |
 | localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | 介面佈局與視覺偏好鏡像                                 |
 | localStorage | `cf-notepad:publish-preferences`                                                     | 發布、自動儲存與公開索引的上次勾選偏好；首次預設全部開啟                |
 | localStorage | `cf-notepad:share-history:*` / `annotation-author`                                   | 本機近 20 筆分享紀錄與註解留言名稱                         |
 | Cookie       | `auth` / `cn_device` / `admin_session`                                               | 具 path scope 的驗證 JWT、匿名裝置 hash 與管理員 session |
+
 
 
 ---

@@ -1722,10 +1722,30 @@ ${getMarkdownCss()}
                     refreshPublicationVersionCount()
                     showSaveStatus(APP_STATE.lang === 'zh-TW' ? '已儲存' : 'Saved')
                     window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已儲存' : 'Note saved')
+                    if (window.offlineStore) {
+                        const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
+                        window.offlineStore.saveNote(APP_STATE.path, {
+                            title,
+                            content,
+                            theme: APP_STATE.theme,
+                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            syncStatus: 'synced'
+                        })
+                    }
                     return true
                 })
                 .catch(error => {
                     showSaveStatus(error.message || 'save failed', true)
+                    if (window.offlineStore) {
+                        const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
+                        window.offlineStore.saveNote(APP_STATE.path, {
+                            title,
+                            content,
+                            theme: APP_STATE.theme,
+                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            syncStatus: 'pending'
+                        })
+                    }
                     errHandle(error.message || error)
                     return false
                 })
@@ -1744,6 +1764,17 @@ ${getMarkdownCss()}
 
         const scheduleAutosave = () => {
             clearAutosaveTimer()
+            if ($textarea && window.offlineStore) {
+                const draftContent = $textarea.value
+                const draftTitle = String(draftContent || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
+                window.offlineStore.saveNote(APP_STATE.path, {
+                    title: draftTitle,
+                    content: draftContent,
+                    theme: APP_STATE.theme,
+                    format: APP_STATE.isBlock ? 'block' : 'markdown',
+                    syncStatus: APP_STATE.isPublished ? 'pending' : 'draft'
+                })
+            }
             if (!$textarea || !APP_STATE.isPublished || APP_STATE.autosave !== true || !hasUnsavedChanges()) return
             autosaveTimer = window.setTimeout(() => {
                 autosaveTimer = null
@@ -3221,10 +3252,96 @@ ${getMarkdownCss()}
                 setTimeout(() => toast.remove(), 250);
             }, 2000);
         }
+
+        // --- PWA File Handling & Local File Opener ---
+        window.__openLocalFileContent = async function({ name, text }) {
+            if ($textarea) {
+                $textarea.value = text;
+                if (APP_STATE.isBlock && typeof window.__setBlockEditorMarkdown === 'function') {
+                    window.__setBlockEditorMarkdown(text);
+                }
+                if (!APP_STATE.isBlock && $previewMd) {
+                    triggerRender($previewMd, text);
+                }
+                if (window.offlineStore) {
+                    const title = name.replace(/\.md$/i, '');
+                    window.offlineStore.saveNote(APP_STATE.path || ('local/' + name), {
+                        title,
+                        content: text,
+                        theme: APP_STATE.theme,
+                        syncStatus: 'draft'
+                    });
+                }
+                window.showToast?.((APP_STATE.lang === 'zh-TW' ? '📂 已開啟本地檔案：' : '📂 Opened local file: ') + name);
+            }
+        };
+        if (window.__pendingLaunchFile) {
+            const pending = window.__pendingLaunchFile;
+            window.__pendingLaunchFile = null;
+            window.__openLocalFileContent(pending);
+        }
+
+        // --- Global Shortcuts: Cmd/Ctrl + S (Save/Export), Cmd/Ctrl + O (Open Local) ---
+        document.addEventListener('keydown', async function(e) {
+            const isMac = (navigator.platform || '').toUpperCase().indexOf('MAC') >= 0;
+            const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey;
+            if (!cmdOrCtrl) return;
+
+            const key = e.key ? e.key.toLowerCase() : '';
+            if (key === 's') {
+                e.preventDefault();
+                if (APP_STATE.isEdit && $textarea) {
+                    const content = $textarea.value;
+                    const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path;
+                    if (window.offlineStore) {
+                        window.offlineStore.saveNote(APP_STATE.path, {
+                            title,
+                            content,
+                            theme: APP_STATE.theme,
+                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            syncStatus: APP_STATE.isPublished ? 'synced' : 'draft'
+                        });
+                    }
+                    if (APP_STATE.isPublished) {
+                        saveCurrentNote({ showBlocked: false });
+                    } else {
+                        window.showToast?.(APP_STATE.lang === 'zh-TW' ? '💾 已儲存至本地快取 (IndexedDB)' : '💾 Saved to local cache (IndexedDB)');
+                    }
+                } else {
+                    const $exportMd = document.getElementById('export-md-btn') || document.getElementById('share-export-md');
+                    if ($exportMd) {
+                        $exportMd.click();
+                    } else if (window.exportMarkdownFile) {
+                        const title = document.title || 'note';
+                        const content = document.getElementById('contents')?.value || document.getElementById('bot-accessible-content')?.textContent || '';
+                        window.exportMarkdownFile(title + '.md', content);
+                        window.showToast?.(APP_STATE.lang === 'zh-TW' ? '📄 已匯出 Markdown 檔案' : '📄 Exported Markdown file');
+                    }
+                }
+            } else if (key === 'o' && APP_STATE.isEdit) {
+                e.preventDefault();
+                if (window.openLocalMarkdownFile) {
+                    const file = await window.openLocalMarkdownFile();
+                    if (file) window.__openLocalFileContent(file);
+                }
+            }
+        });
+
+        // --- Online & Offline Network State Listeners ---
+        window.addEventListener('online', () => {
+            window.showToast?.(APP_STATE.lang === 'zh-TW' ? '🟢 網路已恢復連線' : '🟢 Network reconnected');
+            if (APP_STATE.isEdit && APP_STATE.isPublished && typeof hasUnsavedChanges === 'function' && hasUnsavedChanges()) {
+                saveCurrentNote({ showBlocked: false });
+            }
+        });
+        window.addEventListener('offline', () => {
+            window.showToast?.(APP_STATE.lang === 'zh-TW' ? '⚡ 已切換為離線模式，修改將自動保存在本機' : '⚡ Offline mode: Changes are saved locally');
+        });
     })
 </script>
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
+    <script type="module" src="/js/offline-store.mjs"></script>
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}

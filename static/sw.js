@@ -1,4 +1,4 @@
-const CACHE_NAME = 'david888-wiki-shell-v2'
+const CACHE_NAME = 'david888-wiki-shell-v3'
 const OFFLINE_URL = '/_pwa-offline'
 const PRECACHE_URLS = [
     OFFLINE_URL,
@@ -6,6 +6,9 @@ const PRECACHE_URLS = [
     '/notepad-icon-192.png',
     '/notepad-icon.png',
     '/notepad-icon.svg',
+    '/favicon.ico',
+    '/js/offline-store.mjs',
+    '/js/pwa-install.mjs',
 ]
 
 self.addEventListener('install', event => {

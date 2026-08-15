@@ -74,6 +74,33 @@ export const initPwaInstallPrompt = (documentRef = document, windowRef = window)
     return true
 }
 
+export const initPwaFileHandling = (windowRef = window) => {
+    if (typeof windowRef === 'undefined') return false
+    if ('launchQueue' in windowRef && typeof windowRef.launchQueue?.setConsumer === 'function') {
+        windowRef.launchQueue.setConsumer(async (launchParams) => {
+            if (!launchParams.files || !launchParams.files.length) return
+            try {
+                for (const fileHandle of launchParams.files) {
+                    const file = await fileHandle.getFile()
+                    const text = await file.text()
+                    if (typeof windowRef.__openLocalFileContent === 'function') {
+                        windowRef.__openLocalFileContent({ name: file.name, text, handle: fileHandle })
+                    } else {
+                        // Store pending launch file in window
+                        windowRef.__pendingLaunchFile = { name: file.name, text, handle: fileHandle }
+                    }
+                }
+            } catch (err) {
+                console.warn('PWA File Launch failed:', err)
+            }
+        })
+        return true
+    }
+    return false
+}
+
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     initPwaInstallPrompt()
+    initPwaFileHandling()
 }
+

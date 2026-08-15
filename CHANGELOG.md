@@ -1,5 +1,25 @@
 # Changelog
 
+## [2026-08-16]
+
+### Added
+
+- **📱 PWA 支援、檔案關聯 (File Handling API) 與離線工作區 (Offline Workspace)**
+  - **📂 檔案關聯 (File Handling API)**：
+    - 在 `app.webmanifest` 與 Worker 路由中註冊 `file_handlers`（關聯 `.md`、`.markdown`、`.txt` 檔案）。
+    - 支援透過 PWA Launch Queue 在作業系統（macOS Finder 或 Windows 檔案總管）中右鍵點擊 `.md` 檔案直接使用 `wiki.david888.com` 開啟並載入編輯器。
+  - **⚡ 離線工作區 (Offline Workspace)**：
+    - 全面升級 `/_pwa-offline`，在無網路環境下提供完整的本機 Markdown 編輯器介面。
+    - 支援離線瀏覽與編輯所有本機快取筆記、建立新離線草稿、開啟本機檔案與即時匯出 `.md` 檔案。
+  - **💾 混合本機存儲架構 (`static/js/offline-store.mjs`)**：
+    - **LocalStorage**：同步儲存輕量元數據（`path`、`title`、`updatedAt`、`size`、`theme`、`syncStatus`），提供快速即時索引。
+    - **IndexedDB (`CloudNotepadOfflineDB`)**：非同步儲存完整 Markdown 內文與歷史草稿，徹底突破 LocalStorage 5MB 上限。
+    - **記憶體自動降級 (Memory Fallback)**：於無痕模式或不支援 IndexedDB 的極端環境下自動無縫降級為記憶體快取。
+  - **⌨️ 快捷鍵支援 (`Cmd/Ctrl + S` & `Cmd/Ctrl + O`)**：
+    - `Cmd/Ctrl + S`：於編輯模式即時將文章儲存至本機 IndexedDB 與雲端（若已發布）；於檢視/分享模式觸發 Markdown 檔案下載。
+    - `Cmd/Ctrl + O`：於編輯模式快速喚起系統檔案選擇器，載入本地 Markdown 檔案。
+  - **🌐 連線狀態即時感應**：監聽 `online` 與 `offline` 事件，斷網時自動進入離線本地保護模式，聯網恢復時自動提示並增量同步修改。
+
 ## [2026-08-15]
 
 ### Added
