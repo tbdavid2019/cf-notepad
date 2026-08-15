@@ -4,7 +4,17 @@
 
 ### Added
 
-- **Unified Export & One-Click Copy Matrix (`[ ⭳ 匯出 ▾ ]`) & Dynamic Long Image Engine**
+- **Share 模式「圈選文字浮動工具列（📋 複製 / 🌐 翻譯 / ✨ 詢問 AI / 💬 註解）」與原位小卡 (Inline Popover)**
+  - 將分享頁原本單一的劃線註解按鈕升級為現代化多功能膠囊浮動工具列（`.selection-action-toolbar`），具備毛玻璃磨砂質感、高對比陰影與流暢彈出動畫。
+  - **📋 複製 (Copy)**：一鍵複製選取文字至剪貼簿並彈出 Toast 提示。
+  - **🌐 翻譯 (Translate)**：自動判定中英雙向翻譯（含中文字自動翻為 English，其他翻為繁體中文），無縫呼叫後端 `/api/shares/:shareId/ai-assistant`，並在原位小卡中顯示譯文與一鍵複製譯文。
+  - **✨ 詢問 AI (Ask AI)**：提供 4 組快捷預設晶片（`🔍 解釋概念`、`💡 重點摘要`、`📐 公式推導`、`💻 程式碼解析`）與自訂問題輸入框，即時解答讀者提問。
+  - **💬 註解 (Annotate)**：保留原有強大的段落錨點討論功能，無縫展開側邊註解欄。
+  - **智慧定位與點擊穿透保護**：浮動工具列與 AI 小卡依據選取區塊（`Range.getBoundingClientRect()`）智慧偵測上方/下方視窗可用空間進行自動翻轉與水平居中；支援點擊外部自動收合與 Escape 快速鍵。
+
+- **獨立「複製內容」與「匯出」下拉選單 (`[ 📋 複製 ▾ ]` & `[ ⭳ 匯出 ▾ ]`)**
+  - 將原本塞在匯出選單中的「整篇內容複製」獨立為專屬的 **`[ 📋 複製 ▾ ]`** 下拉選單（富文字、純 Markdown、Notion、Jira/Confluence、飛書、長圖）。
+  - **`[ ⭳ 匯出 ▾ ]`** 專注於檔案下載與列印（長圖 .png、Markdown .md、離線 HTML .html、另存 PDF / 列印）。
   - Consolidated export, document copying, and print controls in Edit and Share modes into a single, cohesive **`[ ⭳ 匯出 ▾ ]`** dropdown menu.
   - **長圖導出 (.png)**: Integrated dynamic on-demand loading of `html2canvas` in an isolated rendering sandbox with 2x Retina pixel ratio for full-height, unclipped image exports of Markdown and mathematical equations.
   - **複製圖片 (Copy Image)**: One-click copy of the rendered 2x long image directly to system clipboard (`image/png`).

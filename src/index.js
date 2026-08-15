@@ -1241,6 +1241,101 @@ router.post('/api/shares/:shareId/annotations/:threadId/messages', async request
     }
 })
 
+router.post('/api/shares/:shareId/ai-assistant', async (request, { env }) => {
+    const shareId = decodeURIComponent(request.params.shareId)
+    const path = await env.SHARE.get(shareId)
+    if (!path) {
+        return returnJSON(404, 'Share not found', { status: 404 })
+    }
+    const { metadata } = await queryNote(path)
+    if (!metadata || metadata.share !== true) {
+        return returnJSON(404, 'Share not found or expired', { status: 404 })
+    }
+    if (metadata.vpw) {
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+        const { valid, role } = await checkAuth(cookie, path)
+        if (!valid || (role !== 'view' && role !== 'edit')) {
+            return returnJSON(10002, 'Password authentication required', { status: 401 })
+        }
+    }
+
+    if (!env.AI) {
+        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
+    }
+
+    let json
+    try {
+        json = await request.json()
+    } catch (e) {
+        return returnJSON(40001, 'Invalid JSON body', { status: 400 })
+    }
+
+    const { text, mode, instruction, targetLanguage } = json
+    if (!text || typeof text !== 'string') {
+        return returnJSON(40002, 'Text content is required', { status: 400 })
+    }
+
+    const normalizedText = text.replace(/\u0000/g, '').trim().slice(0, 4000)
+    const userInstruction = typeof instruction === 'string' ? instruction.replace(/\u0000/g, '').trim().slice(0, 500) : ''
+
+    if (mode === 'translate') {
+        const translationTargetLanguage = normalizeTranslationTargetLanguage(targetLanguage) || 'Traditional Chinese'
+        const model = '@cf/openai/gpt-oss-120b'
+        const messages = [
+            {
+                role: 'system',
+                content: `You are a professional, highly accurate translator. Translate the provided text into ${translationTargetLanguage}. Output ONLY the direct translated text. Do not add explanations, conversational comments, or surrounding quotes.`
+            },
+            {
+                role: 'user',
+                content: normalizedText
+            }
+        ]
+        try {
+            const aiResponse = await runAiWithTimeout(env.AI, model, {
+                messages,
+                reasoning_effort: 'low',
+                max_completion_tokens: 4096,
+            }, 60000)
+            const resultText = extractAiText(aiResponse)
+            if (resultText) {
+                return returnJSON(0, { result: resultText, mode: 'translate', modelUsed: model })
+            }
+            return returnJSON(50003, 'Workers AI returned an empty response')
+        } catch (error) {
+            console.error('Reader AI Translate Error:', error)
+            return returnJSON(50003, `Translation failed: ${error.message}`)
+        }
+    } else if (mode === 'ask' || mode === 'explain') {
+        const model = '@cf/openai/gpt-oss-120b'
+        const systemPrompt = 'You are a knowledgeable and clear AI reading assistant for a knowledge base and note system. Help the reader understand the selected text, equation, code snippet, or concepts. Explain clearly and concisely in Traditional Chinese (繁體中文) using clean Markdown. If formulas are involved, format them using KaTeX ($...$ or $$...$$).'
+        const prompt = userInstruction
+            ? `【讀者問題】：${userInstruction}\n\n【選取的內容片段】：\n${normalizedText}`
+            : `請詳細解釋以下選取的內容或公式的核心概念與意義：\n\n${normalizedText}`
+        const messages = [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: prompt }
+        ]
+        try {
+            const aiResponse = await runAiWithTimeout(env.AI, model, {
+                messages,
+                reasoning_effort: 'low',
+                max_completion_tokens: 4096,
+            }, 60000)
+            const resultText = extractAiText(aiResponse)
+            if (resultText) {
+                return returnJSON(0, { result: resultText, mode: 'ask', modelUsed: model })
+            }
+            return returnJSON(50003, 'Workers AI returned an empty response')
+        } catch (error) {
+            console.error('Reader AI Ask Error:', error)
+            return returnJSON(50003, `AI question failed: ${error.message}`)
+        }
+    } else {
+        return returnJSON(40003, 'Unsupported mode for reader AI assistant', { status: 400 })
+    }
+})
+
 router.get('/icon.svg', iconSvgResponse)
 router.head('/icon.svg', iconSvgResponse)
 

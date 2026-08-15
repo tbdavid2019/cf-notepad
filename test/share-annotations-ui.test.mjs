@@ -161,3 +161,21 @@ test('annotation cards expose a copyable deep link and handle it when the URL ch
         /window\.addEventListener\('hashchange', locateThreadFromLocation\)/,
     )
 })
+
+test('selection floating toolbar and inline AI popover components are rendered with multi-action buttons', () => {
+    const shareJsSource = readFileSync(new URL('../static/js/share-annotations.mjs', import.meta.url), 'utf8')
+    assert.match(shareJsSource, /selection-action-toolbar/)
+    assert.match(shareJsSource, /selection-action-copy/)
+    assert.match(shareJsSource, /selection-action-translate/)
+    assert.match(shareJsSource, /selection-action-ask-ai/)
+    assert.match(shareJsSource, /selection-action-annotate/)
+    assert.match(shareJsSource, /selection-ai-popover/)
+    assert.match(shareJsSource, /selection-ai-presets/)
+    assert.match(shareJsSource, /selection-ai-ask-form/)
+    assert.match(shareJsSource, /selection-ai-copy-result-btn/)
+
+    assert.match(annotationCss, /\.selection-action-toolbar/)
+    assert.match(annotationCss, /\.selection-action-btn/)
+    assert.match(annotationCss, /\.selection-ai-popover/)
+    assert.match(annotationCss, /\.selection-ai-chip/)
+})

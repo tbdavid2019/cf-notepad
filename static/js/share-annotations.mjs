@@ -401,8 +401,22 @@ function initShareAnnotations() {
             copyLink: '複製連結',
             linkCopied: '註解連結已複製。',
             copyError: '無法複製連結，請再試一次。',
-            close: '關閉註解欄',
+            close: '關閉',
             annotate: '註解',
+            copy: '複製',
+            translate: '翻譯',
+            askAi: '詢問 AI',
+            textCopied: '已複製選取文字',
+            translationCopied: '已複製譯文',
+            answerCopied: '已複製回答',
+            aiThinking: 'AI 思考中…',
+            aiError: 'AI 回應失敗，請稍後再試。',
+            askPlaceholder: '提問，例如：這段話在說明什麼？',
+            sendAsk: '發送',
+            chipExplain: '🔍 解釋概念',
+            chipSummary: '💡 重點摘要',
+            chipDerivation: '📐 公式推導',
+            chipCode: '💻 程式碼解析',
             selectionHint: '圈選文章文字即可新增註解。',
             empty: '目前沒有註解。圈選一段文字，開始第一個討論。',
             name: '你的名稱',
@@ -427,8 +441,22 @@ function initShareAnnotations() {
             copyLink: 'Copy link',
             linkCopied: 'Annotation link copied.',
             copyError: 'The annotation link could not be copied. Try again.',
-            close: 'Close annotations',
+            close: 'Close',
             annotate: 'Annotate',
+            copy: 'Copy',
+            translate: 'Translate',
+            askAi: 'Ask AI',
+            textCopied: 'Selected text copied',
+            translationCopied: 'Translation copied',
+            answerCopied: 'Answer copied',
+            aiThinking: 'AI thinking…',
+            aiError: 'AI request failed. Please try again.',
+            askPlaceholder: 'Ask, e.g. What does this mean?',
+            sendAsk: 'Send',
+            chipExplain: '🔍 Explain',
+            chipSummary: '💡 Summary',
+            chipDerivation: '📐 Math derivation',
+            chipCode: '💻 Code analysis',
             selectionHint: 'Select article text to start an annotation.',
             empty: 'No annotations yet. Select text to start the first discussion.',
             name: 'Your name',
@@ -438,13 +466,13 @@ function initShareAnnotations() {
             reply: 'Reply',
             sendReply: 'Post reply',
             detached: 'Original text removed',
-            locate: 'Locate in article',
+            locate: 'Locate original',
             loading: 'Loading annotations…',
-            loadError: 'Annotations could not be loaded. Refresh and try again.',
-            saveError: 'Your comment was not posted. Your text is preserved; try again.',
-            stale: 'The article changed. Select the text again.',
+            loadError: 'Failed to load annotations. Refresh and try again.',
+            saveError: 'Failed to post comment. Your text was preserved.',
+            stale: 'Article updated. Please reselect text.',
             quoted: 'Selected text',
-            messages: 'messages',
+            messages: 'comments',
         }
 
     const state = {
@@ -516,12 +544,69 @@ function initShareAnnotations() {
     const railCount = createElement(document, 'span', 'annotation-rail-count', '0')
     railButton.append(railIcon, railCount)
 
-    const selectionButton = createElement(document, 'button', 'annotation-selection-button', copy.annotate)
+    const selectionToolbar = createElement(document, 'div', 'selection-action-toolbar')
+    selectionToolbar.hidden = true
+
+    const copyBtn = createElement(document, 'button', 'selection-action-btn selection-action-copy')
+    copyBtn.type = 'button'
+    copyBtn.innerHTML = `<span class="selection-action-icon" aria-hidden="true">📋</span><span>${copy.copy}</span>`
+    copyBtn.title = copy.copy
+
+    const translateBtn = createElement(document, 'button', 'selection-action-btn selection-action-translate')
+    translateBtn.type = 'button'
+    translateBtn.innerHTML = `<span class="selection-action-icon" aria-hidden="true">🌐</span><span>${copy.translate}</span>`
+    translateBtn.title = copy.translate
+
+    const askAiBtn = createElement(document, 'button', 'selection-action-btn selection-action-ask-ai')
+    askAiBtn.type = 'button'
+    askAiBtn.innerHTML = `<span class="selection-action-icon" aria-hidden="true">✨</span><span>${copy.askAi}</span>`
+    askAiBtn.title = copy.askAi
+
+    const selectionButton = createElement(document, 'button', 'annotation-selection-button selection-action-btn selection-action-annotate')
     selectionButton.type = 'button'
-    selectionButton.hidden = true
+    selectionButton.innerHTML = `<span class="selection-action-icon" aria-hidden="true">💬</span><span>${copy.annotate}</span>`
+    selectionButton.title = copy.annotate
+
+    selectionToolbar.append(copyBtn, translateBtn, askAiBtn, selectionButton)
+
+    const aiPopover = createElement(document, 'div', 'selection-ai-popover')
+    aiPopover.hidden = true
+    aiPopover.innerHTML = `
+        <div class="selection-ai-popover-header">
+            <div class="selection-ai-popover-title">
+                <span class="selection-ai-title-icon" aria-hidden="true">✨</span>
+                <span class="selection-ai-title-text">AI 助手</span>
+            </div>
+            <button type="button" class="selection-ai-close-btn" aria-label="${copy.close}">✕</button>
+        </div>
+        <div class="selection-ai-popover-body">
+            <div class="selection-ai-loading" style="display:none;">
+                <div class="selection-ai-spinner"></div>
+                <span class="selection-ai-loading-text">${copy.aiThinking}</span>
+            </div>
+            <div class="selection-ai-result-view" style="display:none;">
+                <div class="selection-ai-result-content"></div>
+                <div class="selection-ai-result-actions">
+                    <button type="button" class="selection-ai-action-btn selection-ai-copy-result-btn">📋 ${copy.copy}</button>
+                </div>
+            </div>
+            <div class="selection-ai-ask-view" style="display:none;">
+                <div class="selection-ai-presets">
+                    <button type="button" class="selection-ai-chip" data-prompt="請用通俗易懂的語言詳細解釋這段內容的核心概念與背景">${copy.chipExplain}</button>
+                    <button type="button" class="selection-ai-chip" data-prompt="請提煉這段內容的核心要點摘要">${copy.chipSummary}</button>
+                    <button type="button" class="selection-ai-chip" data-prompt="請詳細推導並說明其中的公式與數學邏輯">${copy.chipDerivation}</button>
+                    <button type="button" class="selection-ai-chip" data-prompt="請詳細解釋這段程式碼的邏輯、運作機制與潛在邊界情況">${copy.chipCode}</button>
+                </div>
+                <form class="selection-ai-ask-form">
+                    <input type="text" class="selection-ai-ask-input" placeholder="${copy.askPlaceholder}" required />
+                    <button type="submit" class="selection-ai-ask-submit">${copy.sendAsk}</button>
+                </form>
+            </div>
+        </div>
+    `
 
     panel.append(header, intro, composer, status, threadList)
-    appRoot.append(railButton, selectionButton, panel)
+    appRoot.append(railButton, selectionToolbar, aiPopover, panel)
 
     try {
         authorInput.value = window.localStorage.getItem(AUTHOR_STORAGE_KEY) || ''
@@ -751,25 +836,205 @@ function initShareAnnotations() {
         }
     }
 
+    const positionAiPopover = () => {
+        if (!state.lastSelectionRect) return
+        const rect = state.lastSelectionRect
+        const popoverWidth = Math.min(400, window.innerWidth - 24)
+        const left = Math.min(window.innerWidth - popoverWidth / 2 - 12, Math.max(popoverWidth / 2 + 12, rect.left + rect.width / 2))
+        aiPopover.style.left = `${left}px`
+
+        const spaceBelow = window.innerHeight - rect.bottom
+        if (spaceBelow > 280 || rect.top < 280) {
+            aiPopover.style.top = `${Math.min(window.innerHeight - 320, rect.bottom + 10)}px`
+            aiPopover.style.bottom = 'auto'
+        } else {
+            aiPopover.style.top = `${Math.max(10, rect.top - 300)}px`
+            aiPopover.style.bottom = 'auto'
+        }
+    }
+
+    const openAiPopover = ({ title, showLoading = false, showAskView = false }) => {
+        const titleEl = aiPopover.querySelector('.selection-ai-title-text')
+        const loading = aiPopover.querySelector('.selection-ai-loading')
+        const resultView = aiPopover.querySelector('.selection-ai-result-view')
+        const askView = aiPopover.querySelector('.selection-ai-ask-view')
+
+        if (titleEl && title) titleEl.textContent = title
+        loading.style.display = showLoading ? 'flex' : 'none'
+        resultView.style.display = 'none'
+        askView.style.display = showAskView ? 'block' : 'none'
+
+        selectionToolbar.hidden = true
+        aiPopover.hidden = false
+        positionAiPopover()
+
+        if (showAskView) {
+            const input = aiPopover.querySelector('.selection-ai-ask-input')
+            if (input) {
+                input.value = ''
+                window.setTimeout(() => input.focus(), 50)
+            }
+        }
+    }
+
+    const showAiResult = (text, copySuccessMsg) => {
+        const loading = aiPopover.querySelector('.selection-ai-loading')
+        const resultView = aiPopover.querySelector('.selection-ai-result-view')
+        const resultContent = aiPopover.querySelector('.selection-ai-result-content')
+        const copyResultBtn = aiPopover.querySelector('.selection-ai-copy-result-btn')
+        const askView = aiPopover.querySelector('.selection-ai-ask-view')
+
+        loading.style.display = 'none'
+        askView.style.display = 'none'
+        resultView.style.display = 'block'
+        resultContent.textContent = text
+        positionAiPopover()
+
+        copyResultBtn.onclick = async () => {
+            try {
+                await navigator.clipboard.writeText(text)
+                if (typeof window.showToast === 'function') {
+                    window.showToast(copySuccessMsg || copy.answerCopied)
+                }
+            } catch {}
+        }
+    }
+
+    const showAiError = errorMessage => {
+        const loading = aiPopover.querySelector('.selection-ai-loading')
+        const resultView = aiPopover.querySelector('.selection-ai-result-view')
+        const resultContent = aiPopover.querySelector('.selection-ai-result-content')
+        const askView = aiPopover.querySelector('.selection-ai-ask-view')
+
+        loading.style.display = 'none'
+        askView.style.display = 'none'
+        resultView.style.display = 'block'
+        resultContent.innerHTML = `<span style="color:#d9534f;">⚠️ ${errorMessage}</span>`
+        positionAiPopover()
+    }
+
+    const closeAiPopover = () => {
+        aiPopover.hidden = true
+    }
+
+    const executeAiRequest = async ({ mode, instruction, targetLanguage, copySuccessMsg }) => {
+        if (!state.pendingAnchor?.exact) return
+        const text = state.pendingAnchor.exact
+        try {
+            const data = await requestJson(
+                `/api/shares/${encodeURIComponent(shareId)}/ai-assistant`,
+                {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        text,
+                        mode,
+                        instruction,
+                        targetLanguage,
+                    }),
+                },
+            )
+            if (data.code === 0 && data.data?.result) {
+                showAiResult(data.data.result, copySuccessMsg)
+            } else {
+                showAiError(data.message || copy.aiError)
+            }
+        } catch (err) {
+            showAiError(err.message || copy.aiError)
+        }
+    }
+
     const captureSelection = () => {
         const selection = window.getSelection()
         if (!selection || selection.rangeCount !== 1 || selection.isCollapsed || !state.currentRevision) {
-            selectionButton.hidden = true
+            selectionToolbar.hidden = true
             return
         }
 
         const range = selection.getRangeAt(0)
         const anchor = buildSelectionAnchor(articleRoot, range, state.currentRevision)
         if (!anchor) {
-            selectionButton.hidden = true
+            selectionToolbar.hidden = true
             return
         }
 
         state.pendingAnchor = anchor
         const rect = range.getBoundingClientRect()
-        selectionButton.style.left = `${Math.min(window.innerWidth - 76, Math.max(8, rect.left + rect.width / 2))}px`
-        selectionButton.style.top = `${Math.min(window.innerHeight - 48, Math.max(8, rect.bottom + 10))}px`
-        selectionButton.hidden = false
+        state.lastSelectionRect = rect
+
+        const toolbarWidth = 260
+        const left = Math.min(window.innerWidth - toolbarWidth / 2 - 12, Math.max(toolbarWidth / 2 + 12, rect.left + rect.width / 2))
+        selectionToolbar.style.left = `${left}px`
+
+        if (rect.top > 54) {
+            selectionToolbar.style.top = `${Math.max(8, rect.top - 46)}px`
+        } else {
+            selectionToolbar.style.top = `${Math.min(window.innerHeight - 48, rect.bottom + 8)}px`
+        }
+        selectionToolbar.hidden = false
+    }
+
+    copyBtn.addEventListener('click', async () => {
+        if (!state.pendingAnchor?.exact) return
+        try {
+            await navigator.clipboard.writeText(state.pendingAnchor.exact)
+            if (typeof window.showToast === 'function') {
+                window.showToast(copy.textCopied)
+            }
+        } catch {}
+        selectionToolbar.hidden = true
+    })
+
+    translateBtn.addEventListener('click', () => {
+        if (!state.pendingAnchor?.exact) return
+        const text = state.pendingAnchor.exact
+        const hasChinese = /[\u3400-\u9fff]/.test(text)
+        const targetLanguage = hasChinese ? 'English' : 'Traditional Chinese'
+        const title = `${copy.translate} (${hasChinese ? '➔ English' : '➔ 繁體中文'})`
+        openAiPopover({ title, showLoading: true })
+        executeAiRequest({
+            mode: 'translate',
+            targetLanguage,
+            copySuccessMsg: copy.translationCopied,
+        })
+    })
+
+    askAiBtn.addEventListener('click', () => {
+        if (!state.pendingAnchor?.exact) return
+        openAiPopover({ title: copy.askAi, showAskView: true })
+    })
+
+    const closeAiBtn = aiPopover.querySelector('.selection-ai-close-btn')
+    if (closeAiBtn) closeAiBtn.addEventListener('click', closeAiPopover)
+
+    const presetChips = aiPopover.querySelectorAll('.selection-ai-chip')
+    for (const chip of presetChips) {
+        chip.addEventListener('click', () => {
+            const prompt = chip.dataset.prompt
+            const chipTitle = chip.textContent.trim()
+            openAiPopover({ title: `${copy.askAi} · ${chipTitle}`, showLoading: true })
+            executeAiRequest({
+                mode: 'ask',
+                instruction: prompt,
+                copySuccessMsg: copy.answerCopied,
+            })
+        })
+    }
+
+    const askForm = aiPopover.querySelector('.selection-ai-ask-form')
+    const askInput = aiPopover.querySelector('.selection-ai-ask-input')
+    if (askForm && askInput) {
+        askForm.addEventListener('submit', event => {
+            event.preventDefault()
+            const question = askInput.value.trim()
+            if (!question) return
+            openAiPopover({ title: `${copy.askAi} · ${question.slice(0, 16)}...`, showLoading: true })
+            executeAiRequest({
+                mode: 'ask',
+                instruction: question,
+                copySuccessMsg: copy.answerCopied,
+            })
+        })
     }
 
     railButton.addEventListener('click', () => {
@@ -779,7 +1044,11 @@ function initShareAnnotations() {
     cancelButton.addEventListener('click', hideComposer)
     selectionButton.addEventListener('pointerdown', event => event.preventDefault())
     selectionButton.addEventListener('click', () => {
-        if (state.pendingAnchor) showComposer(state.pendingAnchor)
+        if (state.pendingAnchor) {
+            showComposer(state.pendingAnchor)
+            selectionToolbar.hidden = true
+            aiPopover.hidden = true
+        }
     })
 
     composer.addEventListener('submit', async event => {
@@ -833,6 +1102,26 @@ function initShareAnnotations() {
         }, 120)
     })
     observer.observe(articleRoot, { childList: true, subtree: true })
+
+    document.addEventListener('pointerdown', event => {
+        if (selectionToolbar.hidden && aiPopover.hidden) return
+        if (selectionToolbar.contains(event.target) || aiPopover.contains(event.target) || panel.contains(event.target)) {
+            return
+        }
+        selectionToolbar.hidden = true
+        aiPopover.hidden = true
+    })
+
+    document.addEventListener('keydown', event => {
+        if (event.key === 'Escape') {
+            if (!aiPopover.hidden) {
+                aiPopover.hidden = true
+            }
+            if (!selectionToolbar.hidden) {
+                selectionToolbar.hidden = true
+            }
+        }
+    })
 
     loadThreads()
 }
