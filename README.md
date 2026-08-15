@@ -294,39 +294,55 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 - **Edit Lock vs View Lock**: Separate Salted MD5 password controls for editing permissions versus reading permissions.
 - **D1 Snapshot History**: Cloudflare D1 automatically backs up content (5-minute cooldown, retains 10 snapshots) for preview and restoration.
-- **Slide Presentation Mode**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations (supports two-column slides and click reveals).
-- **Paragraph Annotations &amp; Deep Links**: Highlight text on Share pages to start inline discussions, with copyable deep links that auto-scroll and highlight cited passages.
-- **PDF Export &amp; Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
-- **Installable PWA &amp; Offline Guard**: Install as a standalone PWA app on Android, Mac, or desktop, with a clean offline fallback page.
+- **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
+- **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`).
+- **Stateless Markdown Processing Utilities**:
+  - `POST /api/markdown/render`: Markdown to HTML with 20 CSS theme choices.
+  - `POST /api/markdown/parse`: HTML / Web URL to clean Markdown.
+  - `POST /api/markdown/extract`: Extract plain text, heading hierarchy, links, and word/reading-time statistics.
+  - `POST /api/markdown/lint`: Validate and auto-fix unclosed code fences, missing heading spaces, etc.
+- **PDF Export & Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
+- **PWA App, File Handling & Offline Workspace**:
+  - **OS File Association (File Handling API)**: Right-click `.md` files in macOS Finder or Windows Explorer to open directly in `wiki.david888.com`.
+  - **Offline Workspace (`/_pwa-offline`)**: Work completely offline with local draft creation, caching, and export.
+  - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badge (`🟢 Saved locally`, `☁️ Cloud synced`).
 
 ![Access Control Diagram](image-2.png)
 
 ---
 
-## 💾 Storage Inventory
+## 💾 Local-First Storage Architecture & Pluggable Drivers
+
+1. **0ms Local Saves (IndexedDB)**: Keystrokes are immediately saved to client-side **IndexedDB (`CloudNotepadOfflineDB`)** with status `🟢 Saved locally`, providing desktop-grade fluid writing without network latency.
+2. **Smart Cloud Sync**: Automatically syncs in the background upon 3.5s inactivity pause, periodic intervals, or page close (`visibilitychange` / `keepalive` / `sendBeacon`), **saving >90% of cloud write requests** and eliminating KV write limit concerns.
+3. **Pluggable Backend Storage Drivers (`SCN_STORAGE_DRIVER`)**:
+   - `auto` (Default / Hybrid): Reads D1 first with seamless fallback to legacy KV notes; dual-writes to migrate edited KV notes to D1.
+   - `kv`: Pure Cloudflare KV storage (zero database dependency).
+   - `d1`: Pure Cloudflare D1 storage (SQLite with 100,000 free writes/day).
 
 ### Server / Cloudflare
 
-
 | Storage           | Data                                                                                                          | Description                                                              |
 | ----------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| `NOTES` KV        | Markdown content &amp; metadata (`theme`, `width`, `shareFont`, `publicIndex`, `autosave`, `pw`/`vpw` hashes) | Unpublished notes are browser-only; saves initial theme on note creation |
+| `NOTES` KV        | Markdown content & metadata (`theme`, `width`, `shareFont`, `publicIndex`, `autosave`, `pw`/`vpw` hashes) | Unpublished notes are browser-only; saves initial theme on note creation |
 | `SHARE` KV        | Share slug to note path mapping                                                                               | Does not store article body                                              |
+| D1 `notes`        | (Optional) Full note content & JSON metadata                                                                  | Created via `schema/notes_d1.sql`, provides 100,000 writes/day           |
+| D1 `shares`       | (Optional) Share slug to path mapping table                                                                   | Created via `schema/notes_d1.sql`                                        |
 | D1 `note_history` | Historical version snapshots (path, text, created time)                                                       | Retains latest 10 versions                                               |
 | D1 `note_stats`   | View count, last view time, anonymous device UUID hash                                                        | Stores SHA-256 hash only                                                 |
-| D1 `annotation_*` | Paragraph anchors, source quotes, comments &amp; replies                                                      | Retains discussion threads after text edits                              |
+| D1 `annotation_*` | Paragraph anchors, source quotes, comments & replies                                                          | Retains discussion threads after text edits                              |
 | `IMAGES` R2       | Image upload bucket                                                                                           | Stores public image URLs                                                 |
 
-
-### Browser (localStorage / Cookie)
-
+### Browser (localStorage / IndexedDB / Cookie)
 
 | Type         | Key                                                                                  | Description                                                                          |
 | ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | Complete Markdown note content, offline drafts & snapshots (0ms local-first storage) |
+| localStorage | `cf-notepad:notes-metadata`                                                          | Fast synchronous note metadata list (path, title, updatedAt, size, syncStatus)        |
 | localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | Mirror of layout and visual preferences                                              |
 | localStorage | `cf-notepad:publish-preferences`                                                     | Last confirmed Publish, Autosave, and Public Index choices; all enabled on first use |
-| localStorage | `cf-notepad:share-history:*` / `annotation-author`                                   | Local history of 20 recent shares &amp; author name                                  |
-| Cookie       | `auth` / `cn_device` / `admin_session`                                               | Path-scoped JWT, anonymous device hash &amp; admin session                           |
+| localStorage | `cf-notepad:share-history:*` / `annotation-author`                                   | Local history of 20 recent shares & author name                                  |
+| Cookie       | `auth` / `cn_device` / `admin_session`                                               | Path-scoped JWT, anonymous device hash & admin session                           |
 
 
 ---
