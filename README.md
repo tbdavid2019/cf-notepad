@@ -45,9 +45,15 @@
 
 ### 🤖 1. AI 智慧寫作特助與 Agent 生態
 
-- **🎙️ 音訊匯入與語音轉逐字稿 (Groq whisper-large-v3 主力 + 區分發言者)**：點擊左下角「＋ 新增」選單，可直接上傳錄音檔（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`）。由 **Groq `whisper-large-v3`** 極速語音轉錄（支援 `whisper-large-v3-turbo` 與 Workers AI 多層級備援），支援兩種模式：
-  1. **🎙️ 匯入音訊（逐字稿）**（預設推薦）：100% 原音忠實轉錄，**零幻覺、零摘要、無額外腦補**，極速且純淨。
-  2. **✨ 匯入音訊（區分發言者）**（可選模式）：使用者可主動點選啟用，於發言輪替處標註發言者角色。
+- **🎙️ 音訊匯入與語音轉逐字稿 (Groq whisper-large-v3 主力 + 多層級備援)**：點擊左下角「＋ 新增」選單，位於匯入區塊最上方，可直接上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
+  - **極速多層級 STT 引擎**：
+    1. **主力模型 (Primary)**：**Groq `whisper-large-v3`**（超高速推論，秒級完成長篇語音轉錄）。
+    2. **第一備援 (Fallback 1)**：**Groq `whisper-large-v3-turbo`**。
+    3. **第二備援 (Fallback 2)**：Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`**。
+    4. **第三備援 (Fallback 3)**：Cloudflare Workers AI **`@cf/openai/whisper`**。
+  - **雙模式自主切換**：
+    1. **🎙️ 匯入音訊（逐字稿）**（**推薦預設**）：直接輸出 100% 原音忠實逐字稿，**零幻覺、零額外摘要、無多餘大綱腦補**，極速且純淨。
+    2. **✨ 匯入音訊（區分發言者）**（**可選模式**）：採用嚴格逐字限制（Strict Verbatim）的 LLM 分析發言輪替，標註發言者角色標籤。
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
@@ -202,12 +208,17 @@ wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
 
 透過 `wrangler secret put <變數名稱>` 或網頁後台設定：
 
+- `GROQ_API_KEY`: Groq API 金鑰（**推薦設定**，驅動極速 STT 語音轉逐字稿 `whisper-large-v3`，可於 [Groq Console](https://console.groq.com/) 免費取得）
 - `SCN_SALT`: 加鹽 UUID
 - `SCN_SECRET`: JWT 密鑰
 - `SCN_ADMIN_PATH`: 超級管理員後台路徑 (如 `/admin333`)
 - `SCN_ADMIN_PW`: 管理員密碼
 - `SCN_SLUG_LENGTH`: 隨機網址長度 (預設 `4`)
 - `SCN_ENABLE_NOTE_HISTORY`: 設為 `"1"` 啟用 D1 版本紀錄
+
+```bash
+wrangler secret put GROQ_API_KEY
+```
 
 ### 5. 執行部署
 
@@ -236,6 +247,7 @@ npm run deploy
 - `POST /api/markdown/parse`：傳入 HTML 字串或網頁 URL 轉換為乾淨 Markdown。
 - `POST /api/markdown/extract`：提取 Markdown 純文字、文章標題、標題大綱清單、超連結與字數統計。
 - `POST /api/markdown/lint`：檢查 Markdown 語法問題（未閉合程式碼區塊、缺少空白標題、損毀連結、未加引號之 Mermaid 節點）並輸出修復後的 Markdown。
+- `POST /api/audio/transcribe`：語音轉文字 API，支援 `multipart/form-data`、二進位音訊串流或 Base64 JSON，預設輸出純逐字稿，可傳入 `?diarize=1` 進行發言者角色分離。
 
 ### 💬 劃線註解與討論串 API
 

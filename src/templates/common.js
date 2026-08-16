@@ -407,17 +407,17 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 ${!isBlockEditor ? `
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
-                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-audio-diarize-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioDiarizeMarkdown}</span></button>
+                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
                                 ` : ''}
                                 ${isBlockEditor ? `
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
-                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
                                 <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioBlock}</span></button>
                                 <button type="button" id="dropdown-import-audio-diarize-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioDiarizeBlock}</span></button>
+                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
                                 ` : ''}
                                 <div class="dropdown-divider"></div>

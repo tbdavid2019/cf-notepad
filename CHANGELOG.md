@@ -8,12 +8,14 @@
     2. **第一備援**：Groq `whisper-large-v3-turbo`。
     3. **第二備援**：Cloudflare Workers AI `@cf/openai/whisper-large-v3-turbo`。
     4. **第三備援**：Cloudflare Workers AI `@cf/openai/whisper`。
-  - **純淨無干擾的 UI 選項**：
+  - **純淨無干擾的 UI 選項與直覺佈局**：
+    - 將音訊匯入按鈕移至「＋ 新增」選單內「匯入內容」區塊的最上方，優先展示。
     - 去除「Whisper」或「AI」等技術贅字與雜訊，提供乾淨純粹的介面：
       - **`🎙️ 匯入音訊（逐字稿）`**（預設推薦）：100% 原音忠實轉錄，無任何加工或幻覺。
       - **`✨ 匯入音訊（區分發言者）`**（可選）：嚴格逐字對齊，標註發言者輪替。
   - **多格式音訊支援**：支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
   - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，支援以 `?diarize=1` 參數開啟發言者分離。
+  - **金鑰配置與安全隔離**：支援透過 `wrangler secret put GROQ_API_KEY` 設定加密金鑰，享有每分鐘數百次免費超高速轉錄額度。
   - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供即時 Toast 轉錄進度與完成提示。
 
 - **📱 PWA 常駐主動安裝按鈕與跨平台體驗**
