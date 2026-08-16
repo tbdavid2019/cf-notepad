@@ -45,6 +45,7 @@
 
 ### 🤖 1. AI 智慧寫作特助與 Agent 生態
 
+- **🎙️ 音訊匯入與 AI 發言者區分逐字稿 (Whisper + GPT-OSS 120B)**：點擊左下角「＋ 新增」選單中的「🎙️ 匯入音訊轉逐字稿」或底欄匯入按鈕，可直接上傳錄音檔（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`）。由 Cloudflare Workers AI 原生 **`@cf/openai/whisper-large-v3-turbo`** 極速語音轉錄，並由旗艦 **`@cf/openai/gpt-oss-120b`** 大模型自動進行 Speaker Diarization，智慧識別「**🎤 主持人**」與「**👤 來賓 / 發言者**」，並產生核心重點摘要與結構化對話 Markdown！
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
@@ -251,6 +252,7 @@ npm run deploy
 
 ### 🤖 1. AI Writing Assistant &amp; Agent Ecosystem
 
+- **🎙️ Audio Transcription &amp; AI Speaker Diarization (Whisper + GPT-OSS 120B)**: Upload audio files (`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`) via the `+ New` menu or Footer Import button. Employs Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`** for ultra-fast multi-language ASR and flagship **`@cf/openai/gpt-oss-120b`** for intelligent Speaker Diarization to distinguish between **Host**, **Guest**, and **Speakers** with structured dialogue Markdown and executive summaries!
 - **AI Formatting (AI Format)**: Workers AI (`gpt-oss-20b`) restructures Markdown headings, lists, and whitespace while preserving original language and text. Supports selection-only formatting.
 - **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
 - **AI Translation &amp; Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.

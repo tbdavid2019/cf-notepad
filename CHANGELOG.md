@@ -2,10 +2,19 @@
 
 ## [2026-08-16]
 
-- **🎙️ 音訊匯入與 AI 逐字稿轉錄 (`@cf/openai/whisper-large-v3-turbo`)**
-  - 擴充檔案匯入功能（底欄匯入按鈕與檔案選擇器），支援選取常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`）。
-  - 新增 `POST /api/audio/transcribe` 與 `POST /:path/transcribe` API 端點，透過 Cloudflare Workers AI 高效能 `@cf/openai/whisper-large-v3-turbo` 語音識別模型，自動將音訊轉錄為結構化 Markdown 逐字稿。
-  - 支援無縫匯入現有編輯器（支援「取代全文」或「插入游標處」），並提供多語系即時 Toast 轉錄進度回饋。
+- **🎙️ 音訊匯入、AI 逐字稿轉錄與說話者角色分離 (`@cf/openai/whisper-large-v3-turbo` + `@cf/openai/gpt-oss-120b`)**
+  - **多格式音訊支援**：擴充底欄匯入與左下角 `+` 新增選單（專屬「🎙️ 匯入音訊轉逐字稿（Whisper AI）」入口），支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
+  - **二段式 AI 處理管線 (Two-Stage Pipeline)**：
+    1. **語音轉文字 (ASR)**：使用 Cloudflare Workers AI 原生 `@cf/openai/whisper-large-v3-turbo`（具備 `@cf/openai/whisper` 自動容錯降級），支援直接傳遞 TypedArray 二進位 (`Uint8Array`) 進行極速語音辨識。
+    2. **發言者區分與角色分離 (Speaker Diarization)**：利用 120B 大參數 LLM (`@cf/openai/gpt-oss-120b`，具備 `llama-3.3-70b-instruct` 與 `gpt-oss-20b` 備援) 分析語境與問答模式，自動區分並標註 `**🎤 主持人**` 與 `**👤 來賓 / 發言者**`，並於頂部自動產生核心摘要。
+    3. **單人演講自動適配**：若識別為單人演說或課程，自動整理為邏輯大綱標題與重點條列，避免強制對話拆分。
+  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，並支援 `?diarize=1` 參數。
+  - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供多語系即時 Toast 轉錄進度與完成提示。
+
+- **📱 PWA 常駐主動安裝按鈕與跨平台體驗**
+  - 於右下角 GitHub 連結旁新增常駐「安裝 App」按鈕（`#pwa-install-manual-btn`）。
+  - 移除桌面與手機端隨機自動彈出的提示橫幅，改為主動安裝機制。
+  - 在 HTML `<head>` 最前端即時捕獲 `beforeinstallprompt` 事件，並支援 macOS Safari / iOS Safari 精確 Toast 指引，提升 Service Worker 快取版本至 `v4`。
 
 - **⚡ Local-First 本地優先儲存架構與智慧雲端同步**
   - **0ms 本地即時存檔**：編輯打字時以 300ms 防抖即時寫入客戶端 **IndexedDB (`CloudNotepadOfflineDB`)**，狀態顯示 `🟢 本機已存`，享受原生桌面級流暢體驗。
