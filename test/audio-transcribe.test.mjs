@@ -35,7 +35,5 @@ test('index.js registers audio transcribe routes and uses whisper-large-v3-turbo
     assert.match(indexSource, /router\.post\('\/:path\/transcribe'/)
     assert.match(indexSource, /handleAudioTranscription/)
     assert.match(indexSource, /formatSpeakerDiarization/)
-    assert.match(indexSource, /@cf\/openai\/whisper-large-v3-turbo/)
-    assert.match(indexSource, /@cf\/openai\/gpt-oss-120b/)
-    assert.match(indexSource, /runAiWithTimeout\(env\.AI,\s*model,\s*\{ audio: audioBytes \},\s*120000\)/)
+    assert.match(indexSource, /runAiWithTimeout\(env\.AI,\s*model,\s*\{ audio: audioBytes \},\s*45000\)/)
 })

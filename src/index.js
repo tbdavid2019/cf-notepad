@@ -941,41 +941,34 @@ async function handleAudioTranscription(request, context = {}) {
     let lastError = null
 
     for (const model of modelsToTry) {
-        // 1. Try passing binary Uint8Array in audio property (binary type)
-        try {
-            aiResponse = await runAiWithTimeout(env.AI, model, { audio: audioBytes }, 120000)
-            if (aiResponse?.text) {
-                modelUsed = model
-                break
+        // 1. Try passing binary Uint8Array in audio property (binary type) with retry
+        for (let attempt = 0; attempt < 2; attempt++) {
+            try {
+                aiResponse = await runAiWithTimeout(env.AI, model, { audio: audioBytes }, 45000)
+                if (aiResponse?.text) {
+                    modelUsed = model
+                    break
+                }
+            } catch (err1) {
+                console.warn(`[AI] Whisper ${model} (attempt ${attempt + 1}) with { audio: Uint8Array } failed:`, err1?.message)
+                lastError = err1
+                if (attempt === 0) await new Promise(r => setTimeout(r, 600))
             }
-        } catch (err1) {
-            console.warn(`[AI] Whisper ${model} with { audio: Uint8Array } failed:`, err1?.message)
-            lastError = err1
         }
+        if (aiResponse?.text) break
 
-        // 2. Try passing Array.from(audioBytes) (array of numbers)
+        // 2. Try passing raw Uint8Array / ArrayBuffer directly
         try {
-            aiResponse = await runAiWithTimeout(env.AI, model, { audio: Array.from(audioBytes) }, 120000)
+            aiResponse = await runAiWithTimeout(env.AI, model, audioBytes, 45000)
             if (aiResponse?.text) {
                 modelUsed = model
                 break
             }
         } catch (err2) {
-            console.warn(`[AI] Whisper ${model} with { audio: Array.from } failed:`, err2?.message)
+            console.warn(`[AI] Whisper ${model} with raw audioBytes failed:`, err2?.message)
             lastError = err2
         }
-
-        // 3. Try passing raw Uint8Array directly
-        try {
-            aiResponse = await runAiWithTimeout(env.AI, model, audioBytes, 120000)
-            if (aiResponse?.text) {
-                modelUsed = model
-                break
-            }
-        } catch (err3) {
-            console.warn(`[AI] Whisper ${model} with raw audioBytes failed:`, err3?.message)
-            lastError = err3
-        }
+        if (aiResponse?.text) break
     }
 
     if (!aiResponse || !aiResponse.text) {
