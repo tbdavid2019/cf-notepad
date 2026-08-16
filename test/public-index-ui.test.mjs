@@ -135,7 +135,7 @@ test('footer exposes markdown import export and PDF tools without reusing existi
     assert.match(commonTemplateSource, /footer-view-settings-group/)
     assert.match(baseTemplateSource, /window\.print\(\)/)
     assert.match(baseTemplateSource, /FileReader\(\)/)
-    assert.match(constantSource, /importMarkdown: 'Import Office, PDF or Markdown document'/)
+    assert.match(constantSource, /importMarkdown: 'Import Office, PDF, Audio \(Transcript\) or Markdown'/)
     assert.match(constantSource, /convertingDocument: 'Converting document to Markdown\.\.\.'/)
     assert.match(baseTemplateSource, /@firecrawl\/anydoc-wasm/)
     assert.match(commonTemplateSource, /class="modal import-options-modal"/)

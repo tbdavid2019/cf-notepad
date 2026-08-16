@@ -76,7 +76,8 @@ export const SVG_ICONS = {
     palette: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="13.5" cy="6.5" r=".5" fill="currentColor"></circle><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"></circle><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"></circle><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"></circle><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"></path></svg>`,
     width: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"/><path d="m18 15 3-3-3-3"/><path d="m6 9-3 3 3 3"/></svg>`,
     languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
-    install: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3"></rect><path d="M12 7v8"></path><path d="m8.5 11.5 3.5 3.5 3.5-3.5"></path></svg>`
+    install: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3"></rect><path d="M12 7v8"></path><path d="m8.5 11.5 3.5 3.5 3.5-3.5"></path></svg>`,
+    mic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -407,12 +408,14 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
                                 <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
+                                <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
                                 ` : ''}
                                 ${isBlockEditor ? `
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
                                 <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
+                                <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioBlock}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
                                 ` : ''}
                                 <div class="dropdown-divider"></div>
@@ -420,6 +423,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             </div>
                         </div>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv,audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.mp4,.opus" class="visually-hidden-file-input" aria-hidden="true">
+                        <input id="import-audio-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
                     </div>
                 </div>
             </div>

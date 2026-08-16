@@ -7,8 +7,14 @@ const commonSource = readFileSync(new URL('../src/templates/common.js', import.m
 const baseSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 
-test('import-md-input accepts audio file formats', () => {
+test('import-md-input accepts audio file formats and new menu provides explicit audio import item', () => {
     assert.match(commonSource, /accept="[^"]*audio\/\*[^"]*\.mp3[^"]*\.wav[^"]*\.m4a/)
+    assert.match(commonSource, /id="dropdown-import-audio-btn"/)
+    assert.match(commonSource, /id="import-audio-input"/)
+    assert.ok(SUPPORTED_LANG['zh-TW'].importAudioMarkdown)
+    assert.ok(SUPPORTED_LANG['zh-TW'].importAudioBlock)
+    assert.ok(SUPPORTED_LANG['en-US'].importAudioMarkdown)
+    assert.ok(SUPPORTED_LANG['en-US'].importAudioBlock)
 })
 
 test('base template routes audio imports to AI transcribe endpoint with bilingual messages', () => {
@@ -16,6 +22,8 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.match(baseSource, /\/transcribe/)
     assert.match(baseSource, /transcribingAudio/)
     assert.match(baseSource, /audioTranscribed/)
+    assert.match(baseSource, /const \$dropdownImportAudioBtn = document\.querySelector\('#dropdown-import-audio-btn'\)/)
+    assert.match(baseSource, /const \$importAudioInput = document\.querySelector\('#import-audio-input'\)/)
     assert.ok(SUPPORTED_LANG['zh-TW'].transcribingAudio)
     assert.ok(SUPPORTED_LANG['zh-TW'].audioTranscribed)
     assert.ok(SUPPORTED_LANG['en-US'].transcribingAudio)
