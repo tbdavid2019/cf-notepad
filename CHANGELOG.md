@@ -2,13 +2,19 @@
 
 ## [2026-08-16]
 
-- **🎙️ 音訊匯入、AI 逐字稿轉錄與自主掌控模式 (`@cf/openai/whisper-large-v3-turbo`)**
-  - **多格式音訊支援**：擴充底欄匯入與左下角 `+` 新增選單，支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
-  - **雙模式自主切換與零幻覺防護**：
-    1. **🎙️ 純 Whisper 原始逐字稿（預設推薦）**：直接透過 `@cf/openai/whisper-large-v3-turbo` 進行 100% 原音忠實轉錄，**零幻覺、零額外腦補、無未提及的摘要或虛構議程**，極速且乾淨。
-    2. **🤖 AI 區分發言者（可選模式）**：使用者可主動點選啟用發言者角色分離，採用嚴格逐字限制（Strict Verbatim）的 LLM 管線，僅於發言輪替處標註發言者角色，禁止額外捏造大綱或筆記。
-  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，預設回傳純逐字稿，支援以 `?diarize=1` 參數開啟發言者分離。
-  - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供多語系即時 Toast 轉錄進度與完成提示。
+- **🎙️ 音訊匯入、語音轉逐字稿與 Groq 高速主力管線 (`Groq whisper-large-v3` + `Workers AI Fallback`)**
+  - **極速多層級 STT 引擎**：
+    1. **主力模型**：Groq `whisper-large-v3`（超高速推論、高準確率）。
+    2. **第一備援**：Groq `whisper-large-v3-turbo`。
+    3. **第二備援**：Cloudflare Workers AI `@cf/openai/whisper-large-v3-turbo`。
+    4. **第三備援**：Cloudflare Workers AI `@cf/openai/whisper`。
+  - **純淨無干擾的 UI 選項**：
+    - 去除「Whisper」或「AI」等技術贅字與雜訊，提供乾淨純粹的介面：
+      - **`🎙️ 匯入音訊（逐字稿）`**（預設推薦）：100% 原音忠實轉錄，無任何加工或幻覺。
+      - **`✨ 匯入音訊（區分發言者）`**（可選）：嚴格逐字對齊，標註發言者輪替。
+  - **多格式音訊支援**：支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
+  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，支援以 `?diarize=1` 參數開啟發言者分離。
+  - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供即時 Toast 轉錄進度與完成提示。
 
 - **📱 PWA 常駐主動安裝按鈕與跨平台體驗**
   - 於右下角 GitHub 連結旁新增常駐「安裝 App」按鈕（`#pwa-install-manual-btn`）。

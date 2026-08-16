@@ -230,6 +230,60 @@ async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 120000) {
     }
 }
 
+async function transcribeWithGroq(groqApiKey, audioBytes, model = 'whisper-large-v3', filename = 'audio.mp3', timeoutMs = 60000) {
+    if (!groqApiKey) {
+        throw new Error('Groq API key not provided')
+    }
+
+    const extMatch = (filename || '').match(/\.([a-zA-Z0-9]+)$/)
+    const ext = extMatch ? extMatch[1].toLowerCase() : 'mp3'
+    const mimeTypes = {
+        mp3: 'audio/mpeg',
+        m4a: 'audio/m4a',
+        wav: 'audio/wav',
+        ogg: 'audio/ogg',
+        aac: 'audio/aac',
+        flac: 'audio/flac',
+        webm: 'audio/webm',
+        opus: 'audio/opus',
+        mp4: 'video/mp4',
+    }
+    const mimeType = mimeTypes[ext] || 'audio/mpeg'
+    const safeFilename = filename && filename.includes('.') ? filename : `audio.${ext}`
+
+    const formData = new FormData()
+    formData.append('file', new Blob([audioBytes], { type: mimeType }), safeFilename)
+    formData.append('model', model)
+    formData.append('response_format', 'json')
+
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+    try {
+        const res = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${groqApiKey}`,
+            },
+            body: formData,
+            signal: controller.signal,
+        })
+
+        if (!res.ok) {
+            const errText = await res.text().catch(() => '')
+            throw new Error(`Groq STT (${model}) failed with HTTP ${res.status}: ${errText}`)
+        }
+
+        const data = await res.json()
+        if (!data || typeof data.text !== 'string') {
+            throw new Error(`Groq STT (${model}) returned invalid JSON structure`)
+        }
+        return data
+    } finally {
+        clearTimeout(timer)
+    }
+}
+
 async function generateUniqueShareSlug() {
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const candidate = genRandomStr(SHARE_SLUG_LENGTH)
@@ -931,53 +985,86 @@ async function handleAudioTranscription(request, context = {}) {
         return returnJSON(40007, `Audio file is too large (${(audioBytes.length / (1024 * 1024)).toFixed(1)}MB). Max size is 25MB.`, { status: 413 })
     }
 
-    const modelsToTry = [
-        '@cf/openai/whisper-large-v3-turbo',
-        '@cf/openai/whisper'
-    ]
+    const groqApiKey = env.GROQ_API_KEY || ''
 
-    let aiResponse = null
+    let transcribedText = ''
     let modelUsed = ''
     let lastError = null
 
-    for (const model of modelsToTry) {
-        // 1. Try passing binary Uint8Array in audio property (binary type) with retry
-        for (let attempt = 0; attempt < 2; attempt++) {
+    // 1. Primary: Groq whisper-large-v3
+    if (groqApiKey) {
+        try {
+            console.log('[STT] Attempting primary model: Groq whisper-large-v3...')
+            const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3', filename, 60000)
+            if (groqRes && groqRes.text && groqRes.text.trim()) {
+                transcribedText = groqRes.text.trim()
+                modelUsed = 'groq/whisper-large-v3'
+            }
+        } catch (err) {
+            console.warn('[STT] Primary Groq whisper-large-v3 failed:', err?.message)
+            lastError = err
+        }
+    }
+
+    // 2. Fallback 1: Groq whisper-large-v3-turbo
+    if (!transcribedText && groqApiKey) {
+        try {
+            console.log('[STT] Attempting fallback 1: Groq whisper-large-v3-turbo...')
+            const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3-turbo', filename, 60000)
+            if (groqRes && groqRes.text && groqRes.text.trim()) {
+                transcribedText = groqRes.text.trim()
+                modelUsed = 'groq/whisper-large-v3-turbo'
+            }
+        } catch (err) {
+            console.warn('[STT] Fallback 1 Groq whisper-large-v3-turbo failed:', err?.message)
+            lastError = err
+        }
+    }
+
+    // 3. Fallback 2: Cloudflare Workers AI (@cf/openai/whisper-large-v3-turbo, then @cf/openai/whisper)
+    if (!transcribedText && env.AI) {
+        const cfModels = [
+            '@cf/openai/whisper-large-v3-turbo',
+            '@cf/openai/whisper'
+        ]
+        for (const cfModel of cfModels) {
+            for (let attempt = 0; attempt < 2; attempt++) {
+                try {
+                    console.log(`[STT] Attempting Workers AI ${cfModel} (attempt ${attempt + 1})...`)
+                    const aiResponse = await runAiWithTimeout(env.AI, cfModel, { audio: audioBytes }, 45000)
+                    if (aiResponse?.text && aiResponse.text.trim()) {
+                        transcribedText = aiResponse.text.trim()
+                        modelUsed = cfModel
+                        break
+                    }
+                } catch (err) {
+                    console.warn(`[STT] Workers AI ${cfModel} failed:`, err?.message)
+                    lastError = err
+                    if (attempt === 0) await new Promise(r => setTimeout(r, 600))
+                }
+            }
+            if (transcribedText) break
+
             try {
-                aiResponse = await runAiWithTimeout(env.AI, model, { audio: audioBytes }, 45000)
-                if (aiResponse?.text) {
-                    modelUsed = model
+                const aiResponse = await runAiWithTimeout(env.AI, cfModel, audioBytes, 45000)
+                if (aiResponse?.text && aiResponse.text.trim()) {
+                    transcribedText = aiResponse.text.trim()
+                    modelUsed = cfModel
                     break
                 }
-            } catch (err1) {
-                console.warn(`[AI] Whisper ${model} (attempt ${attempt + 1}) with { audio: Uint8Array } failed:`, err1?.message)
-                lastError = err1
-                if (attempt === 0) await new Promise(r => setTimeout(r, 600))
+            } catch (errRaw) {
+                lastError = errRaw
             }
+            if (transcribedText) break
         }
-        if (aiResponse?.text) break
-
-        // 2. Try passing raw Uint8Array / ArrayBuffer directly
-        try {
-            aiResponse = await runAiWithTimeout(env.AI, model, audioBytes, 45000)
-            if (aiResponse?.text) {
-                modelUsed = model
-                break
-            }
-        } catch (err2) {
-            console.warn(`[AI] Whisper ${model} with raw audioBytes failed:`, err2?.message)
-            lastError = err2
-        }
-        if (aiResponse?.text) break
     }
 
-    if (!aiResponse || !aiResponse.text) {
-        const errMsg = lastError ? lastError.message : 'Workers AI Whisper returned an empty transcript'
-        console.error('[AI] All Whisper attempts failed:', errMsg)
-        return returnJSON(50003, `Workers AI Whisper failed: ${errMsg}`)
+    if (!transcribedText) {
+        const errMsg = lastError ? lastError.message : 'All audio transcription providers and fallback models failed'
+        console.error('[STT] All transcribe attempts failed:', errMsg)
+        return returnJSON(50003, `Audio transcription failed: ${errMsg}`)
     }
 
-    const transcribedText = (aiResponse.text || '').trim()
     let formattedMarkdown = transcribedText
 
     // Check if diarization is requested (default false: pure verbatim transcript unless diarize=1 or diarize=true)
