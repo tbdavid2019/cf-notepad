@@ -1040,8 +1040,8 @@ Formatting Guidelines:
     ]
 
     const modelsToTry = [
-        '@cf/openai/gpt-oss-120b',
         '@cf/meta/llama-3.3-70b-instruct',
+        '@cf/openai/gpt-oss-120b',
         '@cf/openai/gpt-oss-20b'
     ]
 
@@ -1050,9 +1050,8 @@ Formatting Guidelines:
             console.log(`[AI] Running speaker diarization with LLM ${model}...`)
             const response = await runAiWithTimeout(aiBinding, model, {
                 messages,
-                max_completion_tokens: 8192,
-                reasoning_effort: 'low',
-            }, 90000)
+                max_tokens: 4096,
+            }, 40000)
 
             const formatted = extractAiText(response)
             if (formatted && formatted.trim().length > 0) {
@@ -2574,52 +2573,6 @@ router.post('/:path/setting', async request => {
     }
 })
 
-router.post('/:path', async request => {
-    const { path } = request.params
-    const { value, metadata } = await queryNote(path)
-
-    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-    const { valid, role } = await checkAuth(cookie, path)
-
-    if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
-        // OK
-    } else {
-        return returnJSON(10002, 'Password auth failed! Try refreshing this page if you had just set a password.')
-    }
-
-    if (!canPersistNoteContent(metadata)) {
-        return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
-    }
-
-    const formData = await request.formData();
-    const content = formData.get('t')
-
-    if (resolveEditorFormat(metadata) === 'block') {
-        try {
-            validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
-        } catch (error) {
-            return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
-        }
-    }
-
-    try {
-        await persistNoteContent({
-            path,
-            content,
-            metadata: {
-                ...metadata,
-                updateAt: dayjs().unix(),
-            },
-            previousContent: value,
-        })
-
-        return returnJSON(0)
-    } catch (error) {
-        console.error('Save Error:', error)
-        return returnJSON(10001, `KV insert fail: ${error.message}`)
-    }
-})
-
 router.post('/:path/transcribe', async (request, context = {}) => {
     const path = decodeURIComponent(request.params.path)
 
@@ -2744,6 +2697,52 @@ router.post('/:path/ai-format', async (request, { env }) => {
         console.error(`[AI] Error message:`, error.message)
         console.error(`[AI] Error stack:`, error.stack)
         return returnJSON(50003, `Workers AI model ${model} failed: ${error.message}`)
+    }
+})
+
+router.post('/:path', async request => {
+    const { path } = request.params
+    const { value, metadata } = await queryNote(path)
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid, role } = await checkAuth(cookie, path)
+
+    if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
+        // OK
+    } else {
+        return returnJSON(10002, 'Password auth failed! Try refreshing this page if you had just set a password.')
+    }
+
+    if (!canPersistNoteContent(metadata)) {
+        return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
+    }
+
+    const formData = await request.formData();
+    const content = formData.get('t')
+
+    if (resolveEditorFormat(metadata) === 'block') {
+        try {
+            validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
+        } catch (error) {
+            return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+        }
+    }
+
+    try {
+        await persistNoteContent({
+            path,
+            content,
+            metadata: {
+                ...metadata,
+                updateAt: dayjs().unix(),
+            },
+            previousContent: value,
+        })
+
+        return returnJSON(0)
+    } catch (error) {
+        console.error('Save Error:', error)
+        return returnJSON(10001, `KV insert fail: ${error.message}`)
     }
 })
 

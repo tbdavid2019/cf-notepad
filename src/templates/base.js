@@ -2473,14 +2473,21 @@ ${getMarkdownCss()}
                         }
                         const formData = new FormData()
                         formData.append('file', file)
-                        const transcribeUrl = (APP_STATE && APP_STATE.path)
-                            ? ('/' + encodeURIComponent(APP_STATE.path) + '/transcribe')
-                            : '/api/audio/transcribe'
+                        const transcribeUrl = '/api/audio/transcribe'
                         const response = await fetch(transcribeUrl, {
                             method: 'POST',
                             body: formData
                         })
-                        const resJson = await response.json()
+                        const responseText = await response.text()
+                        let resJson
+                        try {
+                            resJson = JSON.parse(responseText)
+                        } catch (parseErr) {
+                            if (!response.ok) {
+                                throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
+                            }
+                            throw new Error('伺服器未回傳有效 JSON 格式')
+                        }
                         if (resJson.err !== 0) {
                             throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
                         }
@@ -2554,14 +2561,21 @@ ${getMarkdownCss()}
                     }
                     const formData = new FormData()
                     formData.append('file', file)
-                    const transcribeUrl = (APP_STATE && APP_STATE.path)
-                        ? ('/' + encodeURIComponent(APP_STATE.path) + '/transcribe')
-                        : '/api/audio/transcribe'
+                    const transcribeUrl = '/api/audio/transcribe'
                     const response = await fetch(transcribeUrl, {
                         method: 'POST',
                         body: formData
                     })
-                    const resJson = await response.json()
+                    const responseText = await response.text()
+                    let resJson
+                    try {
+                        resJson = JSON.parse(responseText)
+                    } catch (parseErr) {
+                        if (!response.ok) {
+                            throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
+                        }
+                        throw new Error('伺服器未回傳有效 JSON 格式')
+                    }
                     if (resJson.err !== 0) {
                         throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
                     }
