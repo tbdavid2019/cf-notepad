@@ -2234,7 +2234,9 @@ ${getMarkdownCss()}
 
         const $dropdownImportDocBtn = document.querySelector('#dropdown-import-doc-btn')
         const $dropdownImportAudioBtn = document.querySelector('#dropdown-import-audio-btn')
+        const $dropdownImportAudioDiarizeBtn = document.querySelector('#dropdown-import-audio-diarize-btn')
         const $importAudioInput = document.querySelector('#import-audio-input')
+        const $importAudioDiarizeInput = document.querySelector('#import-audio-diarize-input')
         if ($dropdownImportDocBtn && $importMdInput) {
             $dropdownImportDocBtn.addEventListener('click', () => {
                 $importMdInput.click()
@@ -2243,6 +2245,11 @@ ${getMarkdownCss()}
         if ($dropdownImportAudioBtn && $importAudioInput) {
             $dropdownImportAudioBtn.addEventListener('click', () => {
                 $importAudioInput.click()
+            })
+        }
+        if ($dropdownImportAudioDiarizeBtn && $importAudioDiarizeInput) {
+            $dropdownImportAudioDiarizeBtn.addEventListener('click', () => {
+                $importAudioDiarizeInput.click()
             })
         }
 
@@ -2263,6 +2270,74 @@ ${getMarkdownCss()}
                 return Boolean($textarea.value && $textarea.value.trim())
             }
         }
+        const processAudioTranscription = async (file, { diarize = false } = {}) => {
+            let insertMode = 'replace'
+            if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
+                insertMode = await showImportOptionDialog()
+            }
+            if (insertMode === 'cancel') return
+
+            try {
+                const toastMsg = diarize
+                    ? (getI18n('transcribingAudioDiarize') || '正在轉錄音訊並由 AI 辨識發言者...')
+                    : (getI18n('transcribingAudio') || '正在使用 AI (Whisper) 轉錄音訊為純逐字稿...')
+                if (typeof window.showToast === 'function') {
+                    window.showToast(toastMsg)
+                }
+
+                const formData = new FormData()
+                formData.append('file', file)
+                const transcribeUrl = diarize ? '/api/audio/transcribe?diarize=1' : '/api/audio/transcribe'
+                const response = await fetch(transcribeUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                const responseText = await response.text()
+                let resJson
+                try {
+                    resJson = JSON.parse(responseText)
+                } catch (parseErr) {
+                    if (!response.ok) {
+                        throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
+                    }
+                    throw new Error('伺服器未回傳有效 JSON 格式')
+                }
+                if (resJson.err !== 0) {
+                    throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
+                }
+                const transcript = resJson.data?.markdown || resJson.data?.text || ''
+                if (!transcript) {
+                    throw new Error('未取得有效逐字稿內容')
+                }
+
+                if (isCurrentBlockEditor()) {
+                    await importIntoBlockEditor(transcript)
+                } else if (isCurrentMarkdownEditor()) {
+                    if (insertMode === 'insert') {
+                        const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length
+                        const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length
+                        const curVal = $textarea.value
+                        $textarea.value = curVal.substring(0, startPos) + transcript + curVal.substring(endPos)
+                    } else {
+                        $textarea.value = transcript
+                    }
+                    renderPlain($previewPlain, $textarea.value)
+                    triggerRender($previewMd, $textarea.value)
+                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                } else {
+                    await createMarkdownNoteFromImport(transcript)
+                }
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast(getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！')
+                }
+            } catch (err) {
+                console.error('Audio transcription failed:', err)
+                const msg = (err && err.message) ? err.message : (getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
+                window.showAppDialog({ title: getI18n('err'), message: msg, kind: 'error' })
+            }
+        }
+
         const createMarkdownNoteFromImport = async importedText => {
             if (typeof window.showToast === 'function') window.showToast(getI18n('creatingMarkdownNote') || 'Creating Markdown note...')
             const createRes = await fetch('/api/new-note', {
@@ -2467,42 +2542,7 @@ ${getMarkdownCss()}
                     reader.onerror = () => handleImportError()
                     reader.readAsText(file, 'utf-8')
                 } else if (isAudio) {
-                    try {
-                        if (typeof window.showToast === 'function') {
-                            window.showToast(getI18n('transcribingAudio') || '正在使用 AI (Whisper) 轉錄音訊為逐字稿...')
-                        }
-                        const formData = new FormData()
-                        formData.append('file', file)
-                        const transcribeUrl = '/api/audio/transcribe'
-                        const response = await fetch(transcribeUrl, {
-                            method: 'POST',
-                            body: formData
-                        })
-                        const responseText = await response.text()
-                        let resJson
-                        try {
-                            resJson = JSON.parse(responseText)
-                        } catch (parseErr) {
-                            if (!response.ok) {
-                                throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
-                            }
-                            throw new Error('伺服器未回傳有效 JSON 格式')
-                        }
-                        if (resJson.err !== 0) {
-                            throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
-                        }
-                        const transcript = resJson.data?.markdown || resJson.data?.text || ''
-                        if (!transcript) {
-                            throw new Error('未取得有效逐字稿內容')
-                        }
-                        await applyImportedContent(transcript, true)
-                        if (typeof window.showToast === 'function') {
-                            window.showToast(getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！')
-                        }
-                    } catch (err) {
-                        console.error('Audio transcription failed:', err)
-                        handleImportError(err)
-                    }
+                    await processAudioTranscription(file, { diarize: false })
                 } else {
                     try {
                         if (typeof window.showToast === 'function') {
@@ -2545,72 +2585,22 @@ ${getMarkdownCss()}
             $importAudioInput.addEventListener('change', async () => {
                 const file = $importAudioInput.files && $importAudioInput.files[0]
                 if (!file) return
-
-                let insertMode = 'replace'
-                if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
-                    insertMode = await showImportOptionDialog()
-                }
-                if (insertMode === 'cancel') {
-                    $importAudioInput.value = ''
-                    return
-                }
-
                 try {
-                    if (typeof window.showToast === 'function') {
-                        window.showToast(getI18n('transcribingAudio') || '正在使用 AI (Whisper) 轉錄音訊為逐字稿...')
-                    }
-                    const formData = new FormData()
-                    formData.append('file', file)
-                    const transcribeUrl = '/api/audio/transcribe'
-                    const response = await fetch(transcribeUrl, {
-                        method: 'POST',
-                        body: formData
-                    })
-                    const responseText = await response.text()
-                    let resJson
-                    try {
-                        resJson = JSON.parse(responseText)
-                    } catch (parseErr) {
-                        if (!response.ok) {
-                            throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
-                        }
-                        throw new Error('伺服器未回傳有效 JSON 格式')
-                    }
-                    if (resJson.err !== 0) {
-                        throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
-                    }
-                    const transcript = resJson.data?.markdown || resJson.data?.text || ''
-                    if (!transcript) {
-                        throw new Error('未取得有效逐字稿內容')
-                    }
-
-                    if (isCurrentBlockEditor()) {
-                        await importIntoBlockEditor(transcript)
-                    } else if (isCurrentMarkdownEditor()) {
-                        if (insertMode === 'insert') {
-                            const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length
-                            const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length
-                            const curVal = $textarea.value
-                            $textarea.value = curVal.substring(0, startPos) + transcript + curVal.substring(endPos)
-                        } else {
-                            $textarea.value = transcript
-                        }
-                        renderPlain($previewPlain, $textarea.value)
-                        triggerRender($previewMd, $textarea.value)
-                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
-                    } else {
-                        await createMarkdownNoteFromImport(transcript)
-                    }
-
-                    if (typeof window.showToast === 'function') {
-                        window.showToast(getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！')
-                    }
-                } catch (err) {
-                    console.error('Audio transcription failed:', err)
-                    const msg = (err && err.message) ? err.message : (getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
-                    window.showAppDialog({ title: getI18n('err'), message: msg, kind: 'error' })
+                    await processAudioTranscription(file, { diarize: false })
                 } finally {
                     $importAudioInput.value = ''
+                }
+            })
+        }
+
+        if ($importAudioDiarizeInput) {
+            $importAudioDiarizeInput.addEventListener('change', async () => {
+                const file = $importAudioDiarizeInput.files && $importAudioDiarizeInput.files[0]
+                if (!file) return
+                try {
+                    await processAudioTranscription(file, { diarize: true })
+                } finally {
+                    $importAudioDiarizeInput.value = ''
                 }
             })
         }

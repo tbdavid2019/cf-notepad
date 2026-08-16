@@ -10,11 +10,17 @@ const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'u
 test('import-md-input accepts audio file formats and new menu provides explicit audio import item', () => {
     assert.match(commonSource, /accept="[^"]*audio\/\*[^"]*\.mp3[^"]*\.wav[^"]*\.m4a/)
     assert.match(commonSource, /id="dropdown-import-audio-btn"/)
+    assert.match(commonSource, /id="dropdown-import-audio-diarize-btn"/)
     assert.match(commonSource, /id="import-audio-input"/)
+    assert.match(commonSource, /id="import-audio-diarize-input"/)
     assert.ok(SUPPORTED_LANG['zh-TW'].importAudioMarkdown)
+    assert.ok(SUPPORTED_LANG['zh-TW'].importAudioDiarizeMarkdown)
     assert.ok(SUPPORTED_LANG['zh-TW'].importAudioBlock)
+    assert.ok(SUPPORTED_LANG['zh-TW'].importAudioDiarizeBlock)
     assert.ok(SUPPORTED_LANG['en-US'].importAudioMarkdown)
+    assert.ok(SUPPORTED_LANG['en-US'].importAudioDiarizeMarkdown)
     assert.ok(SUPPORTED_LANG['en-US'].importAudioBlock)
+    assert.ok(SUPPORTED_LANG['en-US'].importAudioDiarizeBlock)
 })
 
 test('base template routes audio imports to AI transcribe endpoint with bilingual messages', () => {

@@ -980,10 +980,10 @@ async function handleAudioTranscription(request, context = {}) {
     const transcribedText = (aiResponse.text || '').trim()
     let formattedMarkdown = transcribedText
 
-    // Check if diarization is requested (default true unless diarize=0 or diarize=false)
+    // Check if diarization is requested (default false: pure verbatim transcript unless diarize=1 or diarize=true)
     const requestUrl = new URL(request.url)
     const diarizeParam = requestUrl.searchParams.get('diarize')
-    const shouldDiarize = diarizeParam !== '0' && diarizeParam !== 'false'
+    const shouldDiarize = diarizeParam === '1' || diarizeParam === 'true'
 
     if (shouldDiarize) {
         try {
@@ -1010,22 +1010,17 @@ async function formatSpeakerDiarization(aiBinding, rawText, filename = '') {
         return rawText
     }
 
-    const systemPrompt = `You are an expert audio transcription editor and speaker diarization assistant.
-Analyze the transcribed audio text, identify distinct speakers based on conversational context, tone, question-and-answer interactions, greetings, and speaking styles, and format it into clean, structured Markdown dialogue.
+    const systemPrompt = `You are a strict verbatim speaker segmentation assistant.
+Your ONLY task is to insert speaker labels (e.g. **🎤 主持人**: / **👤 來賓**: or **👤 發言者 1**: / **👤 發言者 2**:) at conversational turns.
 
-Formatting Guidelines:
-1. Identify distinct roles such as **🎤 主持人** (Host), **👤 來賓** (Guest / Speaker), or **👤 發言者 1 / 發言者 2** (Speaker 1 / Speaker 2).
-   - If specific names are mentioned in the conversation, include their names (e.g. **🎤 主持人 (David)**, **👤 來賓 (王小明)**).
-2. If the audio is clearly a single-speaker speech, lecture, or monologue rather than a multi-person conversation:
-   - Structure it with informative Markdown section headings (##, ###), bullet points, and clean paragraphs instead of forcing artificial dialogue tags.
-3. Add a concise summary block at the very top:
-   > 💡 **核心摘要**：(1-2 句話精準概述音訊或討論重點)
-   
-   ---
-4. Preserve all original meaning, facts, terminology, and the original language (e.g. Traditional Chinese / English). Do not omit substantive content.
-5. Return ONLY the final formatted Markdown document with no meta explanations or wrapping \`\`\`markdown code block.`
+CRITICAL RULES:
+1. STRICT VERBATIM: You MUST NOT summarize, extrapolate, outline, create agendas, or add any commentary.
+2. ZERO ADDITIONS: DO NOT add any summary blocks, outlines, bulleted takeaways, notes, or concluding remarks.
+3. Every single word in the output must come verbatim from the input transcript.
+4. If there is only one speaker or you cannot determine multiple speakers with high confidence, return the EXACT input transcript unchanged.
+5. Output ONLY the verbatim text with speaker labels, with no markdown code fences.`
 
-    const userPrompt = `Please perform speaker diarization and clean Markdown formatting for the following audio transcript:\n\n${rawText}`
+    const userPrompt = `Segment this transcript by speaker strictly verbatim without any summaries, agendas, or additions:\n\n${rawText}`
 
     const messages = [
         { role: 'system', content: systemPrompt },

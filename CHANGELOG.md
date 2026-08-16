@@ -2,13 +2,12 @@
 
 ## [2026-08-16]
 
-- **🎙️ 音訊匯入、AI 逐字稿轉錄與說話者角色分離 (`@cf/openai/whisper-large-v3-turbo` + `@cf/openai/gpt-oss-120b`)**
-  - **多格式音訊支援**：擴充底欄匯入與左下角 `+` 新增選單（專屬「🎙️ 匯入音訊轉逐字稿（Whisper AI）」入口），支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
-  - **二段式 AI 處理管線 (Two-Stage Pipeline)**：
-    1. **語音轉文字 (ASR)**：使用 Cloudflare Workers AI 原生 `@cf/openai/whisper-large-v3-turbo`（具備 `@cf/openai/whisper` 自動容錯降級），支援直接傳遞 TypedArray 二進位 (`Uint8Array`) 進行極速語音辨識。
-    2. **發言者區分與角色分離 (Speaker Diarization)**：利用 120B 大參數 LLM (`@cf/openai/gpt-oss-120b`，具備 `llama-3.3-70b-instruct` 與 `gpt-oss-20b` 備援) 分析語境與問答模式，自動區分並標註 `**🎤 主持人**` 與 `**👤 來賓 / 發言者**`，並於頂部自動產生核心摘要。
-    3. **單人演講自動適配**：若識別為單人演說或課程，自動整理為邏輯大綱標題與重點條列，避免強制對話拆分。
-  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，並支援 `?diarize=1` 參數。
+- **🎙️ 音訊匯入、AI 逐字稿轉錄與自主掌控模式 (`@cf/openai/whisper-large-v3-turbo`)**
+  - **多格式音訊支援**：擴充底欄匯入與左下角 `+` 新增選單，支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
+  - **雙模式自主切換與零幻覺防護**：
+    1. **🎙️ 純 Whisper 原始逐字稿（預設推薦）**：直接透過 `@cf/openai/whisper-large-v3-turbo` 進行 100% 原音忠實轉錄，**零幻覺、零額外腦補、無未提及的摘要或虛構議程**，極速且乾淨。
+    2. **🤖 AI 區分發言者（可選模式）**：使用者可主動點選啟用發言者角色分離，採用嚴格逐字限制（Strict Verbatim）的 LLM 管線，僅於發言輪替處標註發言者角色，禁止額外捏造大綱或筆記。
+  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，預設回傳純逐字稿，支援以 `?diarize=1` 參數開啟發言者分離。
   - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供多語系即時 Toast 轉錄進度與完成提示。
 
 - **📱 PWA 常駐主動安裝按鈕與跨平台體驗**

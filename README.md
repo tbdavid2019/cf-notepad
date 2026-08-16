@@ -45,7 +45,9 @@
 
 ### 🤖 1. AI 智慧寫作特助與 Agent 生態
 
-- **🎙️ 音訊匯入與 AI 發言者區分逐字稿 (Whisper + GPT-OSS 120B)**：點擊左下角「＋ 新增」選單中的「🎙️ 匯入音訊轉逐字稿」或底欄匯入按鈕，可直接上傳錄音檔（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`）。由 Cloudflare Workers AI 原生 **`@cf/openai/whisper-large-v3-turbo`** 極速語音轉錄，並由旗艦 **`@cf/openai/gpt-oss-120b`** 大模型自動進行 Speaker Diarization，智慧識別「**🎤 主持人**」與「**👤 來賓 / 發言者**」，並產生核心重點摘要與結構化對話 Markdown！
+- **🎙️ 音訊匯入與逐字稿轉錄 (Whisper AI + 自由選擇發言者區分)**：點擊左下角「＋ 新增」選單，可直接上傳錄音檔（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`）。支援兩種模式自由切換：
+  1. **🎙️ 純 Whisper 原始逐字稿（預設推薦）**：由 Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`** 進行 100% 原音忠實轉錄，**零幻覺、零摘要、無額外腦補**，極速且純淨。
+  2. **🤖 AI 區分發言者（可選模式）**：使用者可主動點選啟用，於發言輪替處標註發言者角色，保留純粹對話。
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
