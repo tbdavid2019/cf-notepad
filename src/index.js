@@ -985,16 +985,85 @@ async function handleAudioTranscription(request, context = {}) {
     }
 
     const transcribedText = (aiResponse.text || '').trim()
-    const formattedMarkdown = transcribedText
+    let formattedMarkdown = transcribedText
+
+    // Check if diarization is requested (default true unless diarize=0 or diarize=false)
+    const requestUrl = new URL(request.url)
+    const diarizeParam = requestUrl.searchParams.get('diarize')
+    const shouldDiarize = diarizeParam !== '0' && diarizeParam !== 'false'
+
+    if (shouldDiarize) {
+        try {
+            formattedMarkdown = await formatSpeakerDiarization(env.AI, transcribedText, filename)
+        } catch (diarizeErr) {
+            console.warn('[AI] Speaker diarization failed, falling back to raw transcript:', diarizeErr?.message)
+            formattedMarkdown = transcribedText
+        }
+    }
 
     return returnJSON(0, {
         text: transcribedText,
         markdown: formattedMarkdown,
+        diarized: shouldDiarize,
         vtt: aiResponse?.vtt || null,
         wordCount: aiResponse?.word_count || (transcribedText.match(/\S+/g)?.length || 0),
         modelUsed: modelUsed,
         filename: filename,
     })
+}
+
+async function formatSpeakerDiarization(aiBinding, rawText, filename = '') {
+    if (!rawText || rawText.trim().length < 30) {
+        return rawText
+    }
+
+    const systemPrompt = `You are an expert audio transcription editor and speaker diarization assistant.
+Analyze the transcribed audio text, identify distinct speakers based on conversational context, tone, question-and-answer interactions, greetings, and speaking styles, and format it into clean, structured Markdown dialogue.
+
+Formatting Guidelines:
+1. Identify distinct roles such as **🎤 主持人** (Host), **👤 來賓** (Guest / Speaker), or **👤 發言者 1 / 發言者 2** (Speaker 1 / Speaker 2).
+   - If specific names are mentioned in the conversation, include their names (e.g. **🎤 主持人 (David)**, **👤 來賓 (王小明)**).
+2. If the audio is clearly a single-speaker speech, lecture, or monologue rather than a multi-person conversation:
+   - Structure it with informative Markdown section headings (##, ###), bullet points, and clean paragraphs instead of forcing artificial dialogue tags.
+3. Add a concise summary block at the very top:
+   > 💡 **核心摘要**：(1-2 句話精準概述音訊或討論重點)
+   
+   ---
+4. Preserve all original meaning, facts, terminology, and the original language (e.g. Traditional Chinese / English). Do not omit substantive content.
+5. Return ONLY the final formatted Markdown document with no meta explanations or wrapping \`\`\`markdown code block.`
+
+    const userPrompt = `Please perform speaker diarization and clean Markdown formatting for the following audio transcript:\n\n${rawText}`
+
+    const messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
+    ]
+
+    const modelsToTry = [
+        '@cf/openai/gpt-oss-120b',
+        '@cf/meta/llama-3.3-70b-instruct',
+        '@cf/openai/gpt-oss-20b'
+    ]
+
+    for (const model of modelsToTry) {
+        try {
+            console.log(`[AI] Running speaker diarization with LLM ${model}...`)
+            const response = await runAiWithTimeout(aiBinding, model, {
+                messages,
+                max_completion_tokens: 8192,
+                reasoning_effort: 'low',
+            }, 90000)
+
+            const formatted = extractAiText(response)
+            if (formatted && formatted.trim().length > 0) {
+                return formatted.trim()
+            }
+        } catch (err) {
+            console.warn(`[AI] LLM ${model} speaker diarization failed:`, err?.message)
+        }
+    }
+
+    return rawText
 }
 
 router.post('/api/audio/transcribe', async (request, context = {}) => handleAudioTranscription(request, context))

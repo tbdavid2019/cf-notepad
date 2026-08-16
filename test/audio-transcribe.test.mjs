@@ -30,10 +30,12 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.ok(SUPPORTED_LANG['en-US'].audioTranscribed)
 })
 
-test('index.js registers audio transcribe routes and uses whisper-large-v3-turbo', () => {
+test('index.js registers audio transcribe routes and uses whisper-large-v3-turbo with speaker diarization pipeline', () => {
     assert.match(indexSource, /router\.post\('\/api\/audio\/transcribe'/)
     assert.match(indexSource, /router\.post\('\/:path\/transcribe'/)
     assert.match(indexSource, /handleAudioTranscription/)
+    assert.match(indexSource, /formatSpeakerDiarization/)
     assert.match(indexSource, /@cf\/openai\/whisper-large-v3-turbo/)
+    assert.match(indexSource, /@cf\/openai\/gpt-oss-120b/)
     assert.match(indexSource, /runAiWithTimeout\(env\.AI,\s*model,\s*\{ audio: audioBytes \},\s*120000\)/)
 })
