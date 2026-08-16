@@ -2415,6 +2415,7 @@ ${getMarkdownCss()}
                 const fileName = file.name || '';
                 const ext = (fileName.includes('.') ? fileName.split('.').pop() : '').toLowerCase();
                 const isPlainMd = ['md', 'markdown', 'txt'].includes(ext) || file.type === 'text/markdown' || file.type === 'text/plain';
+                const isAudio = ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm', 'flac', 'mp4', 'm4v', 'opus'].includes(ext) || file.type.startsWith('audio/') || file.type === 'video/mp4';
 
                 const applyImportedContent = async (importedText, isDoc = false) => {
                     if (isCurrentBlockEditor()) {
@@ -2458,6 +2459,36 @@ ${getMarkdownCss()}
                     reader.onload = () => applyImportedContent(typeof reader.result === 'string' ? reader.result : '', false).catch(handleImportError)
                     reader.onerror = () => handleImportError()
                     reader.readAsText(file, 'utf-8')
+                } else if (isAudio) {
+                    try {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(getI18n('transcribingAudio') || '正在使用 AI (Whisper) 轉錄音訊為逐字稿...')
+                        }
+                        const formData = new FormData()
+                        formData.append('file', file)
+                        const transcribeUrl = (APP_STATE && APP_STATE.path)
+                            ? ('/' + encodeURIComponent(APP_STATE.path) + '/transcribe')
+                            : '/api/audio/transcribe'
+                        const response = await fetch(transcribeUrl, {
+                            method: 'POST',
+                            body: formData
+                        })
+                        const resJson = await response.json()
+                        if (resJson.err !== 0) {
+                            throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
+                        }
+                        const transcript = resJson.data?.markdown || resJson.data?.text || ''
+                        if (!transcript) {
+                            throw new Error('未取得有效逐字稿內容')
+                        }
+                        await applyImportedContent(transcript, true)
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！')
+                        }
+                    } catch (err) {
+                        console.error('Audio transcription failed:', err)
+                        handleImportError(err)
+                    }
                 } else {
                     try {
                         if (typeof window.showToast === 'function') {

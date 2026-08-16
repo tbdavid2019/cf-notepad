@@ -2,6 +2,11 @@
 
 ## [2026-08-16]
 
+- **🎙️ 音訊匯入與 AI 逐字稿轉錄 (`@cf/openai/whisper-large-v3-turbo`)**
+  - 擴充檔案匯入功能（底欄匯入按鈕與檔案選擇器），支援選取常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`）。
+  - 新增 `POST /api/audio/transcribe` 與 `POST /:path/transcribe` API 端點，透過 Cloudflare Workers AI 高效能 `@cf/openai/whisper-large-v3-turbo` 語音識別模型，自動將音訊轉錄為結構化 Markdown 逐字稿。
+  - 支援無縫匯入現有編輯器（支援「取代全文」或「插入游標處」），並提供多語系即時 Toast 轉錄進度回饋。
+
 - **⚡ Local-First 本地優先儲存架構與智慧雲端同步**
   - **0ms 本地即時存檔**：編輯打字時以 300ms 防抖即時寫入客戶端 **IndexedDB (`CloudNotepadOfflineDB`)**，狀態顯示 `🟢 本機已存`，享受原生桌面級流暢體驗。
   - **智慧節流雲端同步**：停止輸入 3.5 秒、定期週期性間隔、或關閉/切換分頁（透過 `visibilitychange` / `keepalive` / `sendBeacon`）時自動向雲端同步，節省 90% 以上寫入請求，徹底解決 Cloudflare KV 1,000 次/天寫入上限。

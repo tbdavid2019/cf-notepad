@@ -419,7 +419,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
                             </div>
                         </div>
-                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv" class="visually-hidden-file-input" aria-hidden="true">
+                        <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv,audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.mp4,.opus" class="visually-hidden-file-input" aria-hidden="true">
                     </div>
                 </div>
             </div>

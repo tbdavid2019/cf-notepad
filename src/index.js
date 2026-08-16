@@ -872,6 +872,96 @@ async function processUrlToMarkdown(targetUrl) {
     })
 }
 
+async function handleAudioTranscription(request, context = {}) {
+    const env = context.env || globalThis
+    if (!env.AI) {
+        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
+    }
+
+    let audioBytes = null
+    let filename = 'audio'
+    const contentType = (request.headers.get('content-type') || '').toLowerCase()
+
+    if (contentType.includes('multipart/form-data')) {
+        try {
+            const formData = await request.formData()
+            const file = formData.get('file') || formData.get('audio')
+            if (!file) {
+                return returnJSON(40001, 'No audio file found in form data (use "file" or "audio")', { status: 400 })
+            }
+            filename = file.name || 'audio'
+            const buffer = await file.arrayBuffer()
+            audioBytes = new Uint8Array(buffer)
+        } catch (err) {
+            return returnJSON(40002, `Failed to parse form data: ${err.message}`, { status: 400 })
+        }
+    } else if (contentType.includes('application/json')) {
+        try {
+            const body = await request.json()
+            if (Array.isArray(body.audio)) {
+                audioBytes = new Uint8Array(body.audio)
+            } else if (typeof body.audio === 'string') {
+                const binaryStr = atob(body.audio)
+                audioBytes = new Uint8Array(binaryStr.length)
+                for (let i = 0; i < binaryStr.length; i++) {
+                    audioBytes[i] = binaryStr.charCodeAt(i)
+                }
+            } else {
+                return returnJSON(40003, 'Invalid JSON body: "audio" field as number array or base64 string is required', { status: 400 })
+            }
+            if (body.filename) filename = body.filename
+        } catch (err) {
+            return returnJSON(40004, `Failed to parse JSON body: ${err.message}`, { status: 400 })
+        }
+    } else {
+        try {
+            const buffer = await request.arrayBuffer()
+            audioBytes = new Uint8Array(buffer)
+        } catch (err) {
+            return returnJSON(40005, `Failed to read audio stream: ${err.message}`, { status: 400 })
+        }
+    }
+
+    if (!audioBytes || audioBytes.length === 0) {
+        return returnJSON(40006, 'Audio data is empty', { status: 400 })
+    }
+
+    const MAX_AUDIO_BYTES = 25 * 1024 * 1024
+    if (audioBytes.length > MAX_AUDIO_BYTES) {
+        return returnJSON(40007, `Audio file is too large (${(audioBytes.length / (1024 * 1024)).toFixed(1)}MB). Max size is 25MB.`, { status: 413 })
+    }
+
+    const model = '@cf/openai/whisper-large-v3-turbo'
+
+    try {
+        const whisperInput = {
+            audio: [...audioBytes]
+        }
+        const aiResponse = await runAiWithTimeout(env.AI, model, whisperInput, 120000)
+
+        const transcribedText = (aiResponse?.text || '').trim()
+        if (!transcribedText) {
+            return returnJSON(50003, 'Workers AI Whisper returned an empty transcript')
+        }
+
+        const formattedMarkdown = transcribedText
+
+        return returnJSON(0, {
+            text: transcribedText,
+            markdown: formattedMarkdown,
+            vtt: aiResponse?.vtt || null,
+            wordCount: aiResponse?.word_count || (transcribedText.match(/\S+/g)?.length || 0),
+            modelUsed: model,
+            filename: filename,
+        })
+    } catch (error) {
+        console.error(`[AI] Whisper model ${model} failed:`, error)
+        return returnJSON(50003, `Workers AI Whisper failed: ${error.message}`)
+    }
+}
+
+router.post('/api/audio/transcribe', async (request, context = {}) => handleAudioTranscription(request, context))
+
 router.post('/api/url2md', async (request) => {
     try {
         let url = ''
@@ -2422,6 +2512,20 @@ router.post('/:path', async request => {
         console.error('Save Error:', error)
         return returnJSON(10001, `KV insert fail: ${error.message}`)
     }
+})
+
+router.post('/:path/transcribe', async (request, context = {}) => {
+    const path = decodeURIComponent(request.params.path)
+
+    const { metadata } = await queryNote(path)
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid, role } = await checkAuth(cookie, path)
+
+    if (metadata && (metadata.pw || metadata.vpw) && (!valid || role !== 'edit')) {
+        return returnJSON(10002, 'Password auth failed!', { status: 401 })
+    }
+
+    return handleAudioTranscription(request, context)
 })
 
 router.post('/:path/ai-format', async (request, { env }) => {
