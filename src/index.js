@@ -931,33 +931,70 @@ async function handleAudioTranscription(request, context = {}) {
         return returnJSON(40007, `Audio file is too large (${(audioBytes.length / (1024 * 1024)).toFixed(1)}MB). Max size is 25MB.`, { status: 413 })
     }
 
-    const model = '@cf/openai/whisper-large-v3-turbo'
+    const modelsToTry = [
+        '@cf/openai/whisper-large-v3-turbo',
+        '@cf/openai/whisper'
+    ]
 
-    try {
-        const whisperInput = {
-            audio: [...audioBytes]
+    let aiResponse = null
+    let modelUsed = ''
+    let lastError = null
+
+    for (const model of modelsToTry) {
+        // 1. Try passing binary Uint8Array in audio property (binary type)
+        try {
+            aiResponse = await runAiWithTimeout(env.AI, model, { audio: audioBytes }, 120000)
+            if (aiResponse?.text) {
+                modelUsed = model
+                break
+            }
+        } catch (err1) {
+            console.warn(`[AI] Whisper ${model} with { audio: Uint8Array } failed:`, err1?.message)
+            lastError = err1
         }
-        const aiResponse = await runAiWithTimeout(env.AI, model, whisperInput, 120000)
 
-        const transcribedText = (aiResponse?.text || '').trim()
-        if (!transcribedText) {
-            return returnJSON(50003, 'Workers AI Whisper returned an empty transcript')
+        // 2. Try passing Array.from(audioBytes) (array of numbers)
+        try {
+            aiResponse = await runAiWithTimeout(env.AI, model, { audio: Array.from(audioBytes) }, 120000)
+            if (aiResponse?.text) {
+                modelUsed = model
+                break
+            }
+        } catch (err2) {
+            console.warn(`[AI] Whisper ${model} with { audio: Array.from } failed:`, err2?.message)
+            lastError = err2
         }
 
-        const formattedMarkdown = transcribedText
-
-        return returnJSON(0, {
-            text: transcribedText,
-            markdown: formattedMarkdown,
-            vtt: aiResponse?.vtt || null,
-            wordCount: aiResponse?.word_count || (transcribedText.match(/\S+/g)?.length || 0),
-            modelUsed: model,
-            filename: filename,
-        })
-    } catch (error) {
-        console.error(`[AI] Whisper model ${model} failed:`, error)
-        return returnJSON(50003, `Workers AI Whisper failed: ${error.message}`)
+        // 3. Try passing raw Uint8Array directly
+        try {
+            aiResponse = await runAiWithTimeout(env.AI, model, audioBytes, 120000)
+            if (aiResponse?.text) {
+                modelUsed = model
+                break
+            }
+        } catch (err3) {
+            console.warn(`[AI] Whisper ${model} with raw audioBytes failed:`, err3?.message)
+            lastError = err3
+        }
     }
+
+    if (!aiResponse || !aiResponse.text) {
+        const errMsg = lastError ? lastError.message : 'Workers AI Whisper returned an empty transcript'
+        console.error('[AI] All Whisper attempts failed:', errMsg)
+        return returnJSON(50003, `Workers AI Whisper failed: ${errMsg}`)
+    }
+
+    const transcribedText = (aiResponse.text || '').trim()
+    const formattedMarkdown = transcribedText
+
+    return returnJSON(0, {
+        text: transcribedText,
+        markdown: formattedMarkdown,
+        vtt: aiResponse?.vtt || null,
+        wordCount: aiResponse?.word_count || (transcribedText.match(/\S+/g)?.length || 0),
+        modelUsed: modelUsed,
+        filename: filename,
+    })
 }
 
 router.post('/api/audio/transcribe', async (request, context = {}) => handleAudioTranscription(request, context))
