@@ -2293,17 +2293,25 @@ ${getMarkdownCss()}
                     body: formData
                 })
                 const responseText = await response.text()
-                let resJson
+                let resJson = null
                 try {
                     resJson = JSON.parse(responseText)
                 } catch (parseErr) {
+                    if (responseText && responseText.length < 300 && !responseText.includes('<')) {
+                        throw new Error(responseText)
+                    }
                     if (!response.ok) {
                         throw new Error('轉錄伺服器回應異常 (HTTP ' + response.status + ')')
                     }
                     throw new Error('伺服器未回傳有效 JSON 格式')
                 }
                 if (resJson.err !== 0) {
-                    throw new Error(resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗')
+                    let errMsg = resJson.msg || getI18n('audioTranscribeFailed') || '音訊轉錄失敗'
+                    try {
+                        const unquoted = JSON.parse(errMsg)
+                        if (typeof unquoted === 'string') errMsg = unquoted
+                    } catch {}
+                    throw new Error(errMsg)
                 }
                 const transcript = resJson.data?.markdown || resJson.data?.text || ''
                 if (!transcript) {

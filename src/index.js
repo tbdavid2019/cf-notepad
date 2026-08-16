@@ -926,170 +926,173 @@ async function processUrlToMarkdown(targetUrl) {
     })
 }
 
+function getGroqApiKey(env = {}) {
+    return env?.GROQ_API_KEY || ''
+}
+
 async function handleAudioTranscription(request, context = {}) {
     const env = context.env || globalThis
-    if (!env.AI) {
-        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
-    }
+    try {
+        let audioBytes = null
+        let filename = 'audio.mp3'
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
 
-    let audioBytes = null
-    let filename = 'audio'
-    const contentType = (request.headers.get('content-type') || '').toLowerCase()
-
-    if (contentType.includes('multipart/form-data')) {
-        try {
-            const formData = await request.formData()
-            const file = formData.get('file') || formData.get('audio')
-            if (!file) {
-                return returnJSON(40001, 'No audio file found in form data (use "file" or "audio")', { status: 400 })
-            }
-            filename = file.name || 'audio'
-            const buffer = await file.arrayBuffer()
-            audioBytes = new Uint8Array(buffer)
-        } catch (err) {
-            return returnJSON(40002, `Failed to parse form data: ${err.message}`, { status: 400 })
-        }
-    } else if (contentType.includes('application/json')) {
-        try {
-            const body = await request.json()
-            if (Array.isArray(body.audio)) {
-                audioBytes = new Uint8Array(body.audio)
-            } else if (typeof body.audio === 'string') {
-                const binaryStr = atob(body.audio)
-                audioBytes = new Uint8Array(binaryStr.length)
-                for (let i = 0; i < binaryStr.length; i++) {
-                    audioBytes[i] = binaryStr.charCodeAt(i)
+        if (contentType.includes('multipart/form-data')) {
+            try {
+                const formData = await request.formData()
+                const file = formData.get('file') || formData.get('audio')
+                if (!file) {
+                    return returnJSON(40001, 'No audio file found in form data (use "file" or "audio")', { status: 400 })
                 }
-            } else {
-                return returnJSON(40003, 'Invalid JSON body: "audio" field as number array or base64 string is required', { status: 400 })
+                filename = file.name || 'audio.mp3'
+                const buffer = await file.arrayBuffer()
+                audioBytes = new Uint8Array(buffer)
+            } catch (err) {
+                return returnJSON(40002, `Failed to parse form data: ${err.message}`, { status: 400 })
             }
-            if (body.filename) filename = body.filename
-        } catch (err) {
-            return returnJSON(40004, `Failed to parse JSON body: ${err.message}`, { status: 400 })
-        }
-    } else {
-        try {
-            const buffer = await request.arrayBuffer()
-            audioBytes = new Uint8Array(buffer)
-        } catch (err) {
-            return returnJSON(40005, `Failed to read audio stream: ${err.message}`, { status: 400 })
-        }
-    }
-
-    if (!audioBytes || audioBytes.length === 0) {
-        return returnJSON(40006, 'Audio data is empty', { status: 400 })
-    }
-
-    const MAX_AUDIO_BYTES = 25 * 1024 * 1024
-    if (audioBytes.length > MAX_AUDIO_BYTES) {
-        return returnJSON(40007, `Audio file is too large (${(audioBytes.length / (1024 * 1024)).toFixed(1)}MB). Max size is 25MB.`, { status: 413 })
-    }
-
-    const groqApiKey = env.GROQ_API_KEY || ''
-
-    let transcribedText = ''
-    let modelUsed = ''
-    let lastError = null
-
-    // 1. Primary: Groq whisper-large-v3
-    if (groqApiKey) {
-        try {
-            console.log('[STT] Attempting primary model: Groq whisper-large-v3...')
-            const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3', filename, 60000)
-            if (groqRes && groqRes.text && groqRes.text.trim()) {
-                transcribedText = groqRes.text.trim()
-                modelUsed = 'groq/whisper-large-v3'
+        } else if (contentType.includes('application/json')) {
+            try {
+                const body = await request.json()
+                if (Array.isArray(body.audio)) {
+                    audioBytes = new Uint8Array(body.audio)
+                } else if (typeof body.audio === 'string') {
+                    const binaryStr = atob(body.audio)
+                    audioBytes = new Uint8Array(binaryStr.length)
+                    for (let i = 0; i < binaryStr.length; i++) {
+                        audioBytes[i] = binaryStr.charCodeAt(i)
+                    }
+                } else {
+                    return returnJSON(40003, 'Invalid JSON body: "audio" field as number array or base64 string is required', { status: 400 })
+                }
+                if (body.filename) filename = body.filename
+            } catch (err) {
+                return returnJSON(40004, `Failed to parse JSON body: ${err.message}`, { status: 400 })
             }
-        } catch (err) {
-            console.warn('[STT] Primary Groq whisper-large-v3 failed:', err?.message)
-            lastError = err
-        }
-    }
-
-    // 2. Fallback 1: Groq whisper-large-v3-turbo
-    if (!transcribedText && groqApiKey) {
-        try {
-            console.log('[STT] Attempting fallback 1: Groq whisper-large-v3-turbo...')
-            const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3-turbo', filename, 60000)
-            if (groqRes && groqRes.text && groqRes.text.trim()) {
-                transcribedText = groqRes.text.trim()
-                modelUsed = 'groq/whisper-large-v3-turbo'
+        } else {
+            try {
+                const buffer = await request.arrayBuffer()
+                audioBytes = new Uint8Array(buffer)
+            } catch (err) {
+                return returnJSON(40005, `Failed to read audio stream: ${err.message}`, { status: 400 })
             }
-        } catch (err) {
-            console.warn('[STT] Fallback 1 Groq whisper-large-v3-turbo failed:', err?.message)
-            lastError = err
         }
-    }
 
-    // 3. Fallback 2: Cloudflare Workers AI (@cf/openai/whisper-large-v3-turbo, then @cf/openai/whisper)
-    if (!transcribedText && env.AI) {
-        const cfModels = [
-            '@cf/openai/whisper-large-v3-turbo',
-            '@cf/openai/whisper'
-        ]
-        for (const cfModel of cfModels) {
-            for (let attempt = 0; attempt < 2; attempt++) {
+        if (!audioBytes || audioBytes.length === 0) {
+            return returnJSON(40006, 'Audio data is empty', { status: 400 })
+        }
+
+        const MAX_AUDIO_BYTES = 25 * 1024 * 1024
+        if (audioBytes.length > MAX_AUDIO_BYTES) {
+            return returnJSON(40007, `Audio file is too large (${(audioBytes.length / (1024 * 1024)).toFixed(1)}MB). Max size is 25MB.`, { status: 413 })
+        }
+
+        const groqApiKey = getGroqApiKey(env)
+        let transcribedText = ''
+        let modelUsed = ''
+        let lastError = null
+
+        // 1. Primary: Groq whisper-large-v3
+        if (groqApiKey) {
+            try {
+                console.log('[STT] Attempting primary model: Groq whisper-large-v3...')
+                const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3', filename, 60000)
+                if (groqRes && groqRes.text && groqRes.text.trim()) {
+                    transcribedText = groqRes.text.trim()
+                    modelUsed = 'groq/whisper-large-v3'
+                }
+            } catch (err) {
+                console.warn('[STT] Primary Groq whisper-large-v3 failed:', err?.message)
+                lastError = err
+            }
+        }
+
+        // 2. Fallback 1: Groq whisper-large-v3-turbo
+        if (!transcribedText && groqApiKey) {
+            try {
+                console.log('[STT] Attempting fallback 1: Groq whisper-large-v3-turbo...')
+                const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3-turbo', filename, 60000)
+                if (groqRes && groqRes.text && groqRes.text.trim()) {
+                    transcribedText = groqRes.text.trim()
+                    modelUsed = 'groq/whisper-large-v3-turbo'
+                }
+            } catch (err) {
+                console.warn('[STT] Fallback 1 Groq whisper-large-v3-turbo failed:', err?.message)
+                lastError = err
+            }
+        }
+
+        // 3. Fallback 2: Cloudflare Workers AI (@cf/openai/whisper-large-v3-turbo, then @cf/openai/whisper)
+        if (!transcribedText && env.AI) {
+            const cfModels = [
+                '@cf/openai/whisper-large-v3-turbo',
+                '@cf/openai/whisper'
+            ]
+            for (const cfModel of cfModels) {
+                for (let attempt = 0; attempt < 2; attempt++) {
+                    try {
+                        console.log(`[STT] Attempting Workers AI ${cfModel} (attempt ${attempt + 1})...`)
+                        const aiResponse = await runAiWithTimeout(env.AI, cfModel, { audio: audioBytes }, 45000)
+                        if (aiResponse?.text && aiResponse.text.trim()) {
+                            transcribedText = aiResponse.text.trim()
+                            modelUsed = cfModel
+                            break
+                        }
+                    } catch (err) {
+                        console.warn(`[STT] Workers AI ${cfModel} failed:`, err?.message)
+                        lastError = err
+                        if (attempt === 0) await new Promise(r => setTimeout(r, 600))
+                    }
+                }
+                if (transcribedText) break
+
                 try {
-                    console.log(`[STT] Attempting Workers AI ${cfModel} (attempt ${attempt + 1})...`)
-                    const aiResponse = await runAiWithTimeout(env.AI, cfModel, { audio: audioBytes }, 45000)
+                    const aiResponse = await runAiWithTimeout(env.AI, cfModel, audioBytes, 45000)
                     if (aiResponse?.text && aiResponse.text.trim()) {
                         transcribedText = aiResponse.text.trim()
                         modelUsed = cfModel
                         break
                     }
-                } catch (err) {
-                    console.warn(`[STT] Workers AI ${cfModel} failed:`, err?.message)
-                    lastError = err
-                    if (attempt === 0) await new Promise(r => setTimeout(r, 600))
+                } catch (errRaw) {
+                    lastError = errRaw
                 }
+                if (transcribedText) break
             }
-            if (transcribedText) break
+        }
 
+        if (!transcribedText) {
+            const errMsg = lastError ? lastError.message : 'All audio transcription providers and fallback models failed'
+            console.error('[STT] All transcribe attempts failed:', errMsg)
+            return returnJSON(50003, `Audio transcription failed: ${errMsg}`)
+        }
+
+        let formattedMarkdown = transcribedText
+
+        // Check if diarization is requested (default false: pure verbatim transcript unless diarize=1 or diarize=true)
+        const requestUrl = new URL(request.url)
+        const diarizeParam = requestUrl.searchParams.get('diarize')
+        const shouldDiarize = diarizeParam === '1' || diarizeParam === 'true'
+
+        if (shouldDiarize) {
             try {
-                const aiResponse = await runAiWithTimeout(env.AI, cfModel, audioBytes, 45000)
-                if (aiResponse?.text && aiResponse.text.trim()) {
-                    transcribedText = aiResponse.text.trim()
-                    modelUsed = cfModel
-                    break
-                }
-            } catch (errRaw) {
-                lastError = errRaw
+                formattedMarkdown = await formatSpeakerDiarization(env.AI, transcribedText, filename)
+            } catch (diarizeErr) {
+                console.warn('[AI] Speaker diarization failed, falling back to raw transcript:', diarizeErr?.message)
+                formattedMarkdown = transcribedText
             }
-            if (transcribedText) break
         }
+
+        return returnJSON(0, {
+            text: transcribedText,
+            markdown: formattedMarkdown,
+            diarized: shouldDiarize,
+            wordCount: transcribedText.match(/\S+/g)?.length || 0,
+            modelUsed: modelUsed,
+            filename: filename,
+        })
+    } catch (globalErr) {
+        console.error('[STT] Unhandled error in handleAudioTranscription:', globalErr)
+        return returnJSON(50000, `Internal transcription error: ${globalErr.message}`)
     }
-
-    if (!transcribedText) {
-        const errMsg = lastError ? lastError.message : 'All audio transcription providers and fallback models failed'
-        console.error('[STT] All transcribe attempts failed:', errMsg)
-        return returnJSON(50003, `Audio transcription failed: ${errMsg}`)
-    }
-
-    let formattedMarkdown = transcribedText
-
-    // Check if diarization is requested (default false: pure verbatim transcript unless diarize=1 or diarize=true)
-    const requestUrl = new URL(request.url)
-    const diarizeParam = requestUrl.searchParams.get('diarize')
-    const shouldDiarize = diarizeParam === '1' || diarizeParam === 'true'
-
-    if (shouldDiarize) {
-        try {
-            formattedMarkdown = await formatSpeakerDiarization(env.AI, transcribedText, filename)
-        } catch (diarizeErr) {
-            console.warn('[AI] Speaker diarization failed, falling back to raw transcript:', diarizeErr?.message)
-            formattedMarkdown = transcribedText
-        }
-    }
-
-    return returnJSON(0, {
-        text: transcribedText,
-        markdown: formattedMarkdown,
-        diarized: shouldDiarize,
-        vtt: aiResponse?.vtt || null,
-        wordCount: aiResponse?.word_count || (transcribedText.match(/\S+/g)?.length || 0),
-        modelUsed: modelUsed,
-        filename: filename,
-    })
 }
 
 async function formatSpeakerDiarization(aiBinding, rawText, filename = '') {
