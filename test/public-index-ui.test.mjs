@@ -246,6 +246,14 @@ test('@media print hides floating tooltips, mobile bottom sheet, toolbars, and r
     assert.match(baseCssSource, /\.markdown-body table td/)
 })
 
+test('print preview hides the edit surface instead of printing its dark editor panel', () => {
+    const printCss = baseCssSource.slice(baseCssSource.indexOf('@media print'))
+
+    assert.match(printCss, /\.editor-pane,/)
+    assert.match(printCss, /\.editor-code-shell,/)
+    assert.match(printCss, /\.editor-line-numbers,/)
+})
+
 test('mobile view tables use container-bound width and horizontal scroll without negative margins', () => {
     assert.match(baseCssSource, /body\.share-view \.markdown-body table \{\s*display:\s*block !important;\s*width:\s*100% !important;\s*min-width:\s*0 !important;\s*max-width:\s*100% !important;\s*overflow-x:\s*auto !important;/)
     assert.match(baseCssSource, /body\.share-view #preview-md\.markdown-body > table,\s*body:not\(\.share-view\) #preview-md\.markdown-body > table \{\s*margin-left:\s*0 !important;/)
