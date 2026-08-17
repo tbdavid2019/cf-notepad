@@ -408,7 +408,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
                                 <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
-                                <button type="button" id="dropdown-import-audio-diarize-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioDiarizeMarkdown}</span></button>
+                                <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
                                 ` : ''}
@@ -416,7 +416,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                 <div class="dropdown-divider"></div>
                                 <div class="dropdown-menu-label">${importSectionTitle}</div>
                                 <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioBlock}</span></button>
-                                <button type="button" id="dropdown-import-audio-diarize-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioDiarizeBlock}</span></button>
+                                <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatBlock}</span></button>
                                 <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
                                 <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
                                 ` : ''}
@@ -426,7 +426,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv,audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.mp4,.opus" class="visually-hidden-file-input" aria-hidden="true">
                         <input id="import-audio-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
-                        <input id="import-audio-diarize-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
+                        <input id="import-audio-smart-format-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
                     </div>
                 </div>
             </div>

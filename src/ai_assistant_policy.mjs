@@ -7,6 +7,28 @@ export const AI_FORMAT_SYSTEM_PROMPT = [
     'Return only the final Markdown with no explanations.',
 ].join(' ')
 
+export const AUDIO_SMART_FORMAT_SYSTEM_PROMPT = [
+    'You are an editor who turns a raw Whisper transcript into clear, useful Markdown.',
+    'Clarify the wording and organize the content so the reader can understand it quickly.',
+    'Correct obvious transcription mistakes, punctuation, sentence boundaries, and repeated filler when the intended meaning is clear.',
+    'Use headings, paragraphs, bullet lists, numbered lists, checklists, or tables only when the transcript supports that structure.',
+    'Preserve the original meaning, facts, names, numbers, decisions, and uncertainty.',
+    'Do not invent facts, speakers, conclusions, action items, or details that are not in the transcript.',
+    'If a passage is genuinely unclear, keep it cautious instead of guessing.',
+    'Return only the final Markdown with no explanations about the editing process.',
+].join(' ')
+
+export const buildAudioSmartFormatPrompt = transcript => [
+    'Task: turn the following raw Whisper transcript into clear, well-organized Markdown.',
+    'Make the content easier to read and understand while preserving its meaning and all important information.',
+    'Do not invent facts or add information that is not supported by the transcript.',
+    '',
+    'Raw Whisper transcript:',
+    String(transcript || ''),
+    '',
+    'Return only the final Markdown.',
+].join('\n')
+
 const HAN_CHARACTER = /\p{Script=Han}/u
 const LANGUAGE_NAME = /^[\p{L}\p{M}\p{N}\s()（）\-/,]+$/u
 

@@ -2234,9 +2234,9 @@ ${getMarkdownCss()}
 
         const $dropdownImportDocBtn = document.querySelector('#dropdown-import-doc-btn')
         const $dropdownImportAudioBtn = document.querySelector('#dropdown-import-audio-btn')
-        const $dropdownImportAudioDiarizeBtn = document.querySelector('#dropdown-import-audio-diarize-btn')
+        const $dropdownImportAudioSmartFormatBtn = document.querySelector('#dropdown-import-audio-smart-format-btn')
         const $importAudioInput = document.querySelector('#import-audio-input')
-        const $importAudioDiarizeInput = document.querySelector('#import-audio-diarize-input')
+        const $importAudioSmartFormatInput = document.querySelector('#import-audio-smart-format-input')
         if ($dropdownImportDocBtn && $importMdInput) {
             $dropdownImportDocBtn.addEventListener('click', () => {
                 $importMdInput.click()
@@ -2247,9 +2247,9 @@ ${getMarkdownCss()}
                 $importAudioInput.click()
             })
         }
-        if ($dropdownImportAudioDiarizeBtn && $importAudioDiarizeInput) {
-            $dropdownImportAudioDiarizeBtn.addEventListener('click', () => {
-                $importAudioDiarizeInput.click()
+        if ($dropdownImportAudioSmartFormatBtn && $importAudioSmartFormatInput) {
+            $dropdownImportAudioSmartFormatBtn.addEventListener('click', () => {
+                $importAudioSmartFormatInput.click()
             })
         }
 
@@ -2270,7 +2270,7 @@ ${getMarkdownCss()}
                 return Boolean($textarea.value && $textarea.value.trim())
             }
         }
-        const processAudioTranscription = async (file, { diarize = false } = {}) => {
+        const processAudioTranscription = async (file, { smartFormat = false } = {}) => {
             let insertMode = 'replace'
             if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
                 insertMode = await showImportOptionDialog()
@@ -2278,8 +2278,8 @@ ${getMarkdownCss()}
             if (insertMode === 'cancel') return
 
             try {
-                const toastMsg = diarize
-                    ? (getI18n('transcribingAudioDiarize') || '正在轉錄音訊並由 AI 辨識發言者...')
+                const toastMsg = smartFormat
+                    ? (getI18n('transcribingAudioSmartFormat') || '正在轉錄音訊並使用 AI 智慧整理排版...')
                     : (getI18n('transcribingAudio') || '正在使用 AI (Whisper) 轉錄音訊為純逐字稿...')
                 if (typeof window.showToast === 'function') {
                     window.showToast(toastMsg)
@@ -2287,7 +2287,7 @@ ${getMarkdownCss()}
 
                 const formData = new FormData()
                 formData.append('file', file)
-                const transcribeUrl = diarize ? '/api/audio/transcribe?diarize=1' : '/api/audio/transcribe'
+                const transcribeUrl = smartFormat ? '/api/audio/transcribe?format=smart' : '/api/audio/transcribe'
                 const response = await fetch(transcribeUrl, {
                     method: 'POST',
                     body: formData
@@ -2337,7 +2337,9 @@ ${getMarkdownCss()}
                 }
 
                 if (typeof window.showToast === 'function') {
-                    window.showToast(getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！')
+                    window.showToast(smartFormat
+                        ? (getI18n('audioSmartFormatted') || '音訊逐字稿已成功智慧整理排版！')
+                        : (getI18n('audioTranscribed') || '音訊已成功轉錄為逐字稿！'))
                 }
             } catch (err) {
                 console.error('Audio transcription failed:', err)
@@ -2550,7 +2552,7 @@ ${getMarkdownCss()}
                     reader.onerror = () => handleImportError()
                     reader.readAsText(file, 'utf-8')
                 } else if (isAudio) {
-                    await processAudioTranscription(file, { diarize: false })
+                    await processAudioTranscription(file, { smartFormat: false })
                 } else {
                     try {
                         if (typeof window.showToast === 'function') {
@@ -2594,21 +2596,21 @@ ${getMarkdownCss()}
                 const file = $importAudioInput.files && $importAudioInput.files[0]
                 if (!file) return
                 try {
-                    await processAudioTranscription(file, { diarize: false })
+                    await processAudioTranscription(file, { smartFormat: false })
                 } finally {
                     $importAudioInput.value = ''
                 }
             })
         }
 
-        if ($importAudioDiarizeInput) {
-            $importAudioDiarizeInput.addEventListener('change', async () => {
-                const file = $importAudioDiarizeInput.files && $importAudioDiarizeInput.files[0]
+        if ($importAudioSmartFormatInput) {
+            $importAudioSmartFormatInput.addEventListener('change', async () => {
+                const file = $importAudioSmartFormatInput.files && $importAudioSmartFormatInput.files[0]
                 if (!file) return
                 try {
-                    await processAudioTranscription(file, { diarize: true })
+                    await processAudioTranscription(file, { smartFormat: true })
                 } finally {
-                    $importAudioDiarizeInput.value = ''
+                    $importAudioSmartFormatInput.value = ''
                 }
             })
         }

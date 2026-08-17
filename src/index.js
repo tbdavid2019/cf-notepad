@@ -47,7 +47,7 @@ import {
 } from './note_history.mjs'
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
-import { AI_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
+import { AI_FORMAT_SYSTEM_PROMPT, AUDIO_SMART_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildAudioSmartFormatPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import {
     addAnnotationMessage,
@@ -1067,16 +1067,16 @@ async function handleAudioTranscription(request, context = {}) {
 
         let formattedMarkdown = transcribedText
 
-        // Check if diarization is requested (default false: pure verbatim transcript unless diarize=1 or diarize=true)
+        // Smart format is opt-in: Whisper always produces the source transcript first.
         const requestUrl = new URL(request.url)
-        const diarizeParam = requestUrl.searchParams.get('diarize')
-        const shouldDiarize = diarizeParam === '1' || diarizeParam === 'true'
+        const smartFormatParam = requestUrl.searchParams.get('format')
+        const shouldSmartFormat = smartFormatParam === 'smart' || smartFormatParam === '1' || smartFormatParam === 'true'
 
-        if (shouldDiarize) {
+        if (shouldSmartFormat) {
             try {
-                formattedMarkdown = await formatSpeakerDiarization(env.AI, transcribedText, filename)
-            } catch (diarizeErr) {
-                console.warn('[AI] Speaker diarization failed, falling back to raw transcript:', diarizeErr?.message)
+                formattedMarkdown = await formatAudioSmartMarkdown(env.AI, transcribedText)
+            } catch (formatErr) {
+                console.warn('[AI] Audio smart formatting failed, falling back to raw transcript:', formatErr?.message)
                 formattedMarkdown = transcribedText
             }
         }
@@ -1084,7 +1084,7 @@ async function handleAudioTranscription(request, context = {}) {
         return returnJSON(0, {
             text: transcribedText,
             markdown: formattedMarkdown,
-            diarized: shouldDiarize,
+            smartFormatted: shouldSmartFormat && formattedMarkdown !== transcribedText,
             wordCount: transcribedText.match(/\S+/g)?.length || 0,
             modelUsed: modelUsed,
             filename: filename,
@@ -1095,40 +1095,29 @@ async function handleAudioTranscription(request, context = {}) {
     }
 }
 
-async function formatSpeakerDiarization(aiBinding, rawText, filename = '') {
-    if (!rawText || rawText.trim().length < 30) {
+async function formatAudioSmartMarkdown(aiBinding, rawText) {
+    if (!rawText || rawText.trim().length < 30 || !aiBinding) {
         return rawText
     }
 
-    const systemPrompt = `You are a strict verbatim speaker segmentation assistant.
-Your ONLY task is to insert speaker labels (e.g. **🎤 主持人**: / **👤 來賓**: or **👤 發言者 1**: / **👤 發言者 2**:) at conversational turns.
-
-CRITICAL RULES:
-1. STRICT VERBATIM: You MUST NOT summarize, extrapolate, outline, create agendas, or add any commentary.
-2. ZERO ADDITIONS: DO NOT add any summary blocks, outlines, bulleted takeaways, notes, or concluding remarks.
-3. Every single word in the output must come verbatim from the input transcript.
-4. If there is only one speaker or you cannot determine multiple speakers with high confidence, return the EXACT input transcript unchanged.
-5. Output ONLY the verbatim text with speaker labels, with no markdown code fences.`
-
-    const userPrompt = `Segment this transcript by speaker strictly verbatim without any summaries, agendas, or additions:\n\n${rawText}`
-
+    const userPrompt = buildAudioSmartFormatPrompt(rawText)
     const messages = [
-        { role: 'system', content: systemPrompt },
+        { role: 'system', content: AUDIO_SMART_FORMAT_SYSTEM_PROMPT },
         { role: 'user', content: userPrompt }
     ]
 
     const modelsToTry = [
-        '@cf/meta/llama-3.3-70b-instruct',
         '@cf/openai/gpt-oss-120b',
+        '@cf/meta/llama-3.3-70b-instruct',
         '@cf/openai/gpt-oss-20b'
     ]
 
     for (const model of modelsToTry) {
         try {
-            console.log(`[AI] Running speaker diarization with LLM ${model}...`)
+            console.log(`[AI] Running audio smart formatting with LLM ${model}...`)
             const response = await runAiWithTimeout(aiBinding, model, {
                 messages,
-                max_tokens: 4096,
+                max_tokens: 8192,
             }, 40000)
 
             const formatted = extractAiText(response)
@@ -1136,7 +1125,7 @@ CRITICAL RULES:
                 return formatted.trim()
             }
         } catch (err) {
-            console.warn(`[AI] LLM ${model} speaker diarization failed:`, err?.message)
+            console.warn(`[AI] LLM ${model} audio smart formatting failed:`, err?.message)
         }
     }
 

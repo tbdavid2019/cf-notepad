@@ -12,9 +12,9 @@
     - 將音訊匯入按鈕移至「＋ 新增」選單內「匯入內容」區塊的最上方，優先展示。
     - 去除「Whisper」或「AI」等技術贅字與雜訊，提供乾淨純粹的介面：
       - **`🎙️ 匯入音訊（逐字稿）`**（預設推薦）：100% 原音忠實轉錄，無任何加工或幻覺。
-      - **`✨ 匯入音訊（區分發言者）`**（可選）：嚴格逐字對齊，標註發言者輪替。
+      - **`✨ 匯入音訊（智慧排版）`**（可選）：Whisper 產出逐字稿後，由 LLM 釐清語句、整理內容與 Markdown 排版。
   - **多格式音訊支援**：支援上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
-  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，支援以 `?diarize=1` 參數開啟發言者分離。
+  - **REST API 端點**：提供 `POST /api/audio/transcribe` 與 `POST /:path/transcribe`，支援 `multipart/form-data`、二進位串流與 JSON Base64，支援以 `?format=smart` 參數開啟 Whisper 後的 LLM 智慧整理排版。
   - **金鑰配置與安全隔離**：支援透過 `wrangler secret put GROQ_API_KEY` 設定加密金鑰，享有每分鐘數百次免費超高速轉錄額度。
   - **流暢編輯整合**：支援「取代全文」或「插入游標處」，並提供即時 Toast 轉錄進度與完成提示。
 

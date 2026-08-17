@@ -53,7 +53,7 @@
     4. **第三備援 (Fallback 3)**：Cloudflare Workers AI **`@cf/openai/whisper`**。
   - **雙模式自主切換**：
     1. **🎙️ 匯入音訊（逐字稿）**（**推薦預設**）：直接輸出 100% 原音忠實逐字稿，**零幻覺、零額外摘要、無多餘大綱腦補**，極速且純淨。
-    2. **✨ 匯入音訊（區分發言者）**（**可選模式**）：採用嚴格逐字限制（Strict Verbatim）的 LLM 分析發言輪替，標註發言者角色標籤。
+    2. **✨ 匯入音訊（智慧排版）**（**可選模式**）：Whisper 先產出逐字稿，再由 LLM 釐清語句、整理重點與 Markdown 排版；不自行捏造原文沒有的事實。
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
@@ -247,7 +247,7 @@ npm run deploy
 - `POST /api/markdown/parse`：傳入 HTML 字串或網頁 URL 轉換為乾淨 Markdown。
 - `POST /api/markdown/extract`：提取 Markdown 純文字、文章標題、標題大綱清單、超連結與字數統計。
 - `POST /api/markdown/lint`：檢查 Markdown 語法問題（未閉合程式碼區塊、缺少空白標題、損毀連結、未加引號之 Mermaid 節點）並輸出修復後的 Markdown。
-- `POST /api/audio/transcribe`：語音轉文字 API，支援 `multipart/form-data`、二進位音訊串流或 Base64 JSON，預設輸出純逐字稿，可傳入 `?diarize=1` 進行發言者角色分離。
+- `POST /api/audio/transcribe`：語音轉文字 API，支援 `multipart/form-data`、二進位音訊串流或 Base64 JSON，預設輸出純逐字稿，可傳入 `?format=smart` 讓 Whisper 逐字稿再經 LLM 釐清整理與 Markdown 排版。
 
 ### 💬 劃線註解與討論串 API
 
@@ -266,7 +266,7 @@ npm run deploy
 
 ### 🤖 1. AI Writing Assistant &amp; Agent Ecosystem
 
-- **🎙️ Audio Transcription &amp; AI Speaker Diarization (Whisper + GPT-OSS 120B)**: Upload audio files (`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`) via the `+ New` menu or Footer Import button. Employs Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`** for ultra-fast multi-language ASR and flagship **`@cf/openai/gpt-oss-120b`** for intelligent Speaker Diarization to distinguish between **Host**, **Guest**, and **Speakers** with structured dialogue Markdown and executive summaries!
+- **🎙️ Audio Transcription &amp; Smart Formatting (Whisper + LLM)**: Upload audio files (`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`) via the `+ New` menu or Footer Import button. Whisper produces the transcript first; the optional smart-format mode then uses Cloudflare Workers AI **`@cf/openai/gpt-oss-120b`** to clarify wording, organize content, and format Markdown without inventing unsupported facts.
 - **AI Formatting (AI Format)**: Workers AI (`gpt-oss-20b`) restructures Markdown headings, lists, and whitespace while preserving original language and text. Supports selection-only formatting.
 - **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
 - **AI Translation &amp; Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.
