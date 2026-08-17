@@ -3923,6 +3923,18 @@ themeCss + '\\n' +
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const printPreviewBtn = document.getElementById('print-preview-btn');
             const handlePrint = () => {
+                const printContent = document.createElement('div');
+                printContent.className = 'print-export-content markdown-body';
+                printContent.setAttribute('aria-hidden', 'true');
+                printContent.innerHTML = getExportHtmlContent();
+                printContent.style.display = 'none';
+                document.body.appendChild(printContent);
+
+                const cleanup = () => {
+                    printContent.remove();
+                    window.removeEventListener('afterprint', cleanup);
+                };
+                window.addEventListener('afterprint', cleanup, { once: true });
                 window.print();
             };
             if (exportPdfBtn) exportPdfBtn.addEventListener('click', handlePrint);
@@ -3948,7 +3960,9 @@ themeCss + '\\n' +
                         });
                     }
 
-                    const sourceEl = document.querySelector('#preview-md, #preview-plain, .markdown-body');
+                    const sourceEl = document.querySelector(APP_STATE.editorFormat === 'block'
+                        ? '.david-blocknote-view, .bn-editor, .tiptap, .ProseMirror'
+                        : '#preview-md, #preview-plain, .markdown-body');
                     if (!sourceEl) throw new Error('Content element not found');
 
                     const currentThemeName = APP_STATE.theme || 'claude-canvas';
@@ -3961,7 +3975,7 @@ themeCss + '\\n' +
 
                     const styleEl = document.createElement('style');
                     styleEl.textContent = '.export-image-sandbox { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; color: #1f2328; background: #ffffff; } ' +
-                        '.export-image-sandbox .markdown-body { width: 100% !important; max-width: 100% !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: transparent !important; } ' +
+                        '.export-image-sandbox .markdown-body, .export-image-sandbox .david-blocknote-view, .export-image-sandbox .bn-editor, .export-image-sandbox .tiptap, .export-image-sandbox .ProseMirror { width: 100% !important; max-width: 100% !important; min-height: 0 !important; margin: 0 !important; padding: 0 !important; overflow: visible !important; background: transparent !important; color: #1f2328 !important; } ' +
                         themeCss;
                     sandbox.appendChild(styleEl);
 

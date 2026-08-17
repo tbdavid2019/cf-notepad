@@ -229,7 +229,7 @@ export const COPY_DROPDOWN_MENU = (lang) => {
     `
 }
 
-export const EXPORT_DROPDOWN_MENU = (lang) => {
+export const EXPORT_DROPDOWN_MENU = (lang, { includeMarkdown = true } = {}) => {
     const isZh = lang === 'zh-TW'
     return `
         <div class="footer-control-group">
@@ -248,13 +248,13 @@ export const EXPORT_DROPDOWN_MENU = (lang) => {
                             <small>${isZh ? '生成 2x 高解析度長圖' : 'Generate 2x retina long image'}</small>
                         </span>
                     </button>
-                    <button type="button" class="dropdown-item dropdown-item-rich" id="export-md-btn" role="menuitem">
+                    ${includeMarkdown ? `<button type="button" class="dropdown-item dropdown-item-rich" id="export-md-btn" role="menuitem">
                         ${SVG_ICONS.editLock}
                         <span class="dropdown-item-copy">
                             <strong>${isZh ? '匯出 Markdown (.md)' : 'Export Markdown (.md)'}</strong>
                             <small>${isZh ? '下載原始 Markdown 檔案' : 'Download clean Markdown file'}</small>
                         </span>
-                    </button>
+                    </button>` : ''}
                     <button type="button" class="dropdown-item dropdown-item-rich" id="export-html-btn" role="menuitem">
                         ${SVG_ICONS.globe}
                         <span class="dropdown-item-copy">
@@ -570,6 +570,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '匯入' : 'Import'}</span>
                         </button>
                         ` : ''}
+                        ${isBlockEditor ? EXPORT_DROPDOWN_MENU(lang, { includeMarkdown: false }) : ''}
                         ${!isBlockEditor ? `
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}

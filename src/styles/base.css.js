@@ -3363,7 +3363,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     .layer_3,
     .preview-pane,
     .tiptap-editor-shell,
-    .david-blocknote-view {
+    .david-blocknote-view,
+    .print-export-content {
         height: auto !important;
         min-height: 0 !important;
         overflow: visible !important;
@@ -3381,7 +3382,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     /* Print content page formatting */
     #preview-md,
     #preview-plain,
-    .markdown-body {
+    .markdown-body,
+    .print-export-content {
         height: auto !important;
         overflow: visible !important;
         padding: 0 !important;

@@ -125,12 +125,34 @@ test('FOOTER incorporates unified export, copy, width, and theme dropdown in edi
     assert.ok(shareDom.window.document.querySelector('#theme-dropdown'))
 })
 
+test('block edit footer keeps visual and print exports without Markdown export', () => {
+    const blockFooterHtml = FOOTER({
+        lang: 'zh-TW',
+        isEdit: true,
+        editorFormat: 'block',
+        mode: 'md',
+        theme: 'claude-canvas',
+        width: '100%',
+    })
+    const doc = new JSDOM(blockFooterHtml).window.document
+
+    assert.ok(doc.querySelector('#export-dropdown'))
+    assert.ok(doc.querySelector('#export-image-btn'))
+    assert.equal(doc.querySelector('#export-md-btn'), null)
+    assert.ok(doc.querySelector('#export-html-btn'))
+    assert.ok(doc.querySelector('#export-pdf-btn'))
+    assert.ok(doc.querySelector('#print-preview-btn'))
+    assert.equal(doc.querySelector('#copy-dropdown'), null)
+})
+
 test('base template contains dynamic html2canvas loader and offline html export logic', () => {
     assert.match(baseTemplateSource, /function initExportAndThemeControls/)
     assert.match(baseTemplateSource, /html2canvas@1\.4\.1/)
     assert.match(baseTemplateSource, /scale:\s*2/)
     assert.match(baseTemplateSource, /exportHtmlBtn\.addEventListener\('click'/)
     assert.match(baseTemplateSource, /exportImageBtn\.addEventListener\('click'/)
+    assert.match(baseTemplateSource, /APP_STATE\.editorFormat === 'block'[\s\S]*?\.david-blocknote-view, \.bn-editor, \.tiptap, \.ProseMirror/)
+    assert.match(baseTemplateSource, /print-export-content/)
     assert.match(baseTemplateSource, /copyImageBtn\.addEventListener\('click'/)
     assert.match(baseTemplateSource, /copyAllJiraBtn\.addEventListener\('click'/)
     assert.match(baseTemplateSource, /copyAllFeishuBtn\.addEventListener\('click'/)
