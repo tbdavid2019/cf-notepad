@@ -9,6 +9,7 @@ import {
     getAnnotationThreadIdFromHash,
     getStoredDeleteToken,
     getStoredDeleteTokens,
+    initShareAnnotations,
     isPointInAnnotationRange,
     locateAnchorRange,
     removeStoredDeleteToken,
@@ -273,4 +274,52 @@ test('annotation delete button styles and DOM handlers are defined in JS and CSS
 
     assert.match(annotationCss, /\.annotation-delete-message-btn/)
     assert.match(annotationCss, /\.annotation-message-meta-actions/)
+})
+
+test('initShareAnnotations auto-discovers share root and mounts all annotation UI components even when called with event object', () => {
+    const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <div id="preview-md" class="contents markdown-body"><p>Article text</p></div>
+            <div id="share-annotation-root" data-share-id="test-share-123" data-lang="zh-TW"></div>
+        </body>
+        </html>
+    `, { url: 'https://wiki.david888.com/share/test-share-123' })
+
+    const originalDocument = globalThis.document
+    const originalWindow = globalThis.window
+    const originalFetch = globalThis.fetch
+    const originalMutationObserver = globalThis.MutationObserver
+
+    try {
+        globalThis.document = dom.window.document
+        globalThis.window = dom.window
+        globalThis.window.APP_STATE = { shareId: 'test-share-123', lang: 'zh-TW' }
+        globalThis.fetch = async () => ({
+            ok: true,
+            json: async () => ({ err: 0, data: { enabled: true, sourceRevision: 'abc', threads: [] } }),
+        })
+        globalThis.MutationObserver = class {
+            observe() {}
+            disconnect() {}
+        }
+
+        // Simulate passing a DOM event (e.g. from DOMContentLoaded event listener)
+        const mockEvent = { type: 'DOMContentLoaded', target: dom.window.document }
+        initShareAnnotations(mockEvent)
+
+        const appRoot = dom.window.document.querySelector('#share-annotation-root')
+        assert.ok(appRoot.querySelector('#annotation-rail-button'), 'Rail button should be mounted')
+        assert.ok(appRoot.querySelector('.annotation-sidebar'), 'Sidebar should be mounted')
+        assert.ok(appRoot.querySelector('.annotation-composer'), 'Composer should be mounted')
+        assert.ok(appRoot.querySelector('.selection-action-toolbar'), 'Selection toolbar should be mounted')
+        assert.ok(appRoot.querySelector('.selection-ai-popover'), 'AI popover should be mounted')
+        assert.ok(appRoot.querySelector('.annotation-mini-popover'), 'Mini popover should be mounted')
+    } finally {
+        globalThis.document = originalDocument
+        globalThis.window = originalWindow
+        globalThis.fetch = originalFetch
+        globalThis.MutationObserver = originalMutationObserver
+    }
 })

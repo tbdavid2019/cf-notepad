@@ -474,13 +474,19 @@ function formatRelativeTime(timestampSeconds, lang) {
     return new Intl.DateTimeFormat(lang, { dateStyle: 'medium' }).format(new Date(timestampSeconds * 1000))
 }
 
-export function initShareAnnotations({
-    appRoot = document.body,
-    articleRoot = document.getElementById('contents') || document.querySelector('.contents') || document.body,
-    shareId = window.APP_STATE?.shareId || '',
-    lang = window.APP_STATE?.lang || 'zh-TW',
-} = {}) {
-    if (!shareId || !articleRoot || !appRoot) return null
+export function initShareAnnotations(options = {}) {
+    if (typeof document === 'undefined') return null
+
+    const isEvent = Boolean(options && (typeof options.preventDefault === 'function' || options.target || options.type))
+    const config = isEvent || typeof options !== 'object' || !options ? {} : options
+
+    const appRoot = config.appRoot || document.querySelector('#share-annotation-root')
+    const articleRoot = config.articleRoot || document.querySelector('#preview-md, #preview-plain')
+    if (!appRoot || !articleRoot) return null
+
+    const shareId = config.shareId || appRoot.dataset?.shareId || window.APP_STATE?.shareId || ''
+    const lang = config.lang || (appRoot.dataset?.lang === 'zh-TW' ? 'zh-TW' : (window.APP_STATE?.lang === 'zh-TW' ? 'zh-TW' : 'en'))
+    if (!shareId) return null
 
     const isZh = (lang || '').toLowerCase().startsWith('zh')
     const copy = isZh
@@ -638,6 +644,7 @@ export function initShareAnnotations({
 
     const threadList = createElement(document, 'div', 'annotation-thread-list')
     const railButton = createElement(document, 'button', 'annotation-rail-button')
+    railButton.id = 'annotation-rail-button'
     railButton.type = 'button'
     railButton.setAttribute('aria-label', copy.open)
     railButton.title = copy.move
@@ -1533,7 +1540,7 @@ export function initShareAnnotations({
 
 if (typeof document !== 'undefined') {
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initShareAnnotations, { once: true })
+        document.addEventListener('DOMContentLoaded', () => initShareAnnotations(), { once: true })
     } else {
         initShareAnnotations()
     }
