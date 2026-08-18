@@ -1430,6 +1430,7 @@ export function initShareAnnotations(options = {}) {
     })
 
     articleRoot.addEventListener('click', event => {
+        if (event.button !== 0) return
         const selection = window.getSelection()
         if (selection && !selection.isCollapsed) return
         const hit = findThreadAtPoint(event.clientX, event.clientY)
@@ -1504,6 +1505,7 @@ export function initShareAnnotations(options = {}) {
     observer.observe(articleRoot, { childList: true, subtree: true })
 
     document.addEventListener('pointerdown', event => {
+        if (event.button !== 0) return
         if (selectionToolbar.hidden && aiPopover.hidden && miniPopover.hidden) return
         if (
             selectionToolbar.contains(event.target)
