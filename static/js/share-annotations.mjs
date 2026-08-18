@@ -377,6 +377,52 @@ export function isPointInAnnotationRange(range, x, y, buffer = 3) {
     return false
 }
 
+export const DELETE_TOKENS_STORAGE_KEY = 'cf-notepad:annotation-delete-tokens'
+
+const getLocalStorage = () => {
+    try {
+        if (typeof window !== 'undefined' && window?.localStorage) return window.localStorage
+        if (typeof globalThis !== 'undefined' && globalThis?.localStorage) return globalThis.localStorage
+    } catch {}
+    return null
+}
+
+export function getStoredDeleteTokens() {
+    try {
+        const storage = getLocalStorage()
+        const raw = storage?.getItem(DELETE_TOKENS_STORAGE_KEY)
+        return raw ? JSON.parse(raw) : {}
+    } catch {
+        return {}
+    }
+}
+
+export function getStoredDeleteToken(messageId) {
+    if (!messageId) return ''
+    const tokens = getStoredDeleteTokens()
+    return typeof tokens[messageId] === 'string' ? tokens[messageId] : ''
+}
+
+export function storeDeleteToken(messageId, token) {
+    if (!messageId || !token) return
+    try {
+        const storage = getLocalStorage()
+        const tokens = getStoredDeleteTokens()
+        tokens[messageId] = token
+        storage?.setItem(DELETE_TOKENS_STORAGE_KEY, JSON.stringify(tokens))
+    } catch {}
+}
+
+export function removeStoredDeleteToken(messageId) {
+    if (!messageId) return
+    try {
+        const storage = getLocalStorage()
+        const tokens = getStoredDeleteTokens()
+        delete tokens[messageId]
+        storage?.setItem(DELETE_TOKENS_STORAGE_KEY, JSON.stringify(tokens))
+    } catch {}
+}
+
 function createElement(document, tagName, className, text) {
     const element = document.createElement(tagName)
     if (className) element.className = className
@@ -403,47 +449,67 @@ async function requestJson(url, options = {}) {
     if (!response.ok || payload?.err !== 0) {
         const error = new Error(readApiError(payload, `Request failed (${response.status})`))
         error.status = response.status
+        error.payload = payload
         throw error
     }
-    return payload.data
+    return payload?.data
 }
 
-function initShareAnnotations() {
-    const appRoot = document.querySelector('#share-annotation-root')
-    const articleRoot = document.querySelector('#preview-md, #preview-plain')
-    if (!appRoot || !articleRoot) return
+function formatRelativeTime(timestampSeconds, lang) {
+    const nowSeconds = Math.floor(Date.now() / 1000)
+    const diff = Math.max(0, nowSeconds - timestampSeconds)
+    const isZh = (lang || '').toLowerCase().startsWith('zh')
 
-    const shareId = appRoot.dataset.shareId || ''
-    const lang = appRoot.dataset.lang === 'zh-TW' ? 'zh-TW' : 'en'
-    if (!shareId) return
+    if (diff < 60) return isZh ? '剛剛' : 'just now'
+    if (diff < 3600) {
+        const m = Math.floor(diff / 60)
+        return isZh ? `${m} 分鐘前` : `${m}m ago`
+    }
+    if (diff < 86400) {
+        const h = Math.floor(diff / 3600)
+        return isZh ? `${h} 小時前` : `${h}h ago`
+    }
+    const d = Math.floor(diff / 86400)
+    if (d < 30) return isZh ? `${d} 天前` : `${d}d ago`
+    return new Intl.DateTimeFormat(lang, { dateStyle: 'medium' }).format(new Date(timestampSeconds * 1000))
+}
 
-    const copy = lang === 'zh-TW'
+export function initShareAnnotations({
+    appRoot = document.body,
+    articleRoot = document.getElementById('contents') || document.querySelector('.contents') || document.body,
+    shareId = window.APP_STATE?.shareId || '',
+    lang = window.APP_STATE?.lang || 'zh-TW',
+} = {}) {
+    if (!shareId || !articleRoot || !appRoot) return null
+
+    const isZh = (lang || '').toLowerCase().startsWith('zh')
+    const copy = isZh
         ? {
-            title: '段落註解',
-            open: '開啟段落註解',
-            move: '拖曳以移動註解按鈕',
+            title: '段落劃線討論',
+            open: '開啟段落討論',
+            move: '拖曳以調整按鈕位置',
             copyLink: '複製連結',
-            linkCopied: '註解連結已複製。',
-            copyError: '無法複製連結，請再試一次。',
+            linkCopied: '已複製註解連結。',
+            copyError: '無法複製連結，請手動複製網址。',
             close: '關閉',
             annotate: '註解',
             copy: '複製',
             translate: '翻譯',
             askAi: '詢問 AI',
             textCopied: '已複製選取文字',
-            translationCopied: '已複製譯文',
+            translationCopied: '已複製翻譯結果',
             answerCopied: '已複製回答',
             aiThinking: 'AI 思考中…',
-            aiError: 'AI 回應失敗，請稍後再試。',
-            askPlaceholder: '提問，例如：這段話在說明什麼？',
+            aiError: 'AI 回覆失敗，請稍後再試。',
+            askPlaceholder: '輸入問題，例如：這段話是什麼意思？',
             sendAsk: '發送',
             chipExplain: '🔍 解釋概念',
             chipSummary: '💡 重點摘要',
             chipDerivation: '📐 公式推導',
             chipCode: '💻 程式碼解析',
-            selectionHint: '圈選文章文字即可新增註解。',
-            empty: '目前沒有註解。圈選一段文字，開始第一個討論。',
-            name: '你的名稱',
+            selectionHint: '在內文選取文字即可發起新的段落註解。',
+            empty: '目前尚無任何段落討論。選取內文文字即可發起第一個討論。',
+            name: '你的稱呼',
             comment: '留言內容',
             send: '送出註解',
             cancel: '取消',
@@ -459,6 +525,10 @@ function initShareAnnotations() {
             messages: '則留言',
             viewDiscussion: '查看完整討論 ➔',
             latestComment: '最新留言',
+            deleteComment: '刪除註解',
+            confirmDelete: '確定要刪除這則註解嗎？此動作無法復原。',
+            commentDeleted: '已成功刪除註解。',
+            deleteError: '刪除失敗，可能無此權限。',
         }
         : {
             title: 'Paragraph annotations',
@@ -501,6 +571,10 @@ function initShareAnnotations() {
             messages: 'comments',
             viewDiscussion: 'View discussion ➔',
             latestComment: 'Latest comment',
+            deleteComment: 'Delete comment',
+            confirmDelete: 'Are you sure you want to delete this comment? This cannot be undone.',
+            commentDeleted: 'Comment deleted successfully.',
+            deleteError: 'Failed to delete comment. Permission denied.',
         }
 
     const state = {
@@ -751,6 +825,9 @@ function initShareAnnotations() {
                         }),
                     },
                 )
+                if (data.message?.deleteToken) {
+                    storeDeleteToken(data.message.id, data.message.deleteToken)
+                }
                 thread.messages.push(data.message)
                 thread.messageCount += 1
                 thread.updatedAt = data.message.createdAt
@@ -819,8 +896,10 @@ function initShareAnnotations() {
             const messages = createElement(document, 'div', 'annotation-messages')
             for (const message of thread.messages) {
                 const item = createElement(document, 'div', 'annotation-message')
+                item.dataset.messageId = message.id
                 const meta = createElement(document, 'div', 'annotation-message-meta')
                 const author = createElement(document, 'strong', '', message.authorName)
+                const actions = createElement(document, 'div', 'annotation-message-meta-actions')
                 const date = createElement(
                     document,
                     'time',
@@ -830,7 +909,51 @@ function initShareAnnotations() {
                         timeStyle: 'short',
                     }).format(new Date(message.createdAt * 1000)),
                 )
-                meta.append(author, date)
+                actions.append(date)
+
+                const deleteToken = getStoredDeleteToken(message.id)
+                const isEditor = Boolean(window.APP_STATE?.isEdit || window.APP_STATE?.role === 'edit')
+                if (deleteToken || isEditor) {
+                    const deleteButton = createElement(document, 'button', 'annotation-delete-message-btn', '🗑️')
+                    deleteButton.type = 'button'
+                    deleteButton.title = copy.deleteComment
+                    deleteButton.setAttribute('aria-label', copy.deleteComment)
+                    deleteButton.addEventListener('click', async event => {
+                        event.stopPropagation()
+                        if (!window.confirm(copy.confirmDelete)) return
+                        deleteButton.disabled = true
+                        try {
+                            await requestJson(
+                                `/api/shares/${encodeURIComponent(shareId)}/annotations/${encodeURIComponent(thread.id)}/messages/${encodeURIComponent(message.id)}`,
+                                {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Annotation-Delete-Token': deleteToken || '',
+                                    },
+                                    body: JSON.stringify({ deleteToken: deleteToken || '' }),
+                                },
+                            )
+                            removeStoredDeleteToken(message.id)
+                            thread.messages = thread.messages.filter(m => m.id !== message.id)
+                            thread.messageCount = Math.max(0, thread.messageCount - 1)
+                            if (thread.messages.length === 0) {
+                                state.threads = state.threads.filter(t => t.id !== thread.id)
+                                if (state.activeMiniThreadId === thread.id) {
+                                    hideMiniPopover()
+                                }
+                            }
+                            status.textContent = copy.commentDeleted
+                            renderThreads()
+                        } catch (error) {
+                            status.textContent = error.message || copy.deleteError
+                            deleteButton.disabled = false
+                        }
+                    })
+                    actions.append(deleteButton)
+                }
+
+                meta.append(author, actions)
                 item.append(meta, createElement(document, 'p', '', message.body))
                 messages.append(item)
             }
@@ -1337,6 +1460,9 @@ function initShareAnnotations() {
                     }),
                 },
             )
+            if (data.thread?.messages?.[0]?.deleteToken) {
+                storeDeleteToken(data.thread.messages[0].id, data.thread.messages[0].deleteToken)
+            }
             state.threads.unshift(data.thread)
             try {
                 window.localStorage.setItem(AUTHOR_STORAGE_KEY, authorInput.value.trim())

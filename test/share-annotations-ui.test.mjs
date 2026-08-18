@@ -7,10 +7,14 @@ import {
     buildSelectionAnchor,
     createAnnotationThreadUrl,
     getAnnotationThreadIdFromHash,
+    getStoredDeleteToken,
+    getStoredDeleteTokens,
     isPointInAnnotationRange,
     locateAnchorRange,
+    removeStoredDeleteToken,
     setupAnnotationRailDragging,
     scrollRangeIntoView,
+    storeDeleteToken,
 } from '../static/js/share-annotations.mjs'
 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -229,4 +233,44 @@ test('annotation mini popover components, hover preview, and thread flash styles
     assert.match(annotationCss, /\.annotation-mini-action-text/)
     assert.match(annotationCss, /\.annotation-thread-flash/)
     assert.match(annotationCss, /@media print \{[\s\S]*\.annotation-mini-popover/)
+})
+
+test('annotation delete token storage helpers manage local tokens in localStorage', () => {
+    const originalLocalStorage = globalThis.localStorage
+    const store = new Map()
+    globalThis.localStorage = {
+        getItem: key => store.get(key) || null,
+        setItem: (key, val) => store.set(key, String(val)),
+        removeItem: key => store.delete(key),
+    }
+
+    try {
+        assert.deepEqual(getStoredDeleteTokens(), {})
+        assert.equal(getStoredDeleteToken('msg-1'), '')
+
+        storeDeleteToken('msg-1', 'token-abc')
+        assert.equal(getStoredDeleteToken('msg-1'), 'token-abc')
+        assert.deepEqual(getStoredDeleteTokens(), { 'msg-1': 'token-abc' })
+
+        storeDeleteToken('msg-2', 'token-def')
+        assert.equal(getStoredDeleteToken('msg-2'), 'token-def')
+
+        removeStoredDeleteToken('msg-1')
+        assert.equal(getStoredDeleteToken('msg-1'), '')
+        assert.equal(getStoredDeleteToken('msg-2'), 'token-def')
+    } finally {
+        globalThis.localStorage = originalLocalStorage
+    }
+})
+
+test('annotation delete button styles and DOM handlers are defined in JS and CSS', () => {
+    const shareJsSource = readFileSync(new URL('../static/js/share-annotations.mjs', import.meta.url), 'utf8')
+    assert.match(shareJsSource, /annotation-delete-message-btn/)
+    assert.match(shareJsSource, /DELETE/)
+    assert.match(shareJsSource, /X-Annotation-Delete-Token/)
+    assert.match(shareJsSource, /removeStoredDeleteToken/)
+    assert.match(shareJsSource, /confirmDelete/)
+
+    assert.match(annotationCss, /\.annotation-delete-message-btn/)
+    assert.match(annotationCss, /\.annotation-message-meta-actions/)
 })

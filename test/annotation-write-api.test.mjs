@@ -26,3 +26,12 @@ test('new threads reject a stale source revision', () => {
     assert.match(indexSource, /Source revision changed/)
     assert.match(indexSource, /status:\s*409/)
 })
+
+test('annotation delete routes support deleting messages and threads with permission checks', () => {
+    assert.match(indexSource, /router\.delete\('\/api\/shares\/:shareId\/annotations\/:threadId\/messages\/:messageId'/)
+    assert.match(indexSource, /router\.delete\('\/api\/shares\/:shareId\/annotations\/:threadId'/)
+    assert.match(indexSource, /verifyAnnotationDeleteToken/)
+    assert.match(indexSource, /deleteAnnotationMessage/)
+    assert.match(indexSource, /deleteAnnotationThread/)
+    assert.match(indexSource, /Permission denied to delete annotation/)
+})

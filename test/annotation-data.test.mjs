@@ -4,12 +4,16 @@ import assert from 'node:assert/strict'
 import {
     addAnnotationMessage,
     computeSourceRevision,
+    createAnnotationDeleteToken,
     createAnnotationThread,
     decodeAnnotationCursor,
+    deleteAnnotationMessage,
+    deleteAnnotationThread,
     encodeAnnotationCursor,
     listAnnotationThreads,
     validateAnnotationDraft,
     validateAnnotationMessage,
+    verifyAnnotationDeleteToken,
 } from '../src/annotation_data.mjs'
 
 test('source revisions are stable SHA-256 fingerprints', async () => {
@@ -256,4 +260,88 @@ test('addAnnotationMessage only replies to a thread belonging to the same articl
         'article-one',
     ])
     assert.match(calls[1].sql, /WHERE id = \?[\s\S]*AND path = \?[\s\S]*AND changes\(\) = 1/)
+})
+
+test('annotation delete tokens are verifiable HMAC signatures', async () => {
+    const token = await createAnnotationDeleteToken('msg-123', 'test-secret')
+    assert.match(token, /^[a-f0-9]{64}$/)
+    assert.equal(await verifyAnnotationDeleteToken('msg-123', token, 'test-secret'), true)
+    assert.equal(await verifyAnnotationDeleteToken('msg-123', 'wrong-token', 'test-secret'), false)
+    assert.equal(await verifyAnnotationDeleteToken('msg-456', token, 'test-secret'), false)
+    assert.equal(await verifyAnnotationDeleteToken('msg-123', token, 'different-secret'), false)
+    assert.equal(await verifyAnnotationDeleteToken('', token, 'test-secret'), false)
+    assert.equal(await verifyAnnotationDeleteToken('msg-123', '', 'test-secret'), false)
+})
+
+test('deleteAnnotationMessage soft-deletes a message and reports active message count', async () => {
+    const calls = []
+    const db = {
+        prepare(sql) {
+            const call = { sql }
+            calls.push(call)
+            return {
+                bind(...values) {
+                    call.values = values
+                    return call
+                },
+            }
+        },
+        async batch(statements) {
+            assert.equal(statements.length, 2)
+            return [
+                { success: true, meta: { changes: 1 } },
+                { success: true, meta: { changes: 0 }, results: [{ active_count: 0 }] },
+            ]
+        },
+    }
+
+    const result = await deleteAnnotationMessage(db, 'article-one', 'thread-1', 'message-1', {
+        nowSeconds: 123499,
+    })
+
+    assert.deepEqual(result, {
+        deleted: true,
+        messageId: 'message-1',
+        threadId: 'thread-1',
+        activeMessageCount: 0,
+        threadDeleted: true,
+    })
+    assert.match(calls[0].sql, /UPDATE annotation_messages[\s\S]*SET deleted_at = \?/)
+    assert.deepEqual(calls[0].values, [123499, 'message-1', 'thread-1', 'thread-1', 'article-one'])
+    assert.match(calls[1].sql, /SELECT COUNT\(\*\) AS active_count[\s\S]*WHERE thread_id = \?/)
+    assert.deepEqual(calls[1].values, ['thread-1'])
+})
+
+test('deleteAnnotationThread soft-deletes all messages of a thread', async () => {
+    const calls = []
+    const db = {
+        prepare(sql) {
+            const call = { sql }
+            calls.push(call)
+            return {
+                bind(...values) {
+                    call.values = values
+                    return call
+                },
+            }
+        },
+        async batch(statements) {
+            assert.equal(statements.length, 1)
+            return [
+                { success: true, meta: { changes: 3 } },
+            ]
+        },
+    }
+
+    const result = await deleteAnnotationThread(db, 'article-one', 'thread-1', {
+        nowSeconds: 123500,
+    })
+
+    assert.deepEqual(result, {
+        deleted: true,
+        threadId: 'thread-1',
+        threadDeleted: true,
+    })
+    assert.match(calls[0].sql, /UPDATE annotation_messages[\s\S]*SET deleted_at = \?[\s\S]*WHERE thread_id = \?/)
+    assert.deepEqual(calls[0].values, [123500, 'thread-1', 'thread-1', 'article-one'])
 })

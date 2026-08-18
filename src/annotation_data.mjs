@@ -142,9 +142,32 @@ export function validateAnnotationDraft(input) {
     }
 }
 
+export async function createAnnotationDeleteToken(messageId, secret) {
+    if (typeof messageId !== 'string' || !messageId) return ''
+    const secretKey = typeof secret === 'string' && secret ? secret : 'cf-notepad-annotation-delete-salt'
+    const keyBytes = new TextEncoder().encode(secretKey)
+    const dataBytes = new TextEncoder().encode(`annotation-delete:${messageId}`)
+    const cryptoKey = await crypto.subtle.importKey(
+        'raw',
+        keyBytes,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['sign'],
+    )
+    const signature = await crypto.subtle.sign('HMAC', cryptoKey, dataBytes)
+    return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('')
+}
+
+export async function verifyAnnotationDeleteToken(messageId, token, secret) {
+    if (typeof messageId !== 'string' || !messageId || typeof token !== 'string' || !token) return false
+    const expected = await createAnnotationDeleteToken(messageId, secret)
+    return expected === token
+}
+
 export async function createAnnotationThread(db, path, draft, {
     nowSeconds = Math.floor(Date.now() / 1000),
     createId = () => crypto.randomUUID(),
+    secret = null,
 } = {}) {
     if (!db || typeof db.batch !== 'function' || typeof path !== 'string' || !path || !draft?.anchor) return null
 
@@ -184,11 +207,13 @@ export async function createAnnotationThread(db, path, draft, {
         `).bind(messageId, threadId, authorName, body, nowSeconds),
     ])
 
+    const deleteToken = secret ? await createAnnotationDeleteToken(messageId, secret) : ''
     const message = {
         id: messageId,
         authorName,
         body,
         createdAt: nowSeconds,
+        ...(deleteToken ? { deleteToken } : {}),
     }
 
     return {
@@ -206,6 +231,7 @@ export async function createAnnotationThread(db, path, draft, {
 export async function addAnnotationMessage(db, path, threadId, input, {
     nowSeconds = Math.floor(Date.now() / 1000),
     createId = () => crypto.randomUUID(),
+    secret = null,
 } = {}) {
     const message = normalizeAnnotationMessageInput(input)
     if (
@@ -248,11 +274,99 @@ export async function addAnnotationMessage(db, path, threadId, input, {
 
     if (Number(results?.[0]?.meta?.changes ?? 0) !== 1) return null
 
+    const deleteToken = secret ? await createAnnotationDeleteToken(messageId, secret) : ''
     return {
         id: messageId,
         authorName: message.authorName,
         body: message.body,
         createdAt: nowSeconds,
+        ...(deleteToken ? { deleteToken } : {}),
+    }
+}
+
+export async function deleteAnnotationMessage(db, path, threadId, messageId, {
+    nowSeconds = Math.floor(Date.now() / 1000),
+} = {}) {
+    if (
+        !db
+        || typeof db.batch !== 'function'
+        || typeof path !== 'string'
+        || !path
+        || typeof threadId !== 'string'
+        || !threadId
+        || typeof messageId !== 'string'
+        || !messageId
+    ) {
+        return null
+    }
+
+    const results = await db.batch([
+        db.prepare(`
+            UPDATE annotation_messages
+            SET deleted_at = ?
+            WHERE id = ?
+              AND thread_id = ?
+              AND deleted_at IS NULL
+              AND EXISTS (
+                  SELECT 1 FROM annotation_threads
+                  WHERE id = ? AND path = ?
+              )
+        `).bind(nowSeconds, messageId, threadId, threadId, path),
+        db.prepare(`
+            SELECT COUNT(*) AS active_count
+            FROM annotation_messages
+            WHERE thread_id = ?
+              AND deleted_at IS NULL
+        `).bind(threadId),
+    ])
+
+    const changes = Number(results?.[0]?.meta?.changes ?? 0)
+    if (changes !== 1) return null
+
+    const activeCount = Number(results?.[1]?.results?.[0]?.active_count ?? 0)
+    return {
+        deleted: true,
+        messageId,
+        threadId,
+        activeMessageCount: activeCount,
+        threadDeleted: activeCount === 0,
+    }
+}
+
+export async function deleteAnnotationThread(db, path, threadId, {
+    nowSeconds = Math.floor(Date.now() / 1000),
+} = {}) {
+    if (
+        !db
+        || typeof db.batch !== 'function'
+        || typeof path !== 'string'
+        || !path
+        || typeof threadId !== 'string'
+        || !threadId
+    ) {
+        return null
+    }
+
+    const results = await db.batch([
+        db.prepare(`
+            UPDATE annotation_messages
+            SET deleted_at = ?
+            WHERE thread_id = ?
+              AND deleted_at IS NULL
+              AND EXISTS (
+                  SELECT 1 FROM annotation_threads
+                  WHERE id = ? AND path = ?
+              )
+        `).bind(nowSeconds, threadId, threadId, path),
+    ])
+
+    const changes = Number(results?.[0]?.meta?.changes ?? 0)
+    if (changes < 1) return null
+
+    return {
+        deleted: true,
+        threadId,
+        threadDeleted: true,
     }
 }
 
@@ -329,8 +443,10 @@ export async function listAnnotationThreads(db, path, { cursor = null, limit } =
     const hasMore = threadRows.length > pageSize
     const lastRow = pageRows[pageRows.length - 1]
 
+    const activePageRows = pageRows.filter(row => (messageCountsByThread.get(row.id) || 0) > 0)
+
     return {
-        threads: pageRows.map(row => {
+        threads: activePageRows.map(row => {
             const messages = messagesByThread.get(row.id) || []
             const messageCount = messageCountsByThread.get(row.id) || messages.length
             return presentThread(row, messages, messageCount)

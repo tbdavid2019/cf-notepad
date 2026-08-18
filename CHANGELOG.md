@@ -2,6 +2,10 @@
 
 ## [2026-08-18]
 
+- **🗑️ 劃線註解與留言自行刪除支援 (Self-Deletion with HMAC Token & Author Moderation)**
+  - **訪客本人安全刪除 (Author Self-Deletion)**：建立註解或回覆時自動生成並簽署無狀態 HMAC 刪除憑證（`deleteToken`）儲存於本地端，側邊欄僅對自己發布的留言呈現「🗑️ 刪除」按鈕與二次確認，杜絕誤刪或越權操作。
+  - **筆記作者管理特權 (Author Moderation)**：持有文章編輯權限（`role: edit`）的筆記擁有者具備全域管理刪除權限，可直接刪除任何不當或惡意留言。
+  - **後端安全驗證與自動清理 (RESTful DELETE API)**：提供 `DELETE /api/shares/:shareId/annotations/:threadId/messages/:messageId` 與 `DELETE /api/shares/:shareId/annotations/:threadId` 端點；當劃線討論串的所有留言皆被刪除時，自動從側邊欄與內文劃線高亮中清除。
 - **💬 劃線註解 Hover / Tap 迷你浮動預覽卡片 (Inline Popover)**
   - **桌機版懸停即時預覽 (Desktop Hover Tooltip)**：滑鼠懸停於文章劃線註解範圍時，就地在文字上方/下方彈出迷你浮層卡片，顯示最新留言者、時間、留言內容摘要與總則數；滑鼠移入卡片維持顯示，移開自動延遲淡出。
   - **手機與觸控輕點喚起 (Mobile Tap)**：在行動裝置或觸控螢幕上，輕點劃線文字即可就地彈出迷你預覽卡片；再次點擊或點擊「查看完整討論」即可直接展開底部抽屜（Bottom Sheet）並平滑滾動至對應留言卡片。

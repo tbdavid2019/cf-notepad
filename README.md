@@ -123,6 +123,7 @@
   - 讀者可在分享頁劃線進行段落討論與「複製精準連結」，開啟時會自動跳轉並高亮指定段落。
   - **桌機 Hover 預覽**：滑鼠懸停劃線段落即時彈出迷你浮層（Tooltip），快速瀏覽最新留言與作者。
   - **手機 Tap 喚起**：觸控輕點劃線段落彈出原位小卡或一鍵拉起底部抽屜討論區，並自動滾動與閃爍聚焦對應卡片。
+  - **🗑️ 留言自行刪除與作者管理**：訪客可自行刪除自己在此裝置發布的留言（HMAC Token 鑑權，無法刪除他人留言）；文章擁有者（持有編輯權限）具備全域管理刪除權限。
 - **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
 - **PWA 獨立應用、檔案關聯 (File Handling) 與離線工作區 (Offline Workspace)**：
   - **可安裝 (Add to Home Screen)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式。
@@ -281,6 +282,8 @@ npm run deploy
 - `GET /api/shares/:shareId/annotations`：獲取公開分享頁面的所有劃線討論串。
 - `POST /api/shares/:shareId/annotations`：對特定段落新增劃線討論串。
 - `POST /api/shares/:shareId/annotations/:threadId/messages`：回覆特定劃線討論串。
+- `DELETE /api/shares/:shareId/annotations/:threadId/messages/:messageId`：刪除特定註解留言（需留言者 `deleteToken` 或文章作者權限）。
+- `DELETE /api/shares/:shareId/annotations/:threadId`：刪除整個劃線討論串（需發起者 `deleteToken` 或文章作者權限）。
 - `POST /api/shares/:shareId/ai-assistant`：針對文章或劃線段落向 AI 提問。
 
 ---

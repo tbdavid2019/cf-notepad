@@ -754,7 +754,7 @@
 
 .annotation-message-meta {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
     color: var(--annotation-muted);
@@ -768,6 +768,45 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     font-size: 13px;
+}
+
+.annotation-message-meta-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    flex-shrink: 0;
+}
+
+.annotation-delete-message-btn {
+    appearance: none;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    font-size: 12px;
+    line-height: 1;
+    padding: 3px 5px;
+    border-radius: 6px;
+    color: var(--annotation-muted);
+    opacity: 0.55;
+    transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.annotation-delete-message-btn:hover,
+.annotation-delete-message-btn:focus-visible {
+    opacity: 1;
+    color: #c92a2a;
+    background-color: rgba(201, 42, 42, 0.1);
+    transform: scale(1.1);
+}
+
+.annotation-delete-message-btn:disabled {
+    opacity: 0.25;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .annotation-message p {

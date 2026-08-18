@@ -52,12 +52,16 @@ import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteVie
 import {
     addAnnotationMessage,
     computeSourceRevision,
+    createAnnotationDeleteToken,
     createAnnotationThread,
     decodeAnnotationCursor,
+    deleteAnnotationMessage,
+    deleteAnnotationThread,
     getAnnotationDb,
     listAnnotationThreads,
     validateAnnotationDraft,
     validateAnnotationMessage,
+    verifyAnnotationDeleteToken,
 } from './annotation_data.mjs'
 
 // init
@@ -1601,7 +1605,8 @@ router.post('/api/shares/:shareId/annotations', async request => {
     }
 
     try {
-        const thread = await createAnnotationThread(context.db, context.path, draft)
+        const secret = getSecret()
+        const thread = await createAnnotationThread(context.db, context.path, draft, { secret })
         if (!thread) return returnJSON(400, 'Invalid annotation', { status: 400 })
 
         return returnJSON(0, { thread }, {
@@ -1623,11 +1628,13 @@ router.post('/api/shares/:shareId/annotations/:threadId/messages', async request
     if (!reply) return returnJSON(400, 'Invalid annotation reply', { status: 400 })
 
     try {
+        const secret = getSecret()
         const message = await addAnnotationMessage(
             context.db,
             context.path,
             request.params.threadId,
             reply,
+            { secret },
         )
         if (!message) return returnJSON(404, 'Annotation thread not found', { status: 404 })
 
@@ -1640,6 +1647,95 @@ router.post('/api/shares/:shareId/annotations/:threadId/messages', async request
         })
     } catch (error) {
         console.error('Annotation Reply Error:', error)
+        return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+    }
+})
+
+router.delete('/api/shares/:shareId/annotations/:threadId/messages/:messageId', async request => {
+    const context = await getWritableAnnotationContext(request)
+    if (context.response) return context.response
+
+    const { threadId, messageId } = request.params
+    const secret = getSecret()
+
+    let authorized = false
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid, role } = await checkAuth(cookie, context.path)
+    if (valid && role === 'edit') {
+        authorized = true
+    }
+
+    if (!authorized) {
+        const tokenFromHeader = request.headers.get('X-Annotation-Delete-Token') || request.headers.get('X-Delete-Token')
+        const url = new URL(request.url)
+        const tokenFromQuery = url.searchParams.get('deleteToken')
+        let tokenFromBody = null
+        if (!tokenFromHeader && !tokenFromQuery) {
+            const body = await readAnnotationJson(request)
+            tokenFromBody = body?.deleteToken
+        }
+        const deleteToken = tokenFromHeader || tokenFromQuery || tokenFromBody
+        if (deleteToken && await verifyAnnotationDeleteToken(messageId, deleteToken, secret)) {
+            authorized = true
+        }
+    }
+
+    if (!authorized) {
+        return returnJSON(403, 'Permission denied to delete annotation', { status: 403 })
+    }
+
+    try {
+        const result = await deleteAnnotationMessage(context.db, context.path, threadId, messageId)
+        if (!result) return returnJSON(404, 'Annotation message not found', { status: 404 })
+
+        return returnJSON(0, result, { 'Cache-Control': 'no-store' })
+    } catch (error) {
+        console.error('Annotation Delete Error:', error)
+        return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
+    }
+})
+
+router.delete('/api/shares/:shareId/annotations/:threadId', async request => {
+    const context = await getWritableAnnotationContext(request)
+    if (context.response) return context.response
+
+    const { threadId } = request.params
+    const secret = getSecret()
+
+    let authorized = false
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const { valid, role } = await checkAuth(cookie, context.path)
+    if (valid && role === 'edit') {
+        authorized = true
+    }
+
+    if (!authorized) {
+        const tokenFromHeader = request.headers.get('X-Annotation-Delete-Token') || request.headers.get('X-Delete-Token')
+        const url = new URL(request.url)
+        const rootMessageId = url.searchParams.get('rootMessageId')
+        const tokenFromQuery = url.searchParams.get('deleteToken')
+        let tokenFromBody = null
+        if (!tokenFromHeader && !tokenFromQuery) {
+            const body = await readAnnotationJson(request)
+            tokenFromBody = body?.deleteToken
+        }
+        const deleteToken = tokenFromHeader || tokenFromQuery || tokenFromBody
+        if (rootMessageId && deleteToken && await verifyAnnotationDeleteToken(rootMessageId, deleteToken, secret)) {
+            authorized = true
+        }
+    }
+
+    if (!authorized) {
+        return returnJSON(403, 'Permission denied to delete annotation thread', { status: 403 })
+    }
+
+    try {
+        const result = await deleteAnnotationThread(context.db, context.path, threadId)
+        if (!result) return returnJSON(404, 'Annotation thread not found', { status: 404 })
+
+        return returnJSON(0, result, { 'Cache-Control': 'no-store' })
+    } catch (error) {
+        console.error('Annotation Thread Delete Error:', error)
         return returnJSON(503, 'Annotations are temporarily unavailable', { status: 503 })
     }
 })
