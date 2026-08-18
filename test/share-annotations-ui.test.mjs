@@ -7,6 +7,7 @@ import {
     buildSelectionAnchor,
     createAnnotationThreadUrl,
     getAnnotationThreadIdFromHash,
+    isPointInAnnotationRange,
     locateAnchorRange,
     setupAnnotationRailDragging,
     scrollRangeIntoView,
@@ -178,4 +179,54 @@ test('selection floating toolbar and inline AI popover components are rendered w
     assert.match(annotationCss, /\.selection-action-btn/)
     assert.match(annotationCss, /\.selection-ai-popover/)
     assert.match(annotationCss, /\.selection-ai-chip/)
+})
+
+test('isPointInAnnotationRange accurately checks if coordinates fall inside range client rects', () => {
+    assert.equal(isPointInAnnotationRange(null, 100, 100), false)
+    assert.equal(isPointInAnnotationRange({}, 100, 100), false)
+
+    const mockRange = {
+        getClientRects: () => [
+            { left: 50, right: 150, top: 100, bottom: 120, width: 100, height: 20 },
+            { left: 50, right: 200, top: 125, bottom: 145, width: 150, height: 20 },
+        ],
+    }
+
+    // Inside first line
+    assert.equal(isPointInAnnotationRange(mockRange, 100, 110), true)
+    // Inside second line
+    assert.equal(isPointInAnnotationRange(mockRange, 180, 130), true)
+    // Within 3px buffer boundary
+    assert.equal(isPointInAnnotationRange(mockRange, 48, 110, 3), true)
+    assert.equal(isPointInAnnotationRange(mockRange, 100, 98, 3), true)
+    // Outside
+    assert.equal(isPointInAnnotationRange(mockRange, 10, 10), false)
+    assert.equal(isPointInAnnotationRange(mockRange, 190, 110), false)
+    assert.equal(isPointInAnnotationRange(mockRange, 100, 200), false)
+})
+
+test('annotation mini popover components, hover preview, and thread flash styles are defined', () => {
+    const shareJsSource = readFileSync(new URL('../static/js/share-annotations.mjs', import.meta.url), 'utf8')
+    assert.match(shareJsSource, /annotation-mini-popover/)
+    assert.match(shareJsSource, /annotation-mini-header/)
+    assert.match(shareJsSource, /annotation-mini-badge/)
+    assert.match(shareJsSource, /annotation-mini-count/)
+    assert.match(shareJsSource, /annotation-mini-author/)
+    assert.match(shareJsSource, /annotation-mini-time/)
+    assert.match(shareJsSource, /annotation-mini-body/)
+    assert.match(shareJsSource, /annotation-mini-footer/)
+    assert.match(shareJsSource, /annotation-mini-action-text/)
+    assert.match(shareJsSource, /annotation-thread-flash/)
+    assert.match(shareJsSource, /showMiniPopover/)
+    assert.match(shareJsSource, /hideMiniPopover/)
+    assert.match(shareJsSource, /findThreadAtPoint/)
+    assert.match(shareJsSource, /focusThreadInSidebar/)
+
+    assert.match(annotationCss, /\.annotation-mini-popover/)
+    assert.match(annotationCss, /\.annotation-mini-badge/)
+    assert.match(annotationCss, /\.annotation-mini-author/)
+    assert.match(annotationCss, /\.annotation-mini-body/)
+    assert.match(annotationCss, /\.annotation-mini-action-text/)
+    assert.match(annotationCss, /\.annotation-thread-flash/)
+    assert.match(annotationCss, /@media print \{[\s\S]*\.annotation-mini-popover/)
 })

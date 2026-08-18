@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-08-18]
+
+- **💬 劃線註解 Hover / Tap 迷你浮動預覽卡片 (Inline Popover)**
+  - **桌機版懸停即時預覽 (Desktop Hover Tooltip)**：滑鼠懸停於文章劃線註解範圍時，就地在文字上方/下方彈出迷你浮層卡片，顯示最新留言者、時間、留言內容摘要與總則數；滑鼠移入卡片維持顯示，移開自動延遲淡出。
+  - **手機與觸控輕點喚起 (Mobile Tap)**：在行動裝置或觸控螢幕上，輕點劃線文字即可就地彈出迷你預覽卡片；再次點擊或點擊「查看完整討論」即可直接展開底部抽屜（Bottom Sheet）並平滑滾動至對應留言卡片。
+  - **劃線點擊聯動側邊欄與高亮聚焦 (Click to Focus & Flash)**：點擊劃線文字或迷你預覽卡片，直接開啟側邊欄並聚焦到該討論串，附帶柔和的卡片高亮閃爍動畫（`.annotation-thread-flash`）。
+  - **高效無損命中測試 (Range ClientRects Hit Testing)**：在 CSS Custom Highlight API 基礎上，利用 `Range.getClientRects()` 進行無 DOM 污染的多行坐標命中檢測與視窗邊界自我調節。
+
 ## [2026-08-17]
 
 - **Block 編輯模式補齊檔案導出**：編輯頁重新提供 PNG 長圖、獨立 HTML、PDF／列印預覽；Block 編輯器會直接使用目前畫布內容產生導出結果，Markdown 導出則維持隱藏。

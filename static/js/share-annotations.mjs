@@ -353,6 +353,30 @@ export function scrollRangeIntoView(range, scrollRoot, { behavior = 'smooth' } =
     return true
 }
 
+export function isPointInAnnotationRange(range, x, y, buffer = 3) {
+    if (!range) return false
+    let rects = typeof range.getClientRects === 'function' ? range.getClientRects() : []
+    if ((!rects || rects.length === 0) && typeof range.getBoundingClientRect === 'function') {
+        const bbox = range.getBoundingClientRect()
+        if (bbox && (bbox.width > 0 || bbox.height > 0)) {
+            rects = [bbox]
+        }
+    }
+    if (!rects || rects.length === 0) return false
+    for (let i = 0; i < rects.length; i++) {
+        const r = rects[i]
+        if (
+            x >= r.left - buffer
+            && x <= r.right + buffer
+            && y >= r.top - buffer
+            && y <= r.bottom + buffer
+        ) {
+            return true
+        }
+    }
+    return false
+}
+
 function createElement(document, tagName, className, text) {
     const element = document.createElement(tagName)
     if (className) element.className = className
@@ -433,6 +457,8 @@ function initShareAnnotations() {
             stale: '文章內容已更新，請重新圈選文字。',
             quoted: '你圈選的文字',
             messages: '則留言',
+            viewDiscussion: '查看完整討論 ➔',
+            latestComment: '最新留言',
         }
         : {
             title: 'Paragraph annotations',
@@ -473,12 +499,16 @@ function initShareAnnotations() {
             stale: 'Article updated. Please reselect text.',
             quoted: 'Selected text',
             messages: 'comments',
+            viewDiscussion: 'View discussion ➔',
+            latestComment: 'Latest comment',
         }
 
     const state = {
         currentRevision: '',
         pendingAnchor: null,
         threads: [],
+        located: new Map(),
+        activeMiniThreadId: null,
     }
 
     const panel = createElement(document, 'aside', 'annotation-sidebar')
@@ -609,8 +639,26 @@ function initShareAnnotations() {
         </div>
     `
 
+    const miniPopover = createElement(document, 'div', 'annotation-mini-popover')
+    miniPopover.hidden = true
+    miniPopover.innerHTML = `
+        <div class="annotation-mini-header">
+            <span class="annotation-mini-badge">💬 ${copy.title}</span>
+            <span class="annotation-mini-count"></span>
+            <button type="button" class="annotation-mini-close" aria-label="${copy.close}">×</button>
+        </div>
+        <div class="annotation-mini-author-time">
+            <strong class="annotation-mini-author"></strong>
+            <time class="annotation-mini-time"></time>
+        </div>
+        <div class="annotation-mini-body"></div>
+        <div class="annotation-mini-footer">
+            <span class="annotation-mini-action-text">${copy.viewDiscussion}</span>
+        </div>
+    `
+
     panel.append(header, intro, composer, status, threadList)
-    appRoot.append(railButton, selectionToolbar, aiPopover, panel)
+    appRoot.append(railButton, selectionToolbar, aiPopover, miniPopover, panel)
 
     try {
         authorInput.value = window.localStorage.getItem(AUTHOR_STORAGE_KEY) || ''
@@ -664,6 +712,7 @@ function initShareAnnotations() {
             if (ranges.length) CSS.highlights.set('share-annotations', new Highlight(...ranges))
             else CSS.highlights.delete('share-annotations')
         }
+        state.located = located
         return located
     }
 
@@ -838,6 +887,120 @@ function initShareAnnotations() {
         } catch {
             status.textContent = copy.loadError
         }
+    }
+
+    const findThreadAtPoint = (x, y) => {
+        if (!state.located || state.threads.length === 0) return null
+        for (const thread of state.threads) {
+            const range = state.located.get(thread.id)
+            if (range && isPointInAnnotationRange(range, x, y)) {
+                return { thread, range }
+            }
+        }
+        return null
+    }
+
+    const positionMiniPopover = (range, pointX) => {
+        if (!range || typeof range.getBoundingClientRect !== 'function') return
+        let targetRect = range.getBoundingClientRect()
+        if (typeof range.getClientRects === 'function') {
+            const rects = range.getClientRects()
+            if (rects && rects.length > 0 && typeof pointX === 'number') {
+                for (let i = 0; i < rects.length; i++) {
+                    const r = rects[i]
+                    if (pointX >= r.left - 6 && pointX <= r.right + 6) {
+                        targetRect = r
+                        break
+                    }
+                }
+            }
+        }
+
+        const popoverWidth = Math.min(320, window.innerWidth - 24)
+        const centerX = targetRect.left + targetRect.width / 2
+        const left = clamp(
+            centerX,
+            popoverWidth / 2 + 12,
+            window.innerWidth - popoverWidth / 2 - 12,
+        )
+        miniPopover.style.left = `${Math.round(left)}px`
+
+        const popoverHeight = miniPopover.offsetHeight || 130
+        const spaceAbove = targetRect.top
+        const spaceBelow = window.innerHeight - targetRect.bottom
+
+        if (spaceAbove >= popoverHeight + 14 || spaceAbove > spaceBelow) {
+            const top = Math.max(8, targetRect.top - popoverHeight - 8)
+            miniPopover.style.top = `${Math.round(top)}px`
+            miniPopover.dataset.placement = 'top'
+        } else {
+            const top = Math.min(window.innerHeight - popoverHeight - 8, targetRect.bottom + 8)
+            miniPopover.style.top = `${Math.round(top)}px`
+            miniPopover.dataset.placement = 'bottom'
+        }
+    }
+
+    let miniHideTimer = null
+    const scheduleHideMiniPopover = (delay = 220) => {
+        window.clearTimeout(miniHideTimer)
+        miniHideTimer = window.setTimeout(() => {
+            hideMiniPopover()
+        }, delay)
+    }
+
+    const showMiniPopover = (thread, range, pointX) => {
+        window.clearTimeout(miniHideTimer)
+        state.activeMiniThreadId = thread.id
+        const messages = thread.messages || []
+        const latestMsg = messages[messages.length - 1] || {}
+        const authorName = latestMsg.authorName || copy.name
+        const commentBody = latestMsg.body || ''
+        const count = thread.messageCount || messages.length || 1
+
+        const countEl = miniPopover.querySelector('.annotation-mini-count')
+        const authorEl = miniPopover.querySelector('.annotation-mini-author')
+        const timeEl = miniPopover.querySelector('.annotation-mini-time')
+        const bodyEl = miniPopover.querySelector('.annotation-mini-body')
+
+        if (countEl) countEl.textContent = `${count} ${copy.messages}`
+        if (authorEl) authorEl.textContent = authorName
+        if (timeEl && (latestMsg.createdAt || thread.createdAt)) {
+            const timestamp = (latestMsg.createdAt || thread.createdAt) * 1000
+            try {
+                timeEl.textContent = new Intl.DateTimeFormat(lang, {
+                    dateStyle: 'short',
+                    timeStyle: 'short',
+                }).format(new Date(timestamp))
+            } catch {
+                timeEl.textContent = ''
+            }
+        } else if (timeEl) {
+            timeEl.textContent = ''
+        }
+        if (bodyEl) bodyEl.textContent = commentBody
+
+        selectionToolbar.hidden = true
+        miniPopover.hidden = false
+        positionMiniPopover(range, pointX)
+    }
+
+    const hideMiniPopover = () => {
+        window.clearTimeout(miniHideTimer)
+        state.activeMiniThreadId = null
+        miniPopover.hidden = true
+        if (articleRoot) articleRoot.style.cursor = ''
+    }
+
+    const focusThreadInSidebar = threadId => {
+        setPanelOpen(true)
+        window.setTimeout(() => {
+            const threadCard = threadList.querySelector(`[data-thread-id="${threadId}"]`)
+            if (threadCard) {
+                threadCard.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                threadCard.classList.add('annotation-thread-flash')
+                window.setTimeout(() => threadCard.classList.remove('annotation-thread-flash'), 1600)
+            }
+        }, 60)
     }
 
     const positionAiPopover = () => {
@@ -1089,9 +1252,69 @@ function initShareAnnotations() {
     selectionButton.addEventListener('pointerdown', event => event.preventDefault())
     selectionButton.addEventListener('click', () => {
         if (state.pendingAnchor) {
+            hideMiniPopover()
             showComposer(state.pendingAnchor)
             selectionToolbar.hidden = true
             aiPopover.hidden = true
+        }
+    })
+
+    miniPopover.addEventListener('pointerenter', () => window.clearTimeout(miniHideTimer))
+    miniPopover.addEventListener('pointerleave', () => scheduleHideMiniPopover(220))
+    miniPopover.addEventListener('click', event => {
+        if (event.target.closest('.annotation-mini-close')) {
+            event.stopPropagation()
+            hideMiniPopover()
+            return
+        }
+        if (state.activeMiniThreadId) {
+            const threadId = state.activeMiniThreadId
+            hideMiniPopover()
+            focusThreadInSidebar(threadId)
+        }
+    })
+
+    let pointerMoveThrottle = null
+    articleRoot.addEventListener('pointermove', event => {
+        if (event.pointerType === 'touch') return
+        const selection = window.getSelection()
+        if (selection && !selection.isCollapsed) return
+        if (!aiPopover.hidden || !composer.hidden) return
+
+        if (pointerMoveThrottle) return
+        pointerMoveThrottle = window.setTimeout(() => {
+            pointerMoveThrottle = null
+            const hit = findThreadAtPoint(event.clientX, event.clientY)
+            if (hit) {
+                articleRoot.style.cursor = 'pointer'
+                if (state.activeMiniThreadId !== hit.thread.id || miniPopover.hidden) {
+                    showMiniPopover(hit.thread, hit.range, event.clientX)
+                }
+            } else {
+                articleRoot.style.cursor = ''
+                if (!miniPopover.hidden) {
+                    scheduleHideMiniPopover(200)
+                }
+            }
+        }, 30)
+    })
+
+    articleRoot.addEventListener('click', event => {
+        const selection = window.getSelection()
+        if (selection && !selection.isCollapsed) return
+        const hit = findThreadAtPoint(event.clientX, event.clientY)
+        if (hit) {
+            if (window.innerWidth <= 720 || event.pointerType === 'touch') {
+                if (state.activeMiniThreadId === hit.thread.id && !miniPopover.hidden) {
+                    hideMiniPopover()
+                    focusThreadInSidebar(hit.thread.id)
+                } else {
+                    showMiniPopover(hit.thread, hit.range, event.clientX)
+                }
+            } else {
+                hideMiniPopover()
+                focusThreadInSidebar(hit.thread.id)
+            }
         }
     })
 
@@ -1148,16 +1371,28 @@ function initShareAnnotations() {
     observer.observe(articleRoot, { childList: true, subtree: true })
 
     document.addEventListener('pointerdown', event => {
-        if (selectionToolbar.hidden && aiPopover.hidden) return
-        if (selectionToolbar.contains(event.target) || aiPopover.contains(event.target) || panel.contains(event.target)) {
+        if (selectionToolbar.hidden && aiPopover.hidden && miniPopover.hidden) return
+        if (
+            selectionToolbar.contains(event.target)
+            || aiPopover.contains(event.target)
+            || miniPopover.contains(event.target)
+            || panel.contains(event.target)
+        ) {
             return
         }
+        const hit = findThreadAtPoint(event.clientX, event.clientY)
+        if (hit && hit.thread.id === state.activeMiniThreadId) return
+
         selectionToolbar.hidden = true
         aiPopover.hidden = true
+        hideMiniPopover()
     })
 
     document.addEventListener('keydown', event => {
         if (event.key === 'Escape') {
+            if (!miniPopover.hidden) {
+                hideMiniPopover()
+            }
             if (!aiPopover.hidden) {
                 aiPopover.hidden = true
             }
