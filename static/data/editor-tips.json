@@ -88,8 +88,8 @@
     },
     {
       "id": "book-mode",
-      "zh-TW": "小訣竅：在分享頁點擊「書本」或網址結尾加上 /book，即可進入雙欄目錄樹與章節無刷新翻書閱讀體驗。",
-      "en-US": "Tip: Click 'Book' in the share footer or add /book to the URL to enjoy a dual-pane sidebar TOC with smooth in-place chapter reading."
+      "zh-TW": "小訣竅：在分享頁網址後方加上 /book 即可開啟雙欄書本模式，支援滑鼠拖曳目錄寬度（雙擊重設）、章節搜尋與 [ / ] 快速鍵翻頁！",
+      "en-US": "Tip: Add /book to any share link for dual-pane Book Mode, supporting draggable sidebar width (double-click reset), chapter search, and [ / ] navigation!"
     },
     {
       "id": "vertical-slides",

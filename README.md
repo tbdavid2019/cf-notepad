@@ -99,24 +99,69 @@
 - **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；新筆記編輯器會隨機從桌面或手機預覽開始，方便作者先檢查窄版排版。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
 
+### 📚 3. 書本模式使用與製作指南 (Book Mode Guide)
+
+任何包含**章節清單與超連結**的 Markdown 筆記，都能一秒變身為現代化的**線上雙欄電子書**！
+
+#### 🛠️ 如何製作一本多章節電子書（語法範例）
+只要在筆記內撰寫結構化的目錄清單（支援 H3 分組與層級縮排）：
+
+````markdown
+# 📚 雲端技術手冊與架構指南 (Cloud Architecture Book)
+
+> 本手冊收錄系統核心設計、架構規格與進階擴充功能驗收。
+
+## 📖 目錄與章節導覽 (Book Table of Contents)
+
+### 第一部分：核心架構概論
+- [01. 系統架構與設計概念](/share/qt7xmd)
+- [02. 編輯器擴充與排版特性](/extended-writing-features-demo)
+  - [02-1. 深入排版細節 (子章節)](/share/qt7xmd)
+
+### 第二部分：進階功能驗收
+- [03. Excel 與 Google Sheets 表格自動貼上驗證](/share/qt7xmd)
+- [04. 2D 簡報模式垂直探索展示](/share/qt7xmd/present)
+- [05. 外部參考文獻與協議規範](https://wiki.david888.com/mcp)
+````
+
+#### 🚀 進入與操作書本模式
+1. **進入網址**：在任何分享頁後方加上 `/book`（例如 `https://wiki.david888.com/share/:shareId/book`）或編輯頁加上 `/book`。
+2. **左側目錄與自訂寬度**：
+   - 自動解析所有章節連結與分組標題，支援**章節即時搜尋過濾**。
+   - **側邊欄拖拉調整寬度（Splitter Resizer）**：滑鼠懸停於側邊欄邊緣左右拖曳即可調整寬度（180px～65% 螢幕寬度），雙擊分隔把手一鍵重設為預設 290px，寬度偏好自動記憶於瀏覽器。
+3. **右側極速原生渲染（`?embed=1`）**：
+   - 點擊左側章節立即載入對應文章，零秒原生渲染，KaTeX 公式、程式碼行號、Alert 提示框、Mermaid 圖表與主題樣式全數支援。
+4. **翻頁與導航**：
+   - 頂部提供「← 上一章」與「下一章 →」切換按鈕，支援鍵盤快速鍵 `[`（上一章）與 `]`（下一章）。
+   - 頂部 `↗` 按鈕可一鍵在新分頁開啟當前章節。
+   - 左上角「`← 退出書本`」可精確返回標準閱讀或編輯模式。
+
+---
+
 #### 🔗 實例展示與功能驗收 (Live Demo & Feature Showcase)
 
+- 📖 **書本模式極速體驗 (Book Mode)**：[https://wiki.david888.com/share/47eqhm/book](https://wiki.david888.com/share/47eqhm/book)
+- ✏️ **書本目錄編輯頁面 (Book Editor Demo)**：[https://wiki.david888.com/book-and-2d-slides-demo](https://wiki.david888.com/book-and-2d-slides-demo)
 - 📖 **公開閱讀與渲染頁面 (Share URL)**：[https://wiki.david888.com/share/qt7xmd](https://wiki.david888.com/share/qt7xmd)
-- 🖥️ **全螢幕簡報模式 (Slidev Presentation)**：[https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
-- ✏️ **編輯器模式 (含搜尋與取代 / Alert 補完測試)**：[https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
+- 🖥️ **全螢幕 2D 簡報模式 (2D Slide Presentation)**：[https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
+- ✏️ **編輯器進階寫作展示 (Extended Writing Kit)**：[https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
 
 ![](orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 
-| 功能項目 | 語法範例 | 驗收方式與效果 |
+| 功能項目 | 語法範例 / 操作方式 | 驗收方式與效果 |
 | :--- | :--- | :--- |
-| **1. 🖍️ 螢光筆高亮** | `==螢光筆文字==` | 檢視第 1 節，呈現柔和黃色高光 `<mark>`，適配淺色與深色主題。 |
-| **2. 🎨 自訂字體/背景色** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | 檢視第 2 節，呈現紅字、綠字、藍字及「藍字淡藍底」複合徽章。 |
-| **3. 🔢 行號與檔名標籤** | ```` ```js=1 [server.mjs] ```` | 檢視第 3 節，程式碼頂部有檔名 Header，左側有防圈選行號槽。 |
-| **4. 📋 程式碼一鍵複製** | 自動掛載於 Code Header | 點擊程式碼區塊右上角的「📋 複製」，會顯示綠色打勾成功狀態。 |
-| **5. 💬 GitHub Alert 提示** | `> [!NOTE]` / `> [!TIP]` 等 5 種 | 檢視第 4 節，顯示 Note、Tip、Important、Warning、Caution 提示框。 |
-| **6. 📖 維基百科腳註懸停** | `[^1]` 與 `[@lamport78]` | 檢視第 5 節，將滑鼠移至標號上方，即時就地彈出毛玻璃懸浮卡片。 |
-| **7. 🔍 編輯器搜尋與取代** | `Cmd+F` (搜尋) / `Cmd+H` (取代) | 進入編輯器頁面按下快捷鍵，測試即時高亮、筆數計數與一鍵取代。 |
-| **8. ⚡ Alert 自動補完選單** | 在編輯器新行輸入 `> [!` | 自動彈出 5 種 Alert 類型下拉選單，可用方向鍵與 Enter 快速插入。 |
+| **1. 📖 書本模式與拖拉側邊欄** | `/share/:id/book` | 檢視 `/share/47eqhm/book`，左側拖曳把手調整寬度，點擊章節 0 秒無縫換頁。 |
+| **2. 📽️ 2D 簡報模式** | `---` (橫向) / `--` (縱向) | 進入 `/share/qt7xmd/present`，支援四向方向鍵 `↑` `↓` `←` `→` 與 `O` 矩陣總覽。 |
+| **3. 📊 Excel 表格自動貼上** | 複製 Excel/Sheets 直接貼上 | 在編輯器按 `Cmd+V`，自動將剪貼簿 HTML/TSV 表格轉換為 Markdown 表格。 |
+| **4. 📝 行內註腳與工具列** | `^[行內註腳內容]` 或工具列 `[^1]` | 正文撰寫 `^[說明]`，自動在文末生成編號對應註腳，懸停浮層預覽。 |
+| **5. 🖍️ 螢光筆高亮** | `==螢光筆文字==` | 呈現柔和黃色高光 `<mark>`，適配淺色與 20 款深色主題。 |
+| **6. 🎨 自訂字體/背景色** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | 支援 Hex, RGB, CSS 色彩與 `[color=... bg=...]` 複合標籤。 |
+| **7. 🔢 行號與檔名標籤** | ```` ```js=1 [server.mjs] ```` | 程式碼頂部渲染檔名 Header，左側生成防圈選獨立行號槽。 |
+| **8. 📋 程式碼一鍵複製** | 自動掛載於 Code Header | 點擊程式碼區塊右上角的「📋 複製」，顯示綠色打勾反饋。 |
+| **9. 💬 GitHub Alert 提示** | `> [!NOTE]` / `> [!TIP]` 等 5 種 | 顯示 Note、Tip、Important、Warning、Caution 提示框。 |
+| **10. 📖 維基百科腳註懸停** | `[^1]` 與 `[@lamport78]` | 滑鼠移至標號上方，即時就地彈出毛玻璃懸浮卡片。 |
+| **11. 🔍 編輯器搜尋與取代** | `Cmd+F` (搜尋) / `Cmd+H` (取代) | 按下快捷鍵開啟懸浮面板，支援即時匹配計數、正則與單筆/全部取代。 |
+| **12. ⚡ Alert 自動補完選單** | 行首鍵入 `> [!` | 自動彈出 5 種 Alert 類型下拉選單，方向鍵與 Enter 快速插入。 |
 
 ---
 
@@ -381,22 +426,69 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📝 Inline Footnotes &amp; Toolbar Button (`^[...]`)**: Supports Pandoc / HackMD inline footnote syntax `^[footnote text]` with auto-numbering and bottom definition generation, plus an editor toolbar button (`[^1]`).
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
 
+### 📚 3. Book Mode Guide (Multi-Chapter Documentation)
+
+Any Markdown note containing a structured list of chapter hyperlinks instantly transforms into an interactive **dual-pane online eBook**!
+
+#### 🛠️ How to Create an Online Book (Syntax Example)
+Simply author a table of contents list with Markdown links (supports H3 group headers and sub-item indentation):
+
+````markdown
+# 📚 Cloud Architecture Book & Technical Guide
+
+> This handbook compiles core system design, architecture specs, and feature verification.
+
+## 📖 Book Table of Contents
+
+### Part 1: Core Architecture Concepts
+- [01. System Architecture & Design Concepts](/share/qt7xmd)
+- [02. Extended Writing & Formatting Features](/extended-writing-features-demo)
+  - [02-1. Deep Dive Layout Details (Sub-chapter)](/share/qt7xmd)
+
+### Part 2: Advanced Feature Verification
+- [03. Excel & Google Sheets Auto Table Paste](/share/qt7xmd)
+- [04. 2D Slide Deck Vertical Exploration](/share/qt7xmd/present)
+- [05. External References & API Specifications](https://wiki.david888.com/mcp)
+````
+
+#### 🚀 Accessing & Using Book Mode
+1. **Access URL**: Append `/book` to any share link (e.g. `https://wiki.david888.com/share/:shareId/book`) or edit link.
+2. **Left Sidebar & Draggable Resizer**:
+   - Automatically parses all chapter links, sections, and nested items with **instant chapter search filtering**.
+   - **Splitter Resizer**: Hover over the sidebar border to drag and resize width (180px to 65% viewport width); double-click to reset to default 290px. Preferences are remembered in browser `localStorage`.
+3. **Right Content Native Embed (`?embed=1`)**:
+   - Clicking a chapter loads content immediately via native Workers edge rendering with full KaTeX formulas, code block tabs, GitHub alerts, Mermaid diagrams, and CSS themes.
+4. **Navigation & Shortcuts**:
+   - Top bar provides "← Previous" and "Next →" buttons, with keyboard shortcuts `[` (previous) and `]` (next).
+   - Top `↗` button opens the current chapter in a new tab.
+   - Left top "← Exit Book" returns precisely to standard reading or edit mode.
+
+---
+
 #### 🔗 Live Demo & Feature Showcase
 
+- 📖 **Book Mode Live Experience**: [https://wiki.david888.com/share/47eqhm/book](https://wiki.david888.com/share/47eqhm/book)
+- ✏️ **Book Table of Contents Editor**: [https://wiki.david888.com/book-and-2d-slides-demo](https://wiki.david888.com/book-and-2d-slides-demo)
 - 📖 **Public Reader View (Share URL)**: [https://wiki.david888.com/share/qt7xmd](https://wiki.david888.com/share/qt7xmd)
-- 🖥️ **Fullscreen Slide Presentation**: [https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
-- ✏️ **Editor Mode (Search & Replace / Alert Autocomplete)**: [https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
+- 🖥️ **Fullscreen 2D Slide Presentation**: [https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
+- ✏️ **Editor Extended Writing Kit**: [https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
 
-| Feature | Syntax Example | Verification & Visual Behavior |
+![](orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
+
+| Feature | Syntax / Usage | Verification & Visual Behavior |
 | :--- | :--- | :--- |
-| **1. 🖍️ Text Highlighting** | `==highlighted text==` | Section 1: rendered as soft yellow glow `<mark>` across light/dark themes. |
-| **2. 🎨 Custom Font/BG Color** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | Section 2: red, green, blue text, custom backgrounds and combined badges. |
-| **3. 🔢 Line Numbers & Tabs** | ```` ```js=1 [server.mjs] ```` | Section 3: title header tab on top, line numbers gutter on the left. |
-| **4. 📋 One-Click Code Copy** | Mounted on Code Header | Click "📋 Copy" on code blocks to trigger instant green checkmark state. |
-| **5. 💬 GitHub Alerts** | `> [!NOTE]` / `> [!TIP]` etc. | Section 4: renders Note, Tip, Important, Warning, Caution alert boxes. |
-| **6. 📖 Footnote Hover Popover** | `[^1]` & `[@lamport78]` | Section 5: hover over markers to summon in-place glassmorphic popover card. |
-| **7. 🔍 Search & Replace** | `Cmd+F` (Find) / `Cmd+H` (Replace) | Open editor and press shortcut for match count, navigation and replacement. |
-| **8. ⚡ Alert Autocomplete** | Type `> [!` on a new line | Summons 5 alert options with arrow keys and Enter/Tab insertion. |
+| **1. 📖 Book Mode & Resizer** | `/share/:id/book` | View `/share/47eqhm/book`, drag splitter to resize, click chapters for 0s seamless switch. |
+| **2. 📽️ 2D Presentation** | `---` (horiz) / `--` (vert) | Open `/share/qt7xmd/present`, 4-way arrow keys `↑` `↓` `←` `→` & `O` matrix overview. |
+| **3. 📊 Excel Table Auto-Paste** | Direct clipboard paste | Press `Cmd+V` in editor to auto-convert HTML/TSV table to Markdown table syntax. |
+| **4. 📝 Inline Footnotes** | `^[inline footnote text]` | Write `^[note]`, auto-generates bottom numbered definitions and hover tooltip popover. |
+| **5. 🖍️ Text Highlighting** | `==highlighted text==` | Rendered as soft yellow glow `<mark>` across light/dark themes. |
+| **6. 🎨 Custom Font/BG Color** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | Supports Hex, RGB, CSS colors and `[color=... bg=...]` composite badges. |
+| **7. 🔢 Line Numbers & Tabs** | ```` ```js=1 [server.mjs] ```` | Title header tab on top, line numbers gutter on the left. |
+| **8. 📋 One-Click Code Copy** | Mounted on Code Header | Click "📋 Copy" on code blocks to trigger instant green checkmark state. |
+| **9. 💬 GitHub Alerts** | `> [!NOTE]` / `> [!TIP]` etc. | Renders Note, Tip, Important, Warning, Caution alert boxes. |
+| **10. 📖 Footnote Hover Popover** | `[^1]` & `[@lamport78]` | Hover over markers to summon in-place glassmorphic popover card. |
+| **11. 🔍 Search & Replace** | `Cmd+F` (Find) / `Cmd+H` (Replace) | Shortcut opens floating bar with match count, regex, and one-click replace all. |
+| **12. ⚡ Alert Autocomplete** | Type `> [!` on a new line | Summons 5 alert options with arrow keys and Enter/Tab insertion. |
 
 ![](orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 
