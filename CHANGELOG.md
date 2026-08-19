@@ -15,6 +15,8 @@
 - **📝 行內註腳與工具列擴充 (Inline Footnotes `^[...]` & Footnote Toolbar)**：
   - 支援 Pandoc / HackMD 行內註腳語法 `^[行內註腳說明]`，自動進行數字編號並在文末掛載對應說明。
   - 工具列新增「插入註腳 ([^1])」快捷按鈕，自動遞增編號。
+  - **雙模閱讀體驗 (Hover Card & Click Jump)**：滑鼠懸停（Hover）即時就地顯示毛玻璃懸浮卡片，讀者無須跳開即可原地閱讀註腳；點擊註腳數字或文末 `↩` 返回符號時，則平滑滾動（Smooth Scroll）跳轉至目標並附帶呼吸高亮閃爍（Highlight Pulse Animation）。
+
 
 
 - **🖍️ 編輯器與 Markdown 進階排版擴充套件 (Phase 1 Markdown Extended Writing Kit)**

@@ -236,6 +236,23 @@ export const getMarkdownCss = () => `
     text-underline-offset: 2px;
 }
 
+/* Footnote Target Highlight Pulse */
+@keyframes footnoteHighlightPulse {
+    0% {
+        background-color: rgba(234, 179, 8, 0.45);
+        box-shadow: 0 0 0 6px rgba(234, 179, 8, 0.25);
+    }
+    100% {
+        background-color: transparent;
+        box-shadow: 0 0 0 0 transparent;
+    }
+}
+
+.footnote-target-highlight {
+    animation: footnoteHighlightPulse 1.8s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    border-radius: 6px;
+}
+
 /* Markdown Text Highlight */
 .markdown-body mark,
 .markdown-highlight {

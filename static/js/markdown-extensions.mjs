@@ -521,6 +521,26 @@ function showFootnotePopover(popover, anchor, rootNode) {
     }
 }
 
+function findFootnoteTargetElement(linkEl, rootNode) {
+    if (!linkEl) return null
+    const href = linkEl.getAttribute('href') || ''
+    if (href.startsWith('#')) {
+        const id = href.slice(1)
+        const doc = rootNode.ownerDocument || (typeof document !== 'undefined' ? document : null)
+        if (!doc) return null
+        let el = doc.getElementById(id)
+        if (!el) el = doc.getElementById(`user-content-${id}`)
+        if (!el && id.startsWith('user-content-')) el = doc.getElementById(id.replace('user-content-', ''))
+        if (!el && rootNode.querySelector) {
+            try {
+                el = rootNode.querySelector(`[id="${id}"]`) || rootNode.querySelector(`[id="user-content-${id}"]`)
+            } catch (e) {}
+        }
+        return el
+    }
+    return null
+}
+
 export function decorateFootnoteAndCitationPopovers(rootNode) {
     if (!rootNode?.querySelectorAll) return 0
     const doc = rootNode.ownerDocument || (typeof document !== 'undefined' ? document : null)
@@ -553,13 +573,34 @@ export function decorateFootnoteAndCitationPopovers(rootNode) {
         })
 
         anchor.addEventListener('click', (e) => {
-            if (window.matchMedia && window.matchMedia('(hover: none)').matches) {
-                if (popover.classList.contains('visible')) {
-                    hideFootnotePopover(popover, 0)
-                } else {
-                    e.preventDefault()
-                    showFootnotePopover(popover, anchor, rootNode)
-                }
+            hideFootnotePopover(popover, 0)
+            const targetEl = findFootnoteTargetElement(anchor, rootNode)
+            if (targetEl) {
+                e.preventDefault()
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                targetEl.classList.remove('footnote-target-highlight')
+                void targetEl.offsetWidth
+                targetEl.classList.add('footnote-target-highlight')
+                setTimeout(() => targetEl.classList.remove('footnote-target-highlight'), 2000)
+            }
+        })
+    })
+
+    const backrefSelector = '.data-footnote-backref, [data-footnote-backref], a.footnote-backref, a[href^="#fnref-"], a[href^="#user-content-fnref-"]'
+    const backrefs = Array.from(rootNode.querySelectorAll(backrefSelector))
+    backrefs.forEach(backref => {
+        if (backref.dataset.backrefReady === 'true') return
+        backref.dataset.backrefReady = 'true'
+
+        backref.addEventListener('click', (e) => {
+            const targetEl = findFootnoteTargetElement(backref, rootNode)
+            if (targetEl) {
+                e.preventDefault()
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                targetEl.classList.remove('footnote-target-highlight')
+                void targetEl.offsetWidth
+                targetEl.classList.add('footnote-target-highlight')
+                setTimeout(() => targetEl.classList.remove('footnote-target-highlight'), 2000)
             }
         })
     })
