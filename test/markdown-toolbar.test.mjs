@@ -223,3 +223,10 @@ test('creates a safe image alt label from a filename', () => {
     assert.equal(getImageAltText('my [chart].png'), 'my chart')
     assert.equal(getImageAltText(''), 'image')
 })
+
+test('applies footnote command and creates paired reference and bottom definition', () => {
+    const result = apply('This is text.', 'footnote', 12, 12)
+    assert.match(result.text, /This is text\[\^1\]\./)
+    assert.match(result.text, /\[\^1\]:\s*註腳內容/)
+})
+

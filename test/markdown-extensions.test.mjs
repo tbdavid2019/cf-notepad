@@ -12,6 +12,9 @@ import {
     expandMarkdownExtensions,
     decorateFootnoteAndCitationPopovers,
     decorateCodeBlocks,
+    expandInlineFootnotes,
+    htmlOrTsvToMarkdownTable,
+    parseBookToc,
 } from '../static/js/markdown-extensions.mjs'
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -201,6 +204,54 @@ test('connects HackMD and citation extensions to rendering and responsive layout
     assert.match(markdownCss, /\.pandoc-citation/)
     assert.match(markdownCss, /\.markdown-highlight/)
     assert.match(markdownCss, /\.code-block-wrapper/)
+    assert.match(markdownCss, /#book-mode-container/)
+    assert.match(markdownCss, /\.book-sidebar/)
     assert.match(markdownCss, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
     assert.match(markdownCss, /@media \(max-width: 720px\)/)
 })
+
+test('expands inline footnotes into numbered references and bottom definitions', () => {
+    const input = 'This is main text with an inline note^[Here is the explanation text.] and another^[Second note].'
+    const output = expandInlineFootnotes(input)
+    assert.match(output, /\[\^inline_fn_1\]/)
+    assert.match(output, /\[\^inline_fn_2\]/)
+    assert.match(output, /\[\^inline_fn_1\]:\s*Here is the explanation text\./)
+    assert.match(output, /\[\^inline_fn_2\]:\s*Second note/)
+})
+
+test('converts HTML tables and TSV clipboard text into clean Markdown tables', () => {
+    const html = '<table><tr><th>Name</th><th>Role</th></tr><tr><td>Alice</td><td>Admin</td></tr><tr><td>Bob</td><td>User</td></tr></table>'
+    const mdFromHtml = htmlOrTsvToMarkdownTable(html, '')
+    assert.ok(mdFromHtml)
+    assert.match(mdFromHtml, /\|\s*Name\s*\|\s*Role\s*\|/)
+    assert.match(mdFromHtml, /\|\s*---\s*\|\s*---\s*\|/)
+    assert.match(mdFromHtml, /\|\s*Alice\s*\|\s*Admin\s*\|/)
+
+    const tsv = 'Item\tPrice\tQty\nApple\t10\t5\nBanana\t20\t2'
+    const mdFromTsv = htmlOrTsvToMarkdownTable('', tsv)
+    assert.ok(mdFromTsv)
+    assert.match(mdFromTsv, /\|\s*Item\s*\|\s*Price\s*\|\s*Qty\s*\|/)
+    assert.match(mdFromTsv, /\|\s*Apple\s*\|\s*10\s*\|\s*5\s*\|/)
+})
+
+test('parses book table of contents from markdown notes into structured chapter trees', () => {
+    const bookMarkdown = `# 🚀 Cloud Architecture Guide
+
+## Chapter 1: Introduction
+- [Getting Started](/share/intro1)
+- [Basic Concepts](/share/intro2)
+  - [Deep Dive](/share/intro2-sub)
+
+## Chapter 2: API Reference
+- [REST API](/share/api1)
+- [WebMCP Protocol](https://wiki.david888.com/mcp)
+`
+    const parsed = parseBookToc(bookMarkdown)
+    assert.equal(parsed.title, '🚀 Cloud Architecture Guide')
+    assert.equal(parsed.chapters.length, 5)
+    assert.equal(parsed.chapters[0].title, 'Getting Started')
+    assert.equal(parsed.chapters[0].url, '/share/intro1')
+    assert.equal(parsed.chapters[0].section, 'Chapter 1: Introduction')
+    assert.equal(parsed.chapters[2].level, 1)
+})
+

@@ -840,11 +840,13 @@ ${getMarkdownCss()}
         sharePath: ext.sharePath || '',
         embed: isEmbed,
         presentationPath: ext.presentationPath || '',
+        bookPath: ext.bookPath || '',
         settingPath: ext.settingPath || (path ? '/' + path + '/setting' : ''),
         path: path || '',
         shareId: shareId || '',
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
+        autoBook: ext.autoBook === true,
         isEdit: isEdit === true,
         editorFormat: isBlockDocument ? 'block' : 'markdown',
         isBlock: isBlockDocument,
@@ -3315,38 +3317,66 @@ ${getMarkdownCss()}
         }
 
         if ($textarea) {
-            // Paste Image Handler
-            if (window.ENABLE_R2) {
-                $textarea.addEventListener('paste', function (e) {
-                    const items = (e.clipboardData || e.originalEvent.clipboardData).items
-                    for (let index in items) {
-                        const item = items[index]
+            // Paste Handler (Images & Excel/Sheets Table Auto-Conversion)
+            $textarea.addEventListener('paste', function (e) {
+                const clip = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
+                if (!clip) return;
+
+                // 1. Check Image files
+                if (window.ENABLE_R2 && clip.items) {
+                    for (let index in clip.items) {
+                        const item = clip.items[index];
                         if (item.kind === 'file' && item.type.startsWith('image/')) {
-                            e.preventDefault()
-                            const blob = item.getAsFile()
-                            const start = $textarea.selectionStart
-                            const loadingText = '![' + getI18n('uploading') + ']()'
-                            $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd)
-                            $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length
-                            const formData = new FormData()
-                            formData.append('image', blob)
+                            e.preventDefault();
+                            const blob = item.getAsFile();
+                            const start = $textarea.selectionStart;
+                            const loadingText = '![' + getI18n('uploading') + ']()';
+                            $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd);
+                            $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length;
+                            const formData = new FormData();
+                            formData.append('image', blob);
                             fetchJson('/upload', { method: 'POST', body: formData })
                                 .then(res => {
                                     if (res.err === 0) {
-                                        $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')')
-                                        triggerRender($previewMd, $textarea.value)
-                                        // The upload result changes the value programmatically, so it
-                                        // must notify the auto-save handler or the placeholder is saved.
-                                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                                        $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')');
+                                        triggerRender($previewMd, $textarea.value);
+                                        $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                                    } else {
+                                        $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']');
+                                        window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' });
                                     }
-                                    else { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']'); window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' }) }
                                 })
-                                .catch(err => { $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']'); window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' }) })
+                                .catch(err => {
+                                    $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']');
+                                    window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' });
+                                });
                             return;
                         }
                     }
-                })
-            }
+                }
+
+                // 2. Check Table / TSV paste (Excel, Google Sheets, web tables)
+                var htmlData = clip.getData('text/html');
+                var textData = clip.getData('text/plain');
+                var tableFn = window.htmlOrTsvToMarkdownTable || (typeof htmlOrTsvToMarkdownTable === 'function' ? htmlOrTsvToMarkdownTable : null);
+                if (tableFn) {
+                    var convertedTable = tableFn(htmlData, textData);
+                    if (convertedTable) {
+                        e.preventDefault();
+                        var startPos = $textarea.selectionStart;
+                        var endPos = $textarea.selectionEnd;
+                        var before = $textarea.value.substring(0, startPos);
+                        var prefixNewline = (before.length > 0 && !before.endsWith('\\n\\n')) ? (before.endsWith('\\n') ? '\\n' : '\\n\\n') : '';
+                        var suffixNewline = (after.length > 0 && !after.startsWith('\\n\\n')) ? (after.startsWith('\\n') ? '\\n' : '\\n\\n') : '';
+                        var insertion = prefixNewline + convertedTable + suffixNewline;
+                        $textarea.value = before + insertion + after;
+                        $textarea.selectionStart = $textarea.selectionEnd = startPos + insertion.length;
+                        triggerRender($previewMd, $textarea.value);
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        return;
+                    }
+                }
+            });
 
             let publishNudgeTimer = null;
             let publishNudgeShown = false;
@@ -5390,6 +5420,19 @@ themeCss + '\\n' +
             container.classList.toggle('presentation-authoring', !!(edit && !edit.classList.contains('hide')));
             
             var currentTheme = (typeof APP_STATE !== 'undefined' && APP_STATE.theme) ? APP_STATE.theme : 'tokyo-night';
+            var customTransition = 'fade';
+
+            // YAML Frontmatter detection
+            var yamlMatch = content.match(new RegExp('^---\\\\r?\\\\n([\\\\s\\\\S]*?)\\\\r?\\\\n---\\\\r?\\\\n'));
+            if (yamlMatch) {
+                var yamlBlock = yamlMatch[1];
+                content = content.slice(yamlMatch[0].length);
+                var transMatch = yamlBlock.match(/transition:\s*([a-zA-Z0-9_-]+)/i);
+                if (transMatch) customTransition = transMatch[1].toLowerCase();
+                var themeMatch = yamlBlock.match(/theme:\s*([a-zA-Z0-9_-]+)/i);
+                if (themeMatch) currentTheme = themeMatch[1].toLowerCase();
+            }
+
             container.setAttribute('data-presentation-theme', currentTheme);
 
             container.innerHTML = '<button type="button" id="presentation-close-btn">✕ ' + getI18n('presentationClose') + '</button>' +
@@ -5397,9 +5440,8 @@ themeCss + '\\n' +
                                  '<div class="reveal"><div class="slides"></div></div>';
             
             var slidesDiv = container.querySelector('.slides');
-            var chunks = content.split(new RegExp('\\\\r?\\\\n\\\\s*---\\\\s*\\\\r?\\\\n'));
 
-            chunks.forEach(function(c, chunkIndex) {
+            function processSlideChunk(c, chunkIndex, isVertical) {
                 var processed = c.trim();
                 var isCover = false;
                 var slideBg = '';
@@ -5407,7 +5449,7 @@ themeCss + '\\n' +
                 // 1. Cover layout
                 var coverRe1 = new RegExp('<!--\\\\s*layout:\\\\s*cover\\\\s*-->', 'gi');
                 var coverRe2 = new RegExp('<!--\\\\s*cover\\\\s*-->', 'gi');
-                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && processed.startsWith('# ') && !processed.includes('\\n## '))) {
+                if (processed.includes('<!-- layout: cover -->') || processed.includes('<!-- cover -->') || (chunkIndex === 0 && !isVertical && processed.startsWith('# ') && !processed.includes('\\n## '))) {
                     isCover = true;
                     processed = processed.replace(coverRe1, '').replace(coverRe2, '');
                 }
@@ -5468,7 +5510,22 @@ themeCss + '\\n' +
                 script.type = 'text/template';
                 script.textContent = processed;
                 sec.appendChild(script);
-                slidesDiv.appendChild(sec);
+                return sec;
+            }
+
+            var horizontalChunks = content.split(new RegExp('\\\\r?\\\\n\\\\s*---\\\\s*\\\\r?\\\\n'));
+
+            horizontalChunks.forEach(function(hChunk, hIndex) {
+                var verticalChunks = hChunk.split(new RegExp('\\\\r?\\\\n\\\\s*--\\\\s*\\\\r?\\\\n'));
+                if (verticalChunks.length > 1) {
+                    var outerSec = document.createElement('section');
+                    verticalChunks.forEach(function(vChunk, vIndex) {
+                        outerSec.appendChild(processSlideChunk(vChunk, hIndex, vIndex > 0));
+                    });
+                    slidesDiv.appendChild(outerSec);
+                } else {
+                    slidesDiv.appendChild(processSlideChunk(hChunk, hIndex, false));
+                }
             });
 
             container.classList.add('active');
@@ -5483,7 +5540,7 @@ themeCss + '\\n' +
                 var RevealConstructor = window.Reveal || Reveal;
                 _reveal = new RevealConstructor(container.querySelector('.reveal'), {
                     plugins: plugins,
-                    center: false, hash: true, transition: 'fade',
+                    center: false, hash: true, transition: customTransition,
                     width: 1280, height: 720, margin: 0.035,
                     minScale: 0.2, maxScale: 2,
                     controls: true, progress: true, slideNumber: true
@@ -5554,7 +5611,275 @@ themeCss + '\\n' +
             }
         };
 
+        window.initBookMode = function() {
+            var content = '';
+            var edit = document.getElementById('contents');
+            var share = document.getElementById('bot-accessible-content');
+            
+            if (APP_STATE.isBlock) {
+                content = APP_STATE.blockMarkdown || '';
+            } else if (edit && edit.value && edit.value.trim()) {
+                content = edit.value;
+            } else if (share && (share.textContent || '').trim()) {
+                content = share.textContent;
+            }
+
+            if (!content || !content.trim()) return;
+
+            var tocFn = window.parseBookToc || (typeof parseBookToc === 'function' ? parseBookToc : null);
+            var bookData = tocFn ? tocFn(content) : { title: '書本目錄', chapters: [], sections: [] };
+
+            if (!bookData || !bookData.chapters || bookData.chapters.length === 0) {
+                bookData = {
+                    title: APP_STATE.title || '書本閱讀',
+                    chapters: [{
+                        index: 0,
+                        title: APP_STATE.title || '本篇內容',
+                        url: window.location.pathname,
+                        section: '本文',
+                        level: 0,
+                        isExternal: false
+                    }],
+                    sections: []
+                };
+            }
+
+            document.body.classList.add('book-mode-active');
+            var container = document.getElementById('book-mode-container');
+            if (!container) {
+                container = document.createElement('div');
+                container.id = 'book-mode-container';
+                document.body.appendChild(container);
+            }
+
+            var isZh = APP_STATE.lang === 'zh-TW';
+            var searchPlaceholder = isZh ? '搜尋章節...' : 'Search chapters...';
+            var backToNormalText = isZh ? '📄 退出書本' : '📄 Exit Book';
+
+            var sectionMap = {};
+            bookData.chapters.forEach(function(ch) {
+                var sec = ch.section || (isZh ? '章節清單' : 'Chapters');
+                if (!sectionMap[sec]) sectionMap[sec] = [];
+                sectionMap[sec].push(ch);
+            });
+
+            var sidebarHtml = 
+                '<div class="book-sidebar" id="book-sidebar">' +
+                    '<div class="book-sidebar-header">' +
+                        '<div class="book-title-row">' +
+                            '<a href="' + (APP_STATE.sharePath || '#') + '" class="book-brand-title" title="' + bookData.title + '">📖 ' + bookData.title + '</a>' +
+                            '<button type="button" id="book-exit-btn" class="toolbar-icon-button" style="padding:4px 8px;font-size:12px;" title="' + backToNormalText + '">' + backToNormalText + '</button>' +
+                        '</div>' +
+                        '<input type="search" id="book-search-input" class="book-search-input" placeholder="' + searchPlaceholder + '" aria-label="' + searchPlaceholder + '">' +
+                    '</div>' +
+                    '<div class="book-toc-scroll" id="book-toc-scroll">';
+
+            Object.keys(sectionMap).forEach(function(secTitle) {
+                sidebarHtml += '<div class="book-section-group">' +
+                    '<div class="book-section-title">' + secTitle + '</div>' +
+                    '<ul class="book-toc-list">';
+                sectionMap[secTitle].forEach(function(ch) {
+                    sidebarHtml += '<li class="book-toc-item" data-chapter-index="' + ch.index + '">' +
+                        '<a href="' + ch.url + '" class="book-toc-link" data-url="' + ch.url + '" data-chapter-index="' + ch.index + '" style="padding-left:' + (12 + ch.level * 14) + 'px;">' +
+                            ch.title +
+                        '</a>' +
+                    '</li>';
+                });
+                sidebarHtml += '</ul></div>';
+            });
+
+            sidebarHtml += '</div></div><div class="book-sidebar-backdrop" id="book-sidebar-backdrop"></div>';
+
+            var mainHtml = 
+                '<div class="book-main">' +
+                    '<div class="book-topbar">' +
+                        '<div style="display:flex;align-items:center;gap:10px;min-width:0;">' +
+                            '<button type="button" id="book-sidebar-toggle" class="toolbar-icon-button" aria-label="Toggle Sidebar" style="display:inline-flex;">☰</button>' +
+                            '<div class="book-breadcrumbs" id="book-breadcrumbs">' +
+                                '<span>' + bookData.title + '</span>' +
+                                '<span class="crumb-sep">/</span>' +
+                                '<span class="crumb-current" id="book-crumb-current">載入中...</span>' +
+                            '</div>' +
+                        '</div>' +
+                        '<div class="book-progress-track"><div class="book-progress-fill" id="book-progress-fill"></div></div>' +
+                    '</div>' +
+                    '<div class="book-content-wrap">' +
+                        '<div class="markdown-body" id="book-rendered-content"></div>' +
+                        '<div class="book-chapter-nav" id="book-chapter-nav"></div>' +
+                    '</div>' +
+                '</div>';
+
+            container.innerHTML = sidebarHtml + mainHtml;
+
+            var currentChapterIndex = 0;
+
+            var searchInput = document.getElementById('book-search-input');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    var query = (this.value || '').toLowerCase().trim();
+                    var items = container.querySelectorAll('.book-toc-item');
+                    items.forEach(function(item) {
+                        var text = (item.textContent || '').toLowerCase();
+                        item.style.display = (!query || text.includes(query)) ? '' : 'none';
+                    });
+                });
+            }
+
+            var sidebar = document.getElementById('book-sidebar');
+            var toggleBtn = document.getElementById('book-sidebar-toggle');
+            var backdrop = document.getElementById('book-sidebar-backdrop');
+            if (toggleBtn && sidebar) {
+                toggleBtn.addEventListener('click', function() {
+                    sidebar.classList.toggle('open');
+                });
+            }
+            if (backdrop && sidebar) {
+                backdrop.addEventListener('click', function() {
+                    sidebar.classList.remove('open');
+                });
+            }
+
+            window.addEventListener('scroll', function() {
+                var docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                var progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
+                var fill = document.getElementById('book-progress-fill');
+                if (fill) fill.style.width = Math.min(100, Math.max(0, progress)) + '%';
+            }, { passive: true });
+
+            async function loadChapter(index) {
+                if (index < 0 || index >= bookData.chapters.length) return;
+                currentChapterIndex = index;
+                var chapter = bookData.chapters[index];
+
+                container.querySelectorAll('.book-toc-item').forEach(function(el) {
+                    el.classList.toggle('active', parseInt(el.getAttribute('data-chapter-index'), 10) === index);
+                });
+
+                var crumb = document.getElementById('book-crumb-current');
+                if (crumb) crumb.textContent = chapter.title;
+
+                if (sidebar) sidebar.classList.remove('open');
+
+                var contentTarget = document.getElementById('book-rendered-content');
+                if (!contentTarget) return;
+
+                contentTarget.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(0,0,0,0.4);">' + (isZh ? '載入章節內容中...' : 'Loading chapter...') + '</div>';
+
+                var mdText = '';
+                if (index === 0 && (!chapter.url || chapter.url === window.location.pathname || chapter.url.includes(window.location.pathname))) {
+                    mdText = content;
+                } else if (chapter.isExternal) {
+                    contentTarget.innerHTML = 
+                        '<div style="padding:32px;border:1px solid rgba(0,0,0,0.1);border-radius:8px;text-align:center;">' +
+                            '<h3>' + chapter.title + '</h3>' +
+                            '<p>' + (isZh ? '這是一個外部連結章節：' : 'This is an external chapter link:') + '</p>' +
+                            '<p><a href="' + chapter.url + '" target="_blank" rel="noopener noreferrer" class="opt-button opt-button-accent" style="display:inline-block;padding:8px 16px;text-decoration:none;">' + (isZh ? '在新分頁開啟 ↗' : 'Open in New Tab ↗') + '</a></p>' +
+                        '</div>';
+                    renderNavButtons(index);
+                    return;
+                } else {
+                    try {
+                        var res = await fetch(chapter.url, {
+                            headers: { 'Accept': 'text/markdown' }
+                        });
+                        if (res.ok) {
+                            mdText = await res.text();
+                        } else {
+                            throw new Error('HTTP ' + res.status);
+                        }
+                    } catch(e) {
+                        contentTarget.innerHTML = '<div style="padding:32px;color:red;">' + (isZh ? '無法載入章節內容：' : 'Failed to load chapter content: ') + e.message + '</div>';
+                        renderNavButtons(index);
+                        return;
+                    }
+                }
+
+                if (window.renderMarkdown) {
+                    await window.renderMarkdown(contentTarget, mdText);
+                } else {
+                    contentTarget.innerHTML = '<pre>' + mdText + '</pre>';
+                }
+
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                renderNavButtons(index);
+            }
+
+            function renderNavButtons(index) {
+                var navWrap = document.getElementById('book-chapter-nav');
+                if (!navWrap) return;
+
+                var prevCh = index > 0 ? bookData.chapters[index - 1] : null;
+                var nextCh = index < bookData.chapters.length - 1 ? bookData.chapters[index + 1] : null;
+
+                var navHtml = '';
+                if (prevCh) {
+                    navHtml += '<div class="book-nav-card prev" data-chapter-index="' + (index - 1) + '">' +
+                        '<div class="book-nav-hint">← ' + (isZh ? '上一章' : 'Previous') + '</div>' +
+                        '<div class="book-nav-title">' + prevCh.title + '</div>' +
+                    '</div>';
+                } else {
+                    navHtml += '<div></div>';
+                }
+
+                if (nextCh) {
+                    navHtml += '<div class="book-nav-card next" data-chapter-index="' + (index + 1) + '">' +
+                        '<div class="book-nav-hint">' + (isZh ? '下一章' : 'Next') + ' →</div>' +
+                        '<div class="book-nav-title">' + nextCh.title + '</div>' +
+                    '</div>';
+                }
+
+                navWrap.innerHTML = navHtml;
+            }
+
+            container.addEventListener('click', function(e) {
+                var link = e.target.closest('.book-toc-link');
+                if (link) {
+                    var chIdx = parseInt(link.getAttribute('data-chapter-index'), 10);
+                    if (!isNaN(chIdx)) {
+                        e.preventDefault();
+                        loadChapter(chIdx);
+                        return;
+                    }
+                }
+
+                var navCard = e.target.closest('.book-nav-card');
+                if (navCard) {
+                    var navIdx = parseInt(navCard.getAttribute('data-chapter-index'), 10);
+                    if (!isNaN(navIdx)) {
+                        e.preventDefault();
+                        loadChapter(navIdx);
+                        return;
+                    }
+                }
+
+                var exitBtn = e.target.closest('#book-exit-btn');
+                if (exitBtn) {
+                    e.preventDefault();
+                    document.body.classList.remove('book-mode-active');
+                    if (container) container.remove();
+                    var targetPath = APP_STATE.sharePath || window.location.pathname.replace(new RegExp('\\\\/book\\\\/?$'), '') || '/';
+                    window.location.replace(targetPath);
+                }
+            });
+
+            document.addEventListener('keydown', function(e) {
+                if (!document.body.classList.contains('book-mode-active')) return;
+                if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+                if (e.key === '[') {
+                    if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+                } else if (e.key === ']') {
+                    if (currentChapterIndex < bookData.chapters.length - 1) loadChapter(currentChapterIndex + 1);
+                }
+            });
+
+            loadChapter(0);
+        };
+
         function maybeAutoStart() {
+            if (APP_STATE.autoBook) {
+                window.initBookMode();
+                return;
+            }
             if (!APP_STATE.autoPresent || _autoStarted) return;
             _autoStarted = true;
             window.initPresentation();

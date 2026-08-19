@@ -172,6 +172,24 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
         const snippet = `> [!NOTE]\n> ${content}`
         return replaceSnippet(source, safeStart, safeEnd, snippet, 11, 11 + content.length)
     }
+    if (command === 'footnote') {
+        const selected = source.slice(safeStart, safeEnd)
+        const noteText = selected || (labels.footnote || '註腳內容')
+        const fnMatches = source.match(/\[\^(\d+)\]/g) || []
+        let nextNum = 1
+        fnMatches.forEach(m => {
+            const num = parseInt(m.slice(2, -1), 10)
+            if (num >= nextNum) nextNum = num + 1
+        })
+        const ref = `[^${nextNum}]`
+        const def = `\n\n[^${nextNum}]: ${noteText}`
+        const newText = source.slice(0, safeStart) + ref + source.slice(safeEnd) + def
+        return {
+            text: newText,
+            selectionStart: safeStart + ref.length,
+            selectionEnd: safeStart + ref.length
+        }
+    }
     if (command === 'search') {
         if (typeof window !== 'undefined' && window.toggleEditorSearchReplace) {
             window.toggleEditorSearchReplace()

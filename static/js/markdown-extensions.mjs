@@ -252,7 +252,7 @@ export function expandCustomColors(markdown = '') {
 }
 
 export function expandMarkdownExtensions(markdown = '') {
-    return expandCustomColors(expandTextHighlights(expandPandocCitations(expandHackmdImageSizes(markdown))))
+    return expandInlineFootnotes(expandCustomColors(expandTextHighlights(expandPandocCitations(expandHackmdImageSizes(markdown)))))
 }
 
 export function decorateCodeBlocks(rootNode) {
@@ -553,7 +553,6 @@ export function decorateFootnoteAndCitationPopovers(rootNode) {
         })
 
         anchor.addEventListener('click', (e) => {
-            // On mobile / touch or click, trigger popover if target is in-page
             if (window.matchMedia && window.matchMedia('(hover: none)').matches) {
                 if (popover.classList.contains('visible')) {
                     hideFootnotePopover(popover, 0)
@@ -566,5 +565,146 @@ export function decorateFootnoteAndCitationPopovers(rootNode) {
     })
 
     return count
+}
+
+export function expandInlineFootnotes(source = '') {
+    if (!source || typeof source !== 'string') return ''
+    let count = 0
+    const definitions = []
+    let fence = ''
+
+    const lines = String(source).split('\n').map(line => {
+        const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
+        if (fenceMatch) {
+            const marker = fenceMatch[1][0]
+            if (!fence) fence = marker
+            else if (fence === marker) fence = ''
+            return line
+        }
+        if (fence) return line
+
+        return line.replace(/\^\[([\s\S]*?)\]/g, (match, noteContent) => {
+            count++
+            const fnId = `inline_fn_${count}`
+            definitions.push(`[^${fnId}]: ${noteContent.trim()}`)
+            return `[^${fnId}]`
+        })
+    })
+
+    const transformed = lines.join('\n')
+    if (definitions.length === 0) return transformed
+    return `${transformed}\n\n${definitions.join('\n\n')}`
+}
+
+export function htmlOrTsvToMarkdownTable(html, plainText) {
+    if (html && html.includes('<table')) {
+        try {
+            const rowMatches = html.match(/<tr[^>]*>[\s\S]*?<\/tr>/gi)
+            if (rowMatches && rowMatches.length > 0) {
+                const grid = []
+                rowMatches.forEach(trHtml => {
+                    const cellMatches = [...trHtml.matchAll(/<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>/gi)]
+                    const cells = cellMatches.map(m => {
+                        return m[1].replace(/<[^>]+>/g, '').trim().replace(/\|/g, '\\|').replace(/\s+/g, ' ')
+                    })
+                    if (cells.length > 0) grid.push(cells)
+                })
+                if (grid.length > 0) {
+                    const maxCols = Math.max(...grid.map(r => r.length))
+                    const normalized = grid.map(r => {
+                        const row = [...r]
+                        while (row.length < maxCols) row.push('')
+                        return row
+                    })
+                    const header = normalized[0]
+                    const separator = new Array(maxCols).fill('---')
+                    const body = normalized.slice(1)
+                    const lines = [
+                        `| ${header.join(' | ')} |`,
+                        `| ${separator.join(' | ')} |`,
+                        ...body.map(r => `| ${r.join(' | ')} |`)
+                    ]
+                    return lines.join('\n')
+                }
+            }
+        } catch (e) {}
+    }
+
+    if (plainText && plainText.includes('\t') && plainText.includes('\n')) {
+        const rawLines = plainText.trim().split(/\r?\n/)
+        const grid = rawLines.map(line => line.split('\t').map(c => c.trim().replace(/\|/g, '\\|')))
+        if (grid.length > 0 && grid[0].length > 1) {
+            const maxCols = Math.max(...grid.map(r => r.length))
+            const normalized = grid.map(r => {
+                const row = [...r]
+                while (row.length < maxCols) row.push('')
+                return row
+            })
+            const header = normalized[0]
+            const separator = new Array(maxCols).fill('---')
+            const body = normalized.slice(1)
+            const lines = [
+                `| ${header.join(' | ')} |`,
+                `| ${separator.join(' | ')} |`,
+                ...body.map(r => `| ${r.join(' | ')} |`)
+            ]
+            return lines.join('\n')
+        }
+    }
+
+    return null
+}
+
+export function parseBookToc(source) {
+    if (!source || typeof source !== 'string') {
+        return { title: 'Book', chapters: [], sections: [] }
+    }
+
+    const lines = source.split(/\r?\n/)
+    let bookTitle = ''
+    let currentSection = ''
+    const chapters = []
+    const sections = []
+
+    for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim()
+        if (!line) continue
+
+        const h1Match = line.match(/^#\s+(.+)$/)
+        if (h1Match && !bookTitle) {
+            bookTitle = h1Match[1].replace(/\[.*?\]\(.*?\)/g, '').trim()
+            continue
+        }
+
+        const h2Match = line.match(/^##\s+(.+)$/)
+        if (h2Match) {
+            currentSection = h2Match[1].trim()
+            sections.push({ title: currentSection, line: i })
+            continue
+        }
+
+        const linkMatch = line.match(/^[*-]\s*\[([^\]]+)\]\(([^)]+)\)/)
+        if (linkMatch) {
+            const title = linkMatch[1].trim()
+            const url = linkMatch[2].trim()
+            const indentMatch = lines[i].match(/^(\s*)/)
+            const indentLevel = indentMatch ? Math.floor(indentMatch[1].length / 2) : 0
+
+            chapters.push({
+                index: chapters.length,
+                title,
+                url,
+                section: currentSection || bookTitle || '章節清單',
+                level: indentLevel,
+                isExternal: /^https?:\/\//i.test(url) && !url.includes('wiki.david888.com')
+            })
+        }
+    }
+
+    return {
+        title: bookTitle || '書本目錄',
+        chapters,
+        sections
+    }
 }
 

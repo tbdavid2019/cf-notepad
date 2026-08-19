@@ -78,8 +78,28 @@
     },
     {
       "id": "alert-autocomplete",
-      "zh-TW": "小訣竅：在行首輸入 > [! 會自動彈出 GitHub Alert 快速選單（NOTE / TIP / IMPORTANT / WARNING / CAUTION），支援鍵盤上下鍵與 Enter 插入。",
-      "en-US": "Tip: Typing > [! at the start of a line brings up the GitHub Alert autocomplete menu (NOTE / TIP / IMPORTANT / WARNING / CAUTION) with arrow key navigation."
+      "zh-TW": "小訣竅：在新行輸入 > [! 可立即開啟 GitHub Alert 提示區塊自動補完選單，快速插入 NOTE、TIP、IMPORTANT、WARNING、CAUTION。",
+      "en-US": "Tip: Type > [! on a new line to trigger GitHub Alert autocomplete for instant insertion of NOTE, TIP, IMPORTANT, WARNING, or CAUTION."
+    },
+    {
+      "id": "table-paste",
+      "zh-TW": "小訣竅：從 Excel、Google Sheets 或網頁複製表格後直接貼入編輯器，將自動秒轉為標準對齊的 Markdown 表格！",
+      "en-US": "Tip: Copy tables from Excel, Google Sheets, or web pages and paste directly into the editor to automatically convert them to clean Markdown tables!"
+    },
+    {
+      "id": "book-mode",
+      "zh-TW": "小訣竅：在分享頁點擊「書本」或網址結尾加上 /book，即可進入雙欄目錄樹與章節無刷新翻書閱讀體驗。",
+      "en-US": "Tip: Click 'Book' in the share footer or add /book to the URL to enjoy a dual-pane sidebar TOC with smooth in-place chapter reading."
+    },
+    {
+      "id": "vertical-slides",
+      "zh-TW": "小訣竅：簡報模式支援使用 -- 分隔垂直子投影片，按方向鍵上下即可深入探討子主題，大綱總覽 (O) 同步呈現 2D 矩陣縮圖。",
+      "en-US": "Tip: Presentation mode supports vertical sub-slides split by -- dividers. Use Up/Down arrows to explore subtopics, with full 2D grid matrix overview (O)."
+    },
+    {
+      "id": "inline-footnotes",
+      "zh-TW": "小訣竅：使用 ^[行內註腳內容] 語法可直接插入行內註腳，系統會自動編號並於文末生成對應說明。",
+      "en-US": "Tip: Use ^[inline footnote content] to insert inline footnotes. The system automatically numbers them and generates corresponding definitions at the end."
     }
   ]
 }

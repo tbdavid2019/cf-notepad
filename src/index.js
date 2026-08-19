@@ -1337,13 +1337,14 @@ router.post('/share/:shareId/auth', async request => {
     return returnJSON(404, 'Share not found')
 })
 
-async function renderSharePage(request, presentationMode = false, execution = {}) {
+async function renderSharePage(request, presentationMode = false, execution = {}, bookMode = false) {
     const lang = getI18n(request)
     const { shareId } = request.params
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
     const path = await driverQueryShare(shareId)
     const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
+    const bookPath = `${sharePath}/book`
     const authPath = `${sharePath}/auth`
     const gaMeasurementId = getGaMeasurementId()
 
@@ -1439,10 +1440,13 @@ async function renderSharePage(request, presentationMode = false, execution = {}
                 ...(metadata.pw || metadata.vpw ? { authPath } : {}),
                 sharePath,
                 presentationPath,
+                bookPath,
                 gaMeasurementId,
                 webtalk: getWebtalkConfig(),
                 presentationEntry: presentationMode,
                 autoPresent: presentationMode,
+                bookMode,
+                autoBook: bookMode,
                 embed: embedMode,
                 viewCount,
                 meta: {
@@ -1476,6 +1480,14 @@ router.get('/share/:shareId/present', async (request, execution) => {
 
 router.head('/share/:shareId/present', async (request, execution) => {
     return renderSharePage(request, true, execution)
+})
+
+router.get('/share/:shareId/book', async (request, execution) => {
+    return renderSharePage(request, false, execution, true)
+})
+
+router.head('/share/:shareId/book', async (request, execution) => {
+    return renderSharePage(request, false, execution, true)
 })
 
 router.get('/api/shares/:shareId/annotations', async request => {

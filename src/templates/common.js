@@ -80,7 +80,9 @@ export const SVG_ICONS = {
     mic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`,
     search: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
     highlighter: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>`,
-    alert: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
+    alert: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
+    footnote: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="14" y2="10"/><path d="M12 18h4"/></svg>`,
+    book: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -95,6 +97,7 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'italic', glyph: 'I', glyphClass: 'is-italic', zh: '斜體', en: 'Italic' },
     { command: 'strike', glyph: 'S', glyphClass: 'is-strike', zh: '刪除線', en: 'Strikethrough' },
     { command: 'highlight', glyph: SVG_ICONS.highlighter, glyphClass: 'is-highlight', zh: '螢光筆高亮 (==)', en: 'Highlight (==)' },
+    { command: 'footnote', glyph: SVG_ICONS.footnote, glyphClass: 'is-footnote', zh: '插入註腳 ([^1])', en: 'Footnote ([^1])' },
     { command: 'link', glyph: SVG_ICONS.link, zh: '連結', en: 'Link' },
     { separator: true },
     { command: 'quote', glyph: SVG_ICONS.quote, zh: '引用', en: 'Quote' },
@@ -463,6 +466,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 <small>${lang === 'zh-TW' ? '全螢幕 Slidev 投影片' : 'Fullscreen presentation'}</small>
                                             </span>
                                         </a>
+                                        <a id="share-book-open-link" class="dropdown-item dropdown-item-rich" href="${shareId ? '/share/' + encodeURIComponent(shareId) + '/book' : '#'}" target="_blank" rel="noreferrer">
+                                            ${SVG_ICONS.book}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '打開書本模式' : 'Open Book Mode'}</strong>
+                                                <small>${lang === 'zh-TW' ? '章節目錄樹與翻書閱讀' : 'Sidebar TOC & Book reader'}</small>
+                                            </span>
+                                        </a>
                                         <button type="button" id="copy-share-btn" class="dropdown-item dropdown-item-rich" title="${copyShareTitle}">
                                             ${SVG_ICONS.copy}
                                             <span class="dropdown-item-copy">
@@ -671,6 +681,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${t.present}</span>
                         </button>
                         ${sharePath && shareId ? `
+                        <a href="${'/share/' + encodeURIComponent(shareId) + '/book'}" id="book-mode-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '書本模式' : 'Book mode'}" title="${lang === 'zh-TW' ? '書本模式' : 'Book mode'}" aria-label="${lang === 'zh-TW' ? '書本模式' : 'Book mode'}">
+                            ${SVG_ICONS.book}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '書本' : 'Book'}</span>
+                        </a>
                         <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
                             ${SVG_ICONS.link}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>

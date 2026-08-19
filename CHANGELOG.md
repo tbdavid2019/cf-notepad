@@ -2,6 +2,21 @@
 
 ## [2026-08-19]
 
+- **📖 書本模式 (Book Mode - `/share/:id/book`)**：
+  - **雙欄目錄樹結構 (Dual-Pane Book Shell)**：左側固定目錄導覽欄，支援章節搜尋過濾、層級展開、當前章節高亮標記；手機版自動轉為抽屜式 Drawer 選單。
+  - **SPA 無刷新切換章節 (In-Place Fast Reading)**：點擊左側章節連結無縫非同步載入 Markdown 內文並即時渲染，無整頁重新整理延遲，歷史紀錄與網址狀態透過 `pushState` 完美保持。
+  - **智慧翻書控制列 (Chapter Navigation Footer)**：底部自動生成「← 上一章：[標題]」與「下一章：[標題] →」翻頁卡片，並支援鍵盤快速鍵 `[`（上一章）與 `]`（下一章）。
+  - **閱讀進度指示器**：頂部整合麵包屑路徑與隨捲動即時計算的閱讀進度條。
+- **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML Frontmatter)**：
+  - **垂直子投影片 (`--`)**：支援橫向投影片（`---`）與縱向子投影片（`--`）二維矩陣排版，使用方向鍵上下左右（`↑` `↓` `←` `→`）導覽，大綱總覽（`O`）支援 2D 矩陣縮圖導覽。
+  - **YAML Frontmatter 宣告**：筆記文首支援 `---` YAML 宣告自訂 `transition` 轉場動畫（`fade`, `slide`, `convex`, `concave`, `zoom`）與主題覆寫。
+- **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：
+  - 在編輯器貼上（`Cmd+V` / `Ctrl+V`）來自 Excel、Google Sheets、Numbers 或網頁選取的表格時，自動偵測 `text/html` 與 TSV 格式並秒轉為標準對齊的 Markdown 表格語法（`| ... |`）。
+- **📝 行內註腳與工具列擴充 (Inline Footnotes `^[...]` & Footnote Toolbar)**：
+  - 支援 Pandoc / HackMD 行內註腳語法 `^[行內註腳說明]`，自動進行數字編號並在文末掛載對應說明。
+  - 工具列新增「插入註腳 ([^1])」快捷按鈕，自動遞增編號。
+
+
 - **🖍️ 編輯器與 Markdown 進階排版擴充套件 (Phase 1 Markdown Extended Writing Kit)**
   - **🔍 編輯器全功能搜尋與取代 (Search & Replace Bar - Cmd+F / Cmd+H)**：
     - 支援 `Cmd+F`（Ctrl+F）即時開啟懸浮搜尋列，`Cmd+H`（Ctrl+H）展開取代列，工具列亦新增「🔍 搜尋與取代」按鈕。
