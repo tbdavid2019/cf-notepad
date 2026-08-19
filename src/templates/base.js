@@ -5708,7 +5708,8 @@ themeCss + '\\n' +
 
             var isZh = APP_STATE.lang === 'zh-TW';
             var searchPlaceholder = isZh ? '搜尋章節...' : 'Search chapters...';
-            var backToNormalText = isZh ? '📄 退出書本' : '📄 Exit Book';
+            var backToNormalText = isZh ? '退出書本' : 'Exit Book';
+            var exitUrl = APP_STATE.sharePath || (APP_STATE.path ? '/' + APP_STATE.path : '/');
 
             var sectionMap = {};
             bookData.chapters.forEach(function(ch) {
@@ -5720,10 +5721,12 @@ themeCss + '\\n' +
             var sidebarHtml = 
                 '<div class="book-sidebar" id="book-sidebar">' +
                     '<div class="book-sidebar-header">' +
-                        '<div class="book-title-row">' +
-                            '<a href="#" id="book-toc-home-link" class="book-brand-title" title="' + bookData.title + '">📖 ' + bookData.title + '</a>' +
-                            '<button type="button" id="book-exit-btn" class="toolbar-icon-button" style="padding:4px 8px;font-size:12px;" title="' + backToNormalText + '">' + backToNormalText + '</button>' +
+                        '<div class="book-top-actions">' +
+                            '<a href="' + exitUrl + '" id="book-exit-btn" class="book-exit-link" title="' + (isZh ? '返回一般閱讀模式' : 'Back to Note') + '">' +
+                                '<span>←</span> ' + backToNormalText +
+                            '</a>' +
                         '</div>' +
+                        '<a href="#" id="book-toc-home-link" class="book-brand-title" title="' + bookData.title + '">📖 ' + bookData.title + '</a>' +
                         '<input type="search" id="book-search-input" class="book-search-input" placeholder="' + searchPlaceholder + '" aria-label="' + searchPlaceholder + '">' +
                     '</div>' +
                     '<div class="book-toc-scroll" id="book-toc-scroll">';
@@ -5800,16 +5803,33 @@ themeCss + '\\n' +
                 if (fill) fill.style.width = Math.min(100, Math.max(0, progress)) + '%';
             }, { passive: true });
 
-            async function renderMd(target, text) {
-                if (window.renderMarkdown) {
-                    await window.renderMarkdown(target, text);
-                } else {
-                    target.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(0,0,0,0.4);">' + (isZh ? '載入渲染模組中...' : 'Loading...') + '</div>';
-                    var onReady = async function() {
-                        window.removeEventListener('markdown-ready', onReady);
-                        if (window.renderMarkdown) await window.renderMarkdown(target, text);
+            function getRenderer() {
+                if (window.renderMarkdown) return Promise.resolve(window.renderMarkdown);
+                return new Promise(function(resolve) {
+                    var timer = null;
+                    var check = function() {
+                        if (window.renderMarkdown) {
+                            if (timer) clearInterval(timer);
+                            window.removeEventListener('markdown-ready', check);
+                            resolve(window.renderMarkdown);
+                        }
                     };
-                    window.addEventListener('markdown-ready', onReady);
+                    window.addEventListener('markdown-ready', check, { once: true });
+                    timer = setInterval(check, 50);
+                    setTimeout(function() {
+                        if (timer) clearInterval(timer);
+                        resolve(window.renderMarkdown || null);
+                    }, 6000);
+                });
+            }
+
+            async function renderMd(target, text) {
+                if (!target) return;
+                var renderFn = await getRenderer();
+                if (renderFn) {
+                    await renderFn(target, text);
+                } else {
+                    target.innerHTML = '<div style="white-space:pre-wrap;font-family:sans-serif;padding:24px;">' + (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
                 }
             }
 
@@ -5908,6 +5928,16 @@ themeCss + '\\n' +
             }
 
             container.addEventListener('click', function(e) {
+                var exitBtn = e.target.closest('#book-exit-btn');
+                if (exitBtn) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    document.body.classList.remove('book-mode-active');
+                    if (container) container.remove();
+                    window.location.href = exitUrl;
+                    return;
+                }
+
                 var homeLink = e.target.closest('#book-toc-home-link, #book-crumb-parent');
                 if (homeLink) {
                     e.preventDefault();
@@ -5933,15 +5963,6 @@ themeCss + '\\n' +
                         loadChapter(navIdx);
                         return;
                     }
-                }
-
-                var exitBtn = e.target.closest('#book-exit-btn');
-                if (exitBtn) {
-                    e.preventDefault();
-                    document.body.classList.remove('book-mode-active');
-                    if (container) container.remove();
-                    var targetPath = APP_STATE.sharePath || window.location.pathname.replace(new RegExp('\\\\/book\\\\/?$'), '') || '/';
-                    window.location.replace(targetPath);
                 }
             });
 

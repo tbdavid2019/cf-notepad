@@ -404,36 +404,76 @@ pre.has-line-numbers {
 }
 
 .book-sidebar-header {
-    padding: 16px 18px 12px;
+    padding: 14px 16px 12px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 8px;
 }
 
 [data-ui-theme="dark"] .book-sidebar-header {
     border-bottom-color: rgba(255, 255, 255, 0.06);
 }
 
-.book-title-row {
+.book-top-actions {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 8px;
+    justify-content: flex-start;
+}
+
+.book-exit-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted, rgba(0, 0, 0, 0.6));
+    text-decoration: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: rgba(0, 0, 0, 0.02);
+    transition: all 0.15s ease;
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+[data-ui-theme="dark"] .book-exit-link {
+    color: rgba(255, 255, 255, 0.7);
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.book-exit-link:hover {
+    color: var(--accent-color, #2563eb);
+    border-color: var(--accent-color, #2563eb);
+    background: rgba(37, 99, 235, 0.08);
 }
 
 .book-brand-title {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
-    margin: 0;
-    white-space: nowrap;
+    line-height: 1.4;
+    margin: 2px 0 0 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
     overflow: hidden;
-    text-overflow: ellipsis;
-    display: flex;
-    align-items: center;
-    gap: 6px;
     color: inherit;
     text-decoration: none;
+    cursor: pointer;
+    border-radius: 6px;
+    padding: 3px 6px;
+    margin-left: -6px;
+    transition: background 0.15s ease;
+}
+
+.book-brand-title:hover {
+    background: rgba(0, 0, 0, 0.04);
+}
+
+[data-ui-theme="dark"] .book-brand-title:hover {
+    background: rgba(255, 255, 255, 0.06);
 }
 
 .book-search-input {
