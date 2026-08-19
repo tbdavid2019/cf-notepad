@@ -92,7 +92,7 @@
 - **🔢 程式碼區塊行號與檔名標籤**：支援起始行號 ```` ```js= ```` (第 1 行起) 或 ```` ```js=10 ```` (指定行號起)，以及檔案名稱標籤 ```` ```js [app.js] ```` 或 ```` ```js=1 [server.mjs] ````，自動生成獨立行號槽與檔名 Header。
 - **📋 程式碼區塊一鍵複製按鈕**：所有程式碼區塊自動掛載一鍵複製按鈕，點擊提供即時狀態反饋與 Toast 提示。
 - **💬 GitHub Alert 提示區塊自動補完與工具列**：行首輸入 `> [!` 即時彈出 NOTE、TIP、IMPORTANT、WARNING、CAUTION 快速選單，支援鍵盤導覽與 Enter 插入；工具列同步提供「⚠️ GitHub 提示區塊」按鈕。
-- **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），點擊章節無刷新非同步載入渲染，底部自動產生「← 上一章 / 下一章 →」翻頁卡片（支援鍵盤 `[` 與 `]` 快速鍵）。
+- **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），支援**滑鼠與觸控拖拉調整側邊欄寬度（Splitter Resizer）**，自動保存寬度偏好並支援雙擊重設（290px）；右側採用高規格原生嵌入渲染（`?embed=1`），零秒極速切換章節，頂部提供導覽列與快捷鍵（`[` 上一章、`]` 下一章）。
 - **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML)**：橫向投影片使用 `---`，縱向深入子投影片使用 `--`；支援方向鍵四向導覽（`↑` `↓` `←` `→`）與大綱總覽（`O`）2D 矩陣縮圖，文首支援 YAML 宣告自訂轉場效果（`fade`, `slide`, `zoom` 等）。
 - **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
 - **📝 行內註腳語法與工具列按鈕 (`^[...]`)**：支援 Pandoc / HackMD 行內註腳 `^[註腳說明]`，自動進行數字編號與文末說明生成；工具列提供「插入註腳 ([^1])」快捷按鈕。
@@ -375,7 +375,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **🔢 Code Block Line Numbers &amp; Filename Tabs**: Specify starting line numbers with ```` ```js= ```` (start from line 1) or ```` ```js=10 ````, and title headers with ```` ```js [app.js] ```` or ```` ```js=1 [server.mjs] ````.
 - **📋 Code Block One-Click Copy**: Automatically mounts an instant copy button on every code block with animated state feedback.
 - **💬 GitHub Alert Autocomplete &amp; Toolbar Button**: Typing `> [!` on a new line immediately summons a popup menu to choose `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, or `CAUTION` with keyboard navigation and Enter insertion; also available via toolbar button (`⚠️`).
-- **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth AJAX chapter loading without page reloads, next/prev chapter flip cards, and keyboard navigation (`[` and `]`).
+- **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth native embed chapter loading (`?embed=1`), draggable sidebar resizer with local storage persistence and double-click reset, next/prev chapter flip cards, and keyboard navigation (`[` and `]`).
 - **📽️ 2D Vertical Sub-Slides (`--`) &amp; YAML Frontmatter**: Use `---` for horizontal slides and `--` for deep-dive vertical sub-slides with 2D arrow navigation (`↑` `↓` `←` `→`) and overview matrix (`O`); customize transitions (`fade`, `slide`, `zoom`) via top YAML frontmatter.
 - **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
 - **📝 Inline Footnotes &amp; Toolbar Button (`^[...]`)**: Supports Pandoc / HackMD inline footnote syntax `^[footnote text]` with auto-numbering and bottom definition generation, plus an editor toolbar button (`[^1]`).

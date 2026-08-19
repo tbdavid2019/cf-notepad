@@ -403,6 +403,38 @@ pre.has-line-numbers {
     border-right-color: rgba(255, 255, 255, 0.08);
 }
 
+.book-sidebar-resizer {
+    width: 6px;
+    flex-shrink: 0;
+    cursor: col-resize;
+    position: relative;
+    z-index: 101;
+    background: transparent;
+    transition: background 0.15s ease;
+    margin-left: -3px;
+    margin-right: -3px;
+}
+
+.book-sidebar-resizer:hover,
+.book-sidebar-resizer.is-resizing {
+    background: var(--toolbar-accent, #2563eb);
+}
+
+.book-sidebar-resizer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: -3px;
+    right: -3px;
+}
+
+@media (max-width: 768px) {
+    .book-sidebar-resizer {
+        display: none !important;
+    }
+}
+
 .book-sidebar-header {
     padding: 14px 16px 12px;
     border-bottom: 1px solid rgba(0, 0, 0, 0.06);

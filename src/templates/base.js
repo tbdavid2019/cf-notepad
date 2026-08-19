@@ -5785,7 +5785,9 @@ themeCss + '\\n' +
                     '</div>' +
                 '</div>';
 
-            container.innerHTML = sidebarHtml + mainHtml;
+            var resizerHtml = '<div class="book-sidebar-resizer" id="book-sidebar-resizer" title="' + (isZh ? '拖拉調整側邊欄寬度 / 雙擊重設' : 'Drag to resize sidebar / Double click to reset') + '"></div>';
+
+            container.innerHTML = sidebarHtml + resizerHtml + mainHtml;
 
             var currentChapterIndex = 0;
 
@@ -5804,6 +5806,98 @@ themeCss + '\\n' +
             var sidebar = document.getElementById('book-sidebar');
             var toggleBtn = document.getElementById('book-sidebar-toggle');
             var backdrop = document.getElementById('book-sidebar-backdrop');
+            var resizer = document.getElementById('book-sidebar-resizer');
+            var defaultSidebarWidth = 290;
+
+            try {
+                var savedSidebarWidth = localStorage.getItem('cf-notepad:book-sidebar-width');
+                if (savedSidebarWidth && sidebar) {
+                    var parsedW = parseInt(savedSidebarWidth, 10);
+                    if (parsedW >= 180 && parsedW <= 800) {
+                        sidebar.style.width = parsedW + 'px';
+                    }
+                }
+            } catch (e) {}
+
+            if (resizer && sidebar) {
+                var isDragging = false;
+                var startX = 0;
+                var startWidth = 0;
+
+                var getIframe = function() {
+                    return document.getElementById('book-content-iframe');
+                };
+
+                var onPointerDown = function(clientX) {
+                    isDragging = true;
+                    startX = clientX;
+                    startWidth = sidebar.getBoundingClientRect().width;
+                    resizer.classList.add('is-resizing');
+                    document.body.style.userSelect = 'none';
+                    document.body.style.cursor = 'col-resize';
+                    var ifr = getIframe();
+                    if (ifr) ifr.style.pointerEvents = 'none';
+                };
+
+                var onPointerMove = function(clientX) {
+                    if (!isDragging) return;
+                    var dx = clientX - startX;
+                    var maxAllowed = Math.round(window.innerWidth * 0.65);
+                    var newWidth = Math.max(180, Math.min(maxAllowed, startWidth + dx));
+                    sidebar.style.width = newWidth + 'px';
+                };
+
+                var onPointerUp = function() {
+                    if (!isDragging) return;
+                    isDragging = false;
+                    resizer.classList.remove('is-resizing');
+                    document.body.style.userSelect = '';
+                    document.body.style.cursor = '';
+                    var ifr = getIframe();
+                    if (ifr) ifr.style.pointerEvents = '';
+                    var finalWidth = Math.round(sidebar.getBoundingClientRect().width);
+                    try {
+                        localStorage.setItem('cf-notepad:book-sidebar-width', finalWidth + 'px');
+                    } catch (e) {}
+                };
+
+                resizer.addEventListener('mousedown', function(e) {
+                    e.preventDefault();
+                    onPointerDown(e.clientX);
+                    var onMouseMove = function(ev) { onPointerMove(ev.clientX); };
+                    var onMouseUp = function() {
+                        onPointerUp();
+                        window.removeEventListener('mousemove', onMouseMove);
+                        window.removeEventListener('mouseup', onMouseUp);
+                    };
+                    window.addEventListener('mousemove', onMouseMove);
+                    window.addEventListener('mouseup', onMouseUp);
+                });
+
+                resizer.addEventListener('dblclick', function() {
+                    sidebar.style.width = defaultSidebarWidth + 'px';
+                    try {
+                        localStorage.removeItem('cf-notepad:book-sidebar-width');
+                    } catch (e) {}
+                });
+
+                resizer.addEventListener('touchstart', function(e) {
+                    if (e.touches.length === 1) {
+                        onPointerDown(e.touches[0].clientX);
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchmove', function(e) {
+                    if (isDragging && e.touches.length === 1) {
+                        onPointerMove(e.touches[0].clientX);
+                    }
+                }, { passive: true });
+
+                window.addEventListener('touchend', function() {
+                    if (isDragging) onPointerUp();
+                });
+            }
+
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function() {
                     sidebar.classList.toggle('open');
