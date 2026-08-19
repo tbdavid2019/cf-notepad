@@ -456,6 +456,7 @@ ${getMarkdownCss()}
         import remarkRehype from 'https://esm.sh/remark-rehype@11.1.0?bundle';
         import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
+        import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
         import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks, parseBookToc, htmlOrTsvToMarkdownTable, expandInlineFootnotes } from '/js/markdown-extensions.mjs';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
         import { decorateMediaPreviews } from '/js/media-preview.mjs';

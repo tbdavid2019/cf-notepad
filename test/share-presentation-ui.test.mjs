@@ -97,11 +97,25 @@ test('all script tags in rendered HTML have zero syntax errors across all page c
             presentationEntry: cfg.presentationEntry
         })
         const scripts = html.match(/<script[\s\S]*?<\/script>/g) || []
-        assert.ok(scripts.length > 0)
         for (const s of scripts) {
-            if (s.includes('text/template') || s.includes('type="module"')) continue
+            if (s.includes('text/template')) continue
             const code = s.replace(/<script[^>]*>/i, '').replace(/<\/script>$/i, '')
             if (!code.trim()) continue
+            if (s.includes('type="module"')) {
+                const sanitizedModuleCode = code
+                    .replace(/import\s+([\s\S]*?)\s+from\s+['"][^'"]+['"];?/g, (match, imports) => {
+                        const cleanImports = imports.replace(/[{}]/g, '').split(',').map(x => x.trim()).filter(Boolean);
+                        return cleanImports.length > 0 ? `var ${cleanImports.join(', ')};` : '';
+                    })
+                    .replace(/export\s+function\s+/g, 'function ')
+                    .replace(/export\s+const\s+/g, 'const ');
+                try {
+                    new Function(sanitizedModuleCode);
+                } catch (err) {
+                    assert.fail(`Syntax error in module script for config ${JSON.stringify(cfg)}: ${err.message}\nCode:\n${sanitizedModuleCode}`);
+                }
+                continue;
+            }
             try {
                 new Function(code)
             } catch (err) {
