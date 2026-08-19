@@ -1250,8 +1250,23 @@ ${getMarkdownCss()}
     const renderPlain = (node, text) => { if (node) { node.innerHTML = DOMPurify.sanitize(text) } }
 
     const triggerRender = (node, text) => {
-        if (window.renderMarkdown) { window.renderMarkdown(node, text) }
-        else { window.addEventListener('markdown-ready', () => { window.renderMarkdown(node, text) }, { once: true }) }
+        if (!node) return;
+        if (window.renderMarkdown) {
+            window.renderMarkdown(node, text);
+            return;
+        }
+        const done = () => {
+            if (window.renderMarkdown) window.renderMarkdown(node, text);
+        };
+        window.addEventListener('markdown-ready', done, { once: true });
+        const interval = setInterval(() => {
+            if (window.renderMarkdown) {
+                clearInterval(interval);
+                window.removeEventListener('markdown-ready', done);
+                window.renderMarkdown(node, text);
+            }
+        }, 50);
+        setTimeout(() => clearInterval(interval), 5000);
     }
 
     const SHARE_HISTORY_LIMIT = 20
@@ -5753,16 +5768,19 @@ themeCss + '\\n' +
                         '<div style="display:flex;align-items:center;gap:10px;min-width:0;">' +
                             '<button type="button" id="book-sidebar-toggle" class="toolbar-icon-button" aria-label="Toggle Sidebar" style="display:inline-flex;">☰</button>' +
                             '<div class="book-breadcrumbs" id="book-breadcrumbs">' +
-                                '<span id="book-crumb-parent">' + bookData.title + '</span>' +
+                                '<span id="book-crumb-parent" style="cursor:pointer;">' + bookData.title + '</span>' +
                                 '<span class="crumb-sep">/</span>' +
                                 '<span class="crumb-current" id="book-crumb-current">載入中...</span>' +
                             '</div>' +
                         '</div>' +
-                        '<div class="book-progress-track"><div class="book-progress-fill" id="book-progress-fill"></div></div>' +
+                        '<div class="book-top-nav-group">' +
+                            '<button type="button" id="book-prev-btn" class="book-top-nav-btn" title="' + (isZh ? '上一章 ([)' : 'Previous ([)') + '">← ' + (isZh ? '上一章' : 'Prev') + '</button>' +
+                            '<button type="button" id="book-next-btn" class="book-top-nav-btn" title="' + (isZh ? '下一章 (])' : 'Next (])') + '">' + (isZh ? '下一章' : 'Next') + ' →</button>' +
+                            '<a href="#" id="book-open-tab-btn" class="book-top-nav-btn" target="_blank" rel="noopener noreferrer" title="' + (isZh ? '在新分頁開啟' : 'Open in tab') + '">↗</a>' +
+                        '</div>' +
                     '</div>' +
-                    '<div class="book-content-wrap">' +
-                        '<div class="markdown-body" id="book-rendered-content"></div>' +
-                        '<div class="book-chapter-nav" id="book-chapter-nav"></div>' +
+                    '<div class="book-iframe-container">' +
+                        '<iframe id="book-content-iframe" class="book-embed-frame" title="Book Chapter Content" src="about:blank"></iframe>' +
                     '</div>' +
                 '</div>';
 
@@ -5796,58 +5814,25 @@ themeCss + '\\n' +
                 });
             }
 
-            window.addEventListener('scroll', function() {
-                var docHeight = document.documentElement.scrollHeight - window.innerHeight;
-                var progress = docHeight > 0 ? (window.scrollY / docHeight) * 100 : 0;
-                var fill = document.getElementById('book-progress-fill');
-                if (fill) fill.style.width = Math.min(100, Math.max(0, progress)) + '%';
-            }, { passive: true });
-
-            function getRenderer() {
-                if (window.renderMarkdown) return Promise.resolve(window.renderMarkdown);
-                return new Promise(function(resolve) {
-                    var timer = null;
-                    var check = function() {
-                        if (window.renderMarkdown) {
-                            if (timer) clearInterval(timer);
-                            window.removeEventListener('markdown-ready', check);
-                            resolve(window.renderMarkdown);
-                        }
-                    };
-                    window.addEventListener('markdown-ready', check, { once: true });
-                    timer = setInterval(check, 50);
-                    setTimeout(function() {
-                        if (timer) clearInterval(timer);
-                        resolve(window.renderMarkdown || null);
-                    }, 6000);
-                });
-            }
-
-            async function renderMd(target, text) {
-                if (!target) return;
-                var renderFn = await getRenderer();
-                if (renderFn) {
-                    await renderFn(target, text);
-                } else {
-                    target.innerHTML = '<div style="white-space:pre-wrap;font-family:sans-serif;padding:24px;">' + (text || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</div>';
-                }
-            }
-
-            async function loadChapter(index) {
-                var contentTarget = document.getElementById('book-rendered-content');
-                if (!contentTarget) return;
+            function loadChapter(index) {
+                var iframe = document.getElementById('book-content-iframe');
+                var crumb = document.getElementById('book-crumb-current');
+                var openTabBtn = document.getElementById('book-open-tab-btn');
+                var prevBtn = document.getElementById('book-prev-btn');
+                var nextBtn = document.getElementById('book-next-btn');
 
                 if (index === -1) {
                     currentChapterIndex = -1;
                     container.querySelectorAll('.book-toc-item').forEach(function(el) {
                         el.classList.remove('active');
                     });
-                    var crumb = document.getElementById('book-crumb-current');
                     if (crumb) crumb.textContent = isZh ? '目錄總覽' : 'Table of Contents';
+                    var homeUrl = (APP_STATE.sharePath || window.location.pathname.replace(new RegExp('\\\\/book\\\\/?$'), '') || '/');
+                    if (openTabBtn) openTabBtn.href = homeUrl;
+                    if (iframe) iframe.src = homeUrl + (homeUrl.includes('?') ? '&' : '?') + 'embed=1';
+                    if (prevBtn) prevBtn.disabled = true;
+                    if (nextBtn) nextBtn.disabled = bookData.chapters.length === 0;
                     if (sidebar) sidebar.classList.remove('open');
-                    await renderMd(contentTarget, content);
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                    renderNavButtons(-1);
                     return;
                 }
 
@@ -5859,72 +5844,21 @@ themeCss + '\\n' +
                     el.classList.toggle('active', parseInt(el.getAttribute('data-chapter-index'), 10) === index);
                 });
 
-                var crumb = document.getElementById('book-crumb-current');
                 if (crumb) crumb.textContent = chapter.title;
+                if (openTabBtn) openTabBtn.href = chapter.url;
+
+                if (prevBtn) prevBtn.disabled = index === 0;
+                if (nextBtn) nextBtn.disabled = index >= bookData.chapters.length - 1;
 
                 if (sidebar) sidebar.classList.remove('open');
 
-                contentTarget.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(0,0,0,0.4);">' + (isZh ? '載入章節內容中...' : 'Loading chapter...') + '</div>';
-
-                var mdText = '';
-                if (!chapter.url || chapter.url === window.location.pathname || chapter.url === APP_STATE.sharePath || chapter.url === (APP_STATE.sharePath + '/book')) {
-                    mdText = content;
-                } else if (chapter.isExternal) {
-                    contentTarget.innerHTML = 
-                        '<div style="padding:32px;border:1px solid rgba(0,0,0,0.1);border-radius:8px;text-align:center;">' +
-                            '<h3>' + chapter.title + '</h3>' +
-                            '<p>' + (isZh ? '這是一個外部連結章節：' : 'This is an external chapter link:') + '</p>' +
-                            '<p><a href="' + chapter.url + '" target="_blank" rel="noopener noreferrer" class="opt-button opt-button-accent" style="display:inline-block;padding:8px 16px;text-decoration:none;">' + (isZh ? '在新分頁開啟 ↗' : 'Open in New Tab ↗') + '</a></p>' +
-                        '</div>';
-                    renderNavButtons(index);
-                    return;
-                } else {
-                    try {
-                        var res = await fetch(chapter.url, {
-                            headers: { 'Accept': 'text/markdown' }
-                        });
-                        if (res.ok) {
-                            mdText = await res.text();
-                        } else {
-                            throw new Error('HTTP ' + res.status);
-                        }
-                    } catch (e) {
-                        contentTarget.innerHTML = '<div style="padding:32px;color:red;">' + (isZh ? '無法載入章節內容：' : 'Failed to load chapter content: ') + e.message + '</div>';
-                        renderNavButtons(index);
-                        return;
+                if (iframe) {
+                    var targetUrl = chapter.url;
+                    if (!chapter.isExternal && !targetUrl.includes('embed=1')) {
+                        targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'embed=1';
                     }
+                    iframe.src = targetUrl;
                 }
-
-                await renderMd(contentTarget, mdText);
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                renderNavButtons(index);
-            }
-
-            function renderNavButtons(index) {
-                var navWrap = document.getElementById('book-chapter-nav');
-                if (!navWrap) return;
-
-                var prevCh = index > 0 ? bookData.chapters[index - 1] : (index === 0 ? { title: isZh ? '目錄總覽' : 'Index', index: -1 } : null);
-                var nextCh = (index >= -1 && index < bookData.chapters.length - 1) ? bookData.chapters[index + 1] : null;
-
-                var navHtml = '';
-                if (prevCh) {
-                    navHtml += '<div class="book-nav-card prev" data-chapter-index="' + prevCh.index + '">' +
-                        '<div class="book-nav-hint">← ' + (isZh ? '上一章' : 'Previous') + '</div>' +
-                        '<div class="book-nav-title">' + prevCh.title + '</div>' +
-                    '</div>';
-                } else {
-                    navHtml += '<div></div>';
-                }
-
-                if (nextCh) {
-                    navHtml += '<div class="book-nav-card next" data-chapter-index="' + nextCh.index + '">' +
-                        '<div class="book-nav-hint">' + (isZh ? '下一章' : 'Next') + ' →</div>' +
-                        '<div class="book-nav-title">' + nextCh.title + '</div>' +
-                    '</div>';
-                }
-
-                navWrap.innerHTML = navHtml;
             }
 
             container.addEventListener('click', function(e) {
@@ -5955,14 +5889,19 @@ themeCss + '\\n' +
                     }
                 }
 
-                var navCard = e.target.closest('.book-nav-card');
-                if (navCard) {
-                    var navIdx = parseInt(navCard.getAttribute('data-chapter-index'), 10);
-                    if (!isNaN(navIdx)) {
-                        e.preventDefault();
-                        loadChapter(navIdx);
-                        return;
-                    }
+                var prevBtn = e.target.closest('#book-prev-btn');
+                if (prevBtn) {
+                    e.preventDefault();
+                    if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+                    else if (currentChapterIndex === 0) loadChapter(-1);
+                    return;
+                }
+
+                var nextBtn = e.target.closest('#book-next-btn');
+                if (nextBtn) {
+                    e.preventDefault();
+                    if (currentChapterIndex < bookData.chapters.length - 1) loadChapter(currentChapterIndex + 1);
+                    return;
                 }
             });
 
@@ -5971,6 +5910,7 @@ themeCss + '\\n' +
                 if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
                 if (e.key === '[') {
                     if (currentChapterIndex > 0) loadChapter(currentChapterIndex - 1);
+                    else if (currentChapterIndex === 0) loadChapter(-1);
                 } else if (e.key === ']') {
                     if (currentChapterIndex < bookData.chapters.length - 1) loadChapter(currentChapterIndex + 1);
                 }
