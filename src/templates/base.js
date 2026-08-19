@@ -4257,8 +4257,13 @@ themeCss + '\\n' +
                 citeModal.setAttribute('aria-hidden', 'true');
             }
 
-            if (citeNoteBtn) citeNoteBtn.addEventListener('click', openCiteModal);
-            if (citeShareBtn) citeShareBtn.addEventListener('click', openCiteModal);
+            document.addEventListener('click', (e) => {
+                const trigger = e.target.closest('#cite-share-btn, #cite-edit-btn, #cite-note-btn, .cite-share-btn, .cite-edit-btn');
+                if (trigger) {
+                    e.preventDefault();
+                    openCiteModal();
+                }
+            });
             if (citeModalMask) citeModalMask.addEventListener('click', closeCiteModal);
             if (citeModalCloseBtn) citeModalCloseBtn.addEventListener('click', closeCiteModal);
             if (citeModalCancelBtn) citeModalCancelBtn.addEventListener('click', closeCiteModal);

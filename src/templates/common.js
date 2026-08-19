@@ -215,15 +215,6 @@ export const COPY_DROPDOWN_MENU = (lang) => {
                         </span>
                     </button>
                     <div class="dropdown-divider"></div>
-                    <div class="dropdown-menu-label">${isZh ? '學術與文獻引用' : 'Citations'}</div>
-                    <button type="button" class="dropdown-item dropdown-item-rich" id="cite-note-btn" role="menuitem">
-                        ${SVG_ICONS.quote}
-                        <span class="dropdown-item-copy">
-                            <strong>${isZh ? '引用此文章 (Cite)' : 'Cite this Note'}</strong>
-                            <small>${isZh ? 'APA · IEEE · BibTeX · MLA · Markdown' : 'APA · IEEE · BibTeX · MLA · Markdown'}</small>
-                        </span>
-                    </button>
-                    <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-label">${isZh ? '圖片複製' : 'Image Copy'}</div>
                     <button type="button" class="dropdown-item dropdown-item-rich" id="copy-image-btn" role="menuitem">
                         ${SVG_ICONS.image}
@@ -580,6 +571,12 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </button>
                         ` : ''}
                         ${isBlockEditor ? EXPORT_DROPDOWN_MENU(lang, { includeMarkdown: false }) : ''}
+                        ${isBlockEditor ? `
+                        <button type="button" id="cite-edit-btn" class="toolbar-icon-button cite-edit-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
+                            ${SVG_ICONS.quote}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
+                        </button>
+                        ` : ''}
                         ${!isBlockEditor ? `
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
                             ${SVG_ICONS.import}
@@ -587,6 +584,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </button>
                         ${EXPORT_DROPDOWN_MENU(lang)}
                         ${COPY_DROPDOWN_MENU(lang)}
+                        <button type="button" id="cite-edit-btn" class="toolbar-icon-button cite-edit-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
+                            ${SVG_ICONS.quote}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
+                        </button>
                         <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
@@ -651,6 +652,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         }
                         ${EXPORT_DROPDOWN_MENU(lang)}
                         ${COPY_DROPDOWN_MENU(lang)}
+                        <button type="button" id="cite-share-btn" class="toolbar-icon-button cite-share-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
+                            ${SVG_ICONS.quote}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
+                        </button>
                         <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
@@ -663,10 +668,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button type="button" id="copy-embed-code-btn" class="toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" title="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}" aria-label="${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}">
                             ${SVG_ICONS.link}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
-                        </button>
-                        <button type="button" id="cite-share-btn" class="toolbar-icon-button cite-share-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
-                            ${SVG_ICONS.quote}
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
                         </button>
                         ` : ''}
                     ` : '')}
