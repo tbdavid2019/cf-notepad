@@ -51,6 +51,14 @@ For an autonomous agent written in Node.js, Python, or Go, simply spawn the clie
 uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py
 ```
 
+### 4. Cloudflare WebMCP & Direct HTTP Endpoint
+The Cloudflare Worker natively serves a JSON-RPC 2.0 MCP endpoint directly at:
+```text
+https://wiki.david888.com/mcp
+```
+When Cloudflare WebMCP is enabled on the domain, browser AI agents (Chrome 146+ `document.modelContext` / Cloudflare BrowserRun) automatically discover and bind these tools in-browser with zero client setup.
+
+
 ---
 
 ## 🛠️ Built-in AI Tools (Capabilities)

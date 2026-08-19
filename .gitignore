@@ -173,3 +173,5 @@ dist
 wrangler.toml
 .DS_Store
 orca-paste-*
+*.sync-conflict-*
+.sync-conflict-*

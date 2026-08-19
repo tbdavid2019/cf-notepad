@@ -6,6 +6,7 @@ import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw
 import { APP_NAME, getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
+import { handleMcpRequest } from './mcp_server.mjs'
 import { createOfflinePageResponse } from './offline_page'
 import {
     extractNoteDescription,
@@ -1966,6 +1967,12 @@ router.head(API_HEALTH_PATH, () => createDiscoveryResponse(
     }),
     'application/json; charset=UTF-8',
 ))
+
+// MCP (Model Context Protocol) Endpoints for WebMCP and Agent Tools
+router.options('/mcp', handleMcpRequest)
+router.get('/mcp', handleMcpRequest)
+router.head('/mcp', handleMcpRequest)
+router.post('/mcp', handleMcpRequest)
 
 router.get(AGENT_SKILLS_INDEX_PATH, async () => createDiscoveryResponse(
     JSON.stringify(await buildAgentSkillsIndex(), null, 2),

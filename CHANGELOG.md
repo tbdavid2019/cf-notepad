@@ -1,5 +1,21 @@
 # Changelog
 
+## [2026-08-19]
+
+- **🌐 原生 Cloudflare WebMCP 與 HTTP JSON-RPC 2.0 端點支援 (`/mcp`)**
+  - **原生 Worker MCP 服務**：在 Cloudflare Worker 原生實作標準 Model Context Protocol (MCP) JSON-RPC 2.0 伺服器端點（`POST /mcp`、`GET /mcp`、`OPTIONS /mcp`），無須本機 Python 執行環境。
+  - **Cloudflare WebMCP 1-Click 零設定橋接**：當使用者在 Cloudflare Dashboard 開啟 WebMCP 時，Edge 注入的 `/.webmcp/bridge.js` 會自動請求同網域的 `/mcp` 端點，將 Wiki 核心工具即時註冊至瀏覽器 `document.modelContext`（Chrome 146+），供 Browser AI Agent 與 BrowserRun 免爬蟲呼叫。
+  - **完整 MCP 工具集 (Built-in Tools)**：
+    - `read_note`：讀取文章 Markdown 內文、密碼檢查與元數據。
+    - `write_note`：建立/覆寫文章並回傳 Share URL 與 Edit URL。
+    - `append_note`：追加 Markdown 內容至指定文章末尾。
+    - `render_markdown`：渲染 Markdown 為包含主題樣式的 HTML。
+    - `lint_markdown`：檢驗並自動修復 Markdown 語法問題。
+    - `extract_markdown_meta`：提取文章標題、大綱目錄、超連結與字數統計。
+    - `get_view_stats`：查詢文章不重複訪客閱讀統計。
+    - `get_api_catalog`：獲取所有機器可讀 discovery 端點目錄。
+  - **全域 CORS 與相容性測試**：提供全域 CORS Preflight 支援與 8 項自動化單元測試，全面覆蓋協議初始化、工具清單與所有調用流程。
+
 ## [2026-08-18]
 
 - **🗑️ 劃線註解與留言自行刪除支援 (Self-Deletion with HMAC Token & Author Moderation)**

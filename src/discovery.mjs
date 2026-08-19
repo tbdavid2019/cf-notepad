@@ -7,6 +7,7 @@ export { API_DOCS_MARKDOWN }
 const AGENT_SKILL_NAME = 'david888-wiki-publisher'
 const AGENT_SKILL_PATH = `/.well-known/agent-skills/${AGENT_SKILL_NAME}/SKILL.md`
 const API_CATALOG_PATH = '/.well-known/api-catalog'
+const MCP_PATH = '/mcp'
 const API_DOCS_PATH = '/docs/api'
 const AUTH_MD_PATH = '/auth.md'
 const LLMS_TXT_PATH = '/llms.txt'
@@ -65,6 +66,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 
 - [Agent Skill](${siteOrigin}${AGENT_SKILL_PATH}): Instructions for agents that read, write, publish, upload, and share notes.
 - [Agent Skills Index](${siteOrigin}${AGENT_SKILLS_INDEX_PATH}): Index of machine-readable agent skills (v0.2.0 schema).
+- [Model Context Protocol (MCP)](${siteOrigin}${MCP_PATH}): Native MCP JSON-RPC 2.0 endpoint for WebMCP and AI agent tools.
 - [API Catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset catalog for API discovery.
 - [API Documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
 - [OpenAPI Specification](${siteOrigin}${OPENAPI_PATH}): Machine-readable OpenAPI 3.1.0 contract.
@@ -681,6 +683,7 @@ export function getDiscoveryConstants() {
         AGENT_SKILLS_INDEX_PATH,
         API_CATALOG_PATH,
         API_CATALOG_PROFILE,
+        MCP_PATH,
         API_DOCS_PATH,
         AUTH_MD_PATH,
         LLMS_TXT_PATH,

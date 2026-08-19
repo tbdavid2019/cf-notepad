@@ -58,7 +58,7 @@
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
 - **選取文字浮動 AI 捷徑**：在編輯器中選取任意文字，自動彈出浮動選單，一鍵觸發排版、AI 編輯或翻譯。
-- **Agent 生態 (MCP &amp; Skills)**：提供符合 Model Context Protocol 的遠端 MCP 伺服器 (`uv run server.py`)，並發布 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，可直接作為 Antigravity、Cursor、Claude Desktop 或 n8n 的發文大腦。
+- **Agent 生態 (MCP, WebMCP &amp; Skills)**：提供原生 HTTP JSON-RPC 2.0 端點（`/mcp`，完美相容 Cloudflare WebMCP 1-Click 整合與 Chrome 146+ `document.modelContext`）、遠端 Python FastMCP 伺服器 (`uv run server.py`)，並發布 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，可直接作為 Antigravity、Cursor、Claude Desktop 或 n8n 的發文大腦。
 
 ```text
 👉 ChatGPT / Claude 一鍵發文 Prompt：
@@ -261,6 +261,7 @@ npm run deploy
 
 部署完成後，站點提供以下自動化檢視端點：
 
+- `GET /mcp` / `POST /mcp`：原生 Model Context Protocol (MCP) JSON-RPC 2.0 端點，支援 Cloudflare WebMCP 橋接與外部 Agent。
 - `GET /.well-known/api-catalog`：RFC 9727 Linkset JSON。
 - `GET /.well-known/agent-skills/david888-wiki-publisher/SKILL.md`：LLM Agent Skill 規格書。
 - `GET /auth.md`：API 認證說明規範。
@@ -301,7 +302,7 @@ npm run deploy
 - **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
 - **AI Translation &amp; Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.
 - **Floating Selection AI Menu**: Selecting text in the editor automatically triggers floating AI Format, AI Edit, and Translate shortcuts.
-- **Agent Ecosystem (MCP &amp; Skills)**: Serves a remote Model Context Protocol server (`uv run server.py`) and standard Agent Skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
+- **Agent Ecosystem (MCP, WebMCP &amp; Skills)**: Serves a native HTTP JSON-RPC 2.0 MCP endpoint (`/mcp`, fully compatible with Cloudflare WebMCP 1-Click toggle and Chrome 146+ `document.modelContext`), a remote Python FastMCP server (`uv run server.py`), and standard Agent Skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.
 
 ```text
 👉 One-Click Prompt for ChatGPT / Claude Web:
