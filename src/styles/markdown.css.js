@@ -235,4 +235,117 @@ export const getMarkdownCss = () => `
     text-decoration: underline;
     text-underline-offset: 2px;
 }
+
+/* Markdown Text Highlight */
+.markdown-body mark,
+.markdown-highlight {
+    background-color: rgba(254, 240, 138, 0.75);
+    color: inherit;
+    padding: 1px 5px;
+    border-radius: 4px;
+    box-decoration-break: clone;
+    -webkit-box-decoration-break: clone;
+}
+[data-ui-theme="dark"] .markdown-body mark,
+[data-ui-theme="dark"] .markdown-highlight {
+    background-color: rgba(234, 179, 8, 0.32);
+    color: #fef08a;
+}
+
+/* Code Block Enhancements (Line numbers, Header, Filename, Copy button) */
+.code-block-wrapper {
+    position: relative;
+    margin: 1.2em 0;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: rgba(0, 0, 0, 0.02);
+    overflow: hidden;
+}
+[data-ui-theme="dark"] .code-block-wrapper {
+    border-color: rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.2);
+}
+.code-block-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 12px;
+    background: rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    font-size: 12px;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    color: #555;
+}
+[data-ui-theme="dark"] .code-block-header {
+    background: rgba(255, 255, 255, 0.05);
+    border-bottom-color: rgba(255, 255, 255, 0.08);
+    color: #aaa;
+}
+.code-block-title {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+}
+.code-file-icon {
+    font-size: 13px;
+}
+.code-copy-btn {
+    background: rgba(255, 255, 255, 0.8);
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    border-radius: 5px;
+    padding: 3px 8px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #444;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s ease;
+}
+[data-ui-theme="dark"] .code-copy-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.18);
+    color: #ddd;
+}
+.code-copy-btn:hover {
+    background: var(--toolbar-accent, #2563eb);
+    color: #ffffff;
+    border-color: var(--toolbar-accent, #2563eb);
+}
+.code-copy-btn.copied {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+}
+.code-block-wrapper pre {
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+}
+pre.has-line-numbers {
+    display: flex !important;
+    padding-left: 0 !important;
+}
+.code-line-numbers {
+    flex: 0 0 auto;
+    padding: 12px 10px 12px 14px;
+    text-align: right;
+    user-select: none;
+    color: rgba(0, 0, 0, 0.35);
+    border-right: 1px solid rgba(0, 0, 0, 0.08);
+    font-family: var(--font-mono, monospace);
+    font-size: inherit;
+    line-height: inherit;
+}
+[data-ui-theme="dark"] .code-line-numbers {
+    color: rgba(255, 255, 255, 0.3);
+    border-right-color: rgba(255, 255, 255, 0.08);
+}
+.code-line-numbers .line-number {
+    display: block;
+}
 `

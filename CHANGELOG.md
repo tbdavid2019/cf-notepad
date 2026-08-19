@@ -2,6 +2,24 @@
 
 ## [2026-08-19]
 
+- **🖍️ 編輯器與 Markdown 進階排版擴充套件 (Phase 1 Markdown Extended Writing Kit)**
+  - **🔍 編輯器全功能搜尋與取代 (Search & Replace Bar - Cmd+F / Cmd+H)**：
+    - 支援 `Cmd+F`（Ctrl+F）即時開啟懸浮搜尋列，`Cmd+H`（Ctrl+H）展開取代列，工具列亦新增「🔍 搜尋與取代」按鈕。
+    - 具備即時匹配計數器（如 `3 / 15`）、快速導覽（`Enter` 下一個、`Shift+Enter` 上一個）、三合一進階比對選項（`Aa` 區分大小寫、`\\b` 全字匹配、`.*` 正規表達式）以及「單處取代」與「全部取代」操作。
+  - **🖍️ 螢光筆文字高亮語法 (`==text==`)**：
+    - 支援 HackMD 標準 `==螢光筆文字==` 語法，渲染為 `<mark class="markdown-highlight">` 標籤，在淺色與 20 款深色主題中呈現高對比且護眼的柔和黃色高光；工具列同步提供「🖍️ 螢光筆 (HL)」快捷按鈕。
+  - **🎨 自訂文字與背景顏色語法 (`[color=...]`, `[bg=...]`)**：
+    - 支援 `[color=red]文字[/color]`、`[bg=yellow]文字[/bg]` 以及複合標籤 `[color=#3b82f6 bg=#eff6ff]文字[/color]`。
+    - 支援 Hex、RGB、HSL 與 CSS Named Color，嚴格遵循安全過濾機制，程式碼區塊外可靈活強調重點。
+  - **🔢 程式碼區塊行號與檔名標籤 (Code Block Line Numbers & Title Tabs)**：
+    - 支援行號起始語法：```` ```js= ````（從第 1 行開始）與 ```` ```js=10 ````（從指定行號開始），左側自動生成等寬且防選取的獨立行號槽（Gutter）。
+    - 支援檔案名稱標籤：```` ```js [app.js] ```` 或 ```` ```js=1 [server.mjs] ````，自動於頂部渲染檔名 Header 與語言徽章。
+  - **📋 程式碼區塊一鍵複製按鈕 (Code Block One-Click Copy)**：
+    - 所有渲染後的程式碼區塊頂部自動掛載輕量複製按鈕，點擊一鍵複製原始程式碼（排除行號與檔名），並附帶綠色成功狀態。
+  - **💬 GitHub Alert 提示區塊自動補完與工具列支援**：
+    - 在編輯器行首鍵入 `> [!` 時自動彈出 GitHub Alert 快速下拉選單（NOTE、TIP、IMPORTANT、WARNING、CAUTION），支援方向鍵選取、`Enter` / `Tab` 插入。
+    - 工具列新增「⚠️ GitHub 提示區塊」按鈕，快速建立標準 Alert 語法。
+
 - **📖 維基百科式腳註懸停預覽 (Footnote Hover Tooltip / Popover) 與 Pandoc 學術引用語法支援**
   - **維基百科式懸停浮層 (Footnote & Citation Popover)**：
     - 正文內的腳註標號 `[^1]`、`[^key]` 或學術引用標籤 `[@key]`，滑鼠懸停時即時就地彈出毛玻璃懸浮小卡（Tooltip Popover），自動抓取文末腳註或 BibTeX 條目內容，免去跳至文末閱讀再尋找回溯點的繁瑣操作。

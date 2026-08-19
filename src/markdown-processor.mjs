@@ -98,6 +98,16 @@ export function renderMarkdownToHtml(markdown = '', options = {}) {
         // Math inline: $...$
         res = res.replace(/\$([^$\n]+)\$/g, '<span class="math-inline">$1</span>')
 
+        // Highlight: ==text==
+        res = res.replace(/==([^=\n]+)==/g, '<mark class="markdown-highlight">$1</mark>')
+
+        // Custom Color: [color=red]...[/color] or [color=red bg=yellow]...[/color]
+        res = res.replace(/\[color=([#a-zA-Z0-9_().,% -]+)(?:\s+bg=([#a-zA-Z0-9_().,% -]+))?\]([\s\S]*?)\[\/color\]/gi, (m, color, bg, content) => {
+            const styles = [color ? `color: ${color}` : '', bg ? `background-color: ${bg}` : ''].filter(Boolean).join('; ')
+            return styles ? `<span style="${styles}">${content}</span>` : content
+        })
+        res = res.replace(/\[bg=([#a-zA-Z0-9_().,% -]+)\]([\s\S]*?)\[\/bg\]/gi, '<span style="background-color: $1">$2</span>')
+
         // Pandoc Citation: [@key] or [@key, locator]
         res = res.replace(/\[@([a-zA-Z0-9_\-]+)(?:,\s*([^\]]+))?\]/g, (m, key, loc) => {
             const locAttr = loc ? ` data-locator="${loc}"` : ''

@@ -77,7 +77,10 @@ export const SVG_ICONS = {
     width: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="12" x2="3" y2="12"/><path d="m18 15 3-3-3-3"/><path d="m6 9-3 3 3 3"/></svg>`,
     languages: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 8 6 6"/><path d="m4 14 6-6 2-3"/><path d="M2 5h12"/><path d="M7 2h1"/><path d="m22 22-5-10-5 10"/><path d="M14 18h6"/></svg>`,
     install: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="3"></rect><path d="M12 7v8"></path><path d="m8.5 11.5 3.5 3.5 3.5-3.5"></path></svg>`,
-    mic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`
+    mic: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="22"></line></svg>`,
+    search: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>`,
+    highlighter: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>`,
+    alert: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -91,9 +94,11 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'bold', glyph: 'B', glyphClass: 'is-bold', zh: '粗體', en: 'Bold' },
     { command: 'italic', glyph: 'I', glyphClass: 'is-italic', zh: '斜體', en: 'Italic' },
     { command: 'strike', glyph: 'S', glyphClass: 'is-strike', zh: '刪除線', en: 'Strikethrough' },
+    { command: 'highlight', glyph: SVG_ICONS.highlighter, glyphClass: 'is-highlight', zh: '螢光筆高亮 (==)', en: 'Highlight (==)' },
     { command: 'link', glyph: SVG_ICONS.link, zh: '連結', en: 'Link' },
     { separator: true },
     { command: 'quote', glyph: SVG_ICONS.quote, zh: '引用', en: 'Quote' },
+    { command: 'alert', glyph: SVG_ICONS.alert, glyphClass: 'is-alert', zh: 'GitHub 提示區塊 (> [!NOTE])', en: 'GitHub Alert (> [!NOTE])' },
     { command: 'toc', glyph: 'TOC', glyphClass: 'is-code', zh: '製作目錄', en: 'Insert table of contents' },
     { command: 'bullet', glyph: SVG_ICONS.bullet, zh: '無序清單', en: 'Bullet list' },
     { command: 'ordered', glyph: '1.', zh: '有序清單', en: 'Numbered list' },
@@ -108,6 +113,7 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'image', glyph: SVG_ICONS.image, glyphClass: 'is-image', zh: '上傳圖片', en: 'Upload image' },
     { command: 'asset', glyph: SVG_ICONS.asset, glyphClass: 'is-asset', zh: '上傳附件', en: 'Upload attachment' },
     { separator: true },
+    { command: 'search', glyph: SVG_ICONS.search, glyphClass: 'is-search', zh: '搜尋與取代 (Cmd+F / Cmd+H)', en: 'Search & Replace (Cmd+F / Cmd+H)' },
     { command: 'fullscreen', glyph: SVG_ICONS.fullscreen, zh: '全螢幕編輯', en: 'Fullscreen editor' },
 ]
 

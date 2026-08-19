@@ -7,7 +7,11 @@ import {
     decorateColumnLayouts,
     expandHackmdImageSizes,
     expandPandocCitations,
+    expandTextHighlights,
+    expandCustomColors,
+    expandMarkdownExtensions,
     decorateFootnoteAndCitationPopovers,
+    decorateCodeBlocks,
 } from '../static/js/markdown-extensions.mjs'
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -123,14 +127,80 @@ test('groups heading sections into two-column and three-column layout items', ()
     )
 })
 
+test('expands text highlight syntax ==text== into mark elements', () => {
+    assert.equal(
+        expandTextHighlights('This is ==highlighted== text.'),
+        'This is <mark class="markdown-highlight">highlighted</mark> text.',
+    )
+    assert.equal(
+        expandTextHighlights('==天啊我會發光==、或是 ==螢==火蟲'),
+        '<mark class="markdown-highlight">天啊我會發光</mark>、或是 <mark class="markdown-highlight">螢</mark>火蟲',
+    )
+    // Preserved inside code fence
+    const fence = '```\n==not highlight==\n```'
+    assert.equal(expandTextHighlights(fence), fence)
+    // Preserved inside inline code
+    const inline = 'Use `==text==` to highlight.'
+    assert.equal(expandTextHighlights(inline), inline)
+})
+
+test('expands custom font color and background color tags', () => {
+    assert.equal(
+        expandCustomColors('[color=red]Red text[/color]'),
+        '<span style="color: red">Red text</span>',
+    )
+    assert.equal(
+        expandCustomColors('[color=#3b82f6 bg=#eff6ff]Blue on light blue[/color]'),
+        '<span style="color: #3b82f6; background-color: #eff6ff">Blue on light blue</span>',
+    )
+    assert.equal(
+        expandCustomColors('[bg=yellow]Yellow background[/bg]'),
+        '<span style="background-color: yellow">Yellow background</span>',
+    )
+    // Preserved inside code fence
+    const fence = '```\n[color=red]not red[/color]\n```'
+    assert.equal(expandCustomColors(fence), fence)
+})
+
+test('decorates code blocks with filename tabs, line numbers, and copy buttons', () => {
+    const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <div id="content">
+                <pre><code class="language-javascript=10 [server.mjs]">console.log("Hello");\nconsole.log("World");</code></pre>
+            </div>
+        </body>
+        </html>
+    `)
+    const root = dom.window.document.getElementById('content')
+    const count = decorateCodeBlocks(root)
+    assert.equal(count, 1)
+
+    const wrapper = root.querySelector('.code-block-wrapper')
+    assert.ok(wrapper, 'Code block wrapper should exist')
+    const header = wrapper.querySelector('.code-block-header')
+    assert.ok(header, 'Code block header should exist')
+    assert.match(header.textContent, /server\.mjs/)
+    const copyBtn = header.querySelector('.code-copy-btn')
+    assert.ok(copyBtn, 'Copy button should exist')
+
+    const lineNumbers = wrapper.querySelector('.code-line-numbers')
+    assert.ok(lineNumbers, 'Line numbers gutter should exist')
+    assert.match(lineNumbers.textContent, /10/)
+    assert.match(lineNumbers.textContent, /11/)
+})
+
 test('connects HackMD and citation extensions to rendering and responsive layout styles', () => {
-    assert.match(baseTemplate, /expandHackmdImageSizes\(text\)/)
-    assert.match(baseTemplate, /expandPandocCitations\(/)
+    assert.match(baseTemplate, /expandMarkdownExtensions\(text\)/)
     assert.match(baseTemplate, /decorateColumnLayouts\(node\)/)
     assert.match(baseTemplate, /decorateFootnoteAndCitationPopovers\(node\)/)
+    assert.match(baseTemplate, /decorateCodeBlocks\(node\)/)
     assert.match(markdownCss, /\.markdown-body \.two-column-layout/)
     assert.match(markdownCss, /\.footnote-popover/)
     assert.match(markdownCss, /\.pandoc-citation/)
+    assert.match(markdownCss, /\.markdown-highlight/)
+    assert.match(markdownCss, /\.code-block-wrapper/)
     assert.match(markdownCss, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
     assert.match(markdownCss, /@media \(max-width: 720px\)/)
 })

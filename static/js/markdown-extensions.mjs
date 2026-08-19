@@ -172,8 +172,185 @@ export function expandPandocCitations(markdown = '') {
     }).join('\n')
 }
 
+const HIGHLIGHT_REGEX = /==([^=\n\r]+)==/g
+
+const expandTextHighlightsOnLine = line => line.replace(
+    HIGHLIGHT_REGEX,
+    (match, text) => `<mark class="markdown-highlight">${escapeAttribute(text)}</mark>`
+)
+
+const expandTextHighlightsOutsideInlineCode = line => {
+    const codeSpan = /(`+)(.*?)\1/g
+    let cursor = 0
+    let output = ''
+    let match
+
+    while ((match = codeSpan.exec(line)) !== null) {
+        output += expandTextHighlightsOnLine(line.slice(cursor, match.index))
+        output += match[0]
+        cursor = match.index + match[0].length
+    }
+    return output + expandTextHighlightsOnLine(line.slice(cursor))
+}
+
+export function expandTextHighlights(markdown = '') {
+    let fence = ''
+    return String(markdown).split('\n').map(line => {
+        const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
+        if (fenceMatch) {
+            const marker = fenceMatch[1][0]
+            if (!fence) fence = marker
+            else if (fence === marker) fence = ''
+            return line
+        }
+        return fence ? line : expandTextHighlightsOutsideInlineCode(line)
+    }).join('\n')
+}
+
+const sanitizeColor = val => {
+    const trimmed = String(val || '').trim()
+    if (/^(#[0-9a-fA-F]{3,8}|[a-zA-Z]+|rgba?\([^)]+\)|hsla?\([^)]+\))$/.test(trimmed)) {
+        return trimmed
+    }
+    return ''
+}
+
+const CUSTOM_COLOR_REGEX = /\[color=([#a-zA-Z0-9_().,% -]+)(?:\s+bg=([#a-zA-Z0-9_().,% -]+))?\]([\s\S]*?)\[\/color\]/gi
+const CUSTOM_BG_REGEX = /\[bg=([#a-zA-Z0-9_().,% -]+)\]([\s\S]*?)\[\/bg\]/gi
+
+const expandCustomColorsOnText = text => {
+    let res = text.replace(CUSTOM_COLOR_REGEX, (m, color, bg, content) => {
+        const safeColor = sanitizeColor(color)
+        const safeBg = sanitizeColor(bg)
+        const styles = [
+            safeColor ? `color: ${safeColor}` : '',
+            safeBg ? `background-color: ${safeBg}` : ''
+        ].filter(Boolean).join('; ')
+        if (!styles) return content
+        return `<span style="${styles}">${content}</span>`
+    })
+    res = res.replace(CUSTOM_BG_REGEX, (m, bg, content) => {
+        const safeBg = sanitizeColor(bg)
+        if (!safeBg) return content
+        return `<span style="background-color: ${safeBg}">${content}</span>`
+    })
+    return res
+}
+
+export function expandCustomColors(markdown = '') {
+    let fence = ''
+    return String(markdown).split('\n').map(line => {
+        const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
+        if (fenceMatch) {
+            const marker = fenceMatch[1][0]
+            if (!fence) fence = marker
+            else if (fence === marker) fence = ''
+            return line
+        }
+        return fence ? line : expandCustomColorsOnText(line)
+    }).join('\n')
+}
+
 export function expandMarkdownExtensions(markdown = '') {
-    return expandPandocCitations(expandHackmdImageSizes(markdown))
+    return expandCustomColors(expandTextHighlights(expandPandocCitations(expandHackmdImageSizes(markdown))))
+}
+
+export function decorateCodeBlocks(rootNode) {
+    if (!rootNode?.querySelectorAll) return 0
+    const codeBlocks = Array.from(rootNode.querySelectorAll('pre > code'))
+    let count = 0
+
+    codeBlocks.forEach(codeEl => {
+        const pre = codeEl.parentElement
+        if (!pre || pre.dataset.codeDecorated === 'true') return
+        pre.dataset.codeDecorated = 'true'
+        count++
+
+        const className = codeEl.className || ''
+        const match = className.match(/language-([a-zA-Z0-9_-]+)(?:=([0-9]*))?(?:\s*\[([^\]]+)\])?/)
+        let lang = match ? match[1] : ''
+        let lineStart = match && match[2] !== undefined ? (parseInt(match[2], 10) || 1) : null
+        let filename = match && match[3] ? match[3].trim() : ''
+
+        if (!filename && pre.getAttribute('data-filename')) filename = pre.getAttribute('data-filename')
+        if (lineStart === null && pre.getAttribute('data-line-numbers')) {
+            lineStart = parseInt(pre.getAttribute('data-line-start') || '1', 10)
+        }
+
+        let wrapper = pre.parentElement
+        if (!wrapper || !wrapper.classList.contains('code-block-wrapper')) {
+            wrapper = pre.ownerDocument.createElement('div')
+            wrapper.className = 'code-block-wrapper'
+            pre.parentNode.insertBefore(wrapper, pre)
+            wrapper.appendChild(pre)
+        }
+
+        const header = pre.ownerDocument.createElement('div')
+        header.className = 'code-block-header'
+
+        const langBadge = pre.ownerDocument.createElement('span')
+        langBadge.className = 'code-block-title'
+        if (filename) {
+            langBadge.innerHTML = `<span class="code-file-icon">📄</span> <span class="code-filename">${escapeAttribute(filename)}</span>`
+        } else if (lang) {
+            langBadge.textContent = lang.toUpperCase()
+        } else {
+            langBadge.textContent = 'CODE'
+        }
+
+        const copyBtn = pre.ownerDocument.createElement('button')
+        copyBtn.type = 'button'
+        copyBtn.className = 'code-copy-btn'
+        copyBtn.setAttribute('aria-label', 'Copy code to clipboard')
+        copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> <span class="copy-text">Copy</span>`
+
+        copyBtn.addEventListener('click', async () => {
+            const rawCode = codeEl.textContent || ''
+            try {
+                if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(rawCode)
+                } else if (typeof document !== 'undefined') {
+                    const ta = document.createElement('textarea')
+                    ta.value = rawCode
+                    document.body.appendChild(ta)
+                    ta.select()
+                    document.execCommand('copy')
+                    ta.remove()
+                }
+                copyBtn.classList.add('copied')
+                copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg> <span class="copy-text">Copied!</span>`
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied')
+                    copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg> <span class="copy-text">Copy</span>`
+                }, 2000)
+            } catch (err) {
+                console.error('Failed to copy code:', err)
+            }
+        })
+
+        header.appendChild(langBadge)
+        header.appendChild(copyBtn)
+        wrapper.insertBefore(header, pre)
+
+        if (lineStart !== null) {
+            pre.classList.add('has-line-numbers')
+            const lines = (codeEl.textContent || '').split('\n')
+            if (lines.length > 1 && lines[lines.length - 1] === '') lines.pop()
+
+            const lineNumbersGutter = pre.ownerDocument.createElement('div')
+            lineNumbersGutter.className = 'code-line-numbers'
+            lineNumbersGutter.setAttribute('aria-hidden', 'true')
+
+            let gutterHtml = ''
+            for (let i = 0; i < lines.length; i++) {
+                gutterHtml += `<span class="line-number">${lineStart + i}</span>\n`
+            }
+            lineNumbersGutter.innerHTML = gutterHtml
+            pre.insertBefore(lineNumbersGutter, codeEl)
+        }
+    })
+
+    return count
 }
 
 function findFootnoteContent(anchor, rootNode) {

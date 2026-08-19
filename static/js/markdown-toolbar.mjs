@@ -1,12 +1,14 @@
 const TOOLBAR_TEXT = {
     'zh-TW': {
         bold: '粗體文字', italic: '斜體文字', strike: '刪除線文字', inlineCode: '程式碼',
+        highlight: '螢光筆重點',
         link: '連結文字', codeBlock: '程式碼', table: '| 欄位 1 | 欄位 2 | 欄位 3 |\n| --- | --- | --- |\n| 文字 | 文字 | 文字 |', imageAlt: '圖片說明',
         twoColumns: '### 第一欄\n\n內容\n\n### 第二欄\n\n內容',
         threeColumns: '### 第一欄\n\n內容\n\n### 第二欄\n\n內容\n\n### 第三欄\n\n內容',
     },
     'en-US': {
         bold: 'bold text', italic: 'italic text', strike: 'strikethrough text', inlineCode: 'code',
+        highlight: 'highlighted text',
         link: 'link text', codeBlock: 'code', table: '| Column 1 | Column 2 | Column 3 |\n| -------- | -------- | -------- |\n| Text | Text | Text |', imageAlt: 'image description',
         twoColumns: '### Column 1\n\nContent\n\n### Column 2\n\nContent',
         threeColumns: '### Column 1\n\nContent\n\n### Column 2\n\nContent\n\n### Column 3\n\nContent',
@@ -20,6 +22,7 @@ const INLINE_COMMANDS = {
     italic: { prefix: '*', suffix: '*' },
     strike: { prefix: '~~', suffix: '~~' },
     inlineCode: { prefix: '`', suffix: '`' },
+    highlight: { prefix: '==', suffix: '==' },
 }
 
 const LIST_MARKER = /^\s*(?:[-*+] |\d+\. )(?:\[[ xX]\] )?/
@@ -159,6 +162,21 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
         const snippet = `![${labels.imageAlt}](https://example.com/image.png)`
         const urlStart = 8
         return replaceSnippet(source, safeStart, safeEnd, snippet, urlStart, urlStart + 29)
+    }
+    if (command === 'highlight') {
+        return replaceInline(source, safeStart, safeEnd, command, labels)
+    }
+    if (command === 'alert') {
+        const selected = source.slice(safeStart, safeEnd)
+        const content = selected || (labels.alert || '提示內容')
+        const snippet = `> [!NOTE]\n> ${content}`
+        return replaceSnippet(source, safeStart, safeEnd, snippet, 11, 11 + content.length)
+    }
+    if (command === 'search') {
+        if (typeof window !== 'undefined' && window.toggleEditorSearchReplace) {
+            window.toggleEditorSearchReplace()
+        }
+        return { text: source, selectionStart: safeStart, selectionEnd: safeEnd }
     }
     if (command === 'twoColumns') {
         return replaceColumnLayout(source, safeStart, safeEnd, 2, labels.twoColumns)

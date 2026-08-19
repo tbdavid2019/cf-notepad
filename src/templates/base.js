@@ -355,7 +355,51 @@ ${getMarkdownCss()}
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : `<div class="editor-pane">
                             ${EDITOR_TOOLBAR(lang)}
+                            <div id="editor-search-bar" class="editor-search-bar hide" role="search" aria-label="${lang === 'zh-TW' ? '搜尋與取代' : 'Search and Replace'}">
+                                <div class="editor-search-row">
+                                    <div class="editor-search-input-wrap">
+                                        <span class="search-icon">${SVG_ICONS.search}</span>
+                                        <input type="text" id="editor-search-input" class="editor-search-field" placeholder="${lang === 'zh-TW' ? '搜尋 (Enter 往下，Shift+Enter 往上)' : 'Find (Enter next, Shift+Enter prev)'}" autocomplete="off" />
+                                        <span id="editor-search-count" class="editor-search-count">0 / 0</span>
+                                    </div>
+                                    <div class="editor-search-options">
+                                        <button type="button" id="editor-search-case" class="search-opt-btn" title="${lang === 'zh-TW' ? '區分大小寫 (Aa)' : 'Match Case (Aa)'}" aria-label="Match Case">Aa</button>
+                                        <button type="button" id="editor-search-word" class="search-opt-btn" title="${lang === 'zh-TW' ? '全字匹配 (\\b)' : 'Match Whole Word (\\b)'}" aria-label="Match Whole Word">\\b</button>
+                                        <button type="button" id="editor-search-regex" class="search-opt-btn" title="${lang === 'zh-TW' ? '正規表達式 (.*)' : 'Use Regex (.*)'}" aria-label="Use Regex">.*</button>
+                                    </div>
+                                    <div class="editor-search-nav">
+                                        <button type="button" id="editor-search-prev" class="search-nav-btn" title="${lang === 'zh-TW' ? '上一個 (Shift+Enter)' : 'Previous match'}" aria-label="Previous">▲</button>
+                                        <button type="button" id="editor-search-next" class="search-nav-btn" title="${lang === 'zh-TW' ? '下一個 (Enter)' : 'Next match'}" aria-label="Next">▼</button>
+                                        <button type="button" id="editor-search-toggle-replace" class="search-nav-btn" title="${lang === 'zh-TW' ? '切換取代面板' : 'Toggle Replace'}" aria-label="Toggle Replace">⇄</button>
+                                        <button type="button" id="editor-search-close" class="search-close-btn" title="${lang === 'zh-TW' ? '關閉 (Esc)' : 'Close'}" aria-label="Close">✕</button>
+                                    </div>
+                                </div>
+                                <div id="editor-replace-row" class="editor-replace-row hide">
+                                    <input type="text" id="editor-replace-input" class="editor-search-field" placeholder="${lang === 'zh-TW' ? '取代為...' : 'Replace with...'}" autocomplete="off" />
+                                    <div class="editor-replace-actions">
+                                        <button type="button" id="editor-replace-btn" class="search-action-btn">${lang === 'zh-TW' ? '取代' : 'Replace'}</button>
+                                        <button type="button" id="editor-replace-all-btn" class="search-action-btn">${lang === 'zh-TW' ? '全部取代' : 'Replace All'}</button>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="editor-code-shell">
+                                <div id="editor-alert-autocomplete" class="editor-alert-autocomplete hide" role="listbox" aria-label="GitHub Alert types">
+                                    <div class="alert-option" data-alert-type="NOTE">
+                                        <span class="alert-badge note">ℹ️ NOTE</span> <span class="alert-desc">${lang === 'zh-TW' ? '重點資訊與備註' : 'Useful information'}</span>
+                                    </div>
+                                    <div class="alert-option" data-alert-type="TIP">
+                                        <span class="alert-badge tip">💡 TIP</span> <span class="alert-desc">${lang === 'zh-TW' ? '實用技巧與建議' : 'Helpful advice'}</span>
+                                    </div>
+                                    <div class="alert-option" data-alert-type="IMPORTANT">
+                                        <span class="alert-badge important">💬 IMPORTANT</span> <span class="alert-desc">${lang === 'zh-TW' ? '關鍵要求與步驟' : 'Crucial information'}</span>
+                                    </div>
+                                    <div class="alert-option" data-alert-type="WARNING">
+                                        <span class="alert-badge warning">⚠️ WARNING</span> <span class="alert-desc">${lang === 'zh-TW' ? '警示與注意事項' : 'Urgent notice'}</span>
+                                    </div>
+                                    <div class="alert-option" data-alert-type="CAUTION">
+                                        <span class="alert-badge caution">🛑 CAUTION</span> <span class="alert-desc">${lang === 'zh-TW' ? '危險與潛在風險' : 'Negative consequences'}</span>
+                                    </div>
+                                </div>
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
@@ -413,7 +457,7 @@ ${getMarkdownCss()}
         import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
         import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
-        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, decorateFootnoteAndCitationPopovers } from '/js/markdown-extensions.mjs';
+        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks } from '/js/markdown-extensions.mjs';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
         import { decorateMediaPreviews } from '/js/media-preview.mjs';
 
@@ -756,11 +800,11 @@ ${getMarkdownCss()}
         window.renderMarkdown = async (node, text) => {
             if (!node) return;
             try {
-                const expanded = expandPandocCitations(expandHackmdImageSizes(text));
+                const expanded = expandMarkdownExtensions(text);
                 const file = await processor.process(expanded);
                 const clean = DOMPurify.sanitize(String(file), {
-                    ADD_TAGS: ['cite', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
-                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'title'],
+                    ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
+                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title'],
                     WHOLE_DOCUMENT: false,
                     FORCE_BODY: true
                 });
@@ -771,6 +815,7 @@ ${getMarkdownCss()}
                 renderTableOfContents(node);
                 node.dataset.copyHtml = node.innerHTML;
                 decorateFootnoteAndCitationPopovers(node);
+                decorateCodeBlocks(node);
                 decorateMediaPreviews(node);
                 openShareContentLinksInNewTab(node);
                 initDiagrams();
@@ -2176,6 +2221,321 @@ ${getMarkdownCss()}
             })
             $textarea.addEventListener('scroll', hideSelectionAiMenu, { passive: true })
             window.addEventListener('resize', hideSelectionAiMenu)
+
+            initEditorSearchReplace();
+            initAlertAutocomplete();
+        }
+
+        function initEditorSearchReplace() {
+            const bar = document.getElementById('editor-search-bar');
+            const searchInput = document.getElementById('editor-search-input');
+            const replaceInput = document.getElementById('editor-replace-input');
+            const replaceRow = document.getElementById('editor-replace-row');
+            const searchCount = document.getElementById('editor-search-count');
+            const caseBtn = document.getElementById('editor-search-case');
+            const wordBtn = document.getElementById('editor-search-word');
+            const regexBtn = document.getElementById('editor-search-regex');
+            const prevBtn = document.getElementById('editor-search-prev');
+            const nextBtn = document.getElementById('editor-search-next');
+            const toggleReplaceBtn = document.getElementById('editor-search-toggle-replace');
+            const closeBtn = document.getElementById('editor-search-close');
+            const replaceBtn = document.getElementById('editor-replace-btn');
+            const replaceAllBtn = document.getElementById('editor-replace-all-btn');
+            const textarea = document.getElementById('contents');
+
+            if (!bar || !searchInput || !textarea) return;
+
+            let matches = [];
+            let currentMatchIndex = -1;
+            let matchCase = false;
+            let matchWord = false;
+            let useRegex = false;
+
+            const updateSearchCount = () => {
+                if (!searchCount) return;
+                if (!searchInput.value || matches.length === 0) {
+                    searchCount.textContent = '0 / 0';
+                } else {
+                    searchCount.textContent = (currentMatchIndex + 1) + ' / ' + matches.length;
+                }
+            };
+
+            const findMatches = () => {
+                const query = searchInput.value;
+                matches = [];
+                currentMatchIndex = -1;
+                if (!query || !textarea.value) {
+                    updateSearchCount();
+                    return;
+                }
+
+                try {
+                    let pattern;
+                    if (useRegex) {
+                        pattern = new RegExp(query, matchCase ? 'g' : 'gi');
+                    } else {
+                        const escaped = query.replace(/[\^$.*+?()[\]{}|\\]/g, '\\\\$&');
+                        const wordPattern = matchWord ? ('\\\\b' + escaped + '\\\\b') : escaped;
+                        pattern = new RegExp(wordPattern, matchCase ? 'g' : 'gi');
+                    }
+
+                    const text = textarea.value;
+                    let m;
+                    while ((m = pattern.exec(text)) !== null) {
+                        matches.push({ start: m.index, end: m.index + m[0].length, text: m[0] });
+                        if (m.index === pattern.lastIndex) pattern.lastIndex++;
+                    }
+                } catch (e) {
+                    matches = [];
+                }
+
+                if (matches.length > 0) {
+                    const selStart = textarea.selectionStart;
+                    const nextIdx = matches.findIndex(match => match.start >= selStart);
+                    currentMatchIndex = nextIdx !== -1 ? nextIdx : 0;
+                    highlightMatch(currentMatchIndex, false);
+                }
+                updateSearchCount();
+            };
+
+            const highlightMatch = (index, doFocus = true) => {
+                if (index < 0 || index >= matches.length) return;
+                const match = matches[index];
+                textarea.setSelectionRange(match.start, match.end);
+                if (doFocus) textarea.focus();
+                updateSearchCount();
+            };
+
+            window.toggleEditorSearchReplace = (showReplace = false) => {
+                if (bar.classList.contains('hide')) {
+                    bar.classList.remove('hide');
+                    if (showReplace && replaceRow) replaceRow.classList.remove('hide');
+                    const sel = textarea.value.slice(textarea.selectionStart, textarea.selectionEnd);
+                    if (sel && sel.indexOf('\\n') === -1) {
+                        searchInput.value = sel;
+                    }
+                    findMatches();
+                    if (showReplace && replaceInput) {
+                        replaceInput.focus();
+                    } else {
+                        searchInput.focus();
+                        searchInput.select();
+                    }
+                } else if (showReplace && replaceRow && replaceRow.classList.contains('hide')) {
+                    replaceRow.classList.remove('hide');
+                    replaceInput?.focus();
+                } else {
+                    bar.classList.add('hide');
+                    textarea.focus();
+                }
+            };
+
+            searchInput.addEventListener('input', findMatches);
+
+            if (caseBtn) caseBtn.addEventListener('click', () => {
+                matchCase = !matchCase;
+                caseBtn.classList.toggle('is-active', matchCase);
+                findMatches();
+            });
+
+            if (wordBtn) wordBtn.addEventListener('click', () => {
+                matchWord = !matchWord;
+                wordBtn.classList.toggle('is-active', matchWord);
+                findMatches();
+            });
+
+            if (regexBtn) regexBtn.addEventListener('click', () => {
+                useRegex = !useRegex;
+                regexBtn.classList.toggle('is-active', useRegex);
+                findMatches();
+            });
+
+            const gotoNext = () => {
+                if (matches.length === 0) return;
+                currentMatchIndex = (currentMatchIndex + 1) % matches.length;
+                highlightMatch(currentMatchIndex);
+            };
+
+            const gotoPrev = () => {
+                if (matches.length === 0) return;
+                currentMatchIndex = (currentMatchIndex - 1 + matches.length) % matches.length;
+                highlightMatch(currentMatchIndex);
+            };
+
+            if (nextBtn) nextBtn.addEventListener('click', gotoNext);
+            if (prevBtn) prevBtn.addEventListener('click', gotoPrev);
+
+            if (toggleReplaceBtn) toggleReplaceBtn.addEventListener('click', () => {
+                if (replaceRow) {
+                    replaceRow.classList.toggle('hide');
+                    if (!replaceRow.classList.contains('hide')) replaceInput?.focus();
+                }
+            });
+
+            if (closeBtn) closeBtn.addEventListener('click', () => {
+                bar.classList.add('hide');
+                textarea.focus();
+            });
+
+            const replaceCurrent = () => {
+                if (matches.length === 0 || currentMatchIndex < 0) return;
+                const match = matches[currentMatchIndex];
+                const repVal = replaceInput ? replaceInput.value : '';
+                const before = textarea.value.slice(0, match.start);
+                const after = textarea.value.slice(match.end);
+                textarea.value = before + repVal + after;
+                textarea.dispatchEvent(new Event('input'));
+                findMatches();
+            };
+
+            const replaceAll = () => {
+                if (matches.length === 0) return;
+                const count = matches.length;
+                const repVal = replaceInput ? replaceInput.value : '';
+                let query = searchInput.value;
+                let pattern;
+                if (useRegex) {
+                    pattern = new RegExp(query, matchCase ? 'g' : 'gi');
+                } else {
+                    const escaped = query.replace(/[\^$.*+?()[\]{}|\\]/g, '\\\\$&');
+                    const wordPattern = matchWord ? ('\\\\b' + escaped + '\\\\b') : escaped;
+                    pattern = new RegExp(wordPattern, matchCase ? 'g' : 'gi');
+                }
+                textarea.value = textarea.value.replace(pattern, repVal);
+                textarea.dispatchEvent(new Event('input'));
+                findMatches();
+                if (window.showToast) {
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? ('已取代 ' + count + ' 處內容') : ('Replaced ' + count + ' occurrences'));
+                }
+            };
+
+            if (replaceBtn) replaceBtn.addEventListener('click', replaceCurrent);
+            if (replaceAllBtn) replaceAllBtn.addEventListener('click', replaceAll);
+
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (e.shiftKey) gotoPrev();
+                    else gotoNext();
+                } else if (e.key === 'Escape') {
+                    bar.classList.add('hide');
+                    textarea.focus();
+                }
+            });
+
+            if (replaceInput) replaceInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (e.altKey) replaceAll();
+                    else replaceCurrent();
+                } else if (e.key === 'Escape') {
+                    bar.classList.add('hide');
+                    textarea.focus();
+                }
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if ((e.metaKey || e.ctrlKey) && (e.key === 'f' || e.key === 'F') && !e.shiftKey && !e.altKey) {
+                    if (document.activeElement === textarea || bar.contains(document.activeElement)) {
+                        e.preventDefault();
+                        window.toggleEditorSearchReplace(false);
+                    }
+                } else if ((e.metaKey || e.ctrlKey) && (e.key === 'h' || e.key === 'H' || (e.altKey && (e.key === 'f' || e.key === 'F')))) {
+                    if (document.activeElement === textarea || bar.contains(document.activeElement)) {
+                        e.preventDefault();
+                        window.toggleEditorSearchReplace(true);
+                    }
+                }
+            });
+        }
+
+        function initAlertAutocomplete() {
+            const popup = document.getElementById('editor-alert-autocomplete');
+            const textarea = document.getElementById('contents');
+            if (!popup || !textarea) return;
+
+            let selectedIndex = 0;
+            const options = Array.from(popup.querySelectorAll('.alert-option'));
+
+            const hideAlertPopup = () => {
+                popup.classList.add('hide');
+            };
+
+            const selectOptionIndex = (idx) => {
+                selectedIndex = (idx + options.length) % options.length;
+                options.forEach((opt, i) => opt.classList.toggle('is-selected', i === selectedIndex));
+            };
+
+            const insertAlert = (type) => {
+                const text = textarea.value;
+                const pos = textarea.selectionStart;
+                const lineStart = text.lastIndexOf('\\n', pos - 1) + 1;
+                const lineBeforeCursor = text.slice(lineStart, pos);
+                const prefixMatch = lineBeforeCursor.match(new RegExp('>\\\\\\\\s*\\\\[!?([a-zA-Z]*)$'));
+                if (!prefixMatch) return;
+
+                const replaceStart = lineStart + prefixMatch.index;
+                const replacement = '> [!' + type + ']\\n> ';
+                const before = text.slice(0, replaceStart);
+                const after = text.slice(pos);
+
+                textarea.value = before + replacement + after;
+                const newPos = before.length + replacement.length;
+                textarea.setSelectionRange(newPos, newPos);
+                textarea.focus();
+                textarea.dispatchEvent(new Event('input'));
+                hideAlertPopup();
+            };
+
+            options.forEach((opt, i) => {
+                opt.addEventListener('click', () => {
+                    const type = opt.getAttribute('data-alert-type');
+                    insertAlert(type);
+                });
+                opt.addEventListener('mouseenter', () => selectOptionIndex(i));
+            });
+
+            textarea.addEventListener('keyup', (e) => {
+                if (['ArrowUp', 'ArrowDown', 'Enter', 'Tab', 'Escape'].includes(e.key) && !popup.classList.contains('hide')) {
+                    return;
+                }
+                const pos = textarea.selectionStart;
+                const text = textarea.value;
+                const lineStart = text.lastIndexOf('\\n', pos - 1) + 1;
+                const line = text.slice(lineStart, pos);
+
+                if (new RegExp('>\\\\\\\\s*\\\\[!?[a-zA-Z]*$').test(line)) {
+                    popup.classList.remove('hide');
+                    selectOptionIndex(0);
+                } else {
+                    hideAlertPopup();
+                }
+            });
+
+            textarea.addEventListener('keydown', (e) => {
+                if (popup.classList.contains('hide')) return;
+
+                if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    selectOptionIndex(selectedIndex + 1);
+                } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    selectOptionIndex(selectedIndex - 1);
+                } else if (e.key === 'Enter' || e.key === 'Tab') {
+                    e.preventDefault();
+                    const type = options[selectedIndex]?.getAttribute('data-alert-type') || 'NOTE';
+                    insertAlert(type);
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    hideAlertPopup();
+                }
+            });
+
+            document.addEventListener('click', (e) => {
+                if (!popup.contains(e.target) && e.target !== textarea) {
+                    hideAlertPopup();
+                }
+            });
         }
 
         const showImportOptionDialog = ({ block = false } = {}) => new Promise(resolve => {

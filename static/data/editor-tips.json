@@ -60,6 +60,26 @@
       "id": "citation-cite",
       "zh-TW": "小訣竅：在分享頁點擊「引用」或「複製」選單中的「引用此文章」，可一鍵複製 APA (7th)、IEEE、BibTeX、MLA (9th)、Markdown 或 Chicago 學術文獻引用格式。",
       "en-US": "Tip: Click 'Cite' or choose 'Cite this Note' in the Copy menu to generate APA (7th), IEEE, BibTeX, MLA (9th), Markdown, or Chicago citations instantly."
+    },
+    {
+      "id": "search-replace",
+      "zh-TW": "小訣竅：按 Cmd+F (搜尋) 或 Cmd+H (取代)，可在編輯器頂部開啟懸浮搜尋面板，支援區分大小寫、全字匹配、正規表達式與全部取代。",
+      "en-US": "Tip: Press Cmd+F (Find) or Cmd+H (Replace) to open the floating search bar, supporting case sensitivity, whole words, regex, and replace all."
+    },
+    {
+      "id": "highlight-color",
+      "zh-TW": "小訣竅：使用 ==螢光筆文字== 可以套用黃色高亮；使用 [color=red]文字[/color] 或 [color=blue bg=yellow]文字[/color] 可自訂字體與背景顏色。",
+      "en-US": "Tip: Use ==highlighted text== for a soft yellow marker, or use [color=red]text[/color] and [color=blue bg=yellow]text[/color] for custom font and background colors."
+    },
+    {
+      "id": "code-block-enhancements",
+      "zh-TW": "小訣竅：程式碼區塊支援行號與檔名標籤，例如 ```js=10 [server.mjs]，並具備右上角一鍵複製按鈕。",
+      "en-US": "Tip: Code blocks support line numbers and filename tabs like ```js=10 [server.mjs], complete with a one-click copy button."
+    },
+    {
+      "id": "alert-autocomplete",
+      "zh-TW": "小訣竅：在行首輸入 > [! 會自動彈出 GitHub Alert 快速選單（NOTE / TIP / IMPORTANT / WARNING / CAUTION），支援鍵盤上下鍵與 Enter 插入。",
+      "en-US": "Tip: Typing > [! at the start of a line brings up the GitHub Alert autocomplete menu (NOTE / TIP / IMPORTANT / WARNING / CAUTION) with arrow key navigation."
     }
   ]
 }
