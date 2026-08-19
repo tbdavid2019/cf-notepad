@@ -369,6 +369,8 @@ pre.has-line-numbers {
 /* ==========================================================================
    Book Mode Styles
    ========================================================================== */
+.book-mode-active .note-container,
+.book-mode-active .footer,
 .book-mode-active #share-root,
 .book-mode-active #main-app {
     display: none !important;

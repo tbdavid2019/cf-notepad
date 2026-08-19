@@ -456,8 +456,7 @@ ${getMarkdownCss()}
         import remarkRehype from 'https://esm.sh/remark-rehype@11.1.0?bundle';
         import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
-        import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
-        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks } from '/js/markdown-extensions.mjs';
+        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks, parseBookToc, htmlOrTsvToMarkdownTable, expandInlineFootnotes } from '/js/markdown-extensions.mjs';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
         import { decorateMediaPreviews } from '/js/media-preview.mjs';
 
@@ -826,6 +825,10 @@ ${getMarkdownCss()}
             }
         };
 
+        window.parseBookToc = parseBookToc;
+        window.htmlOrTsvToMarkdownTable = htmlOrTsvToMarkdownTable;
+        window.expandInlineFootnotes = expandInlineFootnotes;
+        window.expandMarkdownExtensions = expandMarkdownExtensions;
         window.addEventListener('hashchange', scheduleHashScroll);
         window.dispatchEvent(new Event('markdown-ready'));
 
@@ -5626,8 +5629,59 @@ themeCss + '\\n' +
 
             if (!content || !content.trim()) return;
 
-            var tocFn = window.parseBookToc || (typeof parseBookToc === 'function' ? parseBookToc : null);
-            var bookData = tocFn ? tocFn(content) : { title: '書本目錄', chapters: [], sections: [] };
+            function parseBookTocInternal(src) {
+                if (!src) return { title: APP_STATE.title || 'Book', chapters: [], sections: [] };
+                var lines = src.split(new RegExp('\\\\r?\\\\n'));
+                var bookTitle = '';
+                var currentSection = '';
+                var chapters = [];
+                var sections = [];
+
+                for (var i = 0; i < lines.length; i++) {
+                    var line = lines[i];
+                    var h1Match = line.match(new RegExp('^#\\\\s+(.+)$'));
+                    if (h1Match && !bookTitle) {
+                        bookTitle = h1Match[1].trim();
+                        continue;
+                    }
+
+                    var h2Match = line.match(new RegExp('^##\\\\s+(.+)$'));
+                    var h3Match = line.match(new RegExp('^###\\\\s+(.+)$'));
+                    if (h2Match || h3Match) {
+                        var secTitle = (h2Match ? h2Match[1] : h3Match[1]).trim();
+                        currentSection = secTitle;
+                        sections.push({ title: secTitle, line: i });
+                        continue;
+                    }
+
+                    var linkMatch = line.match(new RegExp('^(\\\\s*)(?:[-*+]|\\\\d+\\\\.)\\\\s+\\\\x5B(.*?)\\\\x5D\\\\((.*?)\\\\x29'));
+                    if (linkMatch) {
+                        var indent = linkMatch[1].length;
+                        var title = linkMatch[2].trim();
+                        var url = linkMatch[3].trim();
+                        var level = Math.floor(indent / 2);
+                        var isExternal = url.startsWith('http://') || url.startsWith('https://');
+
+                        chapters.push({
+                            index: chapters.length,
+                            title: title,
+                            url: url,
+                            section: currentSection || (bookTitle || 'Chapters'),
+                            level: level,
+                            isExternal: isExternal
+                        });
+                    }
+                }
+
+                return {
+                    title: bookTitle || APP_STATE.title || 'Book',
+                    chapters: chapters,
+                    sections: sections
+                };
+            }
+
+            var tocFn = window.parseBookToc || parseBookTocInternal;
+            var bookData = tocFn(content);
 
             if (!bookData || !bookData.chapters || bookData.chapters.length === 0) {
                 bookData = {
@@ -5667,7 +5721,7 @@ themeCss + '\\n' +
                 '<div class="book-sidebar" id="book-sidebar">' +
                     '<div class="book-sidebar-header">' +
                         '<div class="book-title-row">' +
-                            '<a href="' + (APP_STATE.sharePath || '#') + '" class="book-brand-title" title="' + bookData.title + '">📖 ' + bookData.title + '</a>' +
+                            '<a href="#" id="book-toc-home-link" class="book-brand-title" title="' + bookData.title + '">📖 ' + bookData.title + '</a>' +
                             '<button type="button" id="book-exit-btn" class="toolbar-icon-button" style="padding:4px 8px;font-size:12px;" title="' + backToNormalText + '">' + backToNormalText + '</button>' +
                         '</div>' +
                         '<input type="search" id="book-search-input" class="book-search-input" placeholder="' + searchPlaceholder + '" aria-label="' + searchPlaceholder + '">' +
@@ -5696,7 +5750,7 @@ themeCss + '\\n' +
                         '<div style="display:flex;align-items:center;gap:10px;min-width:0;">' +
                             '<button type="button" id="book-sidebar-toggle" class="toolbar-icon-button" aria-label="Toggle Sidebar" style="display:inline-flex;">☰</button>' +
                             '<div class="book-breadcrumbs" id="book-breadcrumbs">' +
-                                '<span>' + bookData.title + '</span>' +
+                                '<span id="book-crumb-parent">' + bookData.title + '</span>' +
                                 '<span class="crumb-sep">/</span>' +
                                 '<span class="crumb-current" id="book-crumb-current">載入中...</span>' +
                             '</div>' +
@@ -5746,7 +5800,37 @@ themeCss + '\\n' +
                 if (fill) fill.style.width = Math.min(100, Math.max(0, progress)) + '%';
             }, { passive: true });
 
+            async function renderMd(target, text) {
+                if (window.renderMarkdown) {
+                    await window.renderMarkdown(target, text);
+                } else {
+                    target.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(0,0,0,0.4);">' + (isZh ? '載入渲染模組中...' : 'Loading...') + '</div>';
+                    var onReady = async function() {
+                        window.removeEventListener('markdown-ready', onReady);
+                        if (window.renderMarkdown) await window.renderMarkdown(target, text);
+                    };
+                    window.addEventListener('markdown-ready', onReady);
+                }
+            }
+
             async function loadChapter(index) {
+                var contentTarget = document.getElementById('book-rendered-content');
+                if (!contentTarget) return;
+
+                if (index === -1) {
+                    currentChapterIndex = -1;
+                    container.querySelectorAll('.book-toc-item').forEach(function(el) {
+                        el.classList.remove('active');
+                    });
+                    var crumb = document.getElementById('book-crumb-current');
+                    if (crumb) crumb.textContent = isZh ? '目錄總覽' : 'Table of Contents';
+                    if (sidebar) sidebar.classList.remove('open');
+                    await renderMd(contentTarget, content);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                    renderNavButtons(-1);
+                    return;
+                }
+
                 if (index < 0 || index >= bookData.chapters.length) return;
                 currentChapterIndex = index;
                 var chapter = bookData.chapters[index];
@@ -5760,13 +5844,10 @@ themeCss + '\\n' +
 
                 if (sidebar) sidebar.classList.remove('open');
 
-                var contentTarget = document.getElementById('book-rendered-content');
-                if (!contentTarget) return;
-
                 contentTarget.innerHTML = '<div style="padding:40px 0;text-align:center;color:rgba(0,0,0,0.4);">' + (isZh ? '載入章節內容中...' : 'Loading chapter...') + '</div>';
 
                 var mdText = '';
-                if (index === 0 && (!chapter.url || chapter.url === window.location.pathname || chapter.url.includes(window.location.pathname))) {
+                if (!chapter.url || chapter.url === window.location.pathname || chapter.url === APP_STATE.sharePath || chapter.url === (APP_STATE.sharePath + '/book')) {
                     mdText = content;
                 } else if (chapter.isExternal) {
                     contentTarget.innerHTML = 
@@ -5787,19 +5868,14 @@ themeCss + '\\n' +
                         } else {
                             throw new Error('HTTP ' + res.status);
                         }
-                    } catch(e) {
+                    } catch (e) {
                         contentTarget.innerHTML = '<div style="padding:32px;color:red;">' + (isZh ? '無法載入章節內容：' : 'Failed to load chapter content: ') + e.message + '</div>';
                         renderNavButtons(index);
                         return;
                     }
                 }
 
-                if (window.renderMarkdown) {
-                    await window.renderMarkdown(contentTarget, mdText);
-                } else {
-                    contentTarget.innerHTML = '<pre>' + mdText + '</pre>';
-                }
-
+                await renderMd(contentTarget, mdText);
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 renderNavButtons(index);
             }
@@ -5808,12 +5884,12 @@ themeCss + '\\n' +
                 var navWrap = document.getElementById('book-chapter-nav');
                 if (!navWrap) return;
 
-                var prevCh = index > 0 ? bookData.chapters[index - 1] : null;
-                var nextCh = index < bookData.chapters.length - 1 ? bookData.chapters[index + 1] : null;
+                var prevCh = index > 0 ? bookData.chapters[index - 1] : (index === 0 ? { title: isZh ? '目錄總覽' : 'Index', index: -1 } : null);
+                var nextCh = (index >= -1 && index < bookData.chapters.length - 1) ? bookData.chapters[index + 1] : null;
 
                 var navHtml = '';
                 if (prevCh) {
-                    navHtml += '<div class="book-nav-card prev" data-chapter-index="' + (index - 1) + '">' +
+                    navHtml += '<div class="book-nav-card prev" data-chapter-index="' + prevCh.index + '">' +
                         '<div class="book-nav-hint">← ' + (isZh ? '上一章' : 'Previous') + '</div>' +
                         '<div class="book-nav-title">' + prevCh.title + '</div>' +
                     '</div>';
@@ -5822,7 +5898,7 @@ themeCss + '\\n' +
                 }
 
                 if (nextCh) {
-                    navHtml += '<div class="book-nav-card next" data-chapter-index="' + (index + 1) + '">' +
+                    navHtml += '<div class="book-nav-card next" data-chapter-index="' + nextCh.index + '">' +
                         '<div class="book-nav-hint">' + (isZh ? '下一章' : 'Next') + ' →</div>' +
                         '<div class="book-nav-title">' + nextCh.title + '</div>' +
                     '</div>';
@@ -5832,6 +5908,13 @@ themeCss + '\\n' +
             }
 
             container.addEventListener('click', function(e) {
+                var homeLink = e.target.closest('#book-toc-home-link, #book-crumb-parent');
+                if (homeLink) {
+                    e.preventDefault();
+                    loadChapter(-1);
+                    return;
+                }
+
                 var link = e.target.closest('.book-toc-link');
                 if (link) {
                     var chIdx = parseInt(link.getAttribute('data-chapter-index'), 10);
