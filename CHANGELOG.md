@@ -2,6 +2,16 @@
 
 ## [2026-08-19]
 
+- **📜 Share 頁面學術與技術文獻引用產生器 (Academic & Technical Citation Generator - Cite Modal)**
+  - **支援六大引用標準**：
+    1. **BibTeX**：電腦科學、物理、數學與 LaTeX / Overleaf / Zotero 最普遍使用的程式碼格式。
+    2. **APA 格式 (7th Edition)**：全球最廣泛通用的社會科學與商學文獻標準。
+    3. **IEEE 格式**：電機、資工與科技論文標準格式（含數字標號 `[1]` 與線上存取日期）。
+    4. **MLA 格式 (9th Edition)**：人文、藝術與語文領域專用標準。
+    5. **Markdown 超連結與腳註**：一鍵產生 `[標題 - David888 Wiki](URL)` 與 `[^1]`，方便貼入 Obsidian、Notion 與 GitHub。
+    6. **Chicago 格式 (17th Edition)**：出版業與歷史學標準格式。
+  - **精美互動彈窗 (Cite Modal)**：在分享頁底部工具列（「引用」按鈕）及「複製」選單中新增「引用此文章 (Cite)」；彈窗支援即時切換 Tabs、點擊自動全選代碼、一鍵複製並提供流暢 Toast 提示。
+
 - **🌐 原生 Cloudflare WebMCP 與 HTTP JSON-RPC 2.0 端點支援 (`/mcp`)**
   - **原生 Worker MCP 服務**：在 Cloudflare Worker 原生實作標準 Model Context Protocol (MCP) JSON-RPC 2.0 伺服器端點（`POST /mcp`、`GET /mcp`、`OPTIONS /mcp`），無須本機 Python 執行環境。
   - **Cloudflare WebMCP 1-Click 零設定橋接**：當使用者在 Cloudflare Dashboard 開啟 WebMCP 時，Edge 注入的 `/.webmcp/bridge.js` 會自動請求同網域的 `/mcp` 端點，將 Wiki 核心工具即時註冊至瀏覽器 `document.modelContext`（Chrome 146+），供 Browser AI Agent 與 BrowserRun 免爬蟲呼叫。

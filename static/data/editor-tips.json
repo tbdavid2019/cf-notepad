@@ -55,6 +55,11 @@
       "id": "math-copy",
       "zh-TW": "小訣竅：在分享頁或預覽區直接點擊數學公式即可快速複製；透過底欄的「公式」按鈕可切換 LaTeX、MathML (Word)、純文字或 Notion 格式。",
       "en-US": "Tip: Click any math equation in preview or share view to copy it instantly. Use the 'Math' button in the footer to choose LaTeX, MathML (Word), Plain, or Notion format."
+    },
+    {
+      "id": "citation-cite",
+      "zh-TW": "小訣竅：在分享頁點擊「引用」或「複製」選單中的「引用此文章」，可一鍵複製 APA (7th)、IEEE、BibTeX、MLA (9th)、Markdown 或 Chicago 學術文獻引用格式。",
+      "en-US": "Tip: Click 'Cite' or choose 'Cite this Note' in the Copy menu to generate APA (7th), IEEE, BibTeX, MLA (9th), Markdown, or Chicago citations instantly."
     }
   ]
 }

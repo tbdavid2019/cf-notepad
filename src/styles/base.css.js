@@ -267,6 +267,19 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .url-import-input-field { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color, #ccc); border-radius: 8px; font-size: 0.95rem; box-sizing: border-box; background: var(--input-bg, var(--bg-color, #fff)); color: var(--text-color, inherit); outline: none; }
 .url-import-input-field:focus { border-color: var(--toolbar-accent, #2563eb); box-shadow: 0 0 0 3px color-mix(in srgb, var(--toolbar-accent, #2563eb) 20%, transparent); }
 .url-import-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+.cite-modal-content { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--toolbar-bg, var(--panel-bg, #ffffff)); color: var(--text-color, #222); border: 1px solid var(--border-color, rgba(0, 0, 0, 0.12)); padding: 24px; border-radius: 12px; box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); z-index: 1001; width: min(580px, calc(100vw - 32px)); box-sizing: border-box; display: flex; flex-direction: column; }
+.cite-modal-content .close-btn { position: absolute; top: 14px; right: 16px; background: none; border: none; font-size: 22px; line-height: 1; color: var(--toolbar-muted, #888); cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+.cite-modal-content .close-btn:hover { background: rgba(0, 0, 0, 0.08); color: var(--text-color, #111); }
+.cite-modal-title { margin: 0 0 8px 0; font-size: 1.15rem; font-weight: 600; display: flex; align-items: center; gap: 8px; color: var(--text-color, #111); }
+.cite-modal-desc { margin: 0 0 14px 0; font-size: 0.88rem; line-height: 1.5; color: var(--toolbar-muted, #666); }
+.cite-tabs { display: flex; gap: 6px; margin-bottom: 12px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.cite-tab-btn { padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color, rgba(0,0,0,0.15)); background: var(--button-bg, rgba(0,0,0,0.04)); color: var(--text-color, #333); cursor: pointer; font-size: 0.84rem; font-weight: 500; white-space: nowrap; transition: all 0.15s ease; }
+.cite-tab-btn:hover { background: var(--button-hover-bg, rgba(0,0,0,0.08)); }
+.cite-tab-btn.active { background: var(--toolbar-accent, #2563eb); color: #ffffff; border-color: var(--toolbar-accent, #2563eb); font-weight: 600; }
+.cite-preview-container { margin-bottom: 14px; }
+.cite-preview-text { width: 100%; min-height: 105px; box-sizing: border-box; resize: vertical; padding: 10px 12px; font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 0.88rem; line-height: 1.55; border-radius: 8px; border: 1px solid var(--border-color, #ccc); background: var(--input-bg, rgba(0,0,0,0.02)); color: var(--text-color, inherit); outline: none; }
+.cite-preview-text:focus { border-color: var(--toolbar-accent, #2563eb); box-shadow: 0 0 0 3px color-mix(in srgb, var(--toolbar-accent, #2563eb) 20%, transparent); }
+.cite-modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
 .modal-content input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
 .modal-content .close-btn { position: absolute; right: 10px; top: 5px; cursor: pointer; font-size: 18px; color: #999; }
 .share-index-prompt {

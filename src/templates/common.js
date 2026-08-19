@@ -215,6 +215,15 @@ export const COPY_DROPDOWN_MENU = (lang) => {
                         </span>
                     </button>
                     <div class="dropdown-divider"></div>
+                    <div class="dropdown-menu-label">${isZh ? '學術與文獻引用' : 'Citations'}</div>
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="cite-note-btn" role="menuitem">
+                        ${SVG_ICONS.quote}
+                        <span class="dropdown-item-copy">
+                            <strong>${isZh ? '引用此文章 (Cite)' : 'Cite this Note'}</strong>
+                            <small>${isZh ? 'APA · IEEE · BibTeX · MLA · Markdown' : 'APA · IEEE · BibTeX · MLA · Markdown'}</small>
+                        </span>
+                    </button>
+                    <div class="dropdown-divider"></div>
                     <div class="dropdown-menu-label">${isZh ? '圖片複製' : 'Image Copy'}</div>
                     <button type="button" class="dropdown-item dropdown-item-rich" id="copy-image-btn" role="menuitem">
                         ${SVG_ICONS.image}
@@ -655,6 +664,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.link}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
                         </button>
+                        <button type="button" id="cite-share-btn" class="toolbar-icon-button cite-share-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
+                            ${SVG_ICONS.quote}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
+                        </button>
                         ` : ''}
                     ` : '')}
                     <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" data-tooltip="${moreToolsTitle}" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
@@ -1049,3 +1062,34 @@ ${showNoteHistory ? `
 ` : ''}
 `
 }
+
+export const CITE_MODAL = (lang) => {
+    const zh = lang === 'zh-TW'
+    return `
+<div id="cite-modal" class="modal cite-modal" role="dialog" aria-modal="true" aria-labelledby="cite-modal-title" aria-hidden="true" style="display:none;">
+    <div class="modal-mask" id="cite-modal-mask"></div>
+    <div class="cite-modal-content">
+        <button type="button" class="close-btn" id="cite-modal-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <h3 id="cite-modal-title" class="cite-modal-title">
+            ${SVG_ICONS.quote} <span>${zh ? '引用此文章 (Cite this Note)' : 'Cite this Note'}</span>
+        </h3>
+        <p class="cite-modal-desc">${zh ? '選擇引用格式並複製代碼（適用於論文、技術報告與筆記系統）：' : 'Select citation format and copy citation text for papers, reports, or notes:'}</p>
+        <div class="cite-tabs" role="tablist" aria-label="${zh ? '引用格式' : 'Citation formats'}">
+            <button type="button" class="cite-tab-btn active" data-cite-format="apa" role="tab" aria-selected="true">APA (7th)</button>
+            <button type="button" class="cite-tab-btn" data-cite-format="ieee" role="tab" aria-selected="false">IEEE</button>
+            <button type="button" class="cite-tab-btn" data-cite-format="bibtex" role="tab" aria-selected="false">BibTeX</button>
+            <button type="button" class="cite-tab-btn" data-cite-format="mla" role="tab" aria-selected="false">MLA (9th)</button>
+            <button type="button" class="cite-tab-btn" data-cite-format="markdown" role="tab" aria-selected="false">Markdown</button>
+            <button type="button" class="cite-tab-btn" data-cite-format="chicago" role="tab" aria-selected="false">Chicago</button>
+        </div>
+        <div class="cite-preview-container">
+            <textarea id="cite-preview-text" class="cite-preview-text" readonly spellcheck="false" aria-label="${zh ? '引用預覽' : 'Citation preview'}"></textarea>
+        </div>
+        <div class="cite-modal-actions">
+            <button type="button" class="opt-button" id="cite-modal-cancel-btn">${zh ? '關閉' : 'Close'}</button>
+            <button type="button" class="opt-button opt-button-accent" id="cite-modal-copy-btn">${zh ? '📋 複製引用' : '📋 Copy Citation'}</button>
+        </div>
+    </div>
+</div>`
+}
+

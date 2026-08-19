@@ -110,6 +110,10 @@
     - **Jira / Confluence**：自動轉換為 Jira Wiki 標記語法（`h1.`、`{code}`、`{quote}`、`||` 表格）。
     - **飛書 / Lark**：相容飛書雲文檔排版與公式結構。
     - **複製長圖 (Image)**：2x 高解析度透明 PNG 寫入剪貼簿。
+    - **學術與文獻引用 (Cite)**：一鍵產生並複製 **APA (7th)**、**IEEE**、**BibTeX (LaTeX/Zotero)**、**MLA (9th)**、**Markdown 超連結/腳註** 或 **Chicago (17th)** 引用代碼。
+- **📜 學術與技術文獻引用產生器 (Cite Modal)**：
+  - 在分享頁底欄提供獨立「引用」按鈕與「複製」選單捷徑，彈出專屬 Cite Modal。
+  - 即時抓取文章標題、作者、網站與發表時間，支援 6 大主流學術格式一鍵切換與複製。
 - **KaTeX 數學公式點擊複製 (7 種格式)**：
   - 點擊分享頁或預覽中的任一 KaTeX 數學公式即刻複製到剪貼簿。
   - 提供專屬設定選單（`fx` 按鈕），支援 7 種格式：自動判斷 (Auto)、LaTeX (含 $)、LaTeX 純文字 (無 $，適合 Desmos/WolframAlpha)、Notion (雙 $)、MathML (貼入 Word 轉為原生方程式)、PNG 圖片、SVG 向量。
@@ -331,6 +335,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **CLI Conversion and Publishing**: [`scripts/doc2wiki.sh`](./scripts/doc2wiki.sh) converts a local document and publishes the Markdown to a specified Wiki path. It defaults to private, requires explicit `true` to publish, and prints only the shareable `shareUrl`.
 - **New-note Welcome**: A fresh Markdown note shows centered *Stray Birds* copy and a focused tip with a typewriter effect. It remains available across reloads in the same browser tab and disappears as soon as the author starts typing.
 - **Typography &amp; 20+ Themes**: Traditional Chinese defaults to `GenJyuu Gothic`; Latin text uses `Maple Mono` / `JetBrains Mono`. Features 20+ CSS preview themes (default `claude-canvas`) and width toggles. New editor notes randomly start in a desktop or mobile preview so authors can check narrow layouts early.
+- **Academic &amp; Technical Citations (Cite Modal)**: Dedicated "Cite" button in Share footer and Copy menu to instantly generate and copy **APA (7th)**, **IEEE**, **BibTeX (LaTeX/Zotero)**, **MLA (9th)**, **Markdown**, or **Chicago (17th)** citation formats.
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
 
 ![Editor and Real-Time Preview](image-1.png)

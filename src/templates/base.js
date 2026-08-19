@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, MATH_FORMAT_MODAL, URL_IMPORT_MODAL, SVG_ICONS } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, MATH_FORMAT_MODAL, URL_IMPORT_MODAL, CITE_MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -395,6 +395,7 @@ ${getMarkdownCss()}
     ${isEmbed ? '' : EDITOR_PREFERENCE_MODAL(lang)}
     ${URL_IMPORT_MODAL(lang)}
     ${MATH_FORMAT_MODAL(lang)}
+    ${CITE_MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
     
@@ -4168,6 +4169,130 @@ themeCss + '\\n' +
                         }
                     } catch (e) {
                         console.error('Failed to copy Feishu format:', e);
+                    }
+                });
+            }
+
+            // Cite (Academic / Technical Citations)
+            const citeModal = document.getElementById('cite-modal');
+            const citeModalMask = document.getElementById('cite-modal-mask');
+            const citeModalCloseBtn = document.getElementById('cite-modal-close-btn');
+            const citeModalCancelBtn = document.getElementById('cite-modal-cancel-btn');
+            const citeModalCopyBtn = document.getElementById('cite-modal-copy-btn');
+            const citePreviewText = document.getElementById('cite-preview-text');
+            const citeTabs = document.querySelectorAll('.cite-tab-btn');
+            const citeNoteBtn = document.getElementById('cite-note-btn');
+            const citeShareBtn = document.getElementById('cite-share-btn');
+
+            let currentCitationMap = {};
+            let currentCiteFormat = 'apa';
+
+            function buildCitationsForCurrentDoc() {
+                const heading1 = document.querySelector('#rendered-content h1, .markdown-body h1, #content h1, .bn-editor h1');
+                const rawTitle = (heading1 ? heading1.textContent : '') || (document.title ? document.title.split(' - ')[0] : '') || 'Untitled Note';
+                const title = rawTitle.replace(/^#+\\s*/, '').trim() || 'Untitled Note';
+                const author = 'DAVID888';
+                const siteName = 'David888 Wiki';
+                const canonicalUrl = window.location.href.split('?')[0].split('#')[0];
+
+                const now = new Date();
+                const year = now.getFullYear();
+                const monthNamesEn = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthShortEn = ['Jan.', 'Feb.', 'Mar.', 'Apr.', 'May', 'June', 'July', 'Aug.', 'Sept.', 'Oct.', 'Nov.', 'Dec.'];
+                const monthEn = monthNamesEn[now.getMonth()] || 'August';
+                const monthShort = monthShortEn[now.getMonth()] || 'Aug.';
+                const day = now.getDate();
+                const isoDate = now.toISOString().slice(0, 10);
+
+                const cleanUrl = canonicalUrl;
+                const urlNoProto = cleanUrl.replace(/^https?:\\/\\//, '');
+                const slugMatch = cleanUrl.match(/\\/share\\/([a-zA-Z0-9_-]+)/) || cleanUrl.match(/\\/([a-zA-Z0-9_-]+)$/);
+                const bibKey = slugMatch ? ('david888wiki_' + slugMatch[1]) : 'david888wiki_note';
+
+                return {
+                    apa: author + '. (' + year + ', ' + monthEn + ' ' + day + '). ' + title + '. ' + siteName + '. ' + cleanUrl,
+                    ieee: '[1] ' + author + ', "' + title + '," ' + siteName + ', ' + monthShort + ' ' + day + ', ' + year + '. [Online]. Available: ' + cleanUrl + '. [Accessed: ' + monthShort + ' ' + day + ', ' + year + '].',
+                    bibtex: [
+                        '@misc{' + bibKey + ',',
+                        '  author = {' + author + '},',
+                        '  title = {' + title + '},',
+                        '  howpublished = {\\\\url{' + cleanUrl + '}},',
+                        '  year = {' + year + '},',
+                        '  note = {Accessed: ' + isoDate + '}',
+                        '}'
+                    ].join('\\n'),
+                    mla: author + '. "' + title + '." ' + siteName + ', ' + day + ' ' + monthShort.replace('.', '') + ' ' + year + ', ' + urlNoProto + '. Accessed ' + day + ' ' + monthShort.replace('.', '') + ' ' + year + '.',
+                    markdown: '[' + title + ' - ' + siteName + '](' + cleanUrl + ')',
+                    chicago: author + '. "' + title + '." ' + siteName + '. Last modified ' + monthEn + ' ' + day + ', ' + year + '. ' + cleanUrl + '.'
+                };
+            }
+
+            function updateCitePreview(format) {
+                currentCiteFormat = format || currentCiteFormat || 'apa';
+                if (citePreviewText) {
+                    citePreviewText.value = currentCitationMap[currentCiteFormat] || '';
+                }
+                citeTabs.forEach(tab => {
+                    const isActive = tab.getAttribute('data-cite-format') === currentCiteFormat;
+                    tab.classList.toggle('active', isActive);
+                    tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+                });
+            }
+
+            function openCiteModal() {
+                if (!citeModal) return;
+                currentCitationMap = buildCitationsForCurrentDoc();
+                updateCitePreview(currentCiteFormat);
+                citeModal.style.display = 'flex';
+                citeModal.setAttribute('aria-hidden', 'false');
+                if (citePreviewText) {
+                    citePreviewText.focus();
+                    citePreviewText.select();
+                }
+            }
+
+            function closeCiteModal() {
+                if (!citeModal) return;
+                citeModal.style.display = 'none';
+                citeModal.setAttribute('aria-hidden', 'true');
+            }
+
+            if (citeNoteBtn) citeNoteBtn.addEventListener('click', openCiteModal);
+            if (citeShareBtn) citeShareBtn.addEventListener('click', openCiteModal);
+            if (citeModalMask) citeModalMask.addEventListener('click', closeCiteModal);
+            if (citeModalCloseBtn) citeModalCloseBtn.addEventListener('click', closeCiteModal);
+            if (citeModalCancelBtn) citeModalCancelBtn.addEventListener('click', closeCiteModal);
+
+            citeTabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const format = tab.getAttribute('data-cite-format');
+                    updateCitePreview(format);
+                });
+            });
+
+            if (citePreviewText) {
+                citePreviewText.addEventListener('click', () => {
+                    citePreviewText.select();
+                });
+            }
+
+            if (citeModalCopyBtn && citePreviewText) {
+                citeModalCopyBtn.addEventListener('click', async () => {
+                    const text = citePreviewText.value;
+                    if (!text) return;
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? (currentCiteFormat.toUpperCase() + ' 引用格式已複製！') : (currentCiteFormat.toUpperCase() + ' citation copied!'));
+                        }
+                        closeCiteModal();
+                    } catch (e) {
+                        citePreviewText.select();
+                        document.execCommand('copy');
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(isZh ? (currentCiteFormat.toUpperCase() + ' 引用格式已複製！') : (currentCiteFormat.toUpperCase() + ' citation copied!'));
+                        }
+                        closeCiteModal();
                     }
                 });
             }
