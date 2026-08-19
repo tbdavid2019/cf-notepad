@@ -577,7 +577,7 @@ export function decorateFootnoteAndCitationPopovers(rootNode) {
             const targetEl = findFootnoteTargetElement(anchor, rootNode)
             if (targetEl) {
                 e.preventDefault()
-                targetEl.scrollIntoView({ behavior: 'smooth', block: 'center' })
+                targetEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
                 targetEl.classList.remove('footnote-target-highlight')
                 void targetEl.offsetWidth
                 targetEl.classList.add('footnote-target-highlight')
