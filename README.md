@@ -10,11 +10,11 @@
 
 ![](orca-paste-1786412963175-b84e9a93-3a2c-418e-b031-e5ff91bdcda1.png)
 
+![](orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
 
 
-![Banner](image.png)
 
-
+![](orca-paste-1787127786636-d3cf3fb4-c057-41ef-8c77-9fa2db22a43e.png)
 
 ### 強大的匯入功能
 
@@ -100,6 +100,8 @@
 - 📖 **公開閱讀與渲染頁面 (Share URL)**：[https://wiki.david888.com/share/qt7xmd](https://wiki.david888.com/share/qt7xmd)
 - 🖥️ **全螢幕簡報模式 (Slidev Presentation)**：[https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
 - ✏️ **編輯器模式 (含搜尋與取代 / Alert 補完測試)**：[https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
+
+![](orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 
 | 功能項目 | 語法範例 | 驗收方式與效果 |
 | :--- | :--- | :--- |
@@ -387,6 +389,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 | **6. 📖 Footnote Hover Popover** | `[^1]` & `[@lamport78]` | Section 5: hover over markers to summon in-place glassmorphic popover card. |
 | **7. 🔍 Search & Replace** | `Cmd+F` (Find) / `Cmd+H` (Replace) | Open editor and press shortcut for match count, navigation and replacement. |
 | **8. ⚡ Alert Autocomplete** | Type `> [!` on a new line | Summons 5 alert options with arrow keys and Enter/Tab insertion. |
+
+![](orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 
 ![Editor and Real-Time Preview](image-1.png)
 
