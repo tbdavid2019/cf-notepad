@@ -108,4 +108,131 @@ export const getMarkdownCss = () => `
 .markdown-alert-warning::before { content: "⚠️ Warning"; font-weight: 600; display: block; margin-bottom: 4px; color: #9a6700; }
 .markdown-alert-caution { border-color: #cf222e; background-color: #ffebe9; color: #0d1117; }
 .markdown-alert-caution::before { content: "🛑 Caution"; font-weight: 600; display: block; margin-bottom: 4px; color: #cf222e; }
+
+/* Pandoc Academic Citations & Footnotes */
+.markdown-body .pandoc-citation,
+.pandoc-citation {
+    font-style: normal;
+    display: inline;
+}
+.markdown-body .citation-ref,
+.citation-ref {
+    color: var(--theme-accent, #0969da);
+    text-decoration: none;
+    font-weight: 500;
+    padding: 1px 5px;
+    border-radius: 4px;
+    background-color: rgba(9, 105, 218, 0.08);
+    transition: background-color 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.markdown-body .citation-ref:hover,
+.citation-ref:hover {
+    background-color: rgba(9, 105, 218, 0.18);
+    color: var(--theme-accent-hover, #0550ae);
+    text-decoration: none;
+}
+.markdown-body .footnote-ref a,
+.footnote-ref a,
+[data-footnote-ref] {
+    cursor: pointer;
+    padding: 1px 4px;
+    border-radius: 3px;
+    transition: background-color 0.15s ease;
+}
+.markdown-body .footnote-ref a:hover,
+.footnote-ref a:hover,
+[data-footnote-ref]:hover {
+    background-color: rgba(9, 105, 218, 0.15);
+}
+
+/* Footnote & Citation Hover Popover */
+.footnote-popover {
+    position: fixed;
+    z-index: 10050;
+    max-width: 420px;
+    min-width: 240px;
+    max-height: 280px;
+    background: rgba(255, 255, 255, 0.96);
+    color: #1e293b;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    padding: 12px 14px;
+    font-size: 13.5px;
+    line-height: 1.55;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(4px);
+    transition: opacity 0.18s cubic-bezier(0.16, 1, 0.3, 1), transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.18s;
+    pointer-events: none;
+    overflow-y: auto;
+}
+.footnote-popover.visible,
+.footnote-popover[data-active="true"] {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+.footnote-popover-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+.footnote-popover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+.footnote-popover-badge svg {
+    color: #0969da;
+}
+.footnote-popover-close {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    line-height: 1;
+    color: #94a3b8;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: color 0.15s, background-color 0.15s;
+}
+.footnote-popover-close:hover {
+    color: #1e293b;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+.footnote-popover-body {
+    word-break: break-word;
+    color: #334155;
+}
+.footnote-popover-body p {
+    margin: 0 0 6px;
+}
+.footnote-popover-body p:last-child {
+    margin-bottom: 0;
+}
+.footnote-popover-body code {
+    font-size: 12px;
+    padding: 2px 5px;
+    border-radius: 4px;
+    background: rgba(0, 0, 0, 0.06);
+}
+.footnote-popover-body a {
+    color: #0969da;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
 `

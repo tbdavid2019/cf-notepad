@@ -6,6 +6,8 @@ import { readFileSync } from 'node:fs'
 import {
     decorateColumnLayouts,
     expandHackmdImageSizes,
+    expandPandocCitations,
+    decorateFootnoteAndCitationPopovers,
 } from '../static/js/markdown-extensions.mjs'
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -45,6 +47,56 @@ test('leaves invalid and ordinary Markdown images unchanged', () => {
     )
 })
 
+test('expands Pandoc academic citations into structured citation links', () => {
+    const single = expandPandocCitations('According to [@smith04], distributed systems scale.')
+    assert.match(single, /class="pandoc-citation"/)
+    assert.match(single, /data-citation-key="smith04"/)
+    assert.match(single, /href="#fn-smith04"/)
+
+    const withLocator = expandPandocCitations('See [@doe2023, pp. 45-48] for details.')
+    assert.match(withLocator, /data-citation-key="doe2023"/)
+    assert.match(withLocator, /data-locator="pp\. 45-48"/)
+
+    const multiple = expandPandocCitations('Multiple works agree [@smith04; @doe2023, p. 10].')
+    assert.match(multiple, /data-citation-key="smith04"/)
+    assert.match(multiple, /data-citation-key="doe2023"/)
+
+    const inText = expandPandocCitations('As @lamport82 [p. 15] proposed, Byzantine faults occur.')
+    assert.match(inText, /class="pandoc-citation in-text"/)
+    assert.match(inText, /data-citation-key="lamport82"/)
+
+    // Preserves inside code block
+    const codeBlock = '```\n[@not_a_citation]\n```'
+    assert.equal(expandPandocCitations(codeBlock), codeBlock)
+
+    // Preserves inside inline code
+    const inlineCode = 'Use `[@citationKey]` in text.'
+    assert.equal(expandPandocCitations(inlineCode), inlineCode)
+})
+
+test('decorates footnote references with hover popover listeners', () => {
+    const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <div id="content">
+                <p>Text referencing note<sup class="footnote-ref"><a href="#fn-1" id="fnref-1" data-footnote-ref>1</a></sup> and citation <cite class="pandoc-citation"><a href="#fn-smith04" class="citation-ref" data-citation-key="smith04">[@smith04]</a></cite></p>
+                <section class="footnotes">
+                    <ol>
+                        <li id="fn-1"><p>Footnote 1 text <a href="#fnref-1" class="data-footnote-backref">↩</a></p></li>
+                        <li id="fn-smith04"><p>Smith, John. (2004). <em>Distributed Systems</em>. <a href="#fnref-smith04" class="data-footnote-backref">↩</a></p></li>
+                    </ol>
+                </section>
+            </div>
+        </body>
+        </html>
+    `)
+    const root = dom.window.document.getElementById('content')
+    const count = decorateFootnoteAndCitationPopovers(root)
+    assert.equal(count, 2)
+    assert.ok(dom.window.document.getElementById('footnote-popover'))
+})
+
 test('groups heading sections into two-column and three-column layout items', () => {
     const dom = new JSDOM(`
         <main>
@@ -71,10 +123,14 @@ test('groups heading sections into two-column and three-column layout items', ()
     )
 })
 
-test('connects HackMD extensions to rendering and responsive layout styles', () => {
+test('connects HackMD and citation extensions to rendering and responsive layout styles', () => {
     assert.match(baseTemplate, /expandHackmdImageSizes\(text\)/)
+    assert.match(baseTemplate, /expandPandocCitations\(/)
     assert.match(baseTemplate, /decorateColumnLayouts\(node\)/)
+    assert.match(baseTemplate, /decorateFootnoteAndCitationPopovers\(node\)/)
     assert.match(markdownCss, /\.markdown-body \.two-column-layout/)
+    assert.match(markdownCss, /\.footnote-popover/)
+    assert.match(markdownCss, /\.pandoc-citation/)
     assert.match(markdownCss, /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/)
     assert.match(markdownCss, /@media \(max-width: 720px\)/)
 })

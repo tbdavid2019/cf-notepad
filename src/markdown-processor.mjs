@@ -98,6 +98,16 @@ export function renderMarkdownToHtml(markdown = '', options = {}) {
         // Math inline: $...$
         res = res.replace(/\$([^$\n]+)\$/g, '<span class="math-inline">$1</span>')
 
+        // Pandoc Citation: [@key] or [@key, locator]
+        res = res.replace(/\[@([a-zA-Z0-9_\-]+)(?:,\s*([^\]]+))?\]/g, (m, key, loc) => {
+            const locAttr = loc ? ` data-locator="${loc}"` : ''
+            const locText = loc ? `, ${loc}` : ''
+            return `<cite class="pandoc-citation"><a href="#fn-${key}" class="citation-ref" data-citation-key="${key}"${locAttr}>[@${key}${locText}]</a></cite>`
+        })
+
+        // Footnote references: [^key]
+        res = res.replace(/\[\^([a-zA-Z0-9_\-]+)\]/g, '<sup class="footnote-ref"><a href="#fn-$1" id="fnref-$1" data-footnote-ref>$1</a></sup>')
+
         // Images: ![alt](url)
         res = res.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" loading="lazy" />')
 

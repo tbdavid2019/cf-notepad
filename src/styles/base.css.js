@@ -3342,6 +3342,8 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
     #share-annotation-root,
     .share-annotations-trigger,
     .share-annotations-popover,
+    .footnote-popover,
+    #footnote-popover,
     .tiptap-block-handle,
     .david888-drag-handle,
     .tiptap-add-block,

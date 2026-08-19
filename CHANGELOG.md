@@ -2,6 +2,14 @@
 
 ## [2026-08-19]
 
+- **📖 維基百科式腳註懸停預覽 (Footnote Hover Tooltip / Popover) 與 Pandoc 學術引用語法支援**
+  - **維基百科式懸停浮層 (Footnote & Citation Popover)**：
+    - 正文內的腳註標號 `[^1]`、`[^key]` 或學術引用標籤 `[@key]`，滑鼠懸停時即時就地彈出毛玻璃懸浮小卡（Tooltip Popover），自動抓取文末腳註或 BibTeX 條目內容，免去跳至文末閱讀再尋找回溯點的繁瑣操作。
+    - 支援滑鼠移入浮層操作（複製內文、點擊連結）、深淺色自適應、視窗邊界自我調節，以及觸控螢幕點擊開啟與獨立 `×` 關閉按鈕。
+  - **Pandoc 學術引用語法 (`[@citationKey]`)**：
+    - 支援標準括號引用 `[@key]`、帶頁碼定位 `[@key, pp. 42-45]`、多文獻並列 `[@smith04; @doe2023]`、作者抑制 `[-@key]` 與行內引用 `@key [p. 10]`。
+    - 自動關聯文末同名腳註 `[^key]: ...`、BibTeX 程式碼區塊 `@misc{key, ...}` 或 References 列表，並渲染為現代化的學術 Citation Badge。
+
 - **📜 Share 頁面學術與技術文獻引用產生器 (Academic & Technical Citation Generator - Cite Modal)**
   - **支援六大引用標準**：
     1. **BibTeX**：電腦科學、物理、數學與 LaTeX / Overleaf / Zotero 最普遍使用的程式碼格式。
