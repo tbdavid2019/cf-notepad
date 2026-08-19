@@ -95,6 +95,23 @@
 - **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；新筆記編輯器會隨機從桌面或手機預覽開始，方便作者先檢查窄版排版。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
 
+#### 🔗 實例展示與功能驗收 (Live Demo & Feature Showcase)
+
+- 📖 **公開閱讀與渲染頁面 (Share URL)**：[https://wiki.david888.com/share/qt7xmd](https://wiki.david888.com/share/qt7xmd)
+- 🖥️ **全螢幕簡報模式 (Slidev Presentation)**：[https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
+- ✏️ **編輯器模式 (含搜尋與取代 / Alert 補完測試)**：[https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
+
+| 功能項目 | 語法範例 | 驗收方式與效果 |
+| :--- | :--- | :--- |
+| **1. 🖍️ 螢光筆高亮** | `==螢光筆文字==` | 檢視第 1 節，呈現柔和黃色高光 `<mark>`，適配淺色與深色主題。 |
+| **2. 🎨 自訂字體/背景色** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | 檢視第 2 節，呈現紅字、綠字、藍字及「藍字淡藍底」複合徽章。 |
+| **3. 🔢 行號與檔名標籤** | ```` ```js=1 [server.mjs] ```` | 檢視第 3 節，程式碼頂部有檔名 Header，左側有防圈選行號槽。 |
+| **4. 📋 程式碼一鍵複製** | 自動掛載於 Code Header | 點擊程式碼區塊右上角的「📋 複製」，會顯示綠色打勾成功狀態。 |
+| **5. 💬 GitHub Alert 提示** | `> [!NOTE]` / `> [!TIP]` 等 5 種 | 檢視第 4 節，顯示 Note、Tip、Important、Warning、Caution 提示框。 |
+| **6. 📖 維基百科腳註懸停** | `[^1]` 與 `[@lamport78]` | 檢視第 5 節，將滑鼠移至標號上方，即時就地彈出毛玻璃懸浮卡片。 |
+| **7. 🔍 編輯器搜尋與取代** | `Cmd+F` (搜尋) / `Cmd+H` (取代) | 進入編輯器頁面按下快捷鍵，測試即時高亮、筆數計數與一鍵取代。 |
+| **8. ⚡ Alert 自動補完選單** | 在編輯器新行輸入 `> [!` | 自動彈出 5 種 Alert 類型下拉選單，可用方向鍵與 Enter 快速插入。 |
+
 ---
 
 ### 🔐 3. 隱私、版本控制、簡報與劃線互動
@@ -353,6 +370,23 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📋 Code Block One-Click Copy**: Automatically mounts an instant copy button on every code block with animated state feedback.
 - **💬 GitHub Alert Autocomplete &amp; Toolbar Button**: Typing `> [!` on a new line immediately summons a popup menu to choose `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, or `CAUTION` with keyboard navigation and Enter insertion; also available via toolbar button (`⚠️`).
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
+
+#### 🔗 Live Demo & Feature Showcase
+
+- 📖 **Public Reader View (Share URL)**: [https://wiki.david888.com/share/qt7xmd](https://wiki.david888.com/share/qt7xmd)
+- 🖥️ **Fullscreen Slide Presentation**: [https://wiki.david888.com/share/qt7xmd/present](https://wiki.david888.com/share/qt7xmd/present)
+- ✏️ **Editor Mode (Search & Replace / Alert Autocomplete)**: [https://wiki.david888.com/extended-writing-features-demo](https://wiki.david888.com/extended-writing-features-demo)
+
+| Feature | Syntax Example | Verification & Visual Behavior |
+| :--- | :--- | :--- |
+| **1. 🖍️ Text Highlighting** | `==highlighted text==` | Section 1: rendered as soft yellow glow `<mark>` across light/dark themes. |
+| **2. 🎨 Custom Font/BG Color** | `[color=red]...[/color]`<br>`[bg=yellow]...[/bg]` | Section 2: red, green, blue text, custom backgrounds and combined badges. |
+| **3. 🔢 Line Numbers & Tabs** | ```` ```js=1 [server.mjs] ```` | Section 3: title header tab on top, line numbers gutter on the left. |
+| **4. 📋 One-Click Code Copy** | Mounted on Code Header | Click "📋 Copy" on code blocks to trigger instant green checkmark state. |
+| **5. 💬 GitHub Alerts** | `> [!NOTE]` / `> [!TIP]` etc. | Section 4: renders Note, Tip, Important, Warning, Caution alert boxes. |
+| **6. 📖 Footnote Hover Popover** | `[^1]` & `[@lamport78]` | Section 5: hover over markers to summon in-place glassmorphic popover card. |
+| **7. 🔍 Search & Replace** | `Cmd+F` (Find) / `Cmd+H` (Replace) | Open editor and press shortcut for match count, navigation and replacement. |
+| **8. ⚡ Alert Autocomplete** | Type `> [!` on a new line | Summons 5 alert options with arrow keys and Enter/Tab insertion. |
 
 ![Editor and Real-Time Preview](image-1.png)
 
