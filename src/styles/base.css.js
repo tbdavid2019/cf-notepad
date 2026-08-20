@@ -151,7 +151,8 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 
 /* Layout */
 .note-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
-.layer_1, .layer_2 { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.stack { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.layer_1, .layer_2 { flex: 1; min-height: 0; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
 .layer_3 { flex: 1 1 auto; min-height: 0; height: 100%; display: flex; flex-direction: row; background: #fff; }
 
 /* Utilities */
