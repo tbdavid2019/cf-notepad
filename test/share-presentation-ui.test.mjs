@@ -124,3 +124,8 @@ test('all script tags in rendered HTML have zero syntax errors across all page c
         }
     }
 })
+
+test('presentation engine disambiguates YAML frontmatter from slide separators', () => {
+    assert.match(baseTemplateSource, /hasYamlKeys/)
+    assert.match(baseTemplateSource, /content\.replace\(new RegExp\('\^/)
+})

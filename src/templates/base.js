@@ -5474,16 +5474,20 @@ themeCss + '\\n' +
             var currentTheme = (typeof APP_STATE !== 'undefined' && APP_STATE.theme) ? APP_STATE.theme : 'tokyo-night';
             var customTransition = 'fade';
 
-            // YAML Frontmatter detection
+            // YAML Frontmatter detection (disambiguated from slide separators)
             var yamlMatch = content.match(new RegExp('^---\\\\r?\\\\n([\\\\s\\\\S]*?)\\\\r?\\\\n---\\\\r?\\\\n'));
             if (yamlMatch) {
-                var yamlBlock = yamlMatch[1];
-                content = content.slice(yamlMatch[0].length);
-                var transMatch = yamlBlock.match(/transition:\s*([a-zA-Z0-9_-]+)/i);
-                if (transMatch) customTransition = transMatch[1].toLowerCase();
-                var themeMatch = yamlBlock.match(/theme:\s*([a-zA-Z0-9_-]+)/i);
-                if (themeMatch) currentTheme = themeMatch[1].toLowerCase();
+                var yamlBlock = yamlMatch[1].trim();
+                var hasYamlKeys = new RegExp('^[a-zA-Z0-9_-]+\\\\s*:\\\\s*.+', 'm').test(yamlBlock) && !yamlBlock.startsWith('#');
+                if (hasYamlKeys) {
+                    content = content.slice(yamlMatch[0].length);
+                    var transMatch = yamlBlock.match(/transition:\s*([a-zA-Z0-9_-]+)/i);
+                    if (transMatch) customTransition = transMatch[1].toLowerCase();
+                    var themeMatch = yamlBlock.match(/theme:\s*([a-zA-Z0-9_-]+)/i);
+                    if (themeMatch) currentTheme = themeMatch[1].toLowerCase();
+                }
             }
+            content = content.replace(new RegExp('^\\\\s*---\\\\s*\\\\r?\\\\n'), '');
 
             container.setAttribute('data-presentation-theme', currentTheme);
 

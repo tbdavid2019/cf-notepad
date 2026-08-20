@@ -6,6 +6,10 @@
   - **編輯器預覽區發布狀態列**：新增「📖 書本」按鈕，點擊可直接進入書本模式進行即時預覽。
   - **底部分享選單 (`🌐`)**：在已發布選單中新增「📖 複製書本連結」按鈕，一鍵複製 `/share/:id/book` 網址至剪貼簿。
   - **頂部工具列擴充 (Toolbar Palette Color Tool)**：頂部工具列新增「🎨 自訂顏色 (`[color=...]`)」按鈕，選取文字後一鍵插入文字與背景顏色標籤。
+- **🔌 MCP 伺服器與簡報解析防護優化 (MCP & Presentation Parsing Hardening)**：
+  - **MCP 智慧結構偵測回傳網址 (Conditional Book/Presentation URL Emission)**：`write_note` 僅在筆記包含章節連結清單時回傳 `/book` 網址，僅在包含 `---`/`--` 分頁符號時回傳 `/present` 網址，避免一般普通文章誤導 AI Agent。
+  - **MCP 工具描述輕量化 (Concise MCP Tool Description)**：將 `write_note` 工具描述精簡為核心語意，避免客戶端 UI 截斷與 Token 浪費；完整排版語法移至 `SKILL.md` 與 API 文檔維護。
+  - **YAML Frontmatter 與簡報分隔線消歧義 (YAML vs. Slide Divider Disambiguation)**：強化簡報解析邏輯，精確驗證 YAML Key-Value 結構，防止文首以 `---` 開頭的簡報誤將第一張投影片當作 Frontmatter 剔除。
 
 ## [2026-08-19]
 

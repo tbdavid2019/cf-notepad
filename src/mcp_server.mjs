@@ -35,7 +35,7 @@ export const MCP_TOOLS_DEFINITIONS = [
     },
     {
         name: 'write_note',
-        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Supports rich formatting (==highlight==, [color=...], code tabs, GitHub alerts, 2D sub-slides, and /book mode). Returns both edit URL, public Share URL, 2D Presentation URL, and Book Mode URL.',
+        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Returns both the edit URL and the public Share URL.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -365,15 +365,18 @@ async function executeMcpTool(name, args = {}, requestUrl) {
 
             const editUrl = `${origin}/${path}`
             const shareUrl = nextMetadata.share && nextMetadata.shareId ? `${origin}/share/${nextMetadata.shareId}` : null
-            const presentUrl = shareUrl ? `${shareUrl}/present` : null
+            const hasSlideDividers = /(?:^|\n)(?:---|--)\s*(?:\n|$)/.test(text)
+            const hasChapterLinks = /(?:^|\n)\s*(?:[-*+]|\d+\.)\s*\[.+?\]\((?:https?:\/\/|\/|\w).+?\)/.test(text)
 
             let resText = `Successfully saved note "${path}"!\n`
             if (shareUrl) {
                 resText += `Public Share URL: ${shareUrl} (Give this link to readers)\n`
-                resText += `Book Mode: ${shareUrl}/book (Dual-pane TOC eBook)\n`
-            }
-            if (presentUrl) {
-                resText += `Presentation Mode: ${presentUrl} (2D Slide Deck)\n`
+                if (hasChapterLinks) {
+                    resText += `Book Mode: ${shareUrl}/book (Dual-pane TOC eBook)\n`
+                }
+                if (hasSlideDividers) {
+                    resText += `Presentation Mode: ${shareUrl}/present (2D Slide Deck)\n`
+                }
             }
             resText += `Edit URL: ${editUrl}`
 
