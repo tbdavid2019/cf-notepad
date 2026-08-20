@@ -251,18 +251,36 @@ Guidance:
 - Keep labels concise, especially for mixed Chinese/English text
 - When a user asks for a flowchart, sequence diagram, state diagram, gantt chart, or mindmap, emitting Mermaid markdown is usually better than generating an image
 
-### 3.2 Writing Slide Decks
-Presentation mode is available from a share link by appending `/present`.
+### 3.1 Writing 2D Presentation Slides (Slidev-Lite 2.0)
+Presentation mode is available at `shareUrl + '/present'`.
 
-Authoring features:
-- `---` splits slides
-- `::left::` and `::right::` create a two-column slide
-- `{v-click}` creates progressive reveal fragments
+- Use `---` to split horizontal slides.
+- Use `--` to split vertical deep-dive sub-slides.
+- Top YAML frontmatter sets transition animations (`transition: fade | slide | zoom | convex | concave`).
+- 4-way arrow keys (`↑` `↓` `←` `→`), laser pointer (`L`), pause (`B`), overview matrix (`O`).
+- Use `::left::` and `::right::` for a two-column slide.
+- Use `{v-click}` for progressive reveal items.
 
 Example:
 
 ````md
-# Weekly Review
+---
+transition: slide
+---
+
+# Architecture Update
+
+---
+
+## Overview
+- Cloudflare Workers
+- Hybrid D1 & KV Storage
+
+--
+
+### Vertical Sub-Slide: D1 Features
+- 10 version snapshots
+- Rollback & diffing
 
 ---
 
@@ -274,18 +292,31 @@ Example:
 ::right::
 ```mermaid
 flowchart LR
-    A[Draft] --> B[Deploy]
+    A["Draft"] --> B["Deploy"]
 ```
-
----
-
-## Rollout
-- {v-click} Update docs
-- {v-click} Deploy worker
-- {v-click} Verify share link
 ````
 
-If the user asks for slides, prefer slide-oriented markdown over a flat article.
+### 3.2 Writing Books & Multi-Chapter Manuals (Book Mode)
+Any note containing structured chapter hyperlinks functions as a Book Manifest. Append `/book` to `shareUrl` (or note path) to open dual-pane Book Mode: `https://wiki.david888.com/share/<share-id>/book`.
+
+- Authoring structure: `# Book Title` (H1), `## Section` (H2/H3), `- [Chapter Name](/share/...)` (Markdown links).
+- Features: left sidebar TOC with instant search filter, draggable resizer (180px–65%), `localStorage` persistence, fast native embed (`?embed=1`), and keyboard navigation (`[` and `]`).
+
+### 3.3 Extended Markdown Syntax & Rich Formatting Reference
+David888 Wiki supports standard GFM plus these powerful extended formatting syntaxes:
+
+| Syntax Feature | Markdown Syntax Example | Visual & Render Output |
+| :--- | :--- | :--- |
+| **🖍️ Text Highlighter** | `==highlighted text==` | `<mark class="markdown-highlight">` with soft yellow glow across 20 themes. |
+| **🎨 Custom Text/BG Colors** | `[color=red]red text[/color]`<br>`[bg=yellow]yellow bg[/bg]`<br>`[color=#3b82f6 bg=#eff6ff]badge[/color]` | Custom font and background colors with sanitized Hex, RGB, and CSS color names. |
+| **🔢 Code Line Numbers** | ```` ```js=1 ```` or ```` ```js=10 ```` | Generates non-selectable line numbers gutter on the left of code fences. |
+| **📑 Code Title Tabs** | ```` ```js [app.js] ````<br>```` ```js=1 [server.mjs] ```` | Renders filename tab header with language badge and one-click copy button. |
+| **💬 GitHub Alerts** | `> [!NOTE]` / `> [!TIP]`<br>`> [!IMPORTANT]` / `> [!WARNING]`<br>`> [!CAUTION]` | Styled callout boxes with icons and theme-adaptive styling. |
+| **📝 Standard Footnotes** | `Text[^1]`<br>`[^1]: Definition` | Numbered footnote with glassmorphic hover card popover and smooth scroll. |
+| **📝 Inline Footnotes** | `Text ^[inline note text]` | Pandoc/HackMD inline footnotes, auto-numbered with bottom definition list. |
+| **🎓 Pandoc Citations** | `[@smith04]`, `[@doe2023, p. 42]` | Hover popover cards with academic citation details (APA, IEEE, BibTeX, MLA). |
+| **📊 Tables** | Standard Markdown `\| ... \|` | Responsive tables with automatic conversion from clipboard Excel/Sheets paste. |
+| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>` | Multi-column grid layout (stacks gracefully on mobile screens). |
 
 ### 4. Markdown Processing Utilities (Stateless)
 

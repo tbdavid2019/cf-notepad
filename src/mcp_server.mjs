@@ -35,7 +35,7 @@ export const MCP_TOOLS_DEFINITIONS = [
     },
     {
         name: 'write_note',
-        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Returns both the edit URL and the public Share URL.',
+        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Supports rich formatting (==highlight==, [color=...], code tabs, GitHub alerts, 2D sub-slides, and /book mode). Returns both edit URL, public Share URL, 2D Presentation URL, and Book Mode URL.',
         inputSchema: {
             type: 'object',
             properties: {
@@ -370,9 +370,10 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             let resText = `Successfully saved note "${path}"!\n`
             if (shareUrl) {
                 resText += `Public Share URL: ${shareUrl} (Give this link to readers)\n`
+                resText += `Book Mode: ${shareUrl}/book (Dual-pane TOC eBook)\n`
             }
             if (presentUrl) {
-                resText += `Presentation Mode: ${presentUrl}\n`
+                resText += `Presentation Mode: ${presentUrl} (2D Slide Deck)\n`
             }
             resText += `Edit URL: ${editUrl}`
 

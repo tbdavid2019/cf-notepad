@@ -288,42 +288,104 @@ Practical guidance:
 - Use `previewDevice: "mobile"` only when the human explicitly wants a phone-oriented preview state saved with the note.
 - If you are only publishing content and do not need to control note appearance, you can omit all of these fields.
 
-### F. Writing Presentation Slides
+### F. Writing 2D Presentation Slides (Slidev-Lite 2.0)
 Presentation mode is available at `shareUrl + '/present'`.
 
 Authoring rules:
-- Use `---` to split slides.
-- Use `::left::` and `::right::` for a two-column slide.
+- Use `---` for horizontal slide transitions.
+- Use `--` for vertical deep-dive sub-slides (e.g. detailed breakdown of a parent slide).
+- Navigation supports 4-way arrow keys (`↑` `↓` `←` `→`), laser pointer (`L`), blackout pause (`B`), fullscreen (`F`), and 2D matrix overview grid (`O`).
+- Use YAML frontmatter at the very top of the markdown note to configure transitions and themes:
+  ```yaml
+  ---
+  transition: slide
+  theme: claude-canvas
+  ---
+  ```
+- Use `::left::` and `::right::` for a two-column slide layout.
 - Use `{v-click}` for progressive reveal items.
 
 Example:
 
 ````md
-# Product Update
+---
+transition: fade
+---
+
+# Product Architecture Update
+
+---
+
+## High-Level Architecture
+- Distributed Cloudflare Workers
+- Hybrid D1 Database & KV Storage
+
+--
+
+### Vertical Sub-Slide: D1 Storage Deep-Dive
+- 10 version snapshots with rollback
+- Anonymous unique view deduplication
 
 ---
 
 ::left::
-## What changed
-- API publishing
-- Share settings
+## Frontend Features
+- Instant Markdown rendering
+- 20+ CSS Themes
 
 ::right::
 ```mermaid
 flowchart TD
-    A[Draft] --> B[Publish]
-    B --> C[Share]
+    A["Draft"] --> B["Publish"]
+    B --> C["Share Link"]
 ```
-
----
-
-## Rollout
-- {v-click} Deploy worker
-- {v-click} Verify share URL
-- {v-click} Confirm sitemap state
 ````
 
-If the user asks for slides, prefer slide-oriented markdown instead of a flat long article.
+### G. Writing Books & Multi-Chapter Manuals (Book Mode)
+Any note with a list of chapter links automatically acts as a Book Manifest. Readers can view it as a modern dual-pane eBook by appending `/book` to the share link: `shareUrl + '/book'`.
+
+Authoring rules:
+- Use `# Book Title` (H1) for the main book title.
+- Use `## Section Title` or `### Section Title` for chapter group categories.
+- Use `- [Chapter Name](/share/id)` or `1. [Chapter Name](url)` for chapter links (supports 2-space indentation for sub-chapters).
+- Left sidebar includes live chapter search filtering and a draggable splitter resizer (double-click to reset).
+- Right reading pane loads chapters via native embed (`?embed=1`) with full KaTeX formulas, code tabs, and theme styling.
+
+Example Book Manifest:
+
+````md
+# 📚 Cloud Architecture & Developer Handbook
+
+> Comprehensive system architecture and developer guides.
+
+## 📖 Table of Contents
+
+### Part 1: Getting Started
+- [01. Architecture Overview](/share/qt7xmd)
+- [02. Extended Writing Guide](/extended-writing-features-demo)
+  - [02-1. Deep Dive Details (Sub-chapter)](/share/qt7xmd)
+
+### Part 2: Advanced Capabilities
+- [03. 2D Slide Deck Presentation](/share/qt7xmd/present)
+- [04. API & Protocol Specifications](https://wiki.david888.com/mcp)
+````
+
+### H. Extended Markdown Syntax & Rich Formatting Reference
+When authoring content on David888 Wiki, AI agents can leverage these rich formatting syntaxes:
+
+| Syntax Feature | Markdown Syntax Example | Visual & Render Output |
+| :--- | :--- | :--- |
+| **🖍️ Text Highlighter** | `==highlighted text==` | `<mark class="markdown-highlight">` with soft yellow glow across light/dark themes. |
+| **🎨 Custom Text/BG Colors** | `[color=red]red text[/color]`<br>`[bg=yellow]yellow bg[/bg]`<br>`[color=#3b82f6 bg=#eff6ff]badge[/color]` | Custom font and background colors with sanitized Hex, RGB, and CSS color names. |
+| **🔢 Code Block Line Numbers** | ```` ```js=1 ```` (start from line 1)<br>```` ```js=10 ```` (start from line 10) | Generates non-selectable line numbers gutter on the left of code fences. |
+| **📑 Code Block Title Tabs** | ```` ```js [app.js] ````<br>```` ```js=1 [server.mjs] ```` | Renders filename tab header with language badge and one-click copy button. |
+| **💬 GitHub Alerts** | `> [!NOTE]` / `> [!TIP]`<br>`> [!IMPORTANT]` / `> [!WARNING]`<br>`> [!CAUTION]` | Styled callout boxes with icons and theme-adaptive border and background. |
+| **📝 Standard Footnotes** | `Text with note[^1]`<br>`[^1]: Footnote text` | Numbered footnote with glassmorphic hover card popover and smooth scroll. |
+| **📝 Inline Footnotes** | `Text with ^[inline note text]` | Pandoc/HackMD inline footnotes, auto-numbered with bottom definition list. |
+| **🎓 Pandoc Citations** | `[@smith04]`, `[@doe2023, p. 42]` | Hover popover cards with academic citation details (APA, IEEE, BibTeX, MLA). |
+| **📊 Tables** | `\| Col 1 \| Col 2 \|`<br>`\| --- \| --- \|`<br>`\| Val 1 \| Val 2 \|` | Formatted responsive tables (auto-converts from copied Excel/Google Sheets). |
+| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>`<br>`<div class="three-column-layout">...</div>` | Multi-column grid layout (stacks gracefully on mobile screens). |
+
 
 ## Editor Features and Operational Tips
 
@@ -351,11 +413,10 @@ The wiki also includes a browser-based Markdown editor. When helping a user auth
 ```
 ````
 
-- **Editor view shortcuts**: `⌘-⌥-7` / `Ctrl-Alt-7` selects side-by-side WYSIWYG, `⌘-⌥-8` / `Ctrl-Alt-8` selects pure Markdown, and `⌘-⌥-9` / `Ctrl-Alt-9` selects stacked WYSIWYG.
 - **Undo / Redo** tracks typing, toolbar Markdown commands, image insertion, and pasted content. Use the toolbar or the normal `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, and `Ctrl/Cmd+Y` shortcuts.
 - **AI formatting** is available in both the top toolbar and the footer. It restructures Markdown while preserving the draft's meaning. AI Edit can rewrite a selected passage or the full note only after the user supplies an explicit instruction.
 - **Footer Copy** is beside Markdown Export. It prefers rich HTML and includes Markdown/plain-text fallback for editors such as Notion and Jira, then shows a localized check animation after success.
-- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview.
+- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview. New notes randomly start in a desktop or mobile editor preview so authors can check both presentation shapes.
 - **Share links**: links in rendered Markdown on `/share/...` pages open in a new tab with `noopener noreferrer`.
 - **Startup tips**: the editor randomly chooses a bilingual tip from `static/data/editor-tips.json` and types it below the Stray Birds placeholder with the same typewriter animation. Future user-facing features that deserve a hint must add one object with `id`, `zh-TW`, and `en-US` fields, then update `README.md` and `CHANGELOG.md`.
 - **Admin dashboard**: the route is configured by the runtime `SCN_ADMIN_PATH` binding. The dashboard supports URL/title search, Markdown full-text search, modified-date filters, sortable columns, pagination, URL/public/protected/Sitemap totals, and retained version counts. `views` is a legacy field and may not be available in current data.
