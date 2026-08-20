@@ -105,6 +105,10 @@ const EDITOR_PUBLICATION_STATUS = ({ lang, ext = {}, shareId = '' }) => {
                 ${SVG_ICONS.play}
                 <span class="toolbar-button-label">${escapeHtml(t.present)}</span>
             </button>
+            <button type="button" id="editor-book-btn" class="publication-book-btn toolbar-icon-button" data-tooltip="${lang === 'zh-TW' ? '打開書本模式' : 'Open Book Mode'}" title="${lang === 'zh-TW' ? '打開書本模式' : 'Open Book Mode'}" aria-label="${lang === 'zh-TW' ? '打開書本模式' : 'Open Book Mode'}">
+                ${SVG_ICONS.book}
+                <span class="toolbar-button-label">${lang === 'zh-TW' ? '書本' : 'Book'}</span>
+            </button>
             <span id="publication-state" class="publication-state ${published ? 'is-published' : 'is-draft'}">${escapeHtml(published ? t.publicationPublished : t.publicationDraft)}</span>
             <div class="publication-share-details" ${published ? '' : 'hidden'}>
                 <span class="publication-label">${escapeHtml(t.publicationUrl)}</span>
@@ -3497,6 +3501,20 @@ ${getMarkdownCss()}
                 $sharePresentOpenLink.href = shareUrl + '/present'
             })
         }
+        const $shareBookOpenLink = document.querySelector('#share-book-open-link');
+        if ($shareBookOpenLink) {
+            $shareBookOpenLink.href = initialShareUrl ? initialShareUrl + '/book' : '#'
+            $shareBookOpenLink.addEventListener('click', event => {
+                const shareUrl = getCurrentShareUrl()
+                if (!shareUrl) {
+                    event.preventDefault()
+                    errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
+                    return
+                }
+                $shareBookOpenLink.href = shareUrl + '/book'
+            })
+        }
+        const $copyBookShareBtn = document.querySelector('#copy-book-share-btn');
         if (initialShareUrl) recordShareHistory('created', initialShareUrl, APP_STATE.title);
         if ($shareCopyBtn) {
             $shareCopyBtn.addEventListener('click', async () => {
@@ -3521,7 +3539,22 @@ ${getMarkdownCss()}
                     return
                 }
                 try { 
-                    await clipboardCopy(presentationUrl + '/present');
+                    await clipboardCopy(presentationUrl + '/present'); 
+                    window.showToast(getI18n('copied') || 'Copied!'); 
+                } catch (e) { 
+                    window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
+                }
+            });
+        }
+        if ($copyBookShareBtn) {
+            $copyBookShareBtn.addEventListener('click', async () => {
+                const bookUrl = getCurrentShareUrl()
+                if (!bookUrl) {
+                    errHandle(APP_STATE.lang === 'zh-TW' ? '請先發布文章' : 'Publish this note first')
+                    return
+                }
+                try { 
+                    await clipboardCopy(bookUrl + '/book'); 
                     window.showToast(getI18n('copied') || 'Copied!'); 
                 } catch (e) { 
                     window.showAppDialog({ title: getI18n('err'), message: getI18n('copyFailed'), kind: 'error' });
@@ -6037,6 +6070,11 @@ themeCss + '\\n' +
             if (btn) {
                 e.preventDefault();
                 window.initPresentation();
+            }
+            var bookBtn = e.target.closest('#editor-book-btn, .publication-book-btn');
+            if (bookBtn) {
+                e.preventDefault();
+                window.initBookMode();
             }
         });
         maybeAutoStart();

@@ -97,6 +97,7 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'italic', glyph: 'I', glyphClass: 'is-italic', zh: '斜體', en: 'Italic' },
     { command: 'strike', glyph: 'S', glyphClass: 'is-strike', zh: '刪除線', en: 'Strikethrough' },
     { command: 'highlight', glyph: SVG_ICONS.highlighter, glyphClass: 'is-highlight', zh: '螢光筆高亮 (==)', en: 'Highlight (==)' },
+    { command: 'color', glyph: SVG_ICONS.palette, glyphClass: 'is-color', zh: '自訂字體與背景顏色 ([color=...])', en: 'Custom Color ([color=...])' },
     { command: 'footnote', glyph: SVG_ICONS.footnote, glyphClass: 'is-footnote', zh: '插入註腳 ([^1])', en: 'Footnote ([^1])' },
     { command: 'link', glyph: SVG_ICONS.link, zh: '連結', en: 'Link' },
     { separator: true },
@@ -485,6 +486,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                             <span class="dropdown-item-copy">
                                                 <strong>${copyPresentTitle}</strong>
                                                 <small>${lang === 'zh-TW' ? '複製簡報播放網址' : 'Copy presentation URL'}</small>
+                                            </span>
+                                        </button>
+                                        <button type="button" id="copy-book-share-btn" class="dropdown-item dropdown-item-rich" title="${lang === 'zh-TW' ? '複製書本連結' : 'Copy Book URL'}">
+                                            ${SVG_ICONS.book}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '複製書本連結' : 'Copy Book URL'}</strong>
+                                                <small>${lang === 'zh-TW' ? '複製書本閱讀網址' : 'Copy book mode URL'}</small>
                                             </span>
                                         </button>
                                         <div class="dropdown-divider"></div>

@@ -166,6 +166,12 @@ export const applyMarkdownCommand = (text, start, end, command, lang = 'zh-TW') 
     if (command === 'highlight') {
         return replaceInline(source, safeStart, safeEnd, command, labels)
     }
+    if (command === 'color') {
+        const selected = source.slice(safeStart, safeEnd)
+        const value = selected || (labels.colorText || (lang === 'zh-TW' ? '文字' : 'text'))
+        const snippet = `[color=red]${value}[/color]`
+        return replaceSnippet(source, safeStart, safeEnd, snippet, 7, 10)
+    }
     if (command === 'alert') {
         const selected = source.slice(safeStart, safeEnd)
         const content = selected || (labels.alert || '提示內容')
