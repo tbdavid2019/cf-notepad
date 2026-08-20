@@ -303,7 +303,15 @@ export const initMarkdownToolbar = (root = document) => {
     let isRestoringHistory = false
 
     const updateLineNumbers = () => {
-        if (lineNumbers) lineNumbers.textContent = createLineNumbers(textarea.value)
+        if (!lineNumbers) return
+        const val = textarea.value
+        lineNumbers.textContent = createLineNumbers(val)
+        const lineCount = String(val || '').split('\n').length
+        const digits = Math.max(2, String(lineCount).length)
+        const shell = lineNumbers.closest('.editor-code-shell')
+        if (shell) {
+            shell.style.setProperty('--editor-gutter-digits', String(digits))
+        }
     }
 
     const syncLineNumbers = () => {

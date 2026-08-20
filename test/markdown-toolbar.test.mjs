@@ -230,3 +230,13 @@ test('applies footnote command and creates paired reference and bottom definitio
     assert.match(result.text, /\[\^1\]:\s*註腳內容/)
 })
 
+test('line number gutter uses dynamic adaptive width based on digit count and compact typography', () => {
+    assert.match(toolbarSource, /digits = Math\.max\(2, String\(lineCount\)\.length\)/)
+    assert.match(toolbarSource, /shell\.style\.setProperty\('--editor-gutter-digits', String\(digits\)\)/)
+    assert.match(editorCss, /--editor-gutter-width:\s*clamp\(/)
+    assert.match(editorCss, /--editor-row-height:/)
+    assert.match(editorCss, /\.editor-line-numbers\s*\{[\s\S]*flex:\s*0\s*0\s*var\(--editor-gutter-width/)
+    assert.match(editorCss, /\.editor-line-numbers\s*\{[\s\S]*font-size:\s*13px/)
+    assert.match(editorCss, /\.editor-welcome\s*\{[\s\S]*inset:\s*0\s*0\s*0\s*var\(--editor-gutter-width/)
+})
+

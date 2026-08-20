@@ -22,16 +22,22 @@ export const getEditorCss = () => `
     position: relative;
     overflow: hidden;
     background: #282a36;
+    --editor-font-size: 16px;
+    --editor-line-height: 1.6;
+    --editor-row-height: calc(var(--editor-font-size, 16px) * var(--editor-line-height, 1.6));
+    --editor-gutter-digits: 2;
+    --editor-gutter-width: clamp(26px, calc(var(--editor-gutter-digits, 2) * 8.5px + 12px), 72px);
 }
 
 .editor-code-shell > textarea.contents {
     width: 100%;
     min-height: 0;
+    padding: 20px 24px 20px 14px;
 }
 
 .editor-welcome {
     position: absolute;
-    inset: 0 0 0 42px;
+    inset: 0 0 0 var(--editor-gutter-width, 28px);
     z-index: 1;
     display: grid;
     place-content: center;
@@ -87,8 +93,8 @@ export const getEditorCss = () => `
 
 @media (max-width: 640px) {
     .editor-welcome {
-        inset-left: 36px;
-        padding: 28px 24px 72px;
+        inset: 0 0 0 var(--editor-gutter-width, 22px);
+        padding: 28px 20px 72px;
     }
 
     .editor-welcome__section--tip {
@@ -380,21 +386,23 @@ export const getEditorCss = () => `
 }
 
 .editor-line-numbers {
-    flex: 0 0 42px;
-    min-width: 42px;
+    flex: 0 0 var(--editor-gutter-width, 28px);
+    min-width: var(--editor-gutter-width, 28px);
+    width: var(--editor-gutter-width, 28px);
     box-sizing: border-box;
-    padding: 20px 8px 20px 6px;
+    padding: 20px 6px 20px 4px;
     overflow: hidden;
-    border-right: 1px solid rgba(248, 248, 242, 0.12);
+    border-right: 1px solid rgba(248, 248, 242, 0.08);
     background: #282a36;
-    color: #8b8da8;
+    color: #6272a4;
     font-family: var(--editor-font-family);
-    font-size: 16px;
-    line-height: 1.6;
+    font-size: 13px;
+    line-height: var(--editor-row-height, 25.6px);
     text-align: right;
     white-space: pre;
     user-select: none;
     pointer-events: none;
+    transition: width 0.12s ease, min-width 0.12s ease, flex-basis 0.12s ease;
 }
 
 .markdown-editor-toolbar-wrap {
@@ -584,10 +592,12 @@ textarea#contents {
         display: none;
     }
     .editor-line-numbers {
-        flex-basis: 36px;
-        min-width: 36px;
-        padding-right: 6px;
-        font-size: 14px;
+        flex-basis: var(--editor-gutter-width, 22px);
+        min-width: var(--editor-gutter-width, 22px);
+        width: var(--editor-gutter-width, 22px);
+        padding: 16px 4px 16px 2px;
+        font-size: 12px;
+        line-height: var(--editor-row-height, 25.6px);
     }
 }
 

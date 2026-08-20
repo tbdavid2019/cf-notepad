@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-08-21]
+
+- **📐 編輯器行號區塊緊湊化與自適應寬度重構 (Adaptive & Compact Editor Line Number Gutter)**：
+  - **動態位數自適應 (Dynamic Digits Auto-Sizing)**：取消過去固定 42px 寬度導致 1~99 行短篇筆記左側空白過大、喧賓奪主的問題；改採動態位數計算（`--editor-gutter-digits`），1~99 行超緊湊縮減至 ~26px–28px，隨著文章行數突破百行、千行、萬行平滑動態擴展寬度，完美兼顧簡潔與大篇幅擴充性。
+  - **細緻化字體與視覺層級 (Subtle & Clean Typography)**：行號字體大小微調為 13px 輔助字號（色彩改採柔和的 `#6272a4`），行高精確綁定編輯器行高（`25.6px`），確保每一行行號與 Textarea 內容 100% 垂直像素對齊，不再搶奪文章內文視覺焦點。
+  - **編輯區邊距最佳化 (Optimized Textarea Padding)**：Textarea 左側內距從 30px 收縮至 14px，大幅節省左側非必要邊距（總體左邊距從 72px 縮減至 42px），提供更加寬闊通透的寫作體驗；`editor-welcome` 歡迎畫面亦自動對齊動態 Gutter 寬度保持完美置中。
+
 ## [2026-08-20]
 
 - **⚡ Skill 文檔強化即時更新提醒 (Mandatory Freshness & Continuous Feature Evolution)**：
