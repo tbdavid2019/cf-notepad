@@ -97,6 +97,12 @@
 - **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML)**：橫向投影片使用 `---`，縱向深入子投影片使用 `--`；支援方向鍵四向導覽（`↑` `↓` `←` `→`）與大綱總覽（`O`）2D 矩陣縮圖，文首支援 YAML 宣告自訂轉場效果（`fade`, `slide`, `zoom` 等）。
 - **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
 - **📝 行內註腳語法與工具列按鈕 (`^[...]`)**：支援 Pandoc / HackMD 行內註腳 `^[註腳說明]`，自動進行數字編號與文末說明生成；工具列提供「插入註腳 ([^1])」快捷按鈕。
+- **📂 多格式拖曳匯入與智慧分流 (Drag & Drop File Handling)**：直接將檔案拖曳進 Markdown 編輯器：
+  - **PDF 文件**：彈窗智慧分流「📑 AnyDocs 本地轉檔為 Markdown」或「☁️ 上傳至 888box 作為附件連結」。
+  - **音訊檔案**：彈窗分流「✨ AI (Whisper) 智慧轉錄逐字稿與排版」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
+  - **圖片檔案**：直傳 Cloudflare R2 並在游標處插入 `![alt](url)`。
+  - **Office / Markdown 文件**：支援 DOCX/PPTX/XLSX WASM 本地轉檔或 888box 上傳；拖曳 `.md`/`.txt` 提示游標插入或全篇替換。
+- **🔑 管理員 Touch ID / FIDO2 指紋一鍵登入 (Admin Passkey & Touch ID)**：後台登入介面支援 WebAuthn / FIDO2 生物辨識一鍵刷指紋進入；後台支援隨時綁定新裝置（Mac Touch ID、iPhone Face ID、Windows Hello）與管理憑證。
 - **📐 自適應緊湊行號槽 (Adaptive Line Numbers Gutter)**：行號區塊採用動態寬度計算（1~99 行超緊湊 ~26px，並隨百行、千行、萬行平滑動態擴展），搭配 13px 輔助字號與垂直精準像素對齊，Textarea 左邊距從 72px 縮減至 42px，徹底解決傳統固定寬度過寬與喧賓奪主的問題。
 - **🎨 全面深色模式 (Full Dark Mode for Modals & Badges)**：版本紀錄（`.note-history-modal`）、最近分享（`.share-history-modal`）、本機已存狀態標籤（`.sync-status-badge`）與系統確認對話窗皆完整支援深色模式，使用現代 Slate 深藍冷色調與高對比文字排版。
 - **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；編輯器預設固定為桌面預覽（100% 全寬度），並支援隨時切換左右/上下分割與桌面/手機模式。
@@ -427,7 +433,12 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth native embed chapter loading (`?embed=1`), draggable sidebar resizer with local storage persistence and double-click reset, next/prev chapter flip cards, and keyboard navigation (`[` and `]`).
 - **📽️ 2D Vertical Sub-Slides (`--`) &amp; YAML Frontmatter**: Use `---` for horizontal slides and `--` for deep-dive vertical sub-slides with 2D arrow navigation (`↑` `↓` `←` `→`) and overview matrix (`O`); customize transitions (`fade`, `slide`, `zoom`) via top YAML frontmatter.
 - **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
-- **📝 Inline Footnotes &amp; Toolbar Button (`^[...]`)**: Supports Pandoc / HackMD inline footnote syntax `^[footnote text]` with auto-numbering and bottom definition generation, plus an editor toolbar button (`[^1]`).
+- **📂 Multi-Format Drag & Drop Import & Smart Choice Modal**: Drag files directly into the Markdown editor:
+  - **PDF Documents**: Modal provides choices between "📑 AnyDocs Local Markdown Conversion" and "☁️ Upload to 888box as Attachment Link".
+  - **Audio Files**: Modal provides choices between "✨ AI (Whisper) Smart Transcription & Layout" and "☁️ Upload to 888box Embedded `<audio controls>` Player".
+  - **Images**: Direct upload to Cloudflare R2 and inserts `![alt](url)` at cursor.
+  - **Office Documents & Markdown**: WASM AnyDocs conversion for DOCX/PPTX/XLSX or 888box attachment; dragging `.md`/`.txt` prompts insert at cursor or replace whole note.
+- **🔑 Admin Touch ID / WebAuthn FIDO2 Biometric Login**: Admin login screen features one-click Touch ID / Passkey authentication using zero-dependency Web Crypto ECDSA P-256; admin dashboard allows binding and managing authenticators (MacBook Touch ID, iPhone Face ID, Windows Hello).
 - **📐 Adaptive &amp; Compact Line Numbers Gutter**: Dynamic digit-based gutter auto-sizing (~26px for 1-99 lines, smoothly expanding for hundreds/thousands of lines) with subtle 13px typography and pixel-perfect line-height matching, cutting total left margin from 72px down to 42px.
 - **🎨 Full Dark Mode for Modals &amp; Badges**: Version history modal (`.note-history-modal`), recent shares modal (`.share-history-modal`), local autosave status badge (`.sync-status-badge`), and system dialogs fully adapt to dark mode with high-contrast Slate themes.
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.

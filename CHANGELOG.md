@@ -2,6 +2,17 @@
 
 ## [2026-08-21]
 
+- **📂 Markdown 編輯器多格式拖曳上傳與轉檔分流彈窗 (Drag & Drop File Import with Smart Action Modal)**：
+  - **PDF 文件拖曳 (PDF Drag & Drop)**：拖曳 PDF 檔案進 Markdown 編輯區時，跳出智慧處理彈窗，提供 **📑 AnyDocs 本地轉檔為 Markdown 內文** 與 **☁️ 上傳至 888box (`box.david888.com`) 作為附件連結** 雙選項，滿足深度內文解析或檔案下載分享的不同需求。
+  - **音訊檔案拖曳 (Audio Drag & Drop)**：拖曳 MP3/WAV/M4A/AAC/FLAC 音訊進編輯器時，彈窗提供 **✨ AI (Whisper) 智慧轉錄逐字稿與排版** 與 **☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器** 雙選項。
+  - **圖片直接上傳 (Image Direct Upload)**：拖曳 PNG/JPG/WebP/GIF/SVG 圖片直傳 Cloudflare R2，自動在游標處插入 `![alt](url)`。
+  - **Office 文件拖曳 (Office Docs Drag & Drop)**：拖曳 Word (DOCX)、PowerPoint (PPTX)、Excel (XLSX)、EPUB 等文件時，提供 AnyDocs 本地 WASM 解析轉為 Markdown 內文或上傳至 888box 附件。
+  - **純文字 / Markdown 拖曳 (.md / .txt)**：拖曳 Markdown 或文字檔案自動讀取並提示插入於游標處或整篇替換。
+  - **視覺化拖曳回饋 (Dropzone Overlay)**：編輯器外框加入拖曳懸浮時的虛線高亮邊框與自適應毛玻璃背景反饋 (`.is-dragover`)。
+- **🔑 管理員 Touch ID / FIDO2 指紋生物辨識一鍵登入 (Admin Touch ID & WebAuthn / FIDO2 Passkey Login)**：
+  - **一鍵指紋登入 (Touch ID Quick Login)**：登入頁面新增「🔑 使用 Touch ID / 指紋一鍵登入」按鈕，透過 WebAuthn / FIDO2 ECDSA P-256 現代非對稱加密簽名進行無密碼身分驗證，登入秒速完成。
+  - **後台裝置綁定與管理 (Passkey Device Management)**：管理員登入後台後可隨時為當前設備（MacBook Touch ID、iPhone Face ID、Windows Hello 或 FIDO2 安全金鑰）命名並綁定，支援隨時查看已綁定設備清單與一鍵移除。
+  - **全原生 Web Crypto 驗證 (Native Zero-Dependency Workers Crypto)**：後端完全基於 Cloudflare Workers 原生 Web Crypto API (`crypto.subtle`) 與 DER/P1363 簽名轉碼器，具備抗重放 Challenge 與防篡改驗證機制，並保留傳統密碼登入作為安全備援。
 - **🎨 全面深色模式適配：版本紀錄、最近分享彈窗與本機已存狀態標籤 (Comprehensive Dark Mode for Note History, Recent Shares & Autosave Badge)**：
   - **本機已存文字對比修正 (Autosave Badge High Contrast)**：修復深色模式下 Footer 工具列「本機已存 / Saved locally」狀態文字因遺漏 `--toolbar-fg` 變數而回退至黑色字體的問題，現在統一綁定 `--toolbar-fg: #ffffff`，提供清晰舒適的高對比辨識度。
   - **版本紀錄視窗深色主題 (Version History Modal Dark Mode)**：完整重構 `.note-history-content`、版本清單 (`.note-history-entry`)、預覽面板 (`.note-history-viewer`)、渲染切換按鈕與 Markdown 歷史差異比對區塊，深色模式下採用現代 Slate 深藍冷色系背景 (`#1e293b` / `#0f172a`) 與高對比字體、邊框與代碼塊樣式，徹底揮別刺眼白底。

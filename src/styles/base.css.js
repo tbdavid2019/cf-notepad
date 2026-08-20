@@ -553,9 +553,64 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 }
 .app-dialog-cancel { background: var(--modal-surface, #f6f8fa); color: var(--modal-text, #24292f); border: 1px solid var(--modal-border, #d0d7de); }
 .app-dialog-cancel:hover { background: var(--modal-surface-hover, #eef1f4); }
-.app-dialog-modal .modal-mask, .import-options-modal .modal-mask { z-index: 1000; }
+.app-dialog-modal .modal-mask, .import-options-modal .modal-mask, .file-drop-modal .modal-mask { z-index: 1000; }
 .import-action-cancel, .import-action-insert { background: var(--modal-surface, #f6f8fa); color: var(--modal-text, #24292f); border: 1px solid var(--modal-border, #d0d7de); }
 .import-action-cancel:hover, .import-action-insert:hover { background: var(--modal-surface-hover, #eef1f4); }
+
+.editor-code-shell.is-dragover {
+    outline: 2px dashed var(--toolbar-accent, #cc785c) !important;
+    outline-offset: -4px !important;
+    background: color-mix(in srgb, var(--toolbar-bg, #faf9f5) 85%, var(--toolbar-accent, #cc785c)) !important;
+}
+.file-drop-dialog-content {
+    width: min(480px, calc(100vw - 32px));
+}
+.file-drop-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+.file-drop-actions .btn {
+    width: 100%;
+    min-height: 42px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 8px;
+    border: 1px solid transparent;
+}
+.file-drop-action-primary {
+    background: var(--toolbar-accent, #cc785c);
+    color: #fff;
+}
+.file-drop-action-primary:hover {
+    filter: brightness(1.08);
+}
+.file-drop-action-secondary {
+    background: var(--modal-surface, #f6f8fa);
+    color: var(--modal-text, #24292f);
+    border-color: var(--modal-border, #d0d7de) !important;
+}
+.file-drop-action-secondary:hover {
+    background: var(--modal-surface-hover, #eef1f4);
+}
+.file-drop-action-cancel {
+    background: transparent;
+    color: var(--modal-muted, #6e7781);
+    justify-content: center;
+    text-align: center;
+}
+.file-drop-action-cancel:hover {
+    color: var(--modal-text, #24292f);
+}
 
 /* SVG Icon Utility */
 .svg-icon {

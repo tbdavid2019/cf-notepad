@@ -7,6 +7,18 @@ import { APP_NAME, getSlugLength, getAdminPath, getAdminPassword, getEnableR2, g
 import { NOTEPAD_ICON_SVG } from './icon'
 import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
 import { handleMcpRequest } from './mcp_server.mjs'
+import {
+    generateChallenge,
+    base64UrlToBytes,
+    bytesToBase64Url,
+    parseAttestationObject,
+    verifyFidoAssertion,
+    getFidoCredentials,
+    saveFidoCredential,
+    deleteFidoCredential,
+    storeFidoChallenge,
+    verifyAndConsumeFidoChallenge,
+} from './fido_auth.mjs'
 import { createOfflinePageResponse } from './offline_page'
 import {
     extractNoteDescription,
@@ -801,6 +813,153 @@ const handleAdminPost = async (request) => {
 
     const debugInfo = `Auth Failed. Cookie: ${cookie.admin_session ? 'Present' : 'Missing'}, Match: ${cookie.admin_session === adminPassword}, Action: ${action || 'None'}`
     return returnPage('Admin', { lang, error: `Operation Failed: ${debugInfo}` })
+}
+
+const handleAdminFido = async (request, adminPath) => {
+    const url = new URL(request.url)
+    const subPath = url.pathname.slice(adminPath.length)
+    const adminPassword = getAdminPassword()
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const isAuthed = cookie.admin_session === adminPassword && Boolean(adminPassword)
+    const kv = getNotesNamespace()
+
+    if (subPath === '/fido/login-challenge' && request.method === 'POST') {
+        const credentials = await getFidoCredentials(kv)
+        if (!credentials.length) {
+            return new Response(JSON.stringify({
+                success: false,
+                message: '尚未綁定任何 Touch ID / FIDO 裝置，請先使用密碼登入後至後台綁定。'
+            }), { headers: { 'Content-Type': 'application/json' }, status: 400 })
+        }
+        const challenge = generateChallenge()
+        await storeFidoChallenge(kv, challenge, 'login', 120)
+        return new Response(JSON.stringify({
+            success: true,
+            challenge,
+            rpId: url.hostname,
+            allowCredentials: credentials.map(c => ({ id: c.id, type: 'public-key' })),
+        }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    if (subPath === '/fido/login' && request.method === 'POST') {
+        try {
+            const body = await request.json()
+            const { id, authenticatorData, clientDataJSON, signature } = body || {}
+            if (!id || !authenticatorData || !clientDataJSON || !signature) {
+                return new Response(JSON.stringify({ success: false, message: '無效的 FIDO 認證資料' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+            }
+
+            const clientData = JSON.parse(new TextDecoder('utf-8').decode(base64UrlToBytes(clientDataJSON)))
+            const challengeValid = await verifyAndConsumeFidoChallenge(kv, clientData.challenge, 'login')
+            if (!challengeValid) {
+                return new Response(JSON.stringify({ success: false, message: 'Challenge 驗證失敗或已逾期，請重試' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+            }
+
+            const credentials = await getFidoCredentials(kv)
+            const matchedCred = credentials.find(c => c.id === id)
+            if (!matchedCred) {
+                return new Response(JSON.stringify({ success: false, message: '未找到此裝置的註冊紀錄' }), { status: 404, headers: { 'Content-Type': 'application/json' } })
+            }
+
+            await verifyFidoAssertion({
+                publicKeyRawBase64: matchedCred.publicKeyRaw,
+                authenticatorDataBase64: authenticatorData,
+                clientDataJsonBase64: clientDataJSON,
+                signatureBase64: signature,
+                expectedChallenge: clientData.challenge,
+                expectedOrigin: url.origin,
+                expectedRpId: url.hostname,
+            })
+
+            // Login successful! Set cookie
+            return new Response(JSON.stringify({ success: true, redirect: adminPath }), {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Set-Cookie': Cookies.serialize('admin_session', adminPassword, {
+                        path: adminPath,
+                        expires: dayjs().add(1, 'day').toDate(),
+                        httpOnly: true,
+                        sameSite: 'Strict'
+                    })
+                }
+            })
+        } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: err?.message || '指紋認證失敗' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+    }
+
+    // Following endpoints require admin session
+    if (!isAuthed) {
+        return new Response(JSON.stringify({ success: false, message: 'Unauthorized' }), { status: 401, headers: { 'Content-Type': 'application/json' } })
+    }
+
+    if (subPath === '/fido/register-challenge' && request.method === 'POST') {
+        const challenge = generateChallenge()
+        await storeFidoChallenge(kv, challenge, 'register', 120)
+        return new Response(JSON.stringify({
+            success: true,
+            challenge,
+            rp: {
+                name: readRuntimeVar('SCN_APP_NAME') || 'David888 Wiki Admin',
+                id: url.hostname,
+            },
+            user: {
+                id: bytesToBase64Url(new TextEncoder().encode('admin')),
+                name: 'admin',
+                displayName: 'Administrator',
+            },
+        }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    if (subPath === '/fido/register' && request.method === 'POST') {
+        try {
+            const body = await request.json()
+            const { credential, name } = body || {}
+            if (!credential || !credential.id) {
+                return new Response(JSON.stringify({ success: false, message: '缺少憑證資訊' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+            }
+
+            let publicKeyRaw = credential.publicKeyRaw
+            if (!publicKeyRaw && credential.response?.attestationObject) {
+                const attestationBytes = base64UrlToBytes(credential.response.attestationObject)
+                const parsed = parseAttestationObject(attestationBytes)
+                publicKeyRaw = parsed.publicKeyRaw
+            }
+
+            if (!publicKeyRaw) {
+                return new Response(JSON.stringify({ success: false, message: '無法解析公鑰資訊' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+            }
+
+            if (credential.response?.clientDataJSON) {
+                const clientData = JSON.parse(new TextDecoder('utf-8').decode(base64UrlToBytes(credential.response.clientDataJSON)))
+                await verifyAndConsumeFidoChallenge(kv, clientData.challenge, 'register')
+            }
+
+            const updatedList = await saveFidoCredential(kv, {
+                id: credential.id,
+                publicKeyRaw,
+                name: name || 'Touch ID 裝置',
+                createdAt: Date.now(),
+            })
+
+            return new Response(JSON.stringify({ success: true, message: '裝置綁定成功！', credentials: updatedList }), { headers: { 'Content-Type': 'application/json' } })
+        } catch (err) {
+            return new Response(JSON.stringify({ success: false, message: err?.message || '註冊失敗' }), { status: 400, headers: { 'Content-Type': 'application/json' } })
+        }
+    }
+
+    if (subPath === '/fido/credentials' && request.method === 'GET') {
+        const list = await getFidoCredentials(kv)
+        return new Response(JSON.stringify({ success: true, credentials: list.map(c => ({ id: c.id, name: c.name, createdAt: c.createdAt })) }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    if (subPath === '/fido/credentials/delete' && request.method === 'POST') {
+        const { credentialId } = await request.json()
+        const updatedList = await deleteFidoCredential(kv, credentialId)
+        return new Response(JSON.stringify({ success: true, credentials: updatedList.map(c => ({ id: c.id, name: c.name, createdAt: c.createdAt })) }), { headers: { 'Content-Type': 'application/json' } })
+    }
+
+    return new Response('Not Found', { status: 404 })
 }
 
 router.post('/upload', async (request) => {
@@ -2415,6 +2574,10 @@ router.post('/api/:path', async (request) => {
 router.all('*', async (request) => {
     const adminPath = getAdminPath()
     const requestPath = new URL(request.url).pathname
+
+    if (requestPath.startsWith(adminPath + '/fido/')) {
+        return handleAdminFido(request, adminPath)
+    }
 
     if (requestPath !== adminPath) return
 

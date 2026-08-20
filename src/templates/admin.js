@@ -63,7 +63,7 @@ const sortLink = (adminPath, filters, value, label) => {
     return `<a class="sort-link${active ? ' active' : ''}" href="${escapeHtml(href)}" aria-label="以${escapeHtml(label)}排序">${escapeHtml(label)} <span aria-hidden="true">${indicator}</span></a>`
 }
 
-export const Admin = ({ lang, notes, stats, pagination, filters, historyEnabled, contentScanned, error, adminPath = '' }) => `
+export const Admin = ({ lang, notes, stats, pagination, filters, historyEnabled, contentScanned, error, adminPath = '', fidoCredentials = [], fidoCredentialsCount = 0 }) => `
     <!DOCTYPE html>
     <html lang="${lang === 'en-US' ? 'en' : 'zh-Hant'}">
     <head>
@@ -82,7 +82,13 @@ export const Admin = ({ lang, notes, stats, pagination, filters, historyEnabled,
                     <h1>Cloud Notepad Admin</h1>
                     <p class="admin-subtitle">管理所有 URL、發佈狀態、搜尋與版本保留狀況。</p>
                 </div>
-                ${notes !== undefined ? `<a class="admin-home-link" href="/" target="_blank" rel="noreferrer">開啟首頁 ↗</a>` : ''}
+                <div class="admin-header-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                    ${notes !== undefined ? `
+                        <button type="button" id="fido-manage-btn" class="btn btn-quiet" title="管理綁定的 Touch ID / 指紋裝置">🔑 指紋 / Passkey (${fidoCredentials ? fidoCredentials.length : 0})</button>
+                        <button type="button" id="fido-register-btn" class="btn btn-primary">＋ 綁定 Touch ID</button>
+                        <a class="admin-home-link" href="/" target="_blank" rel="noreferrer">開啟首頁 ↗</a>
+                    ` : ''}
+                </div>
             </header>
             ${error ? `<div class="admin-alert error" role="alert">${escapeHtml(error)}</div>` : ''}
             ${notes !== undefined ? `
@@ -206,20 +212,53 @@ export const Admin = ({ lang, notes, stats, pagination, filters, historyEnabled,
                         <a class="pagination-button ${pagination?.page >= pagination?.totalPages ? 'is-disabled' : ''}" href="${escapeHtml(queryUrl(adminPath, filters || {}, { page: Math.min(pagination?.totalPages || 1, (pagination?.page || 1) + 1) }))}" aria-label="下一頁">下一頁 →</a>
                     </nav>
                 </section>
+
+                <div id="fido-modal" class="fido-modal" style="display:none;" role="dialog" aria-modal="true" aria-labelledby="fido-modal-title">
+                    <div class="fido-modal-backdrop" id="fido-modal-backdrop"></div>
+                    <div class="fido-modal-card">
+                        <header class="fido-modal-header">
+                            <h2 id="fido-modal-title">🔑 Touch ID / FIDO2 裝置管理</h2>
+                            <button type="button" class="fido-modal-close" id="fido-modal-close" aria-label="關閉">×</button>
+                        </header>
+                        <div class="fido-modal-body">
+                            <div class="fido-device-list" id="fido-device-list">
+                                ${fidoCredentials && fidoCredentials.length ? fidoCredentials.map(cred => `
+                                    <div class="fido-device-item" data-id="${escapeHtml(cred.id)}">
+                                        <div class="fido-device-info">
+                                            <strong>${escapeHtml(cred.name || 'Touch ID 裝置')}</strong>
+                                            <span>綁定時間：${escapeHtml(formatDate(Math.floor((cred.createdAt || Date.now()) / 1000)))}</span>
+                                        </div>
+                                        <button type="button" class="btn btn-danger btn-sm fido-delete-btn" data-id="${escapeHtml(cred.id)}">移除</button>
+                                    </div>
+                                `).join('') : `
+                                    <p class="empty-muted">尚未綁定任何 Touch ID / 指紋裝置。點擊下方按鈕即可綁定此設備！</p>
+                                `}
+                            </div>
+                        </div>
+                        <footer class="fido-modal-footer">
+                            <button type="button" class="btn btn-primary" id="fido-modal-add-btn">＋ 綁定此設備 Touch ID</button>
+                            <button type="button" class="btn btn-quiet" id="fido-modal-cancel-btn">關閉</button>
+                        </footer>
+                    </div>
+                </div>
             ` : `
                 <section class="login-card">
                     <div class="login-mark">⌘</div>
                     <h2>管理員登入</h2>
-                    <p>請輸入後台密碼以管理所有筆記。</p>
+                    <p>請使用 Touch ID 指紋或管理員密碼登入後台。</p>
+                    <button id="fido-login-btn" type="button" class="btn btn-fido">
+                        <span class="fido-btn-icon">🔑</span> 使用 Touch ID / 指紋一鍵登入
+                    </button>
+                    <div class="login-divider"><span>或使用管理員密碼</span></div>
                     <form method="POST" class="login-form">
                         <label for="admin-password">後台密碼</label>
                         <input id="admin-password" type="password" name="password" placeholder="Enter admin password" autocomplete="current-password" required />
-                        <button class="btn btn-primary" type="submit">登入後台</button>
+                        <button class="btn btn-primary" type="submit">密碼登入</button>
                     </form>
                 </section>
             `}
         </main>
-        ${notes !== undefined ? `<script>${getAdminScript()}</script>` : ''}
+        <script>${getAdminScript(adminPath, notes !== undefined)}</script>
     </body>
     </html>
 `

@@ -4,9 +4,193 @@
  * Handles: centralized state, event delegation, sorting, batch delete, delete empty pages, user feedback.
  * Returns the script as a string for inlining in the admin template.
  */
-export const getAdminScript = () => `
+export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
 (function() {
     'use strict';
+    const ADMIN_PATH = ${JSON.stringify(adminPath)};
+    const IS_LOGGED_IN = ${JSON.stringify(isLoggedIn)};
+
+    function base64UrlToBuffer(base64url) {
+        if (!base64url) return new Uint8Array(0).buffer;
+        const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/');
+        const pad = base64.length % 4 === 0 ? '' : '='.repeat(4 - (base64.length % 4));
+        const binary = atob(base64 + pad);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        return bytes.buffer;
+    }
+
+    function bufferToBase64Url(buffer) {
+        if (!buffer) return '';
+        const bytes = new Uint8Array(buffer);
+        let binary = '';
+        for (let i = 0; i < bytes.byteLength; i++) binary += String.fromCharCode(bytes[i]);
+        return btoa(binary).replace(/\\+/g, '-').replace(/\\//g, '_').replace(/=+$/, '');
+    }
+
+    async function handleFidoLogin() {
+        const btn = document.querySelector('#fido-login-btn');
+        if (btn) btn.disabled = true;
+        try {
+            const chRes = await fetch(ADMIN_PATH + '/fido/login-challenge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const chData = await chRes.json();
+            if (!chData.success) {
+                alert(chData.message || '無法取得認證 Challenge');
+                if (btn) btn.disabled = false;
+                return;
+            }
+
+            const allowCredentials = (chData.allowCredentials || []).map(c => ({
+                id: base64UrlToBuffer(c.id),
+                type: c.type || 'public-key'
+            }));
+
+            const credential = await navigator.credentials.get({
+                publicKey: {
+                    challenge: base64UrlToBuffer(chData.challenge),
+                    rpId: chData.rpId,
+                    allowCredentials,
+                    userVerification: 'preferred',
+                    timeout: 60000
+                }
+            });
+
+            if (!credential) throw new Error('未取得生物辨識憑證');
+
+            const payload = {
+                id: credential.id,
+                authenticatorData: bufferToBase64Url(credential.response.authenticatorData),
+                clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON),
+                signature: bufferToBase64Url(credential.response.signature)
+            };
+
+            const loginRes = await fetch(ADMIN_PATH + '/fido/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const loginData = await loginRes.json();
+            if (loginData.success) {
+                window.location.href = loginData.redirect || ADMIN_PATH;
+            } else {
+                alert(loginData.message || 'Touch ID 登入失敗');
+                if (btn) btn.disabled = false;
+            }
+        } catch (err) {
+            console.error('FIDO Login Error:', err);
+            if (btn) btn.disabled = false;
+            if (err.name !== 'NotAllowedError') {
+                alert('Touch ID 登入發生錯誤：' + (err.message || err));
+            }
+        }
+    }
+
+    async function handleFidoRegister() {
+        try {
+            const defaultName = navigator.userAgent.includes('Mac') ? 'Mac Touch ID' : (navigator.userAgent.includes('iPhone') ? 'iPhone Face ID' : 'Passkey Device');
+            const deviceName = prompt('請為此 Touch ID / 指紋裝置輸入名稱：', defaultName);
+            if (!deviceName) return;
+
+            const chRes = await fetch(ADMIN_PATH + '/fido/register-challenge', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' }
+            });
+            const chData = await chRes.json();
+            if (!chData.success) {
+                alert(chData.message || '無法取得註冊 Challenge');
+                return;
+            }
+
+            const userIdBuffer = base64UrlToBuffer(chData.user.id);
+            const challengeBuffer = base64UrlToBuffer(chData.challenge);
+
+            const credential = await navigator.credentials.create({
+                publicKey: {
+                    challenge: challengeBuffer,
+                    rp: chData.rp,
+                    user: {
+                        ...chData.user,
+                        id: userIdBuffer
+                    },
+                    pubKeyCredParams: [
+                        { alg: -7, type: 'public-key' },
+                        { alg: -257, type: 'public-key' }
+                    ],
+                    authenticatorSelection: {
+                        userVerification: 'preferred',
+                        residentKey: 'preferred'
+                    },
+                    timeout: 60000
+                }
+            });
+
+            if (!credential) throw new Error('使用者取消或裝置未回應');
+
+            const payload = {
+                name: deviceName,
+                credential: {
+                    id: credential.id,
+                    rawId: bufferToBase64Url(credential.rawId),
+                    response: {
+                        attestationObject: bufferToBase64Url(credential.response.attestationObject),
+                        clientDataJSON: bufferToBase64Url(credential.response.clientDataJSON),
+                    }
+                }
+            };
+
+            const regRes = await fetch(ADMIN_PATH + '/fido/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const regData = await regRes.json();
+            if (regData.success) {
+                alert('🎉 成功！此裝置 Touch ID / 指紋已成功綁定，下次登入可直接一鍵刷指紋進入後台！');
+                window.location.reload();
+            } else {
+                alert('綁定失敗：' + (regData.message || '未知錯誤'));
+            }
+        } catch (err) {
+            console.error('FIDO Register Error:', err);
+            if (err.name !== 'NotAllowedError') {
+                alert('綁定過程發生錯誤：' + (err.message || err));
+            }
+        }
+    }
+
+    async function handleFidoDelete(credentialId) {
+        if (!confirm('確定要移除此 Touch ID / 指紋裝置嗎？')) return;
+        try {
+            const res = await fetch(ADMIN_PATH + '/fido/credentials/delete', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ credentialId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                const item = document.querySelector('.fido-device-item[data-id="' + credentialId + '"]');
+                if (item) item.remove();
+                alert('裝置已成功移除');
+                window.location.reload();
+            } else {
+                alert('移除失敗：' + (data.message || '未知錯誤'));
+            }
+        } catch (err) {
+            alert('移除發生錯誤：' + err.message);
+        }
+    }
+
+    const fidoLoginBtn = document.querySelector('#fido-login-btn');
+    if (fidoLoginBtn) {
+        fidoLoginBtn.addEventListener('click', handleFidoLogin);
+    }
+
+    if (!IS_LOGGED_IN) return;
 
     /**
      * AdminController - centralized state and event handling for the admin page.
@@ -45,6 +229,37 @@ export const getAdminScript = () => `
          * Routes clicks to appropriate methods based on target.
          */
         handleClick(e) {
+            // FIDO register buttons
+            const fidoRegBtn = e.target.closest('#fido-register-btn') || e.target.closest('#fido-modal-add-btn');
+            if (fidoRegBtn) {
+                handleFidoRegister();
+                return;
+            }
+
+            // FIDO manage modal open
+            const fidoManageBtn = e.target.closest('#fido-manage-btn');
+            if (fidoManageBtn) {
+                const modal = document.querySelector('#fido-modal');
+                if (modal) modal.style.display = 'flex';
+                return;
+            }
+
+            // FIDO manage modal close
+            const fidoCloseBtn = e.target.closest('#fido-modal-close') || e.target.closest('#fido-modal-cancel-btn') || e.target.closest('#fido-modal-backdrop');
+            if (fidoCloseBtn) {
+                const modal = document.querySelector('#fido-modal');
+                if (modal) modal.style.display = 'none';
+                return;
+            }
+
+            // FIDO delete device button
+            const fidoDelBtn = e.target.closest('.fido-delete-btn');
+            if (fidoDelBtn) {
+                const id = fidoDelBtn.getAttribute('data-id');
+                if (id) handleFidoDelete(id);
+                return;
+            }
+
             // Sortable column header
             const th = e.target.closest('th.sortable');
             if (th) {

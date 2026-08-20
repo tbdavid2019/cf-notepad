@@ -114,12 +114,164 @@ input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--admin-ac
 .admin-notice.success { background: #e7f6ef; border: 1px solid #b8e2cb; color: #23734c; }
 .admin-notice.error { background: #fff0f2; border: 1px solid #f3c9cf; color: #a33e4c; }
 
-.login-card { width: min(420px, 100%); margin: 12vh auto 0; padding: 34px; text-align: center; }
-.login-mark { width: 42px; height: 42px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: #fff1ec; color: var(--admin-accent); font-size: 22px; }
+.login-card { width: min(440px, 100%); margin: 12vh auto 0; padding: 34px; text-align: center; }
+.login-mark { width: 44px; height: 44px; display: grid; place-items: center; margin: 0 auto 18px; border-radius: 50%; background: #fff1ec; color: var(--admin-accent); font-size: 22px; }
 .login-card h2 { margin-bottom: 8px; font-size: 22px; }
-.login-card p { margin-bottom: 24px; color: var(--admin-muted); font-size: 13px; }
+.login-card p { margin-bottom: 20px; color: var(--admin-muted); font-size: 13px; line-height: 1.5; }
 .login-form { display: grid; gap: 8px; text-align: left; }
 .login-form .btn { width: 100%; margin-top: 8px; }
+
+.btn-fido {
+    width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: #0f172a;
+    color: #fff;
+    border: 1px solid #1e293b;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.15);
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.btn-fido:hover {
+    background: #1e293b;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(15, 23, 42, 0.25);
+}
+.btn-fido:active {
+    transform: scale(0.98);
+}
+.fido-btn-icon {
+    font-size: 16px;
+}
+.login-divider {
+    display: flex;
+    align-items: center;
+    margin: 18px 0;
+    text-align: center;
+    color: var(--admin-muted);
+    font-size: 12px;
+}
+.login-divider::before, .login-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--admin-line);
+}
+.login-divider span {
+    padding: 0 10px;
+}
+
+.fido-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.fido-modal-backdrop {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.45);
+    backdrop-filter: blur(4px);
+}
+.fido-modal-card {
+    position: relative;
+    z-index: 10001;
+    width: min(480px, calc(100vw - 32px));
+    max-height: calc(100vh - 64px);
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid var(--admin-line);
+    border-radius: 12px;
+    box-shadow: 0 20px 48px rgba(15, 23, 42, 0.2);
+    overflow: hidden;
+}
+.fido-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--admin-line);
+}
+.fido-modal-header h2 {
+    margin: 0;
+    font-size: 16px;
+    color: var(--admin-ink);
+}
+.fido-modal-close {
+    border: 0;
+    background: transparent;
+    color: var(--admin-muted);
+    font-size: 20px;
+    cursor: pointer;
+}
+.fido-modal-close:hover {
+    color: var(--admin-ink);
+}
+.fido-modal-body {
+    padding: 18px 20px;
+    overflow-y: auto;
+}
+.fido-device-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.fido-device-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--admin-line);
+    border-radius: 8px;
+    background: #fbfcfc;
+}
+.fido-device-info {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.fido-device-info strong {
+    color: var(--admin-ink);
+    font-size: 13px;
+}
+.fido-device-info span {
+    color: var(--admin-muted);
+    font-size: 11px;
+}
+.btn-sm {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 12px;
+}
+.fido-modal-footer {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    padding: 14px 20px;
+    border-top: 1px solid var(--admin-line);
+    background: #fbfcfc;
+}
+.empty-muted {
+    margin: 12px 0;
+    color: var(--admin-muted);
+    font-size: 13px;
+    text-align: center;
+}
 
 @media (max-width: 980px) {
     .admin-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }

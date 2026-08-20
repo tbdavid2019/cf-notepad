@@ -3606,7 +3606,359 @@ ${getMarkdownCss()}
             $resizer.addEventListener('dblclick', resetSplitPane);
         }
 
+        const BOX_UPLOAD_ENDPOINTS = [
+            'https://box.david888.com/api.php?action=upload',
+            'https://box.aiurl.tw/api.php?action=upload',
+            'https://box.glsoft.ai/api.php?action=upload',
+        ];
+
+        const uploadTo888Box = async (file) => {
+            let lastError;
+            if (typeof window.showToast === 'function') {
+                window.showToast(getI18n('uploading') || '正在上傳至 888box...');
+            }
+            for (const endpoint of BOX_UPLOAD_ENDPOINTS) {
+                try {
+                    const formData = new FormData();
+                    formData.append('file', file);
+                    formData.append('title', file.name || 'attachment');
+                    const response = await fetch(endpoint, { method: 'POST', body: formData });
+                    const payload = await response.json();
+                    const url = payload?.data?.url || payload?.url;
+                    if (response.ok && (payload?.result === 'success' || url) && url) {
+                        return url;
+                    }
+                    lastError = new Error(payload?.message || 'Upload failed');
+                } catch (err) {
+                    lastError = err;
+                }
+            }
+            throw lastError || new Error('Upload to 888box failed');
+        };
+
+        const showFileDropChoiceDialog = (file, kind) => new Promise(resolve => {
+            const modal = document.querySelector('.file-drop-modal');
+            if (!modal) {
+                resolve('convert');
+                return;
+            }
+            const titleEl = modal.querySelector('#file-drop-title');
+            const msgEl = modal.querySelector('#file-drop-message');
+            const primaryBtn = modal.querySelector('#file-drop-action-primary');
+            const secondaryBtn = modal.querySelector('#file-drop-action-secondary');
+            const cancelBtn = modal.querySelector('#file-drop-action-cancel');
+            const mask = modal.querySelector('.modal-mask');
+            const iconEl = modal.querySelector('.file-drop-icon');
+
+            const zh = APP_STATE.lang === 'zh-TW';
+            const fileName = file.name || '';
+
+            if (kind === 'pdf') {
+                if (iconEl) iconEl.textContent = '📄';
+                if (titleEl) titleEl.textContent = zh ? '處理 PDF 文件：「' + fileName + '」' : 'Process PDF Document: "' + fileName + '"';
+                if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此 PDF 文件：' : 'Please select how you would like to handle this PDF file:';
+                if (primaryBtn) primaryBtn.textContent = '📑 ' + (zh ? '解析為 Markdown 內文 (AnyDocs 轉檔)' : 'Convert to Markdown Text (AnyDocs)');
+                if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 作為附件連結' : 'Upload to 888box as Attachment');
+            } else if (kind === 'audio') {
+                if (iconEl) iconEl.textContent = '🎙️';
+                if (titleEl) titleEl.textContent = zh ? '處理音訊檔案：「' + fileName + '」' : 'Process Audio File: "' + fileName + '"';
+                if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此音訊檔案：' : 'Please select how you would like to handle this audio file:';
+                if (primaryBtn) primaryBtn.textContent = '✨ ' + (zh ? 'AI 智慧轉錄逐字稿 (Whisper AI 排版)' : 'Transcribe with AI (Whisper)');
+                if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 嵌入播放器' : 'Upload to 888box as Audio Player');
+            } else {
+                if (iconEl) iconEl.textContent = '📑';
+                if (titleEl) titleEl.textContent = zh ? '處理文件：「' + fileName + '」' : 'Process Document: "' + fileName + '"';
+                if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此文件：' : 'Please select how you would like to handle this document:';
+                if (primaryBtn) primaryBtn.textContent = '📑 ' + (zh ? '解析為 Markdown 內文 (AnyDocs 轉檔)' : 'Convert to Markdown Text (AnyDocs)');
+                if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 作為附件連結' : 'Upload to 888box as Attachment');
+            }
+
+            let settled = false;
+            const cleanup = (choice) => {
+                if (settled) return;
+                settled = true;
+                closeModal(modal);
+                primaryBtn?.removeEventListener('click', onPrimary);
+                secondaryBtn?.removeEventListener('click', onSecondary);
+                cancelBtn?.removeEventListener('click', onCancel);
+                mask?.removeEventListener('click', onCancel);
+                modal?.removeEventListener('keydown', onKeyDown);
+                resolve(choice);
+            };
+
+            const onPrimary = () => cleanup('convert');
+            const onSecondary = () => cleanup('upload');
+            const onCancel = () => cleanup('cancel');
+            const onKeyDown = (e) => {
+                if (e.key === 'Escape') {
+                    e.preventDefault();
+                    onCancel();
+                }
+            };
+
+            openModal(modal, { initialFocus: primaryBtn });
+            primaryBtn?.addEventListener('click', onPrimary);
+            secondaryBtn?.addEventListener('click', onSecondary);
+            cancelBtn?.addEventListener('click', onCancel);
+            mask?.addEventListener('click', onCancel);
+            modal?.addEventListener('keydown', onKeyDown);
+        });
+
+        const handleDroppedFile = async (file) => {
+            if (!file) return;
+            const fileName = file.name || '';
+            const ext = (fileName.includes('.') ? fileName.split('.').pop() : '').toLowerCase();
+            const isImage = file.type.startsWith('image/') || ['png', 'jpg', 'jpeg', 'gif', 'webp', 'svg'].includes(ext);
+            const isAudio = file.type.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'aac', 'ogg', 'webm', 'flac', 'opus'].includes(ext);
+            const isPdf = ext === 'pdf' || file.type === 'application/pdf';
+            const isPlainMd = ['md', 'markdown', 'txt'].includes(ext) || file.type === 'text/markdown' || file.type === 'text/plain';
+            const isDoc = ['docx', 'pptx', 'xlsx', 'epub', 'csv', 'html'].includes(ext);
+
+            // 1. Image -> direct upload to R2
+            if (isImage) {
+                if (window.ENABLE_R2) {
+                    const start = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
+                    const end = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
+                    const loadingText = '![' + getI18n('uploading') + ']()';
+                    $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring(end);
+                    $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length;
+                    const formData = new FormData();
+                    formData.append('image', file);
+                    try {
+                        const res = await fetchJson('/upload', { method: 'POST', body: formData });
+                        if (res.err === 0) {
+                            const alt = fileName.replace(/\\.[^.]+$/, '').replace(/[\\[\\](){}<>]/g, ' ').trim() || 'image';
+                            $textarea.value = $textarea.value.replace(loadingText, '![' + alt + '](' + res.data + ')');
+                            triggerRender($previewMd, $textarea.value);
+                            $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                        } else {
+                            $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']');
+                            window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' });
+                        }
+                    } catch (err) {
+                        $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']');
+                        window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' });
+                    }
+                }
+                return;
+            }
+
+            // 2. Plain Markdown / Text file -> import text directly
+            if (isPlainMd) {
+                let insertMode = 'replace';
+                if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
+                    insertMode = await showImportOptionDialog();
+                }
+                if (insertMode === 'cancel') return;
+                const reader = new FileReader();
+                reader.onload = async () => {
+                    const text = typeof reader.result === 'string' ? reader.result : '';
+                    if (insertMode === 'insert') {
+                        const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
+                        const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
+                        $textarea.value = $textarea.value.substring(0, startPos) + text + $textarea.value.substring(endPos);
+                    } else {
+                        $textarea.value = text;
+                    }
+                    renderPlain($previewPlain, $textarea.value);
+                    triggerRender($previewMd, $textarea.value);
+                    $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    window.showToast(getI18n('markdownImported'));
+                };
+                reader.readAsText(file, 'utf-8');
+                return;
+            }
+
+            // Helper to insert markdown link or tag
+            const insertSnippet = (snippet) => {
+                const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
+                const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
+                const curVal = $textarea.value;
+                const prefix = (startPos > 0 && !curVal.substring(0, startPos).endsWith('\\n')) ? '\\n' : '';
+                const suffix = (endPos < curVal.length && !curVal.substring(endPos).startsWith('\\n')) ? '\\n' : '';
+                const insertion = prefix + snippet + suffix;
+                $textarea.value = curVal.substring(0, startPos) + insertion + curVal.substring(endPos);
+                const nextPos = startPos + insertion.length;
+                if (typeof $textarea.setSelectionRange === 'function') {
+                    $textarea.setSelectionRange(nextPos, nextPos);
+                }
+                triggerRender($previewMd, $textarea.value);
+                $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+            };
+
+            // 3. PDF file -> prompt AnyDocs convert vs 888box upload
+            if (isPdf) {
+                const choice = await showFileDropChoiceDialog(file, 'pdf');
+                if (choice === 'cancel') return;
+                if (choice === 'upload') {
+                    try {
+                        const url = await uploadTo888Box(file);
+                        const label = fileName.replace(/\\.[^.]+$/, '').trim() || 'PDF Document';
+                        insertSnippet('[' + label + '](' + url + ')');
+                        window.showToast(APP_STATE.lang === 'zh-TW' ? 'PDF 已成功上傳至 888box 並插入連結！' : 'PDF uploaded to 888box.');
+                    } catch (err) {
+                        window.showAppDialog({ title: getI18n('err'), message: err.message || '上傳失敗', kind: 'error' });
+                    }
+                    return;
+                }
+                // choice === 'convert' -> AnyDocs WASM
+                try {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(getI18n('convertingDocument') || 'Converting document to Markdown...');
+                    }
+                    let anydocModule;
+                    try {
+                        anydocModule = await import('/wasm/anydoc_wasm.js');
+                    } catch (localErr) {
+                        anydocModule = await import('https://esm.sh/@firecrawl/anydoc-wasm@0.1.6');
+                    }
+                    const initWasm = anydocModule.default || anydocModule.init;
+                    const { toMarkdownBytes, formatFromExtension } = anydocModule;
+                    if (typeof initWasm === 'function') await initWasm();
+                    const arrayBuffer = await file.arrayBuffer();
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    const fmt = typeof formatFromExtension === 'function' ? formatFromExtension(ext) : null;
+                    const markdown = toMarkdownBytes(uint8Array, fmt);
+                    if (typeof markdown !== 'string') throw new Error('Conversion output empty');
+
+                    let insertMode = 'replace';
+                    if ($textarea.value && $textarea.value.trim().length > 0) {
+                        insertMode = await showImportOptionDialog();
+                    }
+                    if (insertMode === 'cancel') return;
+                    if (insertMode === 'insert') {
+                        insertSnippet(markdown);
+                    } else {
+                        $textarea.value = markdown;
+                        triggerRender($previewMd, $textarea.value);
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    window.showToast(getI18n('documentImported') || 'Document imported.');
+                } catch (err) {
+                    console.error('AnyDocs PDF conversion error:', err);
+                    window.showAppDialog({ title: getI18n('err'), message: err.message || 'PDF 解析失敗', kind: 'error' });
+                }
+                return;
+            }
+
+            // 4. Audio file -> prompt Whisper AI transcription vs 888box upload
+            if (isAudio) {
+                const choice = await showFileDropChoiceDialog(file, 'audio');
+                if (choice === 'cancel') return;
+                if (choice === 'upload') {
+                    try {
+                        const url = await uploadTo888Box(file);
+                        insertSnippet('<audio controls src="' + url + '"></audio>');
+                        window.showToast(APP_STATE.lang === 'zh-TW' ? '音訊已成功上傳至 888box 並插入播放器！' : 'Audio uploaded to 888box.');
+                    } catch (err) {
+                        window.showAppDialog({ title: getI18n('err'), message: err.message || '上傳失敗', kind: 'error' });
+                    }
+                    return;
+                }
+                // choice === 'convert' -> processAudioTranscription with smart formatting
+                await processAudioTranscription(file, { smartFormat: true });
+                return;
+            }
+
+            // 5. Office docs (docx, pptx, xlsx, epub, csv) -> prompt AnyDocs convert vs 888box upload
+            if (isDoc) {
+                const choice = await showFileDropChoiceDialog(file, 'doc');
+                if (choice === 'cancel') return;
+                if (choice === 'upload') {
+                    try {
+                        const url = await uploadTo888Box(file);
+                        const label = fileName.replace(/\\.[^.]+$/, '').trim() || 'Document';
+                        insertSnippet('[' + label + '](' + url + ')');
+                        window.showToast(APP_STATE.lang === 'zh-TW' ? '文件已成功上傳至 888box 並插入連結！' : 'Document uploaded to 888box.');
+                    } catch (err) {
+                        window.showAppDialog({ title: getI18n('err'), message: err.message || '上傳失敗', kind: 'error' });
+                    }
+                    return;
+                }
+                // choice === 'convert'
+                try {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(getI18n('convertingDocument') || 'Converting document to Markdown...');
+                    }
+                    let anydocModule;
+                    try {
+                        anydocModule = await import('/wasm/anydoc_wasm.js');
+                    } catch (localErr) {
+                        anydocModule = await import('https://esm.sh/@firecrawl/anydoc-wasm@0.1.6');
+                    }
+                    const initWasm = anydocModule.default || anydocModule.init;
+                    const { toMarkdownBytes, formatFromExtension } = anydocModule;
+                    if (typeof initWasm === 'function') await initWasm();
+                    const arrayBuffer = await file.arrayBuffer();
+                    const uint8Array = new Uint8Array(arrayBuffer);
+                    const fmt = typeof formatFromExtension === 'function' ? formatFromExtension(ext) : null;
+                    const markdown = toMarkdownBytes(uint8Array, fmt);
+                    if (typeof markdown !== 'string') throw new Error('Conversion output empty');
+
+                    let insertMode = 'replace';
+                    if ($textarea.value && $textarea.value.trim().length > 0) {
+                        insertMode = await showImportOptionDialog();
+                    }
+                    if (insertMode === 'cancel') return;
+                    if (insertMode === 'insert') {
+                        insertSnippet(markdown);
+                    } else {
+                        $textarea.value = markdown;
+                        triggerRender($previewMd, $textarea.value);
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+                    }
+                    window.showToast(getI18n('documentImported') || 'Document imported.');
+                } catch (err) {
+                    window.showAppDialog({ title: getI18n('err'), message: err.message || '文件解析失敗', kind: 'error' });
+                }
+                return;
+            }
+
+            // 6. Any other generic file -> upload to 888box
+            try {
+                const url = await uploadTo888Box(file);
+                const label = fileName.replace(/\\.[^.]+$/, '').trim() || 'File';
+                insertSnippet('[' + label + '](' + url + ')');
+                window.showToast(APP_STATE.lang === 'zh-TW' ? '檔案已成功上傳至 888box 並插入連結！' : 'File uploaded to 888box.');
+            } catch (err) {
+                window.showAppDialog({ title: getI18n('err'), message: err.message || '上傳失敗', kind: 'error' });
+            }
+        };
+
         if ($textarea) {
+            // Drag and drop handler for Markdown editor shell
+            const $editorShell = $textarea.closest('.editor-code-shell') || $textarea;
+            let dragCounter = 0;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                $editorShell.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                });
+            });
+
+            $editorShell.addEventListener('dragenter', () => {
+                dragCounter++;
+                $editorShell.classList.add('is-dragover');
+            });
+
+            $editorShell.addEventListener('dragleave', () => {
+                dragCounter--;
+                if (dragCounter <= 0) {
+                    dragCounter = 0;
+                    $editorShell.classList.remove('is-dragover');
+                }
+            });
+
+            $editorShell.addEventListener('drop', async (e) => {
+                dragCounter = 0;
+                $editorShell.classList.remove('is-dragover');
+                const dt = e.dataTransfer;
+                const files = dt && dt.files;
+                if (!files || files.length === 0) return;
+                await handleDroppedFile(files[0]);
+            });
+
             // Paste Handler (Images & Excel/Sheets Table Auto-Conversion)
             $textarea.addEventListener('paste', function (e) {
                 const clip = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);

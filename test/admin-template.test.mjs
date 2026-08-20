@@ -67,3 +67,28 @@ test('admin dashboard escapes untrusted titles and paths', () => {
     assert.doesNotMatch(html, /<script>alert\(1\)<\/script>/)
     assert.match(html, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/)
 })
+
+test('admin login card renders FIDO Touch ID button and password form', () => {
+    const html = Admin({
+        lang: 'zh-TW',
+        adminPath: '/admin333',
+    })
+
+    assert.match(html, /id="fido-login-btn"/)
+    assert.match(html, /Touch ID/)
+    assert.match(html, /id="admin-password"/)
+})
+
+test('admin dashboard renders FIDO device management modal and header buttons', () => {
+    const html = Admin({
+        lang: 'zh-TW',
+        adminPath: '/admin333',
+        notes: [],
+        fidoCredentials: [{ id: 'cred-123', name: 'MacBook Pro Touch ID', createdAt: 1710000000000 }],
+    })
+
+    assert.match(html, /id="fido-manage-btn"/)
+    assert.match(html, /id="fido-register-btn"/)
+    assert.match(html, /id="fido-modal"/)
+    assert.match(html, /MacBook Pro Touch ID/)
+})

@@ -105,6 +105,16 @@
       "id": "diagram-copy-toolbar",
       "zh-TW": "小訣竅：所有渲染後的 Mermaid 與各類圖表右上角均提供懸浮快捷工具列，支援一鍵複製 PNG 圖片、原始碼、SVG 向量圖或下載圖檔！",
       "en-US": "Tip: All rendered Mermaid and diagram charts feature a floating action toolbar in the top-right corner to copy PNG images, source code, SVG vectors, or download images in one click!"
+    },
+    {
+      "id": "file-drag-drop",
+      "zh-TW": "小訣竅：直接將 PDF、音訊、圖片或文件拖曳進 Markdown 編輯器，系統會自動跳出彈窗讓您選擇「本地轉檔為 Markdown」或「上傳至 888box 作為附件」！",
+      "en-US": "Tip: Drag and drop PDF, audio, images, or documents directly into the Markdown editor to choose between local Markdown conversion or 888box attachment upload!"
+    },
+    {
+      "id": "fido-admin-login",
+      "zh-TW": "小訣竅：管理員登入支援 Touch ID / 指紋 FIDO2 一鍵登入；登入後台後可隨時綁定您的筆電指紋、手機 Face ID 或 Passkey 裝置！",
+      "en-US": "Tip: Admin login supports Touch ID / FIDO2 Passkey one-click login. After entering the dashboard, you can bind your laptop Touch ID, mobile Face ID, or Passkey device anytime!"
     }
   ]
 }

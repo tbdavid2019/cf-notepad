@@ -1061,6 +1061,21 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
     </div>
 </div>
+<div class="modal file-drop-modal" role="dialog" aria-modal="true" aria-labelledby="file-drop-title" aria-describedby="file-drop-message" aria-hidden="true">
+    <div class="modal-mask"></div>
+    <div class="app-dialog-content file-drop-dialog-content" data-dialog-kind="confirm">
+        <div class="app-dialog-icon file-drop-icon" aria-hidden="true">📄</div>
+        <div class="app-dialog-copy">
+            <h2 id="file-drop-title">${lang === 'zh-TW' ? '處理拖曳檔案' : 'Process Dropped File'}</h2>
+            <p id="file-drop-message">${lang === 'zh-TW' ? '請選擇您希望如何處理此檔案：' : 'Please select how you would like to handle this file:'}</p>
+        </div>
+        <div class="file-drop-actions">
+            <button type="button" class="btn file-drop-action-primary" id="file-drop-action-primary">📑 ${lang === 'zh-TW' ? '解析為 Markdown 內文' : 'Convert to Markdown'}</button>
+            <button type="button" class="btn file-drop-action-secondary" id="file-drop-action-secondary">☁️ ${lang === 'zh-TW' ? '上傳至 888box 作為附件' : 'Upload to 888box'}</button>
+            <button type="button" class="btn file-drop-action-cancel" id="file-drop-action-cancel">${lang === 'zh-TW' ? '取消' : 'Cancel'}</button>
+        </div>
+    </div>
+</div>
 ${showNoteHistory ? `
 <div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title" aria-hidden="true">
     <div class="modal-mask"></div>
