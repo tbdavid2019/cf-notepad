@@ -151,9 +151,8 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 
 /* Layout */
 .note-container { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
-.stack { flex: 1; display: flex; flex-direction: column; overflow: hidden; position: relative; }
-.layer_1, .layer_2, .layer_3 { height: 100%; display: flex; flex-direction: column; }
-.layer_3 { flex-direction: row; background: #fff; }
+.layer_1, .layer_2 { height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+.layer_3 { flex: 1 1 auto; min-height: 0; height: 100%; display: flex; flex-direction: row; background: #fff; }
 
 /* Utilities */
 .hide { display: none !important; }
@@ -2039,7 +2038,8 @@ html[data-ui-theme="dark"] .share-menu-trigger.is-published {
     height: 32px;
     min-height: 32px;
     padding: 2px 8px;
-    border-bottom: 1px solid var(--status-border);
+    border-top: 1px solid var(--status-border);
+    border-bottom: none;
     background: var(--status-bg);
     color: var(--status-text);
     font: 12px/1.35 var(--editor-font-family);

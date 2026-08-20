@@ -397,14 +397,23 @@ export const getEditorCss = () => `
     pointer-events: none;
 }
 
+.markdown-editor-toolbar-wrap {
+    flex: 0 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 100;
+}
+
 .markdown-editor-toolbar {
+    width: 100%;
+    box-sizing: border-box;
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
     gap: 2px;
     min-height: 32px;
-    padding: 3px 6px;
+    padding: 3px 8px;
     position: relative;
     z-index: 100;
     overflow-x: auto;

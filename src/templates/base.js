@@ -350,6 +350,7 @@ ${getMarkdownCss()}
         <div class="stack">
             <div class="layer_1">
                 <div class="layer_2">
+                    ${isEdit && !isBlockDocument ? EDITOR_TOOLBAR(lang) : ''}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
@@ -358,7 +359,6 @@ ${getMarkdownCss()}
                             <div id="block-editor" class="block-editor" aria-label="Block editor"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : `<div class="editor-pane">
-                            ${EDITOR_TOOLBAR(lang)}
                             <div id="editor-search-bar" class="editor-search-bar hide" role="search" aria-label="${lang === 'zh-TW' ? '搜尋與取代' : 'Search and Replace'}">
                                 <div class="editor-search-row">
                                     <div class="editor-search-input-wrap">
@@ -413,7 +413,7 @@ ${getMarkdownCss()}
                         ${(isEdit && !isBlockDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
-                                ? `<div class="preview-pane">${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div></div>`
+                                ? `<div class="preview-pane"><div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
                         )}
                     </div>

@@ -131,7 +131,7 @@ test('reports the cursor line, column, and total editor length', () => {
 })
 
 test('renders the toolbar for editable pages', () => {
-    assert.match(baseTemplate, /<div class="editor-pane">\s*\$\{EDITOR_TOOLBAR\(lang\)\}/)
+    assert.match(baseTemplate, /<div class="layer_2">\s*\$\{isEdit && !isBlockDocument \? EDITOR_TOOLBAR\(lang\) : ''\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
     assert.match(
         commonTemplate,

@@ -7,14 +7,14 @@ const baseCssSource = readFileSync(new URL('../src/styles/base.css.js', import.m
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const constantSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
 
-test('edit preview renders a publication status strip above the article', () => {
+test('edit preview renders a publication status strip at the bottom of preview pane', () => {
     assert.match(baseTemplateSource, /class="editor-publication-status"/)
     assert.match(baseTemplateSource, /id="publication-share-url"/)
     assert.match(baseTemplateSource, /id="publication-copy-url"/)
     assert.match(baseTemplateSource, /id="publication-public-index"/)
     assert.match(baseTemplateSource, /id="publication-version-count"/)
     assert.match(baseTemplateSource, /id="publication-view-count"/)
-    assert.match(baseTemplateSource, /<div class="preview-pane">\$\{EDITOR_PUBLICATION_STATUS/)
+    assert.match(baseTemplateSource, /class="contents markdown-body"><\/div>\$\{EDITOR_PUBLICATION_STATUS/)
 })
 
 test('publication status uses existing D1 history and unique-view metrics', () => {
