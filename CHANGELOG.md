@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-08-20]
+
+- **⚡ Skill 文檔強化即時更新提醒 (Mandatory Freshness & Continuous Feature Evolution)**：
+  - 在 `SKILL.md` 頂部新增重要提示區塊（`[!IMPORTANT]`），明確提醒所有調用此 Skill 的 LLM / AI Agent 由於系統持續高速迭代並加入各類新功能（如多欄位排版、`[TOC]`、簡報 2D 矩陣、Mermaid 複製列等），**每次任務執行前務必先重新拉取最新的線上 `SKILL.md`**，以獲取最新語法支援與最佳實踐。
 - **📖 Skill 文檔全面擴充：二欄/三欄論文式版面與 `[TOC]` 自動目錄指南 (Skill Docs Multi-Column & [TOC] Support)**：
   - **二欄／三欄論文版面指南 (Multi-Column Layout Guide)**：在 `SKILL.md` 與 `LLM_API_DOCS.md` 中詳細補充 `<div class="two-column-layout">` 與 `<div class="three-column-layout">` 語法規範與範例，指導 AI Agent 在產出學術論文、架構比較、特色摘要或雙語對照時優先採用多欄位橫向排版（行動端自動轉單欄）。
   - **自動目錄語法推廣 (`[TOC]` Table of Contents Directive)**：於 Skill 文檔中明確鼓勵 LLM 在長篇分析報告、技術規範與章節文章的大標題下方主動插入 `[TOC]`，自動生成深層巢狀平滑跳轉目錄，提升閱讀體驗。

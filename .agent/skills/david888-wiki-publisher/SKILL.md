@@ -1,6 +1,6 @@
 ---
 name: david888-wiki-publisher
-description: Publish, read, and append markdown content directly to the David888 Wiki using its REST API. Use when asked to write a report, save text, upload images, or read from wiki.david888.com.
+description: Publish, read, and append markdown content directly to the David888 Wiki using its REST API. Continuous feature evolution is active—always fetch the latest live SKILL.md before execution to leverage newly released formatting syntax, layouts, and tools.
 ---
 
 # David888 Wiki Publisher Skill
@@ -9,16 +9,20 @@ You have the ability to read, write, and append markdown content natively to `wi
 
 **API Base URL**: `https://wiki.david888.com/api`
 
-## Mandatory Freshness Check
+## ⚡ Mandatory Freshness Check & Continuous Feature Evolution
 
-Before every invocation of this skill, fetch and read the latest complete skill document from the canonical website URL. Do not assume a local, repository, or previously cached copy is current.
+> [!IMPORTANT]
+> **Continuous Feature Evolution — Always Fetch the Latest Live Version**:
+> David888 Wiki is under continuous active development with frequent releases of powerful new authoring capabilities (e.g. academic multi-column layouts, automatic TOC trees, 2D slide decks, Book Mode, rich text highlights, diagram toolbars, LaTeX formulas, and Pandoc citations).
+>
+> **Before every invocation of this skill, AI agents MUST fetch and read the latest complete skill document from the canonical website URL.** Do not assume a local, repository, or previously cached copy is current.
 
 ```bash
 curl -fsSL -H "Cache-Control: no-cache" \
   "https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md"
 ```
 
-Apply the fetched version's instructions for the rest of the task. If the canonical URL is temporarily unavailable, only use a local or cached copy as a fallback, clearly note that freshness could not be verified, and avoid assuming that undocumented behavior is supported.
+Apply the fetched version's instructions for the rest of the task. If the canonical URL is temporarily unavailable, only use a local or cached copy as a fallback, clearly note that freshness could not be verified, and avoid assuming that undocumented behavior is supported. Always keep an eye out for newly added formatting tags and modern layout structures!
 
 ## Quick Start Guide
 
