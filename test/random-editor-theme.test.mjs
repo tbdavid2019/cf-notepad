@@ -34,9 +34,9 @@ test('the initial random theme is published to server metadata', () => {
     assert.match(baseTemplateSource, /history\.replaceState/)
 })
 
-test('new notes randomly choose an editor preview device while existing notes keep their device', () => {
-    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: 'desktop', random: () => 0 }), 'mobile')
-    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: 'mobile', random: () => 0.999999 }), 'desktop')
-    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'mobile', random: () => 0 }), 'mobile')
-    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'missing', random: () => 0 }), 'desktop')
+test('initial preview device defaults to desktop and honors storedDevice', () => {
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: '' }), 'desktop')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: 'mobile' }), 'mobile')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'mobile' }), 'mobile')
+    assert.equal(resolveInitialPreviewDevice({ isNewEntry: false, storedDevice: 'missing' }), 'desktop')
 })

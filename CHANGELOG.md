@@ -1,7 +1,10 @@
 # Changelog
 
-## [2026-08-20]
-
+- **📖 Skill 文檔全面擴充：二欄/三欄論文式版面與 `[TOC]` 自動目錄指南 (Skill Docs Multi-Column & [TOC] Support)**：
+  - **二欄／三欄論文版面指南 (Multi-Column Layout Guide)**：在 `SKILL.md` 與 `LLM_API_DOCS.md` 中詳細補充 `<div class="two-column-layout">` 與 `<div class="three-column-layout">` 語法規範與範例，指導 AI Agent 在產出學術論文、架構比較、特色摘要或雙語對照時優先採用多欄位橫向排版（行動端自動轉單欄）。
+  - **自動目錄語法推廣 (`[TOC]` Table of Contents Directive)**：於 Skill 文檔中明確鼓勵 LLM 在長篇分析報告、技術規範與章節文章的大標題下方主動插入 `[TOC]`，自動生成深層巢狀平滑跳轉目錄，提升閱讀體驗。
+- **🖥️ 編輯器預覽裝置預設固定為桌面視圖 (Default Desktop Preview)**：
+  - 取消新筆記隨機挑選桌面或手機預覽的機制，全域預設固定以 PC 桌面視圖（100% 全寬度）開啟編輯器，免除每次開新筆記隨機跳至手機窄版的困擾，仍可透過 Footer 控制列隨時自由手動切換。
 - **📊 Mermaid 與圖表懸浮工具列與一鍵複製/下載 (Mermaid & Diagram Copy Actions Toolbar)**：
   - **四合一懸浮快捷操作列 (Four-in-One Floating Toolbar)**：所有渲染後的 Mermaid 流程圖、循序圖、架構圖以及 Flowchart、Sequence、Graphviz、ABC 樂譜、ECharts 圖表容器右上角自動掛載毛玻璃懸浮工具列，支援滑鼠懸停與觸控裝置自適應。
   - **🖼️ 一鍵複製 PNG 圖片 (Copy PNG Image)**：使用 2x 超高解析度 Canvas/SVG 點陣化技術，一鍵將 Mermaid 圖表轉為清晰透明背景 PNG 並直接寫入系統剪貼簿（支援 `navigator.clipboard.write([new ClipboardItem])`），可直接貼入 Slack、Notion、PowerPoint、Word 或各類通訊軟體；在剪貼簿不支援直接寫入圖片的環境下自動安全回退為一鍵下載 PNG。

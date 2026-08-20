@@ -316,7 +316,26 @@ David888 Wiki supports standard GFM plus these powerful extended formatting synt
 | **📝 Inline Footnotes** | `Text ^[inline note text]` | Pandoc/HackMD inline footnotes, auto-numbered with bottom definition list. |
 | **🎓 Pandoc Citations** | `[@smith04]`, `[@doe2023, p. 42]` | Hover popover cards with academic citation details (APA, IEEE, BibTeX, MLA). |
 | **📊 Tables** | Standard Markdown `\| ... \|` | Responsive tables with automatic conversion from clipboard Excel/Sheets paste. |
-| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>` | Multi-column grid layout (stacks gracefully on mobile screens). |
+| **📑 Table of Contents** | `[TOC]` (on its own line) | Generates interactive, smooth-scrolling nested TOC navigation tree. |
+| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>`<br>`<div class="three-column-layout">...</div>` | Academic paper / magazine 2-column or 3-column layout (stacks on mobile). |
+
+#### 3.3.1 Multi-Column Layouts (Academic & Magazine Layout)
+Wrap content inside `<div class="two-column-layout">` or `<div class="three-column-layout">`. Sub-sections are partitioned by child headings (`###`):
+
+```html
+<div class="two-column-layout">
+
+### 1. Left Column
+Content for column 1...
+
+### 2. Right Column
+Content for column 2...
+
+</div>
+```
+
+#### 3.3.2 Automatic Table of Contents (`[TOC]`)
+Include `[TOC]` on its own line below the main title. The renderer automatically builds a `<nav class="markdown-toc">` with deep anchor links scanning `#` ~ `######` headings.
 
 ### 4. Markdown Processing Utilities (Stateless)
 

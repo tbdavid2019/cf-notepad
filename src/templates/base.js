@@ -54,8 +54,7 @@ export const resolveInitialPreviewDevice = ({
     storedDevice = '',
     random = Math.random,
 } = {}) => {
-    if (!isNewEntry) return storedDevice === 'mobile' ? 'mobile' : 'desktop'
-    return Number(random()) < 0.5 ? 'mobile' : 'desktop'
+    return storedDevice === 'mobile' ? 'mobile' : 'desktop'
 }
 
 const PUBLISH_NUDGE_MODAL = lang => {

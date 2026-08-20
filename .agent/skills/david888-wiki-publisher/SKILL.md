@@ -384,7 +384,70 @@ When authoring content on David888 Wiki, AI agents can leverage these rich forma
 | **📝 Inline Footnotes** | `Text with ^[inline note text]` | Pandoc/HackMD inline footnotes, auto-numbered with bottom definition list. |
 | **🎓 Pandoc Citations** | `[@smith04]`, `[@doe2023, p. 42]` | Hover popover cards with academic citation details (APA, IEEE, BibTeX, MLA). |
 | **📊 Tables** | `\| Col 1 \| Col 2 \|`<br>`\| --- \| --- \|`<br>`\| Val 1 \| Val 2 \|` | Formatted responsive tables (auto-converts from copied Excel/Google Sheets). |
-| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>`<br>`<div class="three-column-layout">...</div>` | Multi-column grid layout (stacks gracefully on mobile screens). |
+| **📑 Table of Contents** | `[TOC]` (on its own line) | Generates interactive, smooth-scrolling nested TOC navigation tree. |
+| **🔤 Multi-Column Layouts** | `<div class="two-column-layout">...</div>`<br>`<div class="three-column-layout">...</div>` | Academic paper / magazine 2-column or 3-column layout (stacks on mobile). |
+
+### H.1 Multi-Column Layouts (Academic & Magazine Layout)
+For research papers, executive briefings, feature comparisons, or bilingual side-by-side text, wrap content inside `<div class="two-column-layout">` or `<div class="three-column-layout">`. Sections are automatically partitioned by the child headings (e.g. `###`):
+
+````html
+<div class="two-column-layout">
+
+### 1. Traditional Architecture
+- Monolithic backend servers
+- Centralized database bottlenecks
+- High regional latency
+
+### 2. Modern Edge Architecture
+- Distributed Cloudflare Workers
+- Hybrid D1 database + KV caching
+- Sub-50ms global latency
+
+</div>
+````
+
+For three parallel columns:
+````html
+<div class="three-column-layout">
+
+### 🚀 Speed
+Edge computing delivers instant response times worldwide.
+
+### 🛡️ Reliability
+Multi-tier failover and distributed snapshots prevent downtime.
+
+### 🔌 Extensibility
+Native MCP, WebMCP, and REST APIs for full AI agent integration.
+
+</div>
+````
+
+### H.2 Automatic Table of Contents (`[TOC]`)
+For comprehensive reports, technical specs, long-form articles, and documentation, **AI agents are strongly encouraged to include `[TOC]`** near the top of the article (right after the title or executive summary):
+
+````md
+# 📚 Distributed Systems & Edge Storage Architecture Report
+
+> Executive Summary: An in-depth evaluation of serverless edge storage engines.
+
+[TOC]
+
+## 1. Introduction & Background
+...
+
+## 2. Core Architecture
+...
+
+### 2.1 Cloudflare Workers Runtime
+...
+
+### 2.2 D1 Hybrid Database Storage
+...
+
+## 3. Experimental Evaluation
+...
+````
+- Inserting `[TOC]` automatically scans all `#` through `######` headings and builds an accessible `<nav class="markdown-toc">` with nested lists and smooth-scrolling deep anchor links.
 
 
 ## Editor Features and Operational Tips
@@ -416,7 +479,7 @@ The wiki also includes a browser-based Markdown editor. When helping a user auth
 - **Undo / Redo** tracks typing, toolbar Markdown commands, image insertion, and pasted content. Use the toolbar or the normal `Ctrl/Cmd+Z`, `Ctrl/Cmd+Shift+Z`, and `Ctrl/Cmd+Y` shortcuts.
 - **AI formatting** is available in both the top toolbar and the footer. It restructures Markdown while preserving the draft's meaning. AI Edit can rewrite a selected passage or the full note only after the user supplies an explicit instruction.
 - **Footer Copy** is beside Markdown Export. It prefers rich HTML and includes Markdown/plain-text fallback for editors such as Notion and Jira, then shows a localized check animation after success.
-- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview. New notes randomly start in a desktop or mobile editor preview so authors can check both presentation shapes.
+- **Grouped view controls**: Preview, Layout, and Device are one footer group. Layout switches between side-by-side and stacked panes; Device switches between desktop and mobile preview. The editor defaults to desktop preview (`100%` width), and authors can toggle to mobile preview or stacked layouts anytime.
 - **Share links**: links in rendered Markdown on `/share/...` pages open in a new tab with `noopener noreferrer`.
 - **Startup tips**: the editor randomly chooses a bilingual tip from `static/data/editor-tips.json` and types it below the Stray Birds placeholder with the same typewriter animation. Future user-facing features that deserve a hint must add one object with `id`, `zh-TW`, and `en-US` fields, then update `README.md` and `CHANGELOG.md`.
 - **Admin dashboard**: the route is configured by the runtime `SCN_ADMIN_PATH` binding. The dashboard supports URL/title search, Markdown full-text search, modified-date filters, sortable columns, pagination, URL/public/protected/Sitemap totals, and retained version counts. `views` is a legacy field and may not be available in current data.
