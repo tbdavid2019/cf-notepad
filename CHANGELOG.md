@@ -2,6 +2,10 @@
 
 ## [2026-08-21]
 
+- **🎨 全面深色模式適配：版本紀錄、最近分享彈窗與本機已存狀態標籤 (Comprehensive Dark Mode for Note History, Recent Shares & Autosave Badge)**：
+  - **本機已存文字對比修正 (Autosave Badge High Contrast)**：修復深色模式下 Footer 工具列「本機已存 / Saved locally」狀態文字因遺漏 `--toolbar-fg` 變數而回退至黑色字體的問題，現在統一綁定 `--toolbar-fg: #ffffff`，提供清晰舒適的高對比辨識度。
+  - **版本紀錄視窗深色主題 (Version History Modal Dark Mode)**：完整重構 `.note-history-content`、版本清單 (`.note-history-entry`)、預覽面板 (`.note-history-viewer`)、渲染切換按鈕與 Markdown 歷史差異比對區塊，深色模式下採用現代 Slate 深藍冷色系背景 (`#1e293b` / `#0f172a`) 與高對比字體、邊框與代碼塊樣式，徹底揮別刺眼白底。
+  - **最近分享彈窗深色主題 (Recent Shares Modal Dark Mode)**：為「最近分享紀錄」彈窗（包含「我分享的 / 我看過的」切換頁籤、分享連結清單與複製按鈕）全面適配深色模式與自適應主題變數。
 - **📐 編輯器行號區塊緊湊化與自適應寬度重構 (Adaptive & Compact Editor Line Number Gutter)**：
   - **動態位數自適應 (Dynamic Digits Auto-Sizing)**：取消過去固定 42px 寬度導致 1~99 行短篇筆記左側空白過大、喧賓奪主的問題；改採動態位數計算（`--editor-gutter-digits`），1~99 行超緊湊縮減至 ~26px–28px，隨著文章行數突破百行、千行、萬行平滑動態擴展寬度，完美兼顧簡潔與大篇幅擴充性。
   - **細緻化字體與視覺層級 (Subtle & Clean Typography)**：行號字體大小微調為 13px 輔助字號（色彩改採柔和的 `#6272a4`），行高精確綁定編輯器行高（`25.6px`），確保每一行行號與 Textarea 內容 100% 垂直像素對齊，不再搶奪文章內文視覺焦點。

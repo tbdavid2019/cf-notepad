@@ -98,6 +98,7 @@
 - **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
 - **📝 行內註腳語法與工具列按鈕 (`^[...]`)**：支援 Pandoc / HackMD 行內註腳 `^[註腳說明]`，自動進行數字編號與文末說明生成；工具列提供「插入註腳 ([^1])」快捷按鈕。
 - **📐 自適應緊湊行號槽 (Adaptive Line Numbers Gutter)**：行號區塊採用動態寬度計算（1~99 行超緊湊 ~26px，並隨百行、千行、萬行平滑動態擴展），搭配 13px 輔助字號與垂直精準像素對齊，Textarea 左邊距從 72px 縮減至 42px，徹底解決傳統固定寬度過寬與喧賓奪主的問題。
+- **🎨 全面深色模式 (Full Dark Mode for Modals & Badges)**：版本紀錄（`.note-history-modal`）、最近分享（`.share-history-modal`）、本機已存狀態標籤（`.sync-status-badge`）與系統確認對話窗皆完整支援深色模式，使用現代 Slate 深藍冷色調與高對比文字排版。
 - **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；編輯器預設固定為桌面預覽（100% 全寬度），並支援隨時切換左右/上下分割與桌面/手機模式。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
 
@@ -428,6 +429,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
 - **📝 Inline Footnotes &amp; Toolbar Button (`^[...]`)**: Supports Pandoc / HackMD inline footnote syntax `^[footnote text]` with auto-numbering and bottom definition generation, plus an editor toolbar button (`[^1]`).
 - **📐 Adaptive &amp; Compact Line Numbers Gutter**: Dynamic digit-based gutter auto-sizing (~26px for 1-99 lines, smoothly expanding for hundreds/thousands of lines) with subtle 13px typography and pixel-perfect line-height matching, cutting total left margin from 72px down to 42px.
+- **🎨 Full Dark Mode for Modals &amp; Badges**: Version history modal (`.note-history-modal`), recent shares modal (`.share-history-modal`), local autosave status badge (`.sync-status-badge`), and system dialogs fully adapt to dark mode with high-contrast Slate themes.
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
 
 ### 📚 3. Book Mode Guide (Multi-Chapter Documentation)
