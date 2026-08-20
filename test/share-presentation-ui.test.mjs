@@ -129,3 +129,9 @@ test('presentation engine disambiguates YAML frontmatter from slide separators',
     assert.match(baseTemplateSource, /hasYamlKeys/)
     assert.match(baseTemplateSource, /content\.replace\(new RegExp\('\^/)
 })
+
+test('book mode and presentation engine include anti-nesting iframe and embed guards', () => {
+    assert.match(baseTemplateSource, /window\.self !== window\.top/)
+    assert.match(baseTemplateSource, /APP_STATE\.isEmbed \|\| APP_STATE\.embed/)
+})
+

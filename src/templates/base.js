@@ -5451,6 +5451,9 @@ themeCss + '\\n' +
         }
 
         window.initPresentation = async function() {
+            if (window.self !== window.top || (typeof APP_STATE !== 'undefined' && (APP_STATE.isEmbed || APP_STATE.embed))) {
+                return;
+            }
             var content = '';
             var edit = document.getElementById('contents');
             var share = document.getElementById('bot-accessible-content');
@@ -5668,6 +5671,9 @@ themeCss + '\\n' +
         };
 
         window.initBookMode = function() {
+            if (window.self !== window.top || (typeof APP_STATE !== 'undefined' && (APP_STATE.isEmbed || APP_STATE.embed))) {
+                return;
+            }
             var content = '';
             var edit = document.getElementById('contents');
             var share = document.getElementById('bot-accessible-content');
@@ -5736,14 +5742,17 @@ themeCss + '\\n' +
             var tocFn = window.parseBookToc || parseBookTocInternal;
             var bookData = tocFn(content);
 
+            var isZh = APP_STATE.lang === 'zh-TW';
+
             if (!bookData || !bookData.chapters || bookData.chapters.length === 0) {
+                var cleanDefaultUrl = APP_STATE.sharePath || window.location.pathname.replace(new RegExp('\\\\/book\\\\/?$'), '') || '/';
                 bookData = {
-                    title: APP_STATE.title || '書本閱讀',
+                    title: APP_STATE.title || (isZh ? '書本閱讀' : 'Book Reader'),
                     chapters: [{
                         index: 0,
-                        title: APP_STATE.title || '本篇內容',
-                        url: window.location.pathname,
-                        section: '本文',
+                        title: APP_STATE.title || (isZh ? '本篇內容' : 'This Note'),
+                        url: cleanDefaultUrl,
+                        section: isZh ? '本文' : 'Content',
                         level: 0,
                         isExternal: false
                     }],
@@ -5985,7 +5994,8 @@ themeCss + '\\n' +
                 if (sidebar) sidebar.classList.remove('open');
 
                 if (iframe) {
-                    var targetUrl = chapter.url;
+                    var targetUrl = (chapter.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                    if (!targetUrl) targetUrl = '/';
                     if (!chapter.isExternal && !targetUrl.includes('embed=1')) {
                         targetUrl += (targetUrl.includes('?') ? '&' : '?') + 'embed=1';
                     }
@@ -6052,6 +6062,9 @@ themeCss + '\\n' +
         };
 
         function maybeAutoStart() {
+            if (window.self !== window.top || (typeof APP_STATE !== 'undefined' && (APP_STATE.isEmbed || APP_STATE.embed))) {
+                return;
+            }
             if (APP_STATE.autoBook) {
                 window.initBookMode();
                 return;

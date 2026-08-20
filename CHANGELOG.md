@@ -10,6 +10,10 @@
   - **MCP 智慧結構偵測回傳網址 (Conditional Book/Presentation URL Emission)**：`write_note` 僅在筆記包含章節連結清單時回傳 `/book` 網址，僅在包含 `---`/`--` 分頁符號時回傳 `/present` 網址，避免一般普通文章誤導 AI Agent。
   - **MCP 工具描述輕量化 (Concise MCP Tool Description)**：將 `write_note` 工具描述精簡為核心語意，避免客戶端 UI 截斷與 Token 浪費；完整排版語法移至 `SKILL.md` 與 API 文檔維護。
   - **YAML Frontmatter 與簡報分隔線消歧義 (YAML vs. Slide Divider Disambiguation)**：強化簡報解析邏輯，精確驗證 YAML Key-Value 結構，防止文首以 `---` 開頭的簡報誤將第一張投影片當作 Frontmatter 剔除。
+- **🛡️ 書本與簡報模式防無限套娃防呆機制 (Anti-Nesting Iframe & Embed Guard)**：
+  - **遞迴內嵌硬防護 (Hard Frame Isolation)**：`initBookMode`、`initPresentation` 與 `maybeAutoStart` 全面加入 `window.self !== window.top` 與 `isEmbed` 雙重判斷，嚴禁在 `<iframe>` 或 `?embed=1` 嵌入情境下重複觸發書本/簡報外框。
+  - **章節嵌入網址過濾 (Chapter URL Sanitization)**：章節載入與目錄回溯自動剝除結尾的 `/book` 路徑，防止將書本容器載入右側 iframe；未包含章節連結的普通筆記安全回退至單篇本文純淨嵌入。
+  - **編輯路由內嵌支援 (`/:path?embed=1`)**：未設定讀取鎖的編輯路由在帶有 `?embed=1` 時自動以乾淨 Share 閱讀視圖呈現，避免編輯器工具列與側邊欄被內嵌。
 
 ## [2026-08-19]
 

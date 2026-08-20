@@ -1443,10 +1443,10 @@ async function renderSharePage(request, presentationMode = false, execution = {}
                 bookPath,
                 gaMeasurementId,
                 webtalk: getWebtalkConfig(),
-                presentationEntry: presentationMode,
-                autoPresent: presentationMode,
-                bookMode,
-                autoBook: bookMode,
+                presentationEntry: presentationMode && !embedMode,
+                autoPresent: presentationMode && !embedMode,
+                bookMode: bookMode && !embedMode,
+                autoBook: bookMode && !embedMode,
                 embed: embedMode,
                 viewCount,
                 meta: {
@@ -2448,7 +2448,25 @@ router.get('/:path', async (request) => {
     // Calculate shareId only if sharing is enabled
     const shareId = await getShareIdForPath(path, metadata)
 
+    const embedMode = new URL(request.url).searchParams.get('embed') === '1'
+
     if (!metadata.pw && !metadata.vpw) {
+        if (embedMode) {
+            return returnPage('Share', {
+                lang,
+                title,
+                content: value,
+                shareId,
+                path,
+                ext: {
+                    ...pageMetadata,
+                    ...blockPageExt,
+                    embed: true,
+                    autoBook: false,
+                    autoPresent: false,
+                },
+            })
+        }
         if (requestAcceptsMarkdown(request)) {
             return createMarkdownResponse(
                 buildMarkdownDocument(markdownExportContent, {
