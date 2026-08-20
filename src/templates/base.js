@@ -514,7 +514,7 @@ ${getMarkdownCss()}
                         const safeValue = node.value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
                         parent.children[index] = {
                             type: 'html',
-                            value: \`<div class="diagram-\${type}-container diagram-source" style="display:none">\${safeValue}</div><div class="diagram-\${type}-render"></div>\`
+                            value: \`<div class="diagram-block-wrapper diagram-\${type}-wrapper"><div class="diagram-\${type}-container diagram-source" style="display:none">\${safeValue}</div><div class="diagram-\${type}-render" data-diagram-type="\${type}"></div></div>\`
                         };
                     }
                 });
@@ -676,6 +676,268 @@ ${getMarkdownCss()}
             document.head.appendChild(s);
         });
 
+        const attachDiagramActions = (renderNode, rawCode, type) => {
+            if (!renderNode) return;
+            const wrapper = renderNode.closest('.diagram-block-wrapper') || renderNode.parentElement;
+            if (!wrapper || wrapper.querySelector('.diagram-toolbar')) return;
+
+            const zh = APP_STATE.lang === 'zh-TW';
+            const toolbar = document.createElement('div');
+            toolbar.className = 'diagram-toolbar';
+            toolbar.setAttribute('role', 'toolbar');
+            toolbar.setAttribute('aria-label', zh ? '圖表操作工具列' : 'Diagram action toolbar');
+
+            const btnCode = document.createElement('button');
+            btnCode.type = 'button';
+            btnCode.className = 'diagram-btn diagram-btn-code';
+            btnCode.title = zh ? '複製原始碼' : 'Copy Source Code';
+            btnCode.setAttribute('aria-label', zh ? '複製原始碼' : 'Copy Source Code');
+            btnCode.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg><span>' + (zh ? '代碼' : 'Code') + '</span>';
+            btnCode.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    if (navigator.clipboard && navigator.clipboard.writeText) {
+                        await navigator.clipboard.writeText(rawCode);
+                    } else {
+                        const ta = document.createElement('textarea');
+                        ta.value = rawCode;
+                        document.body.appendChild(ta);
+                        ta.select();
+                        document.execCommand('copy');
+                        ta.remove();
+                    }
+                    btnCode.classList.add('is-copied');
+                    const origHtml = btnCode.innerHTML;
+                    btnCode.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><span>' + (zh ? '已複製！' : 'Copied!') + '</span>';
+                    setTimeout(() => {
+                        btnCode.classList.remove('is-copied');
+                        btnCode.innerHTML = origHtml;
+                    }, 2000);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '已複製圖表原始碼' : 'Diagram code copied');
+                    }
+                } catch (err) {
+                    console.error('Failed to copy diagram code:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '複製失敗' : 'Copy failed');
+                    }
+                }
+            });
+            toolbar.appendChild(btnCode);
+
+            const getPngBlob = async () => {
+                const svgEl = renderNode.querySelector('svg');
+                const canvasEl = renderNode.querySelector('canvas');
+                if (canvasEl) {
+                    return new Promise((resolve, reject) => {
+                        canvasEl.toBlob((blob) => {
+                            if (blob) resolve(blob);
+                            else reject(new Error('Canvas toBlob failed'));
+                        }, 'image/png');
+                    });
+                }
+                if (svgEl) {
+                    try {
+                        const svgClone = svgEl.cloneNode(true);
+                        if (!svgClone.getAttribute('xmlns')) {
+                            svgClone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                        }
+                        const rect = svgEl.getBoundingClientRect();
+                        let width = rect.width;
+                        let height = rect.height;
+                        if (!width || !height) {
+                            const viewBox = svgEl.viewBox && svgEl.viewBox.baseVal;
+                            if (viewBox && viewBox.width && viewBox.height) {
+                                width = viewBox.width;
+                                height = viewBox.height;
+                            } else {
+                                width = parseFloat(svgEl.getAttribute('width')) || 800;
+                                height = parseFloat(svgEl.getAttribute('height')) || 600;
+                            }
+                        }
+                        svgClone.setAttribute('width', width);
+                        svgClone.setAttribute('height', height);
+                        const svgData = new XMLSerializer().serializeToString(svgClone);
+                        const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+                        const url = URL.createObjectURL(svgBlob);
+                        return await new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = 'anonymous';
+                            img.onload = () => {
+                                try {
+                                    const scale = 2;
+                                    const canvas = document.createElement('canvas');
+                                    canvas.width = Math.ceil(width * scale);
+                                    canvas.height = Math.ceil(height * scale);
+                                    const ctx = canvas.getContext('2d');
+                                    ctx.imageSmoothingEnabled = true;
+                                    ctx.imageSmoothingQuality = 'high';
+                                    ctx.scale(scale, scale);
+                                    ctx.drawImage(img, 0, 0, width, height);
+                                    URL.revokeObjectURL(url);
+                                    canvas.toBlob((blob) => {
+                                        if (blob) resolve(blob);
+                                        else reject(new Error('Canvas toBlob failed'));
+                                    }, 'image/png');
+                                } catch (e) {
+                                    URL.revokeObjectURL(url);
+                                    reject(e);
+                                }
+                            };
+                            img.onerror = () => {
+                                URL.revokeObjectURL(url);
+                                reject(new Error('SVG Image load failed'));
+                            };
+                            img.src = url;
+                        });
+                    } catch (directErr) {
+                        console.warn('Native SVG to PNG failed, falling back to html2canvas:', directErr);
+                        if (!window.html2canvas) {
+                            await new Promise((resolve, reject) => {
+                                const script = document.createElement('script');
+                                script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                                script.onload = resolve;
+                                script.onerror = () => reject(new Error('Failed to load html2canvas'));
+                                document.head.appendChild(script);
+                            });
+                        }
+                        const canvas = await window.html2canvas(renderNode, {
+                            scale: 2,
+                            backgroundColor: null,
+                            logging: false,
+                            useCORS: true,
+                        });
+                        return new Promise((resolve, reject) => {
+                            canvas.toBlob((blob) => {
+                                if (blob) resolve(blob);
+                                else reject(new Error('html2canvas toBlob failed'));
+                            }, 'image/png');
+                        });
+                    }
+                }
+                throw new Error('No SVG or Canvas element found');
+            };
+
+            const btnPng = document.createElement('button');
+            btnPng.type = 'button';
+            btnPng.className = 'diagram-btn diagram-btn-png';
+            btnPng.title = zh ? '複製 PNG 圖片到剪貼簿' : 'Copy PNG image to clipboard';
+            btnPng.setAttribute('aria-label', zh ? '複製 PNG 圖片' : 'Copy PNG image');
+            btnPng.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg><span>PNG</span>';
+            btnPng.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    const blob = await getPngBlob();
+                    if (blob && navigator.clipboard && navigator.clipboard.write && window.ClipboardItem) {
+                        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                        btnPng.classList.add('is-copied');
+                        const origHtml = btnPng.innerHTML;
+                        btnPng.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><span>' + (zh ? '已複製！' : 'Copied!') + '</span>';
+                        setTimeout(() => {
+                            btnPng.classList.remove('is-copied');
+                            btnPng.innerHTML = origHtml;
+                        }, 2000);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(zh ? '已複製圖表 PNG 圖片' : 'Diagram PNG copied to clipboard');
+                        }
+                    } else if (blob) {
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement('a');
+                        a.href = url;
+                        a.download = (type || 'diagram') + '.png';
+                        document.body.appendChild(a);
+                        a.click();
+                        a.remove();
+                        setTimeout(() => URL.revokeObjectURL(url), 1000);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(zh ? '剪貼簿不支援圖片寫入，已自動下載 PNG' : 'Clipboard image not supported, downloaded PNG');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Failed to copy diagram PNG:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '複製 PNG 失敗' : 'Failed to copy PNG');
+                    }
+                }
+            });
+            toolbar.appendChild(btnPng);
+
+            if (renderNode.querySelector('svg')) {
+                const btnSvg = document.createElement('button');
+                btnSvg.type = 'button';
+                btnSvg.className = 'diagram-btn diagram-btn-svg';
+                btnSvg.title = zh ? '複製 SVG 向量代碼' : 'Copy SVG vector code';
+                btnSvg.setAttribute('aria-label', zh ? '複製 SVG' : 'Copy SVG');
+                btnSvg.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span>SVG</span>';
+                btnSvg.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    try {
+                        const svgEl = renderNode.querySelector('svg');
+                        if (!svgEl) return;
+                        const svgText = new XMLSerializer().serializeToString(svgEl);
+                        if (navigator.clipboard && navigator.clipboard.writeText) {
+                            await navigator.clipboard.writeText(svgText);
+                        } else {
+                            const ta = document.createElement('textarea');
+                            ta.value = svgText;
+                            document.body.appendChild(ta);
+                            ta.select();
+                            document.execCommand('copy');
+                            ta.remove();
+                        }
+                        btnSvg.classList.add('is-copied');
+                        const origHtml = btnSvg.innerHTML;
+                        btnSvg.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg><span>' + (zh ? '已複製！' : 'Copied!') + '</span>';
+                        setTimeout(() => {
+                            btnSvg.classList.remove('is-copied');
+                            btnSvg.innerHTML = origHtml;
+                        }, 2000);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(zh ? '已複製 SVG 向量代碼' : 'Diagram SVG copied');
+                        }
+                    } catch (err) {
+                        console.error('Failed to copy diagram SVG:', err);
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(zh ? '複製 SVG 失敗' : 'Failed to copy SVG');
+                        }
+                    }
+                });
+                toolbar.appendChild(btnSvg);
+            }
+
+            const btnDownload = document.createElement('button');
+            btnDownload.type = 'button';
+            btnDownload.className = 'diagram-btn diagram-btn-download';
+            btnDownload.title = zh ? '下載 PNG 圖片' : 'Download PNG Image';
+            btnDownload.setAttribute('aria-label', zh ? '下載 PNG' : 'Download PNG');
+            btnDownload.innerHTML = '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>';
+            btnDownload.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                try {
+                    const blob = await getPngBlob();
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = (type || 'diagram') + '-' + Date.now() + '.png';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    setTimeout(() => URL.revokeObjectURL(url), 1000);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '已開始下載 PNG 圖片' : 'Downloading PNG image');
+                    }
+                } catch (err) {
+                    console.error('Failed to download PNG:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(zh ? '下載失敗' : 'Download failed');
+                    }
+                }
+            });
+            toolbar.appendChild(btnDownload);
+
+            wrapper.appendChild(toolbar);
+        };
+
         const initDiagrams = async () => {
             const mermaidNodes = document.querySelectorAll('.diagram-mermaid-render');
             if (mermaidNodes.length > 0) {
@@ -710,6 +972,7 @@ ${getMarkdownCss()}
                               const { svg } = await mermaid.render(id, code);
                               renderNode.innerHTML = svg;
                               renderNode.setAttribute('data-processed', 'true');
+                              attachDiagramActions(renderNode, code, 'mermaid');
                          } catch (e) {
                               console.error('Mermaid render error', e);
                               renderNode.innerHTML = \`<pre style="color:red; background:#fee; padding:10px; border:1px solid red;">Mermaid Render Error: \${e.message}</pre>\`;
@@ -729,6 +992,7 @@ ${getMarkdownCss()}
                          const chart = flowchart.parse(code);
                          chart.drawSVG(el);
                          el.setAttribute('data-processed', 'true');
+                         attachDiagramActions(el, code, 'flow');
                      });
                  } catch(e) { console.error('Flowchart load failed', e); }
             }
@@ -745,6 +1009,7 @@ ${getMarkdownCss()}
                          const diagram = Diagram.parse(code);
                          diagram.drawSVG(el, {theme: 'simple'});
                          el.setAttribute('data-processed', 'true');
+                         attachDiagramActions(el, code, 'sequence');
                      });
                  } catch(e) { console.error('Sequence load failed', e); }
             }
@@ -758,6 +1023,7 @@ ${getMarkdownCss()}
                          const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
                          el.innerHTML = graphviz.layout(code, "svg", "dot");
                          el.setAttribute('data-processed', 'true');
+                         attachDiagramActions(el, code, 'graphviz');
                      });
                  } catch(e) { console.error('Graphviz load failed', e); }
             }
@@ -770,6 +1036,7 @@ ${getMarkdownCss()}
                          const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
                          ABCJS.renderAbc(el, code);
                          el.setAttribute('data-processed', 'true');
+                         attachDiagramActions(el, code, 'abc');
                      });
                  } catch(e) { console.error('ABC load failed', e); }
             }
@@ -789,6 +1056,7 @@ ${getMarkdownCss()}
                         try {
                             renderEchartsChart(el, source, window.echarts);
                             el.setAttribute('data-processed', 'true');
+                            attachDiagramActions(el, source, 'echarts');
                         } catch (error) {
                             console.error('ECharts render error', error);
                             showEchartsError(el, error);
@@ -808,7 +1076,7 @@ ${getMarkdownCss()}
                 const file = await processor.process(expanded);
                 const clean = DOMPurify.sanitize(String(file), {
                     ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
-                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title'],
+                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title'],
                     WHOLE_DOCUMENT: false,
                     FORCE_BODY: true
                 });

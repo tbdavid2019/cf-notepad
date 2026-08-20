@@ -2365,6 +2365,103 @@ body.preview-device-mobile:not(.share-view) #preview-md.markdown-body > table {
 /* Diagram Source - Hidden */
 .diagram-source { display: none !important; }
 
+/* Diagram Block Wrapper & Actions Toolbar */
+.diagram-block-wrapper {
+    position: relative;
+    margin: 1.2em 0;
+    padding: 16px 12px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(0, 0, 0, 0.015);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+[data-ui-theme="dark"] .diagram-block-wrapper {
+    border-color: rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.02);
+}
+.diagram-block-wrapper:hover {
+    border-color: rgba(0, 0, 0, 0.16);
+}
+[data-ui-theme="dark"] .diagram-block-wrapper:hover {
+    border-color: rgba(255, 255, 255, 0.16);
+}
+.diagram-toolbar {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 4px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-2px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 10;
+}
+[data-ui-theme="dark"] .diagram-toolbar {
+    background: rgba(26, 31, 44, 0.88);
+    border-color: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+.diagram-block-wrapper:hover .diagram-toolbar,
+.diagram-block-wrapper:focus-within .diagram-toolbar,
+.diagram-toolbar:focus-within,
+.diagram-toolbar.is-active {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+}
+@media (hover: none) {
+    .diagram-toolbar {
+        opacity: 0.88;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+}
+.diagram-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 7px;
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace);
+    color: #4b5563;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+}
+[data-ui-theme="dark"] .diagram-btn {
+    color: #9ca3af;
+}
+.diagram-btn:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: #111827;
+}
+[data-ui-theme="dark"] .diagram-btn:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #f3f4f6;
+}
+.diagram-btn.is-copied {
+    color: #16a34a !important;
+    background: rgba(22, 163, 74, 0.12) !important;
+}
+.diagram-btn svg {
+    width: 12px;
+    height: 12px;
+    flex-shrink: 0;
+}
+
 /* Mermaid Renderer Specific Fixes */
 .diagram-mermaid-render {
     line-height: normal;

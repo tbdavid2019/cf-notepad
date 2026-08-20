@@ -100,6 +100,11 @@
       "id": "inline-footnotes",
       "zh-TW": "小訣竅：使用 ^[行內註腳內容] 語法可直接插入行內註腳，系統會自動編號並於文末生成對應說明。",
       "en-US": "Tip: Use ^[inline footnote content] to insert inline footnotes. The system automatically numbers them and generates corresponding definitions at the end."
+    },
+    {
+      "id": "diagram-copy-toolbar",
+      "zh-TW": "小訣竅：所有渲染後的 Mermaid 與各類圖表右上角均提供懸浮快捷工具列，支援一鍵複製 PNG 圖片、原始碼、SVG 向量圖或下載圖檔！",
+      "en-US": "Tip: All rendered Mermaid and diagram charts feature a floating action toolbar in the top-right corner to copy PNG images, source code, SVG vectors, or download images in one click!"
     }
   ]
 }

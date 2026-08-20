@@ -2,6 +2,12 @@
 
 ## [2026-08-20]
 
+- **📊 Mermaid 與圖表懸浮工具列與一鍵複製/下載 (Mermaid & Diagram Copy Actions Toolbar)**：
+  - **四合一懸浮快捷操作列 (Four-in-One Floating Toolbar)**：所有渲染後的 Mermaid 流程圖、循序圖、架構圖以及 Flowchart、Sequence、Graphviz、ABC 樂譜、ECharts 圖表容器右上角自動掛載毛玻璃懸浮工具列，支援滑鼠懸停與觸控裝置自適應。
+  - **🖼️ 一鍵複製 PNG 圖片 (Copy PNG Image)**：使用 2x 超高解析度 Canvas/SVG 點陣化技術，一鍵將 Mermaid 圖表轉為清晰透明背景 PNG 並直接寫入系統剪貼簿（支援 `navigator.clipboard.write([new ClipboardItem])`），可直接貼入 Slack、Notion、PowerPoint、Word 或各類通訊軟體；在剪貼簿不支援直接寫入圖片的環境下自動安全回退為一鍵下載 PNG。
+  - **📋 一鍵複製原始碼 (Copy Source Text)**：秒速複製 Mermaid 原始 Markdown 語法代碼。
+  - **📐 一鍵複製 SVG 向量圖 (Copy SVG Vector)**：一鍵複製乾淨的向量 XML 原始碼，可直接貼入 Figma、Illustrator 或前端代碼庫。
+  - **💾 一鍵下載 PNG (Download PNG)**：提供快速下載高解析圖檔按鈕，並附帶觸覺複製動畫反饋與雙語 Toast 提示。
 - **🖥️ 全寬頂部工具列與底部預覽狀態列重構 (Full-Width Top Header Toolbar & Bottom Preview Status Bar)**：
   - **全寬頂部工具列 (Full-Width Header Toolbar)**：將編輯工具列移出左側單欄，提升為橫跨整個視窗（100% 寬度）的全寬頂部工具列，彻底解決 25+ 個格式按鈕（Undo/Redo、H1~H3、粗斜體、螢光筆、顏色、註腳、Quote、Alert、TOC、清單、Code、表格、分欄、圖片、附件、搜尋、全螢幕）在雙欄模式下被中間分割線截斷或擠壓的問題。
   - **預覽區底部狀態列 (Bottom Preview Status Bar)**：將預覽區頂部的發布狀態列（`尚未發布/已發布`、分享連結、`▷ 簡報`、`📖 書本`、版本與觀看數）移至預覽區的最底部，預覽區頂部與編輯區文字頂部完美水平齊平，閱讀視線通透無干擾，並與左側底部的游標行列字數狀態列整齊呼應。
