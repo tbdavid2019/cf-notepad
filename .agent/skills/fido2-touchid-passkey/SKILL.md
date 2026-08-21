@@ -1,11 +1,23 @@
 ---
 name: fido2-touchid-passkey
-description: Comprehensive implementation guide, cryptographic algorithms, and troubleshooting cookbook for WebAuthn, FIDO2, Touch ID, Face ID, Windows Hello, and Passkeys in serverless edge runtimes (Cloudflare Workers, V8, Node.js) and modern web applications.
+description: Comprehensive implementation guide, cryptographic algorithms, and troubleshooting cookbook for WebAuthn, FIDO2, Touch ID, Face ID, Windows Hello, and Passkeys across serverless edge runtimes (Cloudflare Workers, V8, Node.js) and fullstack frameworks (PHP Laravel Fortify, etc.).
 ---
 
 # FIDO2, WebAuthn & Touch ID Passkey 実戰指南與踩坑經驗 (FIDO2 & WebAuthn Implementation Guide)
 
-本手冊彙整了在 Serverless 邊緣環境（Cloudflare Workers、V8 Engine、Node.js）與現代瀏覽器中實作 **WebAuthn / FIDO2 生物辨識（Mac Touch ID、iPhone Face ID、Windows Hello、Passkey）** 的核心密碼學原理、完整流程架構、以及在跨瀏覽器與邊緣運行時中的所有**關鍵技術細節與避坑指南**。
+本手冊彙整了在 **Serverless 邊緣環境（Cloudflare Workers、V8 Engine、Node.js）**、**全端框架生態（PHP Laravel Fortify 等）** 與現代瀏覽器中實作 **WebAuthn / FIDO2 生物辨識（Mac Touch ID、iPhone Face ID、Windows Hello、Passkey）** 的核心密碼學原理、完整流程架構、以及在跨瀏覽器與邊緣運行時中的所有**關鍵技術細節與避坑指南**。
+
+---
+
+## ⚖️ 0. 架構選型決策準則 (Framework-First vs. Edge Custom Implementation)
+
+在評估 Passkey / WebAuthn 實作方案時，請務必遵循以下決策矩陣：
+
+| 開發場景 / 生態系 | 推薦實作策略 | 核心原則與理由 |
+| :--- | :--- | :--- |
+| **成熟全端框架**<br>(PHP Laravel, Rails, Django, ASP.NET) | 🌟 **框架原生套件優先**<br>(如 Laravel Fortify + `laravel/passkeys`) | **嚴禁自刻密碼學！** 官方套件已內建完整的 User Handle 雜湊、Challenge 生命週期、Passkey 路由、密碼確認中間件、以及跨版本 Migration，自刻只會徒增安全漏洞與維護成本。 |
+| **邊緣無伺服器 / 微服務**<br>(Cloudflare Workers, V8 Isolates) | ⚡ **零依賴 Web Crypto 原生實作**<br>(純 `crypto.subtle` + P-256) | 邊緣環境嚴格限制 Bundle 體積與 Node.js 原生 C++ 模組依賴，需自行精確處理 ASN.1 DER 轉碼、COSE 解析與 Session 簽發。 |
+| **Node.js / Express / NestJS** | 📦 **標準成熟套件**<br>(如 `@simplewebauthn/server` & `/browser`) | 使用經安全審計的標準庫，避免手動處理複雜的 CBOR 與 DER 轉碼。 |
 
 ---
 
@@ -21,24 +33,24 @@ sequenceDiagram
     autonumber
     actor User as 使用者 (Touch ID / Face ID)
     participant Browser as 瀏覽器 (WebAuthn API)
-    participant Server as 伺服器 (Workers / API)
-    participant KV as 儲存層 (KV / Database)
+    participant Server as 伺服器 (Workers / Laravel Fortify)
+    participant DB as 儲存層 (KV / MySQL / D1)
 
     Note over User,Server: 階段一：註冊與綁定 (Registration)
     Browser->>Server: POST /fido/register-challenge (請求註冊 Challenge)
-    Server->>KV: 暫存 challenge (TTL: 120s)
+    Server->>DB: 暫存 challenge (TTL: 120s)
     Server-->>Browser: 回傳 challenge, rp, user
     Browser->>User: 喚起系統生物辨識 (Touch ID / Passkey)
     User-->>Browser: 授權生成新金鑰對 (P-256)
     Browser->>Server: POST /fido/register (回傳 id, rawId, attestationObject, clientDataJSON)
     Server->>Server: 驗證 challenge、解析 attestationObject 提取 COSE 公鑰
-    Server->>KV: 儲存 credentialId 與 rawPublicKey (Base64)
+    Server->>DB: 儲存 credentialId 與 rawPublicKey (Base64)
     Server-->>Browser: 綁定成功
 
     Note over User,Server: 階段二：指紋一鍵登入 (Authentication)
     Browser->>Server: POST /fido/login-challenge (請求登入 Challenge)
-    Server->>KV: 讀取該用戶所有已綁定的 allowCredentials
-    Server->>KV: 暫存 login challenge (TTL: 120s)
+    Server->>DB: 讀取該用戶所有已綁定的 allowCredentials
+    Server->>DB: 暫存 login challenge (TTL: 120s)
     Server-->>Browser: 回傳 challenge, rpId, allowCredentials
     Browser->>User: 喚起 Touch ID / Passkey
     User-->>Browser: 刷指紋授權簽署
@@ -154,11 +166,92 @@ const isValid = await crypto.subtle.verify(
 
 ### 坑 6：Challenge 生命週期與防重放攻擊（Replay Attack）💥
 - `challenge` 必須使用加密安全的隨機字串（`crypto.getRandomValues(new Uint8Array(32))`）。
-- Challenge 儲存於 KV 時必須具備 TTL（建議 60~120 秒），且**一旦驗證過必須立即原子刪除（Consume-once）**，防止重放攻擊。
+- Challenge 儲存於 KV / Cache 時必須具備 TTL（建議 60~120 秒），且**一旦驗證過必須立即原子刪除（Consume-once）**，防止重放攻擊。
 
 ---
 
-## 💻 4. 模組化程式碼參考實作 (Reference Code)
+## 🐘 4. PHP / Laravel 生態實戰最佳實踐 (Laravel Fortify Passkeys SOP)
+
+在 PHP / Laravel 專案中，**強烈建議直接採用 Laravel Fortify 原生 Passkeys 支援（基於 `laravel/passkeys`），切忌自行手刻 WebAuthn 加密**。
+
+### 🌟 實作分段標準流程 (7-Step Delivery Pipeline)
+
+#### 1. 啟用 Features 與 Model 介面實作
+在 `config/fortify.php` 啟用 Passkeys：
+```php
+'features' => [
+    Features::registration(),
+    Features::resetPasswords(),
+    Features::emailVerification(),
+    Features::updateProfileInformation(),
+    Features::updatePasswords(),
+    Features::twoFactorAuthentication(),
+    Features::passkeys(), // 啟用 Passkeys 支援
+],
+```
+在 `User.php` Model 中加入介面與 Trait：
+```php
+use Laravel\Fortify\Contracts\PasskeyUser;
+use Laravel\Fortify\Traits\PasskeyAuthenticatable;
+
+class User extends Authenticatable implements PasskeyUser
+{
+    use PasskeyAuthenticatable;
+    // ...
+}
+```
+
+#### 2. 發布 Migration 與資料庫結構
+執行 Migration 發布並建立 `passkeys` 憑證資料表：
+```bash
+php artisan vendor:publish --tag=fortify-migrations
+php artisan migrate
+```
+資料表結構會包含 `user_id`, `name`, `credential_id`, `public_key`, `user_handle` 等欄位。
+
+#### 3. 環境變數設定（關鍵防雷）
+在 `.env` 設定 RP 與 User Handle Secret：
+```env
+# 必須為純 domain（無 https://，無 port）
+PASSKEYS_RELYING_PARTY_ID=your-domain.com
+PASSKEYS_ALLOWED_ORIGINS=https://your-domain.com
+
+# ⚠️ 極重要：必須設定固定且持久的金鑰，跨環境或更新時嚴禁變動，否則現有 Passkeys 全數失效
+PASSKEYS_USER_HANDLE_SECRET=base64:YourFixedRandomSecretStringHere=
+```
+
+#### 4. 登入頁面整合 Passkey 一鍵登入
+前端透過 `@github/webauthn-json` 或 Fortify 提供的輔助函式發起認證：
+- 呼叫 Fortify 原生端點 `GET /passkeys/login-options` 取得 Challenge 與 `allowCredentials`。
+- 呼叫 `POST /login` 提交 WebAuthn Assertion 簽名完成身分驗證。
+
+#### 5. 個人資料頁（Profile）Passkey 註冊、命名與安全刪除
+- 使用者可在會員中心註冊新裝置（呼叫 `GET /passkeys/register-options` 與 `POST /passkeys`）。
+- **安全防護**：註冊新 Passkey 或刪除既有 Passkey 前，必須掛載 `password.confirm` 中間件，確保是本人在已知主密碼的情況下操作。
+
+#### 6. Pest 自動化測試矩陣
+撰寫完善的 Pest / PHPUnit 測試案例：
+```php
+test('user can authenticate via passkey', function () {
+    // 模擬 WebAuthn Assertion 驗證並斷言轉址至 dashboard
+});
+
+test('suspended or banned user cannot login with passkey', function () {
+    // 驗證即使 Passkey 簽名合法，停權帳號仍會被 AuthenticateSession 中間件阻擋
+});
+
+test('passkey management requires password confirmation', function () {
+    // 驗證未確認密碼時訪問 /passkeys 會被重導至 password.confirm
+});
+```
+
+#### 7. UAT / Production 網域與 HTTPS 檢核
+- 驗證 WebAuthn 僅在 HTTPS（或 `localhost`）下工作。
+- 檢查 Staging / UAT / Prod 各自的 `PASSKEYS_RELYING_PARTY_ID` 是否與存取網域完全一致。
+
+---
+
+## 💻 5. 模組化程式碼參考實作 (Edge Web Crypto Reference)
 
 ### 後端 WebAuthn 驗證核心 (`fido_auth.mjs`)
 
@@ -236,8 +329,9 @@ export async function verifyFidoAssertion({
 
 ---
 
-## 📋 5. 快速檢核清單 (Implementation Checklist)
+## 📋 6. 快速檢核清單 (Implementation Checklist)
 
+- [ ] **選型審查**：全端框架（Laravel 等）使用官方套件；邊緣無伺服器（Workers）使用零依賴 Web Crypto。
 - [ ] 伺服器端產生隨機 32-byte Base64URL Challenge，TTL 設定 120s。
 - [ ] 註冊時在 `authenticatorSelection` 設定 `authenticatorAttachment: 'platform'`。
 - [ ] 註冊時解析 Attestation Object 並持久化儲存 COSE Raw P-256 公鑰。
@@ -245,3 +339,4 @@ export async function verifyFidoAssertion({
 - [ ] 登入驗證時將 DER 簽名轉為 64-byte IEEE P1363 格式。
 - [ ] 登入驗證時比對 `clientData.challenge`、`clientData.origin` 與 `rpIdHash`。
 - [ ] 登入成功後原子刪除已使用的 Challenge 並核發 Session Cookie。
+- [ ] Laravel 專案已固定設定 `PASSKEYS_USER_HANDLE_SECRET` 並掛載 `password.confirm`。
