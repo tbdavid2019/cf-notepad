@@ -578,19 +578,21 @@ const handleAdminGet = async (request) => {
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
     const adminPath = getAdminPath()
     const adminPassword = getAdminPassword()
+    const kv = getNotesNamespace()
+    const fidoCredentials = await getFidoCredentials(kv)
 
     // Check if logged in
     if (cookie.admin_session === adminPassword && adminPassword) {
         // Logged in, list notes
         try {
             const adminData = await buildAdminData(request)
-            return returnPage('Admin', { lang, adminPath, ...adminData })
+            return returnPage('Admin', { lang, adminPath, fidoCredentials, ...adminData })
         } catch (e) {
-            return returnPage('Admin', { lang, adminPath, error: 'Failed to retrieve notes: ' + e.message })
+            return returnPage('Admin', { lang, adminPath, fidoCredentials, error: 'Failed to retrieve notes: ' + e.message })
         }
     }
 
-    return returnPage('Admin', { lang, adminPath })
+    return returnPage('Admin', { lang, adminPath, fidoCredentials, fidoCredentialsCount: fidoCredentials.length })
 }
 
 async function listAllAdminNotes() {

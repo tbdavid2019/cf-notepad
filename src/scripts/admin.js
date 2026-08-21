@@ -163,6 +163,38 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
         }
     }
 
+    async function refreshFidoDevicesList() {
+        try {
+            const res = await fetch(ADMIN_PATH + '/fido/credentials');
+            const data = await res.json().catch(() => ({ success: false }));
+            if (data.success && Array.isArray(data.credentials)) {
+                const listEl = document.querySelector('#fido-device-list');
+                const manageBtn = document.querySelector('#fido-manage-btn');
+                if (manageBtn) {
+                    manageBtn.textContent = '🔑 指紋 / Passkey (' + data.credentials.length + ')';
+                }
+                if (listEl) {
+                    if (data.credentials.length === 0) {
+                        listEl.innerHTML = '<p class="empty-muted">尚未綁定任何 Touch ID / 指紋裝置。點擊下方按鈕即可綁定此設備！</p>';
+                    } else {
+                        listEl.innerHTML = data.credentials.map(c => {
+                            const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
+                            return '<div class="fido-device-item" data-id="' + c.id + '">' +
+                                '<div class="fido-device-info">' +
+                                    '<strong>' + (c.name || 'Touch ID 裝置') + '</strong>' +
+                                    '<span>綁定時間：' + dateStr + '</span>' +
+                                '</div>' +
+                                '<button type="button" class="btn btn-danger btn-sm fido-delete-btn" data-id="' + c.id + '">移除</button>' +
+                            '</div>';
+                        }).join('');
+                    }
+                }
+            }
+        } catch (e) {
+            console.error('Failed to refresh FIDO list:', e);
+        }
+    }
+
     async function handleFidoDelete(credentialId) {
         if (!confirm('確定要移除此 Touch ID / 指紋裝置嗎？')) return;
         try {
@@ -176,7 +208,7 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 const item = document.querySelector('.fido-device-item[data-id="' + credentialId + '"]');
                 if (item) item.remove();
                 alert('裝置已成功移除');
-                window.location.reload();
+                refreshFidoDevicesList();
             } else {
                 alert('移除失敗：' + (data.message || '未知錯誤'));
             }
@@ -211,6 +243,7 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
             console.log('[Admin] Initializing AdminController');
             this.setupEventDelegation();
             this.updateBatchDeleteButton();
+            refreshFidoDevicesList();
         }
 
         /**
@@ -241,6 +274,7 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
             if (fidoManageBtn) {
                 const modal = document.querySelector('#fido-modal');
                 if (modal) modal.style.display = 'flex';
+                refreshFidoDevicesList();
                 return;
             }
 
