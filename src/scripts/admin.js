@@ -121,6 +121,7 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                         { alg: -257, type: 'public-key' }
                     ],
                     authenticatorSelection: {
+                        authenticatorAttachment: 'platform',
                         userVerification: 'preferred',
                         residentKey: 'preferred'
                     },
