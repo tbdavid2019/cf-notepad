@@ -255,3 +255,31 @@ test('parses book table of contents from markdown notes into structured chapter 
     assert.equal(parsed.chapters[2].level, 1)
 })
 
+test('decorates footnotes section with id and resolves footnote targets safely', () => {
+    const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <div id="content">
+                <p>Paragraph with [TOC]</p>
+                <h2>Real Heading</h2>
+                <p>Text referencing footnote<sup class="footnote-ref"><a href="#fn-1" id="fnref-1" data-footnote-ref>1</a></sup></p>
+                <section class="footnotes" data-footnotes>
+                    <h2 class="sr-only" id="footnote-label">Footnotes</h2>
+                    <ol>
+                        <li id="fn-1"><p>Footnote 1 text <a href="#fnref-1" class="data-footnote-backref">↩</a></p></li>
+                    </ol>
+                </section>
+            </div>
+        </body>
+        </html>
+    `)
+    const root = dom.window.document.getElementById('content')
+    const count = decorateFootnoteAndCitationPopovers(root)
+    assert.equal(count, 1)
+    const section = root.querySelector('.footnotes')
+    assert.equal(section.id, 'footnotes')
+    assert.match(markdownCss, /\.footnotes,\s*\[data-footnotes\]/)
+    assert.match(baseTemplate, /heading\.classList\.contains\('sr-only'\)/)
+})
+

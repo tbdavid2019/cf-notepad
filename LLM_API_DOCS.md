@@ -337,6 +337,12 @@ Content for column 2...
 #### 3.3.2 Automatic Table of Contents (`[TOC]`)
 Include `[TOC]` on its own line below the main title. The renderer automatically builds a `<nav class="markdown-toc">` with deep anchor links scanning `#` ~ `######` headings.
 
+#### 3.3.3 Academic References & Footnotes (`[^1]` & `^[inline]`)
+AI agents and LLMs are strongly encouraged to actively use footnotes for citations, source links, and supplementary explanations:
+- **Standard Footnotes**: `Text[^1]` and `[^1]: Source link or description`
+- **Inline Footnotes**: `Text with ^[inline explanation]` (auto-extracted and numbered at bottom)
+- **Reader Experience**: Footnote markers trigger interactive glassmorphic hover popovers and smooth bidirectional jumping.
+
 ### 4. Markdown Processing Utilities (Stateless)
 
 Stateless text transformation and validation endpoints that require no authentication or storage:

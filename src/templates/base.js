@@ -565,6 +565,8 @@ ${getMarkdownCss()}
             if (!node) return;
             const seen = new Map();
             node.querySelectorAll('h1, h2, h3, h4, h5, h6').forEach(heading => {
+                if (heading.classList.contains('sr-only') || heading.classList.contains('visually-hidden') || heading.getAttribute('aria-hidden') === 'true') return;
+                if (heading.closest('.footnotes, [data-footnotes]')) return;
                 const aliases = getHeadingSlugAliases(heading.textContent);
                 const baseId = aliases[0];
                 if (!baseId) return;
@@ -593,7 +595,12 @@ ${getMarkdownCss()}
             if (!placeholders.length) return;
 
             const headings = Array.from(node.querySelectorAll('h1, h2, h3, h4, h5, h6'))
-                .filter(heading => heading.id);
+                .filter(heading => {
+                    if (!heading.id) return false;
+                    if (heading.classList.contains('sr-only') || heading.classList.contains('visually-hidden') || heading.getAttribute('aria-hidden') === 'true') return false;
+                    if (heading.closest('.footnotes, [data-footnotes]')) return false;
+                    return true;
+                });
             if (!headings.length) return;
 
             placeholders.forEach(paragraph => {
@@ -655,11 +662,32 @@ ${getMarkdownCss()}
             }
             if (!targetId) return;
             const escapedId = window.CSS && CSS.escape ? CSS.escape(targetId) : targetId.replace(/"/g, '\\\\"');
-            const target = document.getElementById(targetId) || document.querySelector('[name="' + escapedId + '"]');
+            let target = document.getElementById(targetId) || document.querySelector('[name="' + escapedId + '"]');
+            if (!target && !targetId.startsWith('user-content-')) {
+                target = document.getElementById('user-content-' + targetId);
+            }
+            if (!target && targetId.startsWith('user-content-')) {
+                target = document.getElementById(targetId.replace('user-content-', ''));
+            }
+            if (!target && (targetId === 'footnotes' || targetId === 'footnote-label')) {
+                target = document.querySelector('.footnotes, [data-footnotes]');
+            }
             if (!target) return;
+
+            if (target.classList.contains('sr-only') || target.classList.contains('visually-hidden') || target.getAttribute('aria-hidden') === 'true') {
+                target = target.closest('.footnotes, [data-footnotes]') || target.parentElement || target;
+            }
+
             const scrollParent = target.closest('.contents') || document.scrollingElement || document.documentElement;
-            const top = target.getBoundingClientRect().top - scrollParent.getBoundingClientRect().top + scrollParent.scrollTop - 12;
-            scrollParent.scrollTop = Math.max(0, top);
+            if (scrollParent === document.scrollingElement || scrollParent === document.documentElement || scrollParent === document.body) {
+                const top = target.getBoundingClientRect().top + (window.pageYOffset || document.documentElement.scrollTop || 0) - 18;
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            } else {
+                const parentRect = scrollParent.getBoundingClientRect();
+                const targetRect = target.getBoundingClientRect();
+                const top = targetRect.top - parentRect.top + scrollParent.scrollTop - 18;
+                scrollParent.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            }
         };
 
         const scheduleHashScroll = () => {

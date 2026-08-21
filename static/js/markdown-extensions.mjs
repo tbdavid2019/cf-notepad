@@ -536,6 +536,12 @@ function findFootnoteTargetElement(linkEl, rootNode) {
                 el = rootNode.querySelector(`[id="${id}"]`) || rootNode.querySelector(`[id="user-content-${id}"]`)
             } catch (e) {}
         }
+        if (!el && (id === 'footnotes' || id === 'footnote-label')) {
+            el = doc.querySelector?.('.footnotes, [data-footnotes]') || rootNode.querySelector?.('.footnotes, [data-footnotes]')
+        }
+        if (el && (el.classList.contains('sr-only') || el.classList.contains('visually-hidden') || el.getAttribute('aria-hidden') === 'true')) {
+            el = el.closest('.footnotes, [data-footnotes]') || el.parentElement || el
+        }
         return el
     }
     return null
@@ -545,6 +551,11 @@ export function decorateFootnoteAndCitationPopovers(rootNode) {
     if (!rootNode?.querySelectorAll) return 0
     const doc = rootNode.ownerDocument || (typeof document !== 'undefined' ? document : null)
     if (!doc) return 0
+
+    const footnoteSections = rootNode.querySelectorAll?.('.footnotes, [data-footnotes]') || []
+    footnoteSections.forEach(section => {
+        if (!section.id) section.id = 'footnotes'
+    })
 
     const popover = ensureFootnotePopoverElement(doc)
     const refSelector = '.footnote-ref a, [data-footnote-ref], .citation-ref, a[href^="#fn-"], a[href^="#user-content-fn-"]'

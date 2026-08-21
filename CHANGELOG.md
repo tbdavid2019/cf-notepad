@@ -2,6 +2,11 @@
 
 ## [2026-08-21]
 
+- **📝 註腳跳轉修復、目錄過濾與 Skill 註腳功能全面推廣 (Footnote Navigation Fix, TOC Filter & Academic Footnotes Promotion)**：
+  - **修復註腳跳轉致頁面空白 Bug (Footnote Anchor & Blank Page Fix)**：修復點擊註腳或錨點時，因 `scrollToLocationHash` 抓取到 remark-gfm 自動產生的隱藏 `h2.sr-only#footnote-label` 且計算 viewport 捲動偏移量重複相加，導致視窗捲動超出範圍變為一片空白的嚴重問題。現在自動解包 `.sr-only` 元素指向可見的 `.footnotes` 容器，並優化 `parentRect` 捲動偏移計算。
+  - **目錄樹剔除輔助無障礙標題 (TOC Hidden Heading Filtering)**：`renderTableOfContents` 與 `decorateHeadingAnchors` 全面過濾 `.sr-only`、`.visually-hidden`、`aria-hidden="true"` 以及 `.footnotes` 內部的隱藏標題，確保自動目錄 (`[TOC]`) 不再被 remark 隱藏標題污染。
+  - **註腳容器樣式與錨點邊距 (Footnotes CSS & Target Scroll-Margin)**：為 `.footnotes` 與 `[data-footnotes]` 補齊現代化頂部分隔線、內邊距與文字尺寸，並為 `li:target`、`[id^="fn-"]`、`[id^="fnref-"]` 統一配置 `scroll-margin-top: 24px`，確保平滑跳轉定位精準不遮擋。
+  - **Skill 與 API 文檔鼓勵 LLM 積極使用註腳 (Promote Academic Footnotes in Skills & Docs)**：於 `SKILL.md`、`LLM_API_DOCS.md` 與 `README.md` 中新增專屬章節「H.3 學術參考文獻與註腳指南 (`[^1]` 與 `^[inline]`)」，明確指導並鼓勵 AI Agent / LLM 在引用外部倉庫、論文、工具連結或附加說明時，積極採用標準註腳與 Pandoc 行內註腳，搭配前端毛玻璃懸浮卡片與雙向平滑跳轉。
 - **📂 Markdown 編輯器多格式拖曳上傳與轉檔分流彈窗 (Drag & Drop File Import with Smart Action Modal)**：
   - **PDF 文件拖曳 (PDF Drag & Drop)**：拖曳 PDF 檔案進 Markdown 編輯區時，跳出智慧處理彈窗，提供 **📑 AnyDocs 本地轉檔為 Markdown 內文** 與 **☁️ 上傳至 888box (`box.david888.com`) 作為附件連結** 雙選項，滿足深度內文解析或檔案下載分享的不同需求。
   - **音訊檔案拖曳 (Audio Drag & Drop)**：拖曳 MP3/WAV/M4A/AAC/FLAC 音訊進編輯器時，彈窗提供 **✨ AI (Whisper) 智慧轉錄逐字稿與排版** 與 **☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器** 雙選項。

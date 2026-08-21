@@ -453,6 +453,31 @@ For comprehensive reports, technical specs, long-form articles, and documentatio
 ````
 - Inserting `[TOC]` automatically scans all `#` through `######` headings and builds an accessible `<nav class="markdown-toc">` with nested lists and smooth-scrolling deep anchor links.
 
+### H.3 Academic References & Footnotes (`[^1]` & `^[inline]`)
+**AI agents and LLMs are strongly encouraged to actively use footnotes** whenever citing research papers, quoting sources, referencing external GitHub repositories/tools, or adding supplementary annotations:
+
+1. **Standard Footnotes (`[^1]` / `[^key]`)**:
+   Use inline references like `[^1]` or `[^voko]` in sentences, and define them at the bottom of the article:
+   ````md
+   Modern multi-agent systems rely on secure process sandboxing[^1] and distributed channels[^2].
+
+   ---
+
+   ## 8. 參考資源與官方連結
+
+   [^1]: **VOKO 運行時倉庫**：[https://github.com/laoyudashu/voko](https://github.com/laoyudashu/voko)
+   [^2]: **Ranxy/laelia 協作平台**：[https://github.com/Ranxy/laelia](https://github.com/Ranxy/laelia)
+   ````
+2. **Inline Footnotes (`^[inline explanation]`)**:
+   Use Pandoc/HackMD inline footnotes directly inside paragraphs:
+   ````md
+   Edge database storage^[Cloudflare D1 runs SQLite at the edge with automated read replication] ensures global sub-50ms latency.
+   ````
+   The renderer automatically numbers, extracts, and places them into the bottom footnotes list.
+3. **Interactive Reader Experience**:
+   - **Glassmorphic Hover Cards**: Readers hovering over footnote numbers see an instant glassmorphic popover preview without losing their reading spot.
+   - **Smooth Bidirectional Jump**: Clicking jumps smoothly to the target definition, and clicking `↩` returns directly to the referring text passage.
+
 
 ## Editor Features and Operational Tips
 

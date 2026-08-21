@@ -253,6 +253,43 @@ export const getMarkdownCss = () => `
     border-radius: 6px;
 }
 
+/* Footnotes Section & Jump Targets */
+.footnotes,
+[data-footnotes] {
+    margin-top: 2.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border-color, #e1e4e8);
+    font-size: 0.9em;
+    position: relative;
+    scroll-margin-top: 24px;
+}
+
+.footnotes ol,
+[data-footnotes] ol {
+    padding-left: 1.5rem;
+    margin: 0;
+}
+
+.footnotes li,
+[data-footnotes] li {
+    margin-bottom: 0.5rem;
+    scroll-margin-top: 24px;
+}
+
+.footnotes li:target,
+[data-footnotes] li:target,
+[id^="fn-"],
+[id^="user-content-fn-"],
+[id^="fnref-"],
+[id^="user-content-fnref-"] {
+    scroll-margin-top: 24px;
+}
+
+[data-ui-theme="dark"] .footnotes,
+[data-ui-theme="dark"] [data-footnotes] {
+    border-top-color: var(--border-color, #334155);
+}
+
 /* Markdown Text Highlight */
 .markdown-body mark,
 .markdown-highlight {

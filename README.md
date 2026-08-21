@@ -96,7 +96,7 @@
 - **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），支援**滑鼠與觸控拖拉調整側邊欄寬度（Splitter Resizer）**，自動保存寬度偏好並支援雙擊重設（290px）；右側採用高規格原生嵌入渲染（`?embed=1`），零秒極速切換章節，頂部提供導覽列與快捷鍵（`[` 上一章、`]` 下一章）。
 - **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML)**：橫向投影片使用 `---`，縱向深入子投影片使用 `--`；支援方向鍵四向導覽（`↑` `↓` `←` `→`）與大綱總覽（`O`）2D 矩陣縮圖，文首支援 YAML 宣告自訂轉場效果（`fade`, `slide`, `zoom` 等）。
 - **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
-- **📝 行內註腳語法與工具列按鈕 (`^[...]`)**：支援 Pandoc / HackMD 行內註腳 `^[註腳說明]`，自動進行數字編號與文末說明生成；工具列提供「插入註腳 ([^1])」快捷按鈕。
+- **📝 論文級雙向註腳與毛玻璃預覽 (`[^1]` / `^[...]`)**：支援標準註腳 `[^1]` 與 Pandoc/HackMD 行內註腳 `^[說明]`，自動進行數字編號與文末清單聚合；游標懸浮註腳編號立即彈出毛玻璃卡片（Hover Popover）預覽註釋內容，點擊平滑雙向跳轉（`↩` 一鍵返回內文定位點），修復深層錨點與文章目錄 (`[TOC]`) 乾淨排版；工具列提供「插入註腳 ([^1])」快捷按鈕。
 - **📂 多格式拖曳匯入與智慧分流 (Drag & Drop File Handling)**：直接將檔案拖曳進 Markdown 編輯器：
   - **PDF 文件**：彈窗智慧分流「📑 AnyDocs 本地轉檔為 Markdown」或「☁️ 上傳至 888box 作為附件連結」。
   - **音訊檔案**：彈窗分流「✨ AI (Whisper) 智慧轉錄逐字稿與排版」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
@@ -421,8 +421,8 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **CLI Conversion and Publishing**: [`scripts/doc2wiki.sh`](./scripts/doc2wiki.sh) converts a local document and publishes the Markdown to a specified Wiki path. It defaults to private, requires explicit `true` to publish, and prints only the shareable `shareUrl`.
 - **New-note Welcome**: A fresh Markdown note shows centered *Stray Birds* copy and a focused tip with a typewriter effect. It remains available across reloads in the same browser tab and disappears as soon as the author starts typing.
 - **Academic &amp; Technical Citations (Cite Modal)**: Dedicated standalone "Cite" button in Share footer and Edit mode to instantly generate and copy **APA (7th)**, **IEEE**, **BibTeX (LaTeX/Zotero)**, **MLA (9th)**, **Markdown**, or **Chicago (17th)** citation formats.
-- **Wikipedia-Style Footnote Hover Popovers &amp; Pandoc Citations (`[@key]`)**:
-  - **Footnote Popovers**: Hovering over any footnote reference (`[^1]`, `[^key]`) or citation badge (`[@key]`) immediately reveals an in-place glassmorphic tooltip with full citation details, avoiding disruptive scrolling to the bottom.
+- **Academic Footnotes, Glassmorphic Popovers &amp; Pandoc Citations (`[^1]` / `^[...]` / `[@key]`)**:
+  - **Footnote Popovers & Smooth Jump**: Hovering over any footnote reference (`[^1]`, `[^key]`) or citation badge (`[@key]`) immediately reveals an in-place glassmorphic tooltip with full citation details, avoiding disruptive scrolling. Clicking jumps smoothly with bidirectional backlink return (`↩`) and clean, non-polluted `[TOC]` heading anchors.
   - **Pandoc Citations**: Supports bracketed citations `[@smith04]`, locators `[@doe2023, p. 42]`, multiple citations `[@key1; @key2]`, author suppression `[-@key]`, and in-text `@key [locator]`, automatically mapping to footnotes, BibTeX blocks, or bibliography lists.
 - **🔍 Full-Featured Search &amp; Replace**: Press `Cmd+F` (Ctrl+F) to summon the floating search bar or `Cmd+H` (Ctrl+H) for the replace panel; includes live match counters (`3 / 15`), Next/Prev navigation, match case (`Aa`), whole words (`\b`), regex (`.*`), and one-click replace all.
 - **🖍️ Text Highlighting (`==text==`)**: HackMD-compliant `==highlighted text==` rendered as `<mark class="markdown-highlight">` with soft yellow glow across 20 dark and light themes, plus a dedicated toolbar button (`HL`).
