@@ -36,8 +36,8 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
-            const chData = await chRes.json();
-            if (!chData.success) {
+            const chData = await chRes.json().catch(() => ({ success: false, message: '無法解析伺服器回應' }));
+            if (!chRes.ok || !chData.success) {
                 alert(chData.message || '無法取得認證 Challenge');
                 if (btn) btn.disabled = false;
                 return;
@@ -73,8 +73,8 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 body: JSON.stringify(payload)
             });
 
-            const loginData = await loginRes.json();
-            if (loginData.success) {
+            const loginData = await loginRes.json().catch(() => ({ success: false, message: '無法解析伺服器回應' }));
+            if (loginRes.ok && loginData.success) {
                 window.location.href = loginData.redirect || ADMIN_PATH;
             } else {
                 alert(loginData.message || 'Touch ID 登入失敗');
@@ -99,8 +99,8 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' }
             });
-            const chData = await chRes.json();
-            if (!chData.success) {
+            const chData = await chRes.json().catch(() => ({ success: false, message: '無法解析伺服器回應' }));
+            if (!chRes.ok || !chData.success) {
                 alert(chData.message || '無法取得註冊 Challenge');
                 return;
             }
@@ -148,8 +148,8 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 body: JSON.stringify(payload)
             });
 
-            const regData = await regRes.json();
-            if (regData.success) {
+            const regData = await regRes.json().catch(() => ({ success: false, message: '無法解析伺服器回應' }));
+            if (regRes.ok && regData.success) {
                 alert('🎉 成功！此裝置 Touch ID / 指紋已成功綁定，下次登入可直接一鍵刷指紋進入後台！');
                 window.location.reload();
             } else {
@@ -171,8 +171,8 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ credentialId })
             });
-            const data = await res.json();
-            if (data.success) {
+            const data = await res.json().catch(() => ({ success: false, message: '無法解析伺服器回應' }));
+            if (res.ok && data.success) {
                 const item = document.querySelector('.fido-device-item[data-id="' + credentialId + '"]');
                 if (item) item.remove();
                 alert('裝置已成功移除');
