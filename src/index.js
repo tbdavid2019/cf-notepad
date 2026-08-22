@@ -345,15 +345,17 @@ async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
     const legacyShareId = await MD5(path)
 
     if (metadata.share === true) {
-        await driverPutShare(legacyShareId, path)
+        if (legacyShareId) await driverPutShare(legacyShareId, path)
         if (metadata.shareSlug) {
             await driverPutShare(metadata.shareSlug, path)
         }
         if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
             await driverPutShare(metadata.shareId, path)
         }
+        // Also map direct note path as share alias
+        await driverPutShare(path, path)
     } else {
-        await driverDeleteShare(legacyShareId)
+        if (legacyShareId) await driverDeleteShare(legacyShareId)
         if (previousMetadata.shareSlug) {
             await driverDeleteShare(previousMetadata.shareSlug)
         }
@@ -366,6 +368,7 @@ async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
         if (metadata.shareId && metadata.shareId !== previousMetadata.shareId) {
             await driverDeleteShare(metadata.shareId)
         }
+        await driverDeleteShare(path)
     }
 }
 
@@ -1556,7 +1559,19 @@ async function renderSharePage(request, presentationMode = false, execution = {}
     const lang = getI18n(request)
     const { shareId } = request.params
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
-    const path = await driverQueryShare(shareId)
+    let path = await driverQueryShare(shareId)
+
+    // Fallback: If not found in shares mapping, check if shareId is directly a note path
+    if (!path) {
+        const directNote = await queryNote(shareId)
+        if (directNote && (directNote.value !== null || Object.keys(directNote.metadata || {}).length > 0)) {
+            if (directNote.metadata?.share === true) {
+                path = shareId
+                syncShareMappings(shareId, directNote.metadata).catch(() => {})
+            }
+        }
+    }
+
     const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
     const bookPath = `${sharePath}/book`
@@ -3157,15 +3172,19 @@ router.post('/:path', async request => {
     }
 
     try {
+        const nextMeta = {
+            ...metadata,
+            updateAt: dayjs().unix(),
+        }
         await persistNoteContent({
             path,
             content,
-            metadata: {
-                ...metadata,
-                updateAt: dayjs().unix(),
-            },
+            metadata: nextMeta,
             previousContent: value,
         })
+        if (nextMeta.share === true) {
+            await syncShareMappings(path, nextMeta, metadata).catch(() => {})
+        }
 
         return returnJSON(0)
     } catch (error) {
