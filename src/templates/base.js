@@ -1344,9 +1344,10 @@ ${getMarkdownCss()}
     }
 
     const initWebMcp = () => {
-        const mc = (typeof document !== 'undefined' && document.modelContext) ||
-                   (typeof navigator !== 'undefined' && navigator.modelContext)
-        if (!mc) return
+        const contexts = []
+        if (typeof document !== 'undefined' && document.modelContext) contexts.push(document.modelContext)
+        if (typeof navigator !== 'undefined' && navigator.modelContext && !contexts.includes(navigator.modelContext)) contexts.push(navigator.modelContext)
+        if (typeof window !== 'undefined' && window.modelContext && !contexts.includes(window.modelContext)) contexts.push(window.modelContext)
 
         const getCurrentMarkdown = () => {
             const textarea = document.getElementById('contents')
@@ -1408,18 +1409,30 @@ ${getMarkdownCss()}
             })
         }
 
-        // Modern standard WebMCP Imperative API: document.modelContext.registerTool
-        if (typeof mc.registerTool === 'function') {
-            for (const tool of tools) {
-                Promise.resolve(mc.registerTool(tool)).catch(error => {
-                    console.warn('WebMCP registerTool failed for ' + tool.name + ':', error)
+        // Register tools on all available WebMCP contexts
+        for (const mc of contexts) {
+            if (typeof mc.registerTool === 'function') {
+                for (const tool of tools) {
+                    Promise.resolve(mc.registerTool(tool)).catch(error => {
+                        console.warn('WebMCP registerTool failed for ' + tool.name + ':', error)
+                    })
+                }
+            } else if (typeof mc.provideContext === 'function') {
+                Promise.resolve(mc.provideContext.call(mc, { tools })).catch(error => {
+                    console.warn('WebMCP provideContext failed:', error)
                 })
             }
-        } else if (typeof mc.provideContext === 'function') {
-            // Legacy draft fallback
-            Promise.resolve(mc.provideContext.call(mc, { tools })).catch(error => {
-                console.warn('WebMCP provideContext failed:', error)
-            })
+        }
+
+        // Expose debug inspection helper
+        window.__checkWebMcp = async () => {
+            const hasDoc = !!(typeof document !== 'undefined' && document.modelContext)
+            const hasNav = !!(typeof navigator !== 'undefined' && navigator.modelContext)
+            let tools = []
+            if (hasDoc && typeof document.modelContext.getTools === 'function') {
+                try { tools = await document.modelContext.getTools() } catch (e) { tools = e.message }
+            }
+            return { hasDoc, hasNav, registeredContexts: contexts.length, tools }
         }
     }
 
