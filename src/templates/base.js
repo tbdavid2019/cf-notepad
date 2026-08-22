@@ -1344,8 +1344,9 @@ ${getMarkdownCss()}
     }
 
     const initWebMcp = () => {
-        const provideContext = navigator.modelContext && navigator.modelContext.provideContext
-        if (typeof provideContext !== 'function') return
+        const mc = (typeof document !== 'undefined' && document.modelContext) ||
+                   (typeof navigator !== 'undefined' && navigator.modelContext)
+        if (!mc) return
 
         const getCurrentMarkdown = () => {
             const textarea = document.getElementById('contents')
@@ -1407,9 +1408,19 @@ ${getMarkdownCss()}
             })
         }
 
-        Promise.resolve(provideContext.call(navigator.modelContext, { tools })).catch(error => {
-            console.warn('WebMCP context registration failed:', error)
-        })
+        // Modern standard WebMCP Imperative API: document.modelContext.registerTool
+        if (typeof mc.registerTool === 'function') {
+            for (const tool of tools) {
+                Promise.resolve(mc.registerTool(tool)).catch(error => {
+                    console.warn('WebMCP registerTool failed for ' + tool.name + ':', error)
+                })
+            }
+        } else if (typeof mc.provideContext === 'function') {
+            // Legacy draft fallback
+            Promise.resolve(mc.provideContext.call(mc, { tools })).catch(error => {
+                console.warn('WebMCP provideContext failed:', error)
+            })
+        }
     }
 
         const getAuthPath = () => APP_STATE.authPath || (location.pathname + '/auth')

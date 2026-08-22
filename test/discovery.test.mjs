@@ -195,9 +195,11 @@ test('worker registers discovery routes before dynamic note routes', () => {
 
 test('base template registers a guarded WebMCP context', () => {
     assert.match(baseTemplateSource, /const initWebMcp = \(\) => \{/)
-    assert.match(baseTemplateSource, /navigator\.modelContext && navigator\.modelContext\.provideContext/)
+    assert.match(baseTemplateSource, /document\.modelContext/)
+    assert.match(baseTemplateSource, /navigator\.modelContext/)
     assert.match(baseTemplateSource, /name: 'read-current-markdown'/)
     assert.match(baseTemplateSource, /name: 'copy-share-link'/)
     assert.match(baseTemplateSource, /name: 'open-presentation'/)
-    assert.match(baseTemplateSource, /provideContext\.call\(navigator\.modelContext, \{ tools \}\)/)
+    assert.match(baseTemplateSource, /mc\.registerTool\(tool\)/)
+    assert.match(baseTemplateSource, /mc\.provideContext\.call\(mc, \{ tools \}\)/)
 })

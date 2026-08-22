@@ -12,7 +12,9 @@
     1. **🎙️ 匯入音訊（逐字稿）**（**高亮焦點預設**）：直接轉錄為帶有 `[mm:ss]` 時間戳記的純逐字稿段落。
     2. **✨ 匯入音訊（智慧排版）**：轉錄後由 LLM 整理大綱、重點與 Markdown 結構。
     3. **☁️ 上傳至 888box 嵌入播放器**：直傳 888box 並在游標處插入 `<audio controls>`。
-  - **彈窗樣式與鍵盤支援 (Modal UX & Keydown)**：預設聚焦第一項高亮按鈕，支援鍵盤 Enter 快速送出、Tab 切換與 Escape 取消。
+- **🔌 WebMCP 瀏覽器端標準化升級 (Chrome 150+ WebMCP Standard Support)**：
+  - **支援 `document.modelContext.registerTool`**：對齊 Google Chrome 官方 WebMCP Imperative API 標準，改用 `document.modelContext.registerTool` 逐一註冊網頁工具（`read-current-markdown`, `copy-share-link`, `open-presentation`），並向下相容早期草案 `navigator.modelContext.provideContext`。
+  - **相容 Model Context Tool Inspector 擴充功能**：完美相容 Chrome 官方 Inspector 擴充功能，在開啟 `chrome://flags/#enable-webmcp-testing` 後可即時偵測、手動執行並透過 Gemini 呼叫瀏覽器網頁工具。
 
 ## [2026-08-21]
 
