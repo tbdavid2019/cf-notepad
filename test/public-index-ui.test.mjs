@@ -174,7 +174,7 @@ test('share routes support short slugs while keeping legacy md5 compatibility', 
     assert.match(indexSource, /const SHARE_SLUG_LENGTH = 6/)
     assert.match(indexSource, /async function generateUniqueShareSlug\(\)/)
     assert.match(indexSource, /async function getShareIdForPath\(path, metadata = \{\}\)/)
-    assert.match(indexSource, /return metadata\.shareSlug \|\| await MD5\(path\)/)
+    assert.match(indexSource, /return metadata\.shareSlug \|\| (?:metadata\.shareId \|\| )?await MD5\(path\)/)
     assert.match(indexSource, /await (?:getShareNamespace\(\)\.put|driverPutShare)\(legacyShareId, path\)/)
     assert.match(indexSource, /await (?:getShareNamespace\(\)\.put|driverPutShare)\(metadata\.shareSlug, path\)/)
     assert.match(indexSource, /router\.get\('\/share\/:shareId'/)

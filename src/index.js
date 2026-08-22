@@ -323,12 +323,18 @@ async function generateUniqueShareSlug() {
 
 async function getShareIdForPath(path, metadata = {}) {
     if (metadata.share !== true) return null
-    return metadata.shareSlug || await MD5(path)
+    return metadata.shareSlug || metadata.shareId || await MD5(path)
 }
 
 async function ensureShareMetadata(path, metadata = {}) {
     if (metadata.share !== true) return { ...metadata }
     if (metadata.shareSlug) return { ...metadata }
+    if (metadata.shareId) {
+        return {
+            ...metadata,
+            shareSlug: metadata.shareId,
+        }
+    }
     return {
         ...metadata,
         shareSlug: await generateUniqueShareSlug(),
@@ -343,13 +349,22 @@ async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
         if (metadata.shareSlug) {
             await driverPutShare(metadata.shareSlug, path)
         }
+        if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
+            await driverPutShare(metadata.shareId, path)
+        }
     } else {
         await driverDeleteShare(legacyShareId)
         if (previousMetadata.shareSlug) {
             await driverDeleteShare(previousMetadata.shareSlug)
         }
+        if (previousMetadata.shareId) {
+            await driverDeleteShare(previousMetadata.shareId)
+        }
         if (metadata.shareSlug && metadata.shareSlug !== previousMetadata.shareSlug) {
             await driverDeleteShare(metadata.shareSlug)
+        }
+        if (metadata.shareId && metadata.shareId !== previousMetadata.shareId) {
+            await driverDeleteShare(metadata.shareId)
         }
     }
 }
@@ -2649,8 +2664,17 @@ router.get('/:path', async (request) => {
         : extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
     const pageMetadata = newEntry ? { ...metadata, isNewEntry: true } : metadata
 
-    // Calculate shareId only if sharing is enabled
-    const shareId = await getShareIdForPath(path, metadata)
+    // Calculate shareId and auto-heal share mappings if note is published
+    let activeMetadata = metadata
+    if (metadata.share === true) {
+        const nextMeta = await ensureShareMetadata(path, metadata)
+        if (nextMeta.shareSlug !== metadata.shareSlug) {
+            activeMetadata = nextMeta
+            await driverPutNote(path, value, nextMeta).catch(() => {})
+        }
+        await syncShareMappings(path, activeMetadata, metadata).catch(() => {})
+    }
+    const shareId = await getShareIdForPath(path, activeMetadata)
 
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
 

@@ -15,6 +15,9 @@
 - **🔌 WebMCP 瀏覽器端標準化升級 (Chrome 150+ WebMCP Standard Support)**：
   - **支援 `document.modelContext.registerTool`**：對齊 Google Chrome 官方 WebMCP Imperative API 標準，改用 `document.modelContext.registerTool` 逐一註冊網頁工具（`read-current-markdown`, `copy-share-link`, `open-presentation`），並向下相容早期草案 `navigator.modelContext.provideContext`。
   - **相容 Model Context Tool Inspector 擴充功能**：完美相容 Chrome 官方 Inspector 擴充功能，在開啟 `chrome://flags/#enable-webmcp-testing` 後可即時偵測、手動執行並透過 Gemini 呼叫瀏覽器網頁工具。
+- **🔗 MCP / WebMCP 文章發布與分享映射自動修復 (MCP Share Mapping & Self-Healing Query)**：
+  - **跨模組 ShareSlug / ShareId 雙向對齊**：解決過去透過 MCP / WebMCP (`write_note` / `append_note`) 建立或寫入文章時，因 `shareSlug` 與 `shareId` 鍵值不同步導致編輯頁面分享連結點擊 404 的問題。現在 MCP 伺服器會自動同步註冊 `shareSlug`、`shareId` 以及 `MD5(path)` 多重路由別名至資料庫。
+  - **D1 分享查詢自我修復 (Self-Healing Share Query Fallback)**：`driverQueryShare` 於 `shares` 表未命中時，會自動比對 `notes` 表的 `shareSlug` / `shareId` / `path`，並在查詢成功的同時即時自動補齊寫入 `shares` 表，徹底杜絕任何分享頁面 404 斷鏈情況。
 
 ## [2026-08-21]
 

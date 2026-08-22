@@ -184,10 +184,21 @@ export const genRandomStr = (n = 4) => {
 }
 
 async function md5Hex(str) {
-    const msgUint8 = new TextEncoder().encode(String(str || ''))
-    const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+    const input = String(str || '')
+    try {
+        if (typeof crypto !== 'undefined' && crypto.subtle) {
+            const msgUint8 = new TextEncoder().encode(input)
+            const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
+            const hashArray = Array.from(new Uint8Array(hashBuffer))
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+        }
+    } catch (_) {}
+    try {
+        const mod = 'node:' + 'crypto'
+        const nodeCrypto = await import(/* webpackIgnore: true */ mod)
+        return nodeCrypto.createHash('md5').update(input).digest('hex')
+    } catch (_) {}
+    return ''
 }
 
 async function saltPassword(password) {
@@ -220,33 +231,50 @@ function createJsonResponse(data, status = 200) {
 }
 
 async function ensureMcpShareMetadata(path, metadata = {}) {
-    let shareId = metadata?.shareId
-    if (metadata?.share === true && !shareId) {
-        let attempts = 0
-        while (attempts < 5) {
-            const candidate = genRandomStr(4)
-            const existing = await driverQueryShare(candidate)
-            if (!existing || existing === path) {
-                shareId = candidate
-                break
-            }
-            attempts += 1
+    if (metadata?.share !== true) return { ...metadata }
+    const existingSlug = metadata?.shareSlug || metadata?.shareId
+    if (existingSlug) {
+        return {
+            ...metadata,
+            shareSlug: existingSlug,
+            shareId: existingSlug,
         }
-        if (!shareId) {
-            shareId = `${path}-${Date.now().toString(36).slice(-4)}`
+    }
+    let attempts = 0
+    let candidate = ''
+    while (attempts < 8) {
+        const gen = genRandomStr(6)
+        const existing = await driverQueryShare(gen)
+        if (!existing || existing === path) {
+            candidate = gen
+            break
         }
+        attempts += 1
+    }
+    if (!candidate) {
+        candidate = `${path}-${Date.now().toString(36).slice(-4)}`
     }
     return {
         ...metadata,
-        ...(shareId ? { shareId } : {}),
+        shareSlug: candidate,
+        shareId: candidate,
     }
 }
 
 async function persistMcpNote({ path, content, metadata, previousContent }) {
     await driverPutNote(path, content, metadata)
 
-    if (metadata.share === true && metadata.shareId) {
-        await driverPutShare(metadata.shareId, path)
+    if (metadata.share === true) {
+        const legacyShareId = await md5Hex(path)
+        if (legacyShareId) {
+            await driverPutShare(legacyShareId, path)
+        }
+        if (metadata.shareSlug) {
+            await driverPutShare(metadata.shareSlug, path)
+        }
+        if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
+            await driverPutShare(metadata.shareId, path)
+        }
     }
 
     const historyConfig = getNoteHistoryConfig()
@@ -297,7 +325,8 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                 }
             }
 
-            const shareUrl = metadata.share && metadata.shareId ? `${origin}/share/${metadata.shareId}` : null
+            const shareSlug = metadata.share && (metadata.shareSlug || metadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
             let responseText = value || ''
             if (shareUrl) {
                 responseText += `\n\n---\n*Share URL:* ${shareUrl}`
@@ -364,7 +393,8 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             })
 
             const editUrl = `${origin}/${path}`
-            const shareUrl = nextMetadata.share && nextMetadata.shareId ? `${origin}/share/${nextMetadata.shareId}` : null
+            const shareSlug = nextMetadata.share && (nextMetadata.shareSlug || nextMetadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
             const hasSlideDividers = /(?:^|\n)(?:---|--)\s*(?:\n|$)/.test(text)
             const hasChapterLinks = /(?:^|\n)\s*(?:[-*+]|\d+\.)\s*\[.+?\]\((?:https?:\/\/|\/|\w).+?\)/.test(text)
 
@@ -422,7 +452,8 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                 previousContent: prevValue,
             })
 
-            const shareUrl = nextMetadata.share && nextMetadata.shareId ? `${origin}/share/${nextMetadata.shareId}` : null
+            const shareSlug = nextMetadata.share && (nextMetadata.shareSlug || nextMetadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
             let resText = `Successfully appended to note "${path}".\n`
             if (shareUrl) {
                 resText += `Share URL: ${shareUrl}`

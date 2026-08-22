@@ -142,6 +142,24 @@ export async function driverDeleteNote(path) {
  * @param {string} shareId - Share ID or slug
  * @returns {Promise<string|null>} Target note path
  */
+async function md5Hex(str) {
+    const input = String(str || '')
+    try {
+        if (typeof crypto !== 'undefined' && crypto.subtle) {
+            const msgUint8 = new TextEncoder().encode(input)
+            const hashBuffer = await crypto.subtle.digest('MD5', msgUint8)
+            const hashArray = Array.from(new Uint8Array(hashBuffer))
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+        }
+    } catch (_) {}
+    try {
+        const mod = 'node:' + 'crypto'
+        const nodeCrypto = await import(/* webpackIgnore: true */ mod)
+        return nodeCrypto.createHash('md5').update(input).digest('hex')
+    } catch (_) {}
+    return ''
+}
+
 export async function driverQueryShare(shareId) {
     const driver = getStorageDriverName()
     const db = getStorageDb()
@@ -151,6 +169,48 @@ export async function driverQueryShare(shareId) {
         try {
             const row = await db.prepare('SELECT path FROM shares WHERE share_id = ?').bind(shareId).first()
             if (row && row.path) return row.path
+
+            // Fallback for D1: check if share_id matches shareSlug, shareId, or note name with share=1
+            const noteRow = await db.prepare(`
+                SELECT name FROM notes 
+                WHERE (
+                    json_extract(metadata, '$.shareSlug') = ? 
+                    OR json_extract(metadata, '$.shareId') = ?
+                    OR name = ?
+                )
+                AND (json_extract(metadata, '$.share') = 1 OR json_extract(metadata, '$.share') = true)
+                LIMIT 1
+            `).bind(shareId, shareId, shareId).first()
+            if (noteRow && noteRow.name) {
+                // Self-heal the share mapping in shares table
+                db.prepare(`
+                    INSERT INTO shares (share_id, path)
+                    VALUES (?, ?)
+                    ON CONFLICT(share_id) DO UPDATE SET path = excluded.path
+                `).bind(shareId, noteRow.name).run().catch(() => {})
+                return noteRow.name
+            }
+
+            // Fallback for D1: if shareId is a 32-char hex string, check if it matches MD5(name)
+            if (/^[a-f0-9]{32}$/i.test(shareId)) {
+                const candidates = await db.prepare(`
+                    SELECT name FROM notes 
+                    WHERE (json_extract(metadata, '$.share') = 1 OR json_extract(metadata, '$.share') = true)
+                `).all()
+                if (candidates && candidates.results) {
+                    for (const candidate of candidates.results) {
+                        const hash = await md5Hex(candidate.name)
+                        if (hash.toLowerCase() === shareId.toLowerCase()) {
+                            db.prepare(`
+                                INSERT INTO shares (share_id, path)
+                                VALUES (?, ?)
+                                ON CONFLICT(share_id) DO UPDATE SET path = excluded.path
+                            `).bind(shareId, candidate.name).run().catch(() => {})
+                            return candidate.name
+                        }
+                    }
+                }
+            }
         } catch (err) {
             if (driver === 'd1') console.error('D1 Query Share Error:', err)
         }
