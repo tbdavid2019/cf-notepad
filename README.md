@@ -100,7 +100,7 @@
 - **📝 論文級雙向註腳與毛玻璃預覽 (`[^1]` / `^[...]`)**：支援標準註腳 `[^1]` 與 Pandoc/HackMD 行內註腳 `^[說明]`，自動進行數字編號與文末清單聚合；游標懸浮註腳編號立即彈出毛玻璃卡片（Hover Popover）預覽註釋內容，點擊平滑雙向跳轉（`↩` 一鍵返回內文定位點），修復深層錨點與文章目錄 (`[TOC]`) 乾淨排版；工具列提供「插入註腳 ([^1])」快捷按鈕。
 - **📂 多格式拖曳匯入與智慧分流 (Drag & Drop File Handling)**：直接將檔案拖曳進 Markdown 編輯器：
   - **PDF 文件**：彈窗智慧分流「📑 AnyDocs 本地轉檔為 Markdown」或「☁️ 上傳至 888box 作為附件連結」。
-  - **音訊檔案**：彈窗提供三合一選項，預設「🎙️ AI 轉錄音訊為逐字稿 (原生時間戳)」，亦可選擇「✨ AI 智慧整理排版」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
+  - **音訊檔案**：彈窗提供三合一選項，預設「🎙️ 匯入音訊（逐字稿）」，亦可選擇「✨ 匯入音訊（智慧排版）」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
   - **圖片檔案**：直傳 Cloudflare R2 並在游標處插入 `![alt](url)`。
   - **Office / Markdown 文件**：支援 DOCX/PPTX/XLSX WASM 本地轉檔或 888box 上傳；拖曳 `.md`/`.txt` 提示游標插入或全篇替換。
 - **🔑 管理員 Touch ID / FIDO2 指紋一鍵登入 (Admin Passkey & Touch ID)**：後台登入介面支援 WebAuthn / FIDO2 生物辨識一鍵刷指紋進入；後台支援隨時綁定新裝置（Mac Touch ID、iPhone Face ID、Windows Hello）與管理憑證。
@@ -439,7 +439,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
 - **📂 Multi-Format Drag & Drop Import & Smart Choice Modal**: Drag files directly into the Markdown editor:
   - **PDF Documents**: Modal provides choices between "📑 AnyDocs Local Markdown Conversion" and "☁️ Upload to 888box as Attachment Link".
-  - **Audio Files**: Modal provides a 3-way choice, defaulting to "🎙️ Transcribe Audio to Verbatim (Timestamps)", with options for "✨ Transcribe with AI Smart Layout" or "☁️ Upload to 888box Embedded `<audio controls>` Player".
+  - **Audio Files**: Modal provides a 3-way choice matching the menu, defaulting to "🎙️ Import audio (Transcript)", with options for "✨ Import audio (Smart format)" or "☁️ Upload to 888box Embedded `<audio controls>` Player".
   - **Images**: Direct upload to Cloudflare R2 and inserts `![alt](url)` at cursor.
   - **Office Documents & Markdown**: WASM AnyDocs conversion for DOCX/PPTX/XLSX or 888box attachment; dragging `.md`/`.txt` prompts insert at cursor or replace whole note.
 - **🔑 Admin Touch ID / WebAuthn FIDO2 Biometric Login**: Admin login screen features one-click Touch ID / Passkey authentication using zero-dependency Web Crypto ECDSA P-256; admin dashboard allows binding and managing authenticators (MacBook Touch ID, iPhone Face ID, Windows Hello).

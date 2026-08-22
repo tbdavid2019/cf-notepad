@@ -3693,10 +3693,10 @@ ${getMarkdownCss()}
                 if (iconEl) iconEl.textContent = '🎙️';
                 if (titleEl) titleEl.textContent = zh ? '處理音訊檔案：「' + fileName + '」' : 'Process Audio File: "' + fileName + '"';
                 if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此音訊檔案：' : 'Please select how you would like to handle this audio file:';
-                if (primaryBtn) primaryBtn.textContent = '🎙️ ' + (zh ? 'AI 轉錄音訊為逐字稿 (原生時間戳)' : 'Transcribe Audio with Timestamps');
+                if (primaryBtn) primaryBtn.textContent = '🎙️ ' + (zh ? '匯入音訊（逐字稿）' : 'Import audio (Transcript)');
                 if (tertiaryBtn) {
                     tertiaryBtn.style.display = '';
-                    tertiaryBtn.textContent = '✨ ' + (zh ? 'AI 智慧整理排版 (Whisper + AI)' : 'Transcribe with AI Smart Layout');
+                    tertiaryBtn.textContent = '✨ ' + (zh ? '匯入音訊（智慧排版）' : 'Import audio (Smart format)');
                 }
                 if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 嵌入播放器' : 'Upload to 888box as Audio Player');
             } else {
