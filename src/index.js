@@ -60,6 +60,13 @@ import {
 } from './note_history.mjs'
 import { filterAdminNotes, normalizeAdminQuery, paginateAdminNotes, sortAdminNotes, summarizeAdminNotes } from './admin_data.mjs'
 import { canPersistNoteContent, getSaveBlockedMessage } from './save_policy.mjs'
+import {
+    parseVttTimestamp,
+    formatSecondsToTimestamp,
+    parseVttToSegments,
+    normalizeTranscriptionSegments,
+    formatTranscriptSegments,
+} from './audio_transcribe.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, AUDIO_SMART_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildAudioSmartFormatPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
 import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import {
@@ -271,7 +278,7 @@ async function transcribeWithGroq(groqApiKey, audioBytes, model = 'whisper-large
     const formData = new FormData()
     formData.append('file', new Blob([audioBytes], { type: mimeType }), safeFilename)
     formData.append('model', model)
-    formData.append('response_format', 'json')
+    formData.append('response_format', 'verbose_json')
 
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
@@ -292,10 +299,14 @@ async function transcribeWithGroq(groqApiKey, audioBytes, model = 'whisper-large
         }
 
         const data = await res.json()
-        if (!data || typeof data.text !== 'string') {
+        if (!data || (typeof data.text !== 'string' && !Array.isArray(data.segments))) {
             throw new Error(`Groq STT (${model}) returned invalid JSON structure`)
         }
-        return data
+        return {
+            text: (data.text || '').trim(),
+            segments: Array.isArray(data.segments) ? data.segments : [],
+            duration: data.duration,
+        }
     } finally {
         clearTimeout(timer)
     }
@@ -1159,7 +1170,8 @@ async function handleAudioTranscription(request, context = {}) {
         }
 
         const groqApiKey = getGroqApiKey(env)
-        let transcribedText = ''
+        let rawTranscribedText = ''
+        let transcribedSegments = []
         let modelUsed = ''
         let lastError = null
 
@@ -1168,8 +1180,12 @@ async function handleAudioTranscription(request, context = {}) {
             try {
                 console.log('[STT] Attempting primary model: Groq whisper-large-v3...')
                 const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3', filename, 60000)
-                if (groqRes && groqRes.text && groqRes.text.trim()) {
-                    transcribedText = groqRes.text.trim()
+                if (groqRes && (groqRes.text || (groqRes.segments && groqRes.segments.length > 0))) {
+                    rawTranscribedText = (groqRes.text || '').trim()
+                    transcribedSegments = normalizeTranscriptionSegments(groqRes.segments)
+                    if (!rawTranscribedText && transcribedSegments.length > 0) {
+                        rawTranscribedText = transcribedSegments.map(s => s.text).join(' ')
+                    }
                     modelUsed = 'groq/whisper-large-v3'
                 }
             } catch (err) {
@@ -1179,12 +1195,16 @@ async function handleAudioTranscription(request, context = {}) {
         }
 
         // 2. Fallback 1: Groq whisper-large-v3-turbo
-        if (!transcribedText && groqApiKey) {
+        if (!rawTranscribedText && groqApiKey) {
             try {
                 console.log('[STT] Attempting fallback 1: Groq whisper-large-v3-turbo...')
                 const groqRes = await transcribeWithGroq(groqApiKey, audioBytes, 'whisper-large-v3-turbo', filename, 60000)
-                if (groqRes && groqRes.text && groqRes.text.trim()) {
-                    transcribedText = groqRes.text.trim()
+                if (groqRes && (groqRes.text || (groqRes.segments && groqRes.segments.length > 0))) {
+                    rawTranscribedText = (groqRes.text || '').trim()
+                    transcribedSegments = normalizeTranscriptionSegments(groqRes.segments)
+                    if (!rawTranscribedText && transcribedSegments.length > 0) {
+                        rawTranscribedText = transcribedSegments.map(s => s.text).join(' ')
+                    }
                     modelUsed = 'groq/whisper-large-v3-turbo'
                 }
             } catch (err) {
@@ -1194,7 +1214,7 @@ async function handleAudioTranscription(request, context = {}) {
         }
 
         // 3. Fallback 2: Cloudflare Workers AI (@cf/openai/whisper-large-v3-turbo, then @cf/openai/whisper)
-        if (!transcribedText && env.AI) {
+        if (!rawTranscribedText && transcribedSegments.length === 0 && env.AI) {
             const cfModels = [
                 '@cf/openai/whisper-large-v3-turbo',
                 '@cf/openai/whisper'
@@ -1204,10 +1224,15 @@ async function handleAudioTranscription(request, context = {}) {
                     try {
                         console.log(`[STT] Attempting Workers AI ${cfModel} (attempt ${attempt + 1})...`)
                         const aiResponse = await runAiWithTimeout(env.AI, cfModel, { audio: audioBytes }, 45000)
-                        if (aiResponse?.text && aiResponse.text.trim()) {
-                            transcribedText = aiResponse.text.trim()
-                            modelUsed = cfModel
-                            break
+                        if (aiResponse) {
+                            const vttSegments = aiResponse.vtt ? parseVttToSegments(aiResponse.vtt) : []
+                            const text = (aiResponse.text || '').trim()
+                            if (text || vttSegments.length > 0) {
+                                rawTranscribedText = text || vttSegments.map(s => s.text).join(' ')
+                                transcribedSegments = normalizeTranscriptionSegments(vttSegments)
+                                modelUsed = cfModel
+                                break
+                            }
                         }
                     } catch (err) {
                         console.warn(`[STT] Workers AI ${cfModel} failed:`, err?.message)
@@ -1215,29 +1240,36 @@ async function handleAudioTranscription(request, context = {}) {
                         if (attempt === 0) await new Promise(r => setTimeout(r, 600))
                     }
                 }
-                if (transcribedText) break
+                if (rawTranscribedText || transcribedSegments.length > 0) break
 
                 try {
                     const aiResponse = await runAiWithTimeout(env.AI, cfModel, audioBytes, 45000)
-                    if (aiResponse?.text && aiResponse.text.trim()) {
-                        transcribedText = aiResponse.text.trim()
-                        modelUsed = cfModel
-                        break
+                    if (aiResponse) {
+                        const vttSegments = aiResponse.vtt ? parseVttToSegments(aiResponse.vtt) : []
+                        const text = (aiResponse.text || '').trim()
+                        if (text || vttSegments.length > 0) {
+                            rawTranscribedText = text || vttSegments.map(s => s.text).join(' ')
+                            transcribedSegments = normalizeTranscriptionSegments(vttSegments)
+                            modelUsed = cfModel
+                            break
+                        }
                     }
                 } catch (errRaw) {
                     lastError = errRaw
                 }
-                if (transcribedText) break
+                if (rawTranscribedText || transcribedSegments.length > 0) break
             }
         }
 
-        if (!transcribedText) {
+        if (!rawTranscribedText && transcribedSegments.length === 0) {
             const errMsg = lastError ? lastError.message : 'All audio transcription providers and fallback models failed'
             console.error('[STT] All transcribe attempts failed:', errMsg)
             return returnJSON(50003, `Audio transcription failed: ${errMsg}`)
         }
 
-        let formattedMarkdown = transcribedText
+        // Format timestamped transcript
+        const timestampedMarkdown = formatTranscriptSegments(transcribedSegments, rawTranscribedText)
+        let formattedMarkdown = timestampedMarkdown
 
         // Smart format is opt-in: Whisper always produces the source transcript first.
         const requestUrl = new URL(request.url)
@@ -1246,18 +1278,19 @@ async function handleAudioTranscription(request, context = {}) {
 
         if (shouldSmartFormat) {
             try {
-                formattedMarkdown = await formatAudioSmartMarkdown(env.AI, transcribedText)
+                formattedMarkdown = await formatAudioSmartMarkdown(env.AI, timestampedMarkdown)
             } catch (formatErr) {
                 console.warn('[AI] Audio smart formatting failed, falling back to raw transcript:', formatErr?.message)
-                formattedMarkdown = transcribedText
+                formattedMarkdown = timestampedMarkdown
             }
         }
 
         return returnJSON(0, {
-            text: transcribedText,
+            text: rawTranscribedText,
             markdown: formattedMarkdown,
-            smartFormatted: shouldSmartFormat && formattedMarkdown !== transcribedText,
-            wordCount: transcribedText.match(/\S+/g)?.length || 0,
+            segments: transcribedSegments,
+            smartFormatted: shouldSmartFormat && formattedMarkdown !== timestampedMarkdown,
+            wordCount: rawTranscribedText.match(/\S+/g)?.length || 0,
             modelUsed: modelUsed,
             filename: filename,
         })

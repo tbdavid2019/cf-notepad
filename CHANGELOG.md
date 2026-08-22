@@ -1,5 +1,13 @@
 # Changelog
 
+## [2026-08-23]
+
+- **🎙️ 語音辨識升級：原生時間戳記標記 (`[mm:ss]`) 與自動段落排版 (Whisper Timestamps & Paragraph Segmentation)**：
+  - **原生時間標記分段 (Native Timestamp Parsing & Segmentation)**：升級 Groq STT 請求格式為 `verbose_json`，並全面解析 Cloudflare Workers AI Whisper (`@cf/openai/whisper-large-v3-turbo`) 回傳之 WebVTT 字幕流，提取精確至毫秒的語音時間區間與文字片段。
+  - **結構化 Markdown 段落排版 (Timestamped Paragraph Formatting)**：解決過往純逐字稿字元全部黏在一起、難以閱讀的痛點。現在「匯入音訊（逐字稿）」會依據 Whisper 語音停頓與時間戳記自動分段，輸出格式如 `**[00:15]** 段落文字內容`，每段獨立換行，兼顧 Markdown 預覽與 BlockNote 區塊編輯器的完美排版。
+  - **智慧排版同步受惠 (Smart Layout Timestamps Optimization)**：「匯入音訊（智慧排版）」亦獲得時間結構化的分段輸入，讓 LLM（`gpt-oss-120b` / `llama-3.3-70b-instruct`）在整理摘要、行動清單與主題標題時更能精確定位時間脈絡。
+  - **模組化架構與完整測試 (Modular Audio Transcribe & Test Coverage)**：獨立抽離 `src/audio_transcribe.mjs` 工具模組，完整覆蓋 WebVTT 解析、標籤清理、秒數時間戳轉換與超長音訊（`[hh:mm:ss]`）單元測試。
+
 ## [2026-08-21]
 
 - **📝 註腳跳轉修復、目錄過濾與 Skill 註腳功能全面推廣 (Footnote Navigation Fix, TOC Filter & Academic Footnotes Promotion)**：

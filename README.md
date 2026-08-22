@@ -45,15 +45,16 @@
 
 ### 🤖 1. AI 智慧寫作特助與 Agent 生態
 
-- **🎙️ 音訊匯入與語音轉逐字稿 (Groq whisper-large-v3 主力 + 多層級備援)**：點擊左下角「＋ 新增」選單，位於匯入區塊最上方，可直接上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
+- **🎙️ 音訊匯入與語音轉逐字稿 (Groq whisper-large-v3 主力 + 多層級備援 + 原生時間戳記 `[mm:ss]`)**：點擊左下角「＋ 新增」選單，位於匯入區塊最上方，可直接上傳常見音訊檔案（`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4` 等）。
   - **極速多層級 STT 引擎**：
-    1. **主力模型 (Primary)**：**Groq `whisper-large-v3`**（超高速推論，秒級完成長篇語音轉錄）。
+    1. **主力模型 (Primary)**：**Groq `whisper-large-v3`**（超高速推論，秒級完成長篇語音轉錄，原生 `verbose_json` 時間段落）。
     2. **第一備援 (Fallback 1)**：**Groq `whisper-large-v3-turbo`**。
-    3. **第二備援 (Fallback 2)**：Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`**。
+    3. **第二備援 (Fallback 2)**：Cloudflare Workers AI **`@cf/openai/whisper-large-v3-turbo`**（解析原生 WebVTT 字幕時間流）。
     4. **第三備援 (Fallback 3)**：Cloudflare Workers AI **`@cf/openai/whisper`**。
+  - **原生時間戳記與自動分段**：解決純逐字稿擠成一整坨的痛點，依據語音停頓自動生成帶有 `**[00:15]**` 時間標記的獨立段落，兼顧 Markdown 預覽與 BlockNote 區塊編輯。
   - **雙模式自主切換**：
-    1. **🎙️ 匯入音訊（逐字稿）**（**推薦預設**）：直接輸出 100% 原音忠實逐字稿，**零幻覺、零額外摘要、無多餘大綱腦補**，極速且純淨。
-    2. **✨ 匯入音訊（智慧排版）**（**可選模式**）：Whisper 先產出逐字稿，再由 LLM 釐清語句、整理重點與 Markdown 排版；不自行捏造原文沒有的事實。
+    1. **🎙️ 匯入音訊（逐字稿）**（**推薦預設**）：輸出 100% 原音忠實逐字稿附帶精確時間戳記，**零幻覺、零額外摘要、無多餘大綱腦補**，極速且純淨。
+    2. **✨ 匯入音訊（智慧排版）**（**可選模式**）：Whisper 先產出結構化時間逐字稿，再由 LLM 釐清語句、整理重點與 Markdown 排版；不自行捏造原文沒有的事實。
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
 - **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
@@ -365,7 +366,7 @@ npm run deploy
 - `POST /api/markdown/parse`：傳入 HTML 字串或網頁 URL 轉換為乾淨 Markdown。
 - `POST /api/markdown/extract`：提取 Markdown 純文字、文章標題、標題大綱清單、超連結與字數統計。
 - `POST /api/markdown/lint`：檢查 Markdown 語法問題（未閉合程式碼區塊、缺少空白標題、損毀連結、未加引號之 Mermaid 節點）並輸出修復後的 Markdown。
-- `POST /api/audio/transcribe`：語音轉文字 API，支援 `multipart/form-data`、二進位音訊串流或 Base64 JSON，預設輸出純逐字稿，可傳入 `?format=smart` 讓 Whisper 逐字稿再經 LLM 釐清整理與 Markdown 排版。
+- `POST /api/audio/transcribe`：語音轉文字 API，支援 `multipart/form-data`、二進位音訊串流或 Base64 JSON，輸出包含精確時間標記 `[mm:ss]` 的 Markdown 段落，可傳入 `?format=smart` 讓 Whisper 逐字稿再經 LLM 釐清整理與 Markdown 排版。
 
 ### 💬 劃線註解與討論串 API
 
@@ -386,7 +387,10 @@ npm run deploy
 
 ### 🤖 1. AI Writing Assistant &amp; Agent Ecosystem
 
-- **🎙️ Audio Transcription &amp; Smart Formatting (Whisper + LLM)**: Upload audio files (`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`) via the `+ New` menu or Footer Import button. Whisper produces the transcript first; the optional smart-format mode then uses Cloudflare Workers AI **`@cf/openai/gpt-oss-120b`** to clarify wording, organize content, and format Markdown without inventing unsupported facts.
+- **🎙️ Audio Transcription with Native Timestamps &amp; Smart Formatting (`[mm:ss]`)**: Upload audio files (`.mp3`, `.m4a`, `.wav`, `.aac`, `.ogg`, `.webm`, `.flac`, `.opus`, `.mp4`) via the `+ New` menu or Footer Import button.
+  - **Multi-tier STT Engine**: Primary Groq `whisper-large-v3` (`verbose_json`), Fallback 1 Groq `whisper-large-v3-turbo`, Fallback 2 Cloudflare Workers AI `@cf/openai/whisper-large-v3-turbo` (WebVTT parsing), and Fallback 3 `@cf/openai/whisper`.
+  - **Timestamped Paragraph Segmentation**: Eliminates single-block text walls by automatically grouping spoken cues into structured paragraphs prefixed with `**[mm:ss]**` timestamps.
+  - **Dual Modes**: **Transcript Only** (100% faithful verbatim transcription with timestamps) or **Smart Layout** (LLM clarifies wording, organizes headings, and structures Markdown).
 - **AI Formatting (AI Format)**: Workers AI (`gpt-oss-20b`) restructures Markdown headings, lists, and whitespace while preserving original language and text. Supports selection-only formatting.
 - **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
 - **AI Translation &amp; Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.
