@@ -3673,6 +3673,7 @@ ${getMarkdownCss()}
             const titleEl = modal.querySelector('#file-drop-title');
             const msgEl = modal.querySelector('#file-drop-message');
             const primaryBtn = modal.querySelector('#file-drop-action-primary');
+            const tertiaryBtn = modal.querySelector('#file-drop-action-tertiary');
             const secondaryBtn = modal.querySelector('#file-drop-action-secondary');
             const cancelBtn = modal.querySelector('#file-drop-action-cancel');
             const mask = modal.querySelector('.modal-mask');
@@ -3686,18 +3687,24 @@ ${getMarkdownCss()}
                 if (titleEl) titleEl.textContent = zh ? '處理 PDF 文件：「' + fileName + '」' : 'Process PDF Document: "' + fileName + '"';
                 if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此 PDF 文件：' : 'Please select how you would like to handle this PDF file:';
                 if (primaryBtn) primaryBtn.textContent = '📑 ' + (zh ? '解析為 Markdown 內文 (AnyDocs 轉檔)' : 'Convert to Markdown Text (AnyDocs)');
+                if (tertiaryBtn) tertiaryBtn.style.display = 'none';
                 if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 作為附件連結' : 'Upload to 888box as Attachment');
             } else if (kind === 'audio') {
                 if (iconEl) iconEl.textContent = '🎙️';
                 if (titleEl) titleEl.textContent = zh ? '處理音訊檔案：「' + fileName + '」' : 'Process Audio File: "' + fileName + '"';
                 if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此音訊檔案：' : 'Please select how you would like to handle this audio file:';
-                if (primaryBtn) primaryBtn.textContent = '✨ ' + (zh ? 'AI 智慧轉錄逐字稿 (Whisper AI 排版)' : 'Transcribe with AI (Whisper)');
+                if (primaryBtn) primaryBtn.textContent = '🎙️ ' + (zh ? 'AI 轉錄音訊為逐字稿 (原生時間戳)' : 'Transcribe Audio with Timestamps');
+                if (tertiaryBtn) {
+                    tertiaryBtn.style.display = '';
+                    tertiaryBtn.textContent = '✨ ' + (zh ? 'AI 智慧整理排版 (Whisper + AI)' : 'Transcribe with AI Smart Layout');
+                }
                 if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 嵌入播放器' : 'Upload to 888box as Audio Player');
             } else {
                 if (iconEl) iconEl.textContent = '📑';
                 if (titleEl) titleEl.textContent = zh ? '處理文件：「' + fileName + '」' : 'Process Document: "' + fileName + '"';
                 if (msgEl) msgEl.textContent = zh ? '請選擇您希望如何處理此文件：' : 'Please select how you would like to handle this document:';
                 if (primaryBtn) primaryBtn.textContent = '📑 ' + (zh ? '解析為 Markdown 內文 (AnyDocs 轉檔)' : 'Convert to Markdown Text (AnyDocs)');
+                if (tertiaryBtn) tertiaryBtn.style.display = 'none';
                 if (secondaryBtn) secondaryBtn.textContent = '☁️ ' + (zh ? '上傳至 888box 作為附件連結' : 'Upload to 888box as Attachment');
             }
 
@@ -3707,6 +3714,7 @@ ${getMarkdownCss()}
                 settled = true;
                 closeModal(modal);
                 primaryBtn?.removeEventListener('click', onPrimary);
+                tertiaryBtn?.removeEventListener('click', onTertiary);
                 secondaryBtn?.removeEventListener('click', onSecondary);
                 cancelBtn?.removeEventListener('click', onCancel);
                 mask?.removeEventListener('click', onCancel);
@@ -3714,7 +3722,8 @@ ${getMarkdownCss()}
                 resolve(choice);
             };
 
-            const onPrimary = () => cleanup('convert');
+            const onPrimary = () => cleanup(kind === 'audio' ? 'transcribe' : 'convert');
+            const onTertiary = () => cleanup('smart');
             const onSecondary = () => cleanup('upload');
             const onCancel = () => cleanup('cancel');
             const onKeyDown = (e) => {
@@ -3726,6 +3735,7 @@ ${getMarkdownCss()}
 
             openModal(modal, { initialFocus: primaryBtn });
             primaryBtn?.addEventListener('click', onPrimary);
+            tertiaryBtn?.addEventListener('click', onTertiary);
             secondaryBtn?.addEventListener('click', onSecondary);
             cancelBtn?.addEventListener('click', onCancel);
             mask?.addEventListener('click', onCancel);
@@ -3883,8 +3893,12 @@ ${getMarkdownCss()}
                     }
                     return;
                 }
-                // choice === 'convert' -> processAudioTranscription with smart formatting
-                await processAudioTranscription(file, { smartFormat: true });
+                if (choice === 'smart') {
+                    await processAudioTranscription(file, { smartFormat: true });
+                    return;
+                }
+                // choice === 'transcribe' (default) -> plain verbatim transcript with timestamps
+                await processAudioTranscription(file, { smartFormat: false });
                 return;
             }
 

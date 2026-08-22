@@ -7,6 +7,12 @@
   - **結構化 Markdown 段落排版 (Timestamped Paragraph Formatting)**：解決過往純逐字稿字元全部黏在一起、難以閱讀的痛點。現在「匯入音訊（逐字稿）」會依據 Whisper 語音停頓與時間戳記自動分段，輸出格式如 `**[00:15]** 段落文字內容`，每段獨立換行，兼顧 Markdown 預覽與 BlockNote 區塊編輯器的完美排版。
   - **智慧排版同步受惠 (Smart Layout Timestamps Optimization)**：「匯入音訊（智慧排版）」亦獲得時間結構化的分段輸入，讓 LLM（`gpt-oss-120b` / `llama-3.3-70b-instruct`）在整理摘要、行動清單與主題標題時更能精確定位時間脈絡。
   - **模組化架構與完整測試 (Modular Audio Transcribe & Test Coverage)**：獨立抽離 `src/audio_transcribe.mjs` 工具模組，完整覆蓋 WebVTT 解析、標籤清理、秒數時間戳轉換與超長音訊（`[hh:mm:ss]`）單元測試。
+- **📂 編輯器音訊檔案拖曳三合一分流彈窗 (Audio Drag & Drop Tri-Action Modal with Verbatim Default)**：
+  - **補齊純逐字稿選項並設為預設 (Default Verbatim Transcript Option)**：拖曳音訊進編輯器時，彈窗提供三合一選項：
+    1. **🎙️ AI 轉錄音訊為逐字稿 (原生時間戳)**（**高亮焦點預設**）：直接轉錄為帶有 `[mm:ss]` 時間戳記的純逐字稿段落。
+    2. **✨ AI 智慧整理排版 (Whisper + AI)**：轉錄後由 LLM 整理大綱、重點與 Markdown 結構。
+    3. **☁️ 上傳至 888box 嵌入播放器**：直傳 888box 並在游標處插入 `<audio controls>`。
+  - **彈窗樣式與鍵盤支援 (Modal UX & Keydown)**：預設聚焦第一項高亮按鈕，支援鍵盤 Enter 快速送出、Tab 切換與 Escape 取消。
 
 ## [2026-08-21]
 

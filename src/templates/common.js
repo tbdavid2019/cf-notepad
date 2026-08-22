@@ -1071,6 +1071,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
         <div class="file-drop-actions">
             <button type="button" class="btn file-drop-action-primary" id="file-drop-action-primary">📑 ${lang === 'zh-TW' ? '解析為 Markdown 內文' : 'Convert to Markdown'}</button>
+            <button type="button" class="btn file-drop-action-tertiary" id="file-drop-action-tertiary" style="display: none;">✨ ${lang === 'zh-TW' ? 'AI 智慧整理排版' : 'AI Smart Layout'}</button>
             <button type="button" class="btn file-drop-action-secondary" id="file-drop-action-secondary">☁️ ${lang === 'zh-TW' ? '上傳至 888box 作為附件' : 'Upload to 888box'}</button>
             <button type="button" class="btn file-drop-action-cancel" id="file-drop-action-cancel">${lang === 'zh-TW' ? '取消' : 'Cancel'}</button>
         </div>

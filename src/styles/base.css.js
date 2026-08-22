@@ -594,12 +594,12 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
 .file-drop-action-primary:hover {
     filter: brightness(1.08);
 }
-.file-drop-action-secondary {
+.file-drop-action-secondary, .file-drop-action-tertiary {
     background: var(--modal-surface, #f6f8fa);
     color: var(--modal-text, #24292f);
     border-color: var(--modal-border, #d0d7de) !important;
 }
-.file-drop-action-secondary:hover {
+.file-drop-action-secondary:hover, .file-drop-action-tertiary:hover {
     background: var(--modal-surface-hover, #eef1f4);
 }
 .file-drop-action-cancel {
