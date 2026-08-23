@@ -345,34 +345,63 @@ flowchart TD
 ```
 ````
 
-### G. Writing Books & Multi-Chapter Manuals (Book Mode)
-Any note with a list of chapter links automatically acts as a Book Manifest. Readers can view it as a modern dual-pane eBook by appending `/book` to the share link: `shareUrl + '/book'`.
+### G. Writing Books & Multi-Chapter Manuals (Book Mode & Multi-Article Orchestration)
+Any note containing a list of chapter links automatically functions as a **Book Manifest**. Readers can view the collection as a modern dual-pane interactive eBook by appending `/book` to the share link: `shareUrl + '/book'`.
 
-Authoring rules:
-- Use `# Book Title` (H1) for the main book title.
-- Use `## Section Title` or `### Section Title` for chapter group categories.
-- Use `- [Chapter Name](/share/id)` or `1. [Chapter Name](url)` for chapter links (supports 2-space indentation for sub-chapters).
-- Left sidebar includes live chapter search filtering and a draggable splitter resizer (double-click to reset).
-- Right reading pane loads chapters via native embed (`?embed=1`) with full KaTeX formulas, code tabs, and theme styling.
+#### G.1 The 4-Step Standard SOP for AI Agents to Build a Multi-Article Book
+When a human asks you to create a comprehensive course, tutorial series, documentation handbook, or multi-chapter book:
 
-Example Book Manifest:
+1. **Step 1: Outline & Chapter Planning**
+   - Design a logical module/chapter structure (e.g. Overview, Module 1, Module 2, Advanced Topics, Case Studies).
+   - Determine unique, descriptive path slugs for each chapter (e.g. `ts-intro`, `ts-generics`, `ts-decorators`, `ts-handbook-hub`).
+
+2. **Step 2: Iteratively Author & Publish Every Chapter Note**
+   - Write and publish each chapter as an independent, fully-formatted markdown note via `write_note` (or `POST /api/<chapter-path>`).
+   - Collect each chapter's returned `shareUrl` (or relative share path like `/share/<id>` or direct path `/<path>`).
+   - *Tip*: You can freely mix normal Markdown chapters with 2D slide decks (`/share/<id>/present`) inside the book!
+
+3. **Step 3: Author the Book Manifest / Hub Note**
+   - Create a central hub note (e.g. `ts-complete-handbook`) containing the master Table of Contents.
+   - **Manifest Structure Rules**:
+     - Use `# Book Title` (H1) for the main book title.
+     - Add a blockquote `> ...` for the book's executive summary, target audience, or reading guide.
+     - Use `## Module Title` or `### Section Title` for chapter groupings.
+     - Use `- [Chapter Name](/share/<id>)` or `1. [Chapter Name](/<path>)` for chapter links.
+     - Use 2-space indentation `- [Sub-Chapter Name](/share/<id>)` for hierarchical nested sub-chapters.
+
+4. **Step 4: Deliver the Interactive Book Reader URL to the User**
+   - Take the Hub Note's returned `shareUrl` and append `/book`.
+   - **Always return the `/book` link to the human**: `https://wiki.david888.com/share/<hub-share-id>/book`.
+
+#### G.2 Example Book Manifest Note (`ts-complete-handbook`)
 
 ````md
-# 📚 Cloud Architecture & Developer Handbook
+# 📘 TypeScript 現代全端實戰手冊 (TypeScript Modern Fullstack Handbook)
 
-> Comprehensive system architecture and developer guides.
+> 本書為全端工程師設計，從底層型別推導到分散式架構實戰，涵蓋現代 TypeScript 所有關鍵技術。
 
-## 📖 Table of Contents
+## 📖 核心章節目錄 (Table of Contents)
 
-### Part 1: Getting Started
-- [01. Architecture Overview](/share/qt7xmd)
-- [02. Extended Writing Guide](/extended-writing-features-demo)
-  - [02-1. Deep Dive Details (Sub-chapter)](/share/qt7xmd)
+### 第一單元：現代型別核心基礎
+- [01. TypeScript 5.x 核心觀念與型別系統概覽](/share/ts-ch01)
+- [02. 泛型 (Generics) 與條件型別實戰](/share/ts-ch02)
+  - [02-1. 深入 infer 與樣板字面型別 (Template Literal Types)](/share/ts-ch02-infer)
+- [03. 型別守衛與斷言技巧](/share/ts-ch03)
 
-### Part 2: Advanced Capabilities
-- [03. 2D Slide Deck Presentation](/share/qt7xmd/present)
-- [04. API & Protocol Specifications](https://wiki.david888.com/mcp)
+### 第二單元：架構模式與簡報
+- [04. Clean Architecture 與領域驅動設計](/share/ts-ch04)
+- [05. 2D 簡報：分散式系統型別安全架構](/share/ts-ch05/present)
+
+### 第三單元：邊緣運算與 API 整合
+- [06. Cloudflare Workers + D1 全端型別共享](/share/ts-ch06)
+- [07. WebMCP 與 AI Agent 工具端點開發](/share/ts-ch07)
 ````
+
+#### G.3 Reader Features Supported in Book Mode (`/book`)
+- **Dual-Pane Split Layout**: Left pane displays the hierarchical table of contents with live search filtering; right pane renders the chapter via fast embed (`?embed=1`).
+- **Draggable Splitter**: Readers can freely drag the boundary between sidebar and reading pane (180px to 65% width) or double-click to reset.
+- **Embedded Slides & Media**: Slides (`/present`), code copy tabs, KaTeX formulas, Mermaid diagrams, and zoomable images all render natively without leaving the book interface.
+- **Keyboard Shortcuts**: Readers can press `[` (Previous Chapter) and `]` (Next Chapter) to navigate through the entire book.
 
 ### H. Extended Markdown Syntax & Rich Formatting Reference
 When authoring content on David888 Wiki, AI agents can leverage these rich formatting syntaxes:

@@ -146,6 +146,13 @@
    - 頂部 `↗` 按鈕可一鍵在新分頁開啟當前章節。
    - 左上角「`← 退出書本`」可精確返回標準閱讀或編輯模式。
 
+#### 🤖 AI Agent 4 步驟自動串書工作流 (Multi-Article Book Orchestration SOP for LLMs)
+當要求 AI 撰寫一整套教學、技術文檔手冊或系列課程時，LLM 應依循標準 4 步驟自主發布電子書：
+1. **大綱規劃**：規劃章節架構並為各章命名語意清晰的 Path Slug（如 `ts-ch01`, `ts-ch02`）。
+2. **逐篇發布章節**：透過 `write_note` 或 API 逐篇寫入發布並收集各篇的 `shareUrl`（亦可在章節中混排 `/present` 簡報模式）。
+3. **建立總目錄文章 (Manifest Hub Note)**：以 Markdown 列表將所有章節連結整合為目錄文章（支援 H3 分組與 2 格縮排子章節）。
+4. **交付電子書連結**：取得總目錄文章之 `shareUrl` 並加上 `/book`，回傳如 `https://wiki.david888.com/share/<hub-id>/book` 給使用者。
+
 ---
 
 #### 🔗 實例展示與功能驗收 (Live Demo & Feature Showcase)
@@ -482,7 +489,14 @@ Simply author a table of contents list with Markdown links (supports H3 group he
 4. **Navigation & Shortcuts**:
    - Top bar provides "← Previous" and "Next →" buttons, with keyboard shortcuts `[` (previous) and `]` (next).
    - Top `↗` button opens the current chapter in a new tab.
-   - Left top "← Exit Book" returns precisely to standard reading or edit mode.
+    - Left top "← Exit Book" returns precisely to standard reading or edit mode.
+
+#### 🤖 AI Agent 4-Step Multi-Article Book Orchestration SOP (For LLMs)
+When asked to author a tutorial series, documentation handbook, or comprehensive course, AI agents should follow this standard 4-step SOP:
+1. **Outline Planning**: Structure chapters logically and assign clean path slugs (e.g. `ts-ch01`, `ts-ch02`).
+2. **Iterative Chapter Publishing**: Publish each chapter via `write_note` or API and collect the returned `shareUrl` (supports mixing 2D slide decks `/share/id/present` as chapters).
+3. **Author Manifest Hub Note**: Aggregate all chapter links in an index note with H3 section groupings and 2-space indented sub-chapters.
+4. **Deliver Book Reader URL**: Append `/book` to the hub note's `shareUrl` and present `https://wiki.david888.com/share/<hub-id>/book` to the user.
 
 ---
 

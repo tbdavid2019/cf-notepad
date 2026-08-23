@@ -18,6 +18,10 @@
 - **🔗 MCP / WebMCP 文章發布與分享映射自動修復 (MCP Share Mapping & Self-Healing Query)**：
   - **跨模組 ShareSlug / ShareId 雙向對齊**：解決過去透過 MCP / WebMCP (`write_note` / `append_note`) 建立或寫入文章時，因 `shareSlug` 與 `shareId` 鍵值不同步導致編輯頁面分享連結點擊 404 的問題。現在 MCP 伺服器會自動同步註冊 `shareSlug`、`shareId` 以及 `MD5(path)` 多重路由別名至資料庫。
   - **D1 分享查詢自我修復 (Self-Healing Share Query Fallback)**：`driverQueryShare` 於 `shares` 表未命中時，會自動比對 `notes` 表的 `shareSlug` / `shareId` / `path`，並在查詢成功的同時即時自動補齊寫入 `shares` 表，徹底杜絕任何分享頁面 404 斷鏈情況。
+- **📚 AI Agent 多文章串聯電子書工作流升級 (Multi-Article Book Orchestration SOP for LLMs)**：
+  - **系統化 4 步驟電子書編排 SOP (Standard 4-Step Book SOP)**：在 `SKILL.md`（Section G）與 `LLM_API_DOCS.md`（Section 3.2）中新增完整的多篇串書 SOP 指南，指導 LLM 遵循「1. 章節規劃大綱 ➔ 2. 獨立撰寫發布各章篇章取得 `shareUrl` ➔ 3. 建立總目錄 Manifest 文章 ➔ 4. 交付 `/book` 電子書閱讀連結給使用者」。
+  - **支援巢狀章節與簡報混排 (Nested Chapters & Presentation Mixing)**：完整說明二格縮排的子章節語法（`- [子章節](/share/id)`），以及在電子書章節中混排 2D 簡報（`/share/id/present`）的無縫內嵌閱讀支援。
+  - **自動化代碼與技能文檔同步**：執行 `generate-agent-skill.mjs`，同步更新 `src/generated/agent-skill.generated.mjs`、`src/generated/api-docs.generated.mjs` 與 `.agent/skills/` 目錄。
 
 ## [2026-08-21]
 

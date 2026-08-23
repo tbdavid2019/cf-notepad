@@ -296,11 +296,35 @@ flowchart LR
 ```
 ````
 
-### 3.2 Writing Books & Multi-Chapter Manuals (Book Mode)
-Any note containing structured chapter hyperlinks functions as a Book Manifest. Append `/book` to `shareUrl` (or note path) to open dual-pane Book Mode: `https://wiki.david888.com/share/<share-id>/book`.
+### 3.2 Writing Books & Multi-Chapter Manuals (Book Mode & Multi-Article Orchestration)
+Any note containing structured chapter hyperlinks functions as a **Book Manifest**. Append `/book` to `shareUrl` (or note path) to open the dual-pane interactive eBook interface: `https://wiki.david888.com/share/<share-id>/book`.
 
-- Authoring structure: `# Book Title` (H1), `## Section` (H2/H3), `- [Chapter Name](/share/...)` (Markdown links).
-- Features: left sidebar TOC with instant search filter, draggable resizer (180px–65%), `localStorage` persistence, fast native embed (`?embed=1`), and keyboard navigation (`[` and `]`).
+#### 3.2.1 The 4-Step Standard SOP for AI Agents to Build a Multi-Article Book
+1. **Step 1: Outline & Chapter Planning**: Design the syllabus and determine slug paths for all chapters (e.g. `ts-ch01`, `ts-ch02`, `ts-handbook-hub`).
+2. **Step 2: Iteratively Author & Publish Every Chapter**: Publish each chapter via `write_note` (or `POST /api/<path>`) and collect the generated `shareUrl`. Slides (`/present`) can be included as chapters!
+3. **Step 3: Author the Book Manifest / Hub Note**: Create the root hub note (`# Book Title`, `> Summary`, `## Modules`, and `- [Chapter Title](/share/<id>)` or `1. [Title](/<path>)`).
+4. **Step 4: Deliver the Interactive Book Reader URL to the User**: Append `/book` to the Hub Note's `shareUrl`: `https://wiki.david888.com/share/<hub-share-id>/book`.
+
+#### 3.2.2 Example Book Manifest Note
+````md
+# 📘 TypeScript 現代全端實戰手冊
+
+> 本書為全端工程師設計，從底層型別推導到分散式架構實戰。
+
+## 📖 核心章節目錄
+
+### 第一單元：現代型別核心基礎
+- [01. TypeScript 5.x 核心觀念與型別系統概覽](/share/ts-ch01)
+- [02. 泛型 (Generics) 與條件型別實戰](/share/ts-ch02)
+  - [02-1. 深入 infer 與樣板字面型別](/share/ts-ch02-infer)
+
+### 第二單元：架構模式與簡報
+- [03. 2D 簡報：分散式系統型別安全架構](/share/ts-ch03/present)
+- [04. Clean Architecture 與領域驅動設計](/share/ts-ch04)
+````
+
+#### 3.2.3 Book Mode Features
+- Left sidebar TOC with instant search filter, draggable resizer (180px–65%), `localStorage` persistence, fast native embed (`?embed=1`), and keyboard navigation (`[` and `]`).
 
 ### 3.3 Extended Markdown Syntax & Rich Formatting Reference
 David888 Wiki supports standard GFM plus these powerful extended formatting syntaxes:
