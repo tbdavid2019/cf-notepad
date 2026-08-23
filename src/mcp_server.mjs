@@ -6,15 +6,25 @@ import { resolvePasswordRole } from './password_policy.mjs'
 import { DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant.js'
 import { canPersistNoteContent } from './save_policy.mjs'
 import { getNoteHistoryConfig, saveNoteHistoryVersionIfNeeded } from './note_history.mjs'
+import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
 
 export const MCP_SERVER_INFO = {
     name: 'david888-wiki',
     version: '1.0.0',
     protocolVersion: '2024-11-05',
-    description: 'David888 Wiki / Cloud Notepad native MCP Server for in-browser AI agents and external LLM tools.',
+    description: 'David888 Wiki native MCP Server. Supports Markdown publishing, 2D slide decks (---/--), dual-pane Book Mode (/book), and rich formatting. When composing multi-article books, 2D presentations, or advanced layouts, call "get_authoring_skill_guide" or fetch "https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" for the complete authoring SOP.',
 }
 
 export const MCP_TOOLS_DEFINITIONS = [
+    {
+        name: 'get_authoring_skill_guide',
+        description: 'Retrieve the complete David888 Wiki authoring guide and multi-article Book Orchestration SOP (Markdown formatting, 2D slide decks, Book Mode /book, KaTeX, citations, themes) from SKILL.md.',
+        inputSchema: {
+            type: 'object',
+            properties: {},
+            additionalProperties: false,
+        },
+    },
     {
         name: 'read_note',
         description: 'Retrieve the markdown content and metadata of a note from David888 Wiki / Cloud Notepad.',
@@ -35,7 +45,7 @@ export const MCP_TOOLS_DEFINITIONS = [
     },
     {
         name: 'write_note',
-        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Returns both the edit URL and the public Share URL.',
+        description: 'Create or overwrite a markdown note on David888 Wiki / Cloud Notepad. Returns both the edit URL and the public Share URL. Supports 2D slide presentations ("---"/"--") and Book Mode ("/book"). For the multi-chapter Book Orchestration SOP, call "get_authoring_skill_guide".',
         inputSchema: {
             type: 'object',
             properties: {
@@ -300,6 +310,13 @@ async function executeMcpTool(name, args = {}, requestUrl) {
     const origin = requestUrl ? `${requestUrl.protocol}//${requestUrl.host}` : 'https://wiki.david888.com'
 
     switch (name) {
+        case 'get_authoring_skill_guide': {
+            return {
+                isError: false,
+                text: AGENT_SKILL_MARKDOWN,
+            }
+        }
+
         case 'read_note': {
             const path = String(args.path || '').trim()
             if (!path) {

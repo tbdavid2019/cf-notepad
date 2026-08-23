@@ -259,6 +259,29 @@ test('POST /mcp tools/call: write_note, read_note, append_note workflow', async 
     assert.match(readAfterBody.result.content[0].text, /## Appended Section/)
 })
 
+test('POST /mcp tools/call: get_authoring_skill_guide returns SKILL.md markdown', async () => {
+    const req = new Request('https://wiki.david888.com/mcp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 14,
+            method: 'tools/call',
+            params: {
+                name: 'get_authoring_skill_guide',
+                arguments: {},
+            },
+        }),
+    })
+    const res = await handleMcpRequest(req)
+    assert.equal(res.status, 200)
+    const body = await res.json()
+    assert.equal(body.id, 14)
+    assert.equal(body.result.isError, false)
+    assert.match(body.result.content[0].text, /# David888 Wiki Publisher Skill/)
+    assert.match(body.result.content[0].text, /Book Mode & Multi-Article Orchestration/)
+})
+
 test('POST /mcp returns method not found for unknown method', async () => {
     const req = new Request('https://wiki.david888.com/mcp', {
         method: 'POST',

@@ -1409,6 +1409,38 @@ ${getMarkdownCss()}
             })
         }
 
+        if (APP_STATE.sharePath) {
+            tools.push({
+                name: 'open-book',
+                description: 'Open the current note in dual-pane Book Mode.',
+                inputSchema: {
+                    type: 'object',
+                    properties: {},
+                    additionalProperties: false,
+                },
+                execute: async () => {
+                    const bookUrl = window.location.origin + APP_STATE.sharePath + '/book'
+                    window.location.href = bookUrl
+                    return { bookUrl }
+                },
+            })
+        }
+
+        tools.push({
+            name: 'get-authoring-skill-guide',
+            description: 'Get the canonical URL and instructions for David888 Wiki authoring and multi-article Book orchestration.',
+            inputSchema: {
+                type: 'object',
+                properties: {},
+                additionalProperties: false,
+            },
+            execute: async () => ({
+                skillUrl: 'https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md',
+                docsUrl: 'https://wiki.david888.com/api/docs',
+                instructions: 'Fetch SKILL.md for the 4-step Book Orchestration SOP, 2D presentation slides (---/--), KaTeX, and extended formatting syntaxes.',
+            }),
+        })
+
         // Register tools on all available WebMCP contexts
         for (const mc of contexts) {
             if (typeof mc.registerTool === 'function') {

@@ -22,6 +22,10 @@
   - **系統化 4 步驟電子書編排 SOP (Standard 4-Step Book SOP)**：在 `SKILL.md`（Section G）與 `LLM_API_DOCS.md`（Section 3.2）中新增完整的多篇串書 SOP 指南，指導 LLM 遵循「1. 章節規劃大綱 ➔ 2. 獨立撰寫發布各章篇章取得 `shareUrl` ➔ 3. 建立總目錄 Manifest 文章 ➔ 4. 交付 `/book` 電子書閱讀連結給使用者」。
   - **支援巢狀章節與簡報混排 (Nested Chapters & Presentation Mixing)**：完整說明二格縮排的子章節語法（`- [子章節](/share/id)`），以及在電子書章節中混排 2D 簡報（`/share/id/present`）的無縫內嵌閱讀支援。
   - **自動化代碼與技能文檔同步**：執行 `generate-agent-skill.mjs`，同步更新 `src/generated/agent-skill.generated.mjs`、`src/generated/api-docs.generated.mjs` 與 `.agent/skills/` 目錄。
+- **🤖 WebMCP 與 MCP 原生技能引導升級 (Native MCP Skill Guide Tool & Prompt Discovery)**：
+  - **新增 `get_authoring_skill_guide` 工具**：於原生 Worker MCP 服務器新增 `get_authoring_skill_guide` 端點，LLM 在進行多文章編排、簡報撰寫或排版時可直接一鍵取得完整的 `SKILL.md` 規範與 SOP，無須額外發起 Shell / cURL 查詢。
+  - **WebMCP 瀏覽器端工具擴充**：於前台 `document.modelContext` 擴充註冊 `get-authoring-skill-guide` 與 `open-book` 瀏覽器工具，主動向 Chrome 150+ Inspector 與 AI Agent 暴露正規的 Skill 存取指引。
+  - **Tool 描述主動提示 SOP 查閱**：在 `write_note` 工具描述與服務器 Description 中明確提示：「如需進行多章節串書 (Book Orchestration SOP)、2D 簡報 (---/--) 或 KaTeX/主題排版，請呼叫 `get_authoring_skill_guide` 或讀取 `SKILL.md`」。
 
 ## [2026-08-21]
 
