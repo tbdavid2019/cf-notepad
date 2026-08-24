@@ -893,8 +893,8 @@ export const createOfflinePageResponse = () => {
             if (options.showNotification) {
                 showToast('💾 已儲存至本地 IndexedDB')
             }
-            if (navigator.onLine) {
-                // If manual sync or pending, perform conflict-checked sync; normal auto-save performs direct POST
+            if (navigator.onLine && options.manualSync) {
+                // Server sync ONLY on manual save or explicit sync trigger, avoiding server spam during typing
                 syncNoteToServer(currentPath, content, { checkConflict: isManualOrReconnection })
             }
         }

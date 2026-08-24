@@ -458,6 +458,13 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📐 Adaptive &amp; Compact Line Numbers Gutter**: Dynamic digit-based gutter auto-sizing (~26px for 1-99 lines, smoothly expanding for hundreds/thousands of lines) with subtle 13px typography and pixel-perfect line-height matching, cutting total left margin from 72px down to 42px.
 - **🎨 Full Dark Mode for Modals &amp; Badges**: Version history modal (`.note-history-modal`), recent shares modal (`.share-history-modal`), local autosave status badge (`.sync-status-badge`), and system dialogs fully adapt to dark mode with high-contrast Slate themes.
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
+- **⚡ PWA Offline Workstation, Background Sync & Media Caching (`/_pwa-offline`)**:
+  - **Full-Featured Markdown Workspace**: Standalone offline application supporting Edit, Split, and Preview view modes, 5 customizable color themes (Dark, Light, Tokyo Night, Dracula, Nord), live sidebar note search, draft management, and one-click JSON backup & restore.
+  - **Visual 3-Way Conflict Diff Modal**: Protects offline edits from remote cloud overwrites with side-by-side Diff comparison (Local vs Remote) and 3 resolution actions: Keep Local, Adopt Remote, or Save as Conflict Copy.
+  - **Zero-GET Keystroke Saving & Background Sync**: Keystrokes save locally to IndexedDB with 0ms delay and zero redundant network GET requests. Reconnecting to the network automatically registers Service Worker Background Sync (`sync-pending-notes`) to synchronize pending notes silently without disrupting user flow.
+  - **LRU Media Caching**: Service Worker v5 automatically precaches Markdown rendering assets and maintains an LRU-managed image cache (max 60 items) for R2 media (`s3.wiki.david888.com`).
+  - **Cross-Device File Associations & Web Share Target**: Directly open and edit `.md`, `.markdown`, and `.txt` files from Desktop and Android systems (WebAPK intent filters); share text and URLs directly into new Wiki notes via Web Share Target.
+
 
 ### 📚 3. Book Mode Guide (Multi-Chapter Documentation)
 

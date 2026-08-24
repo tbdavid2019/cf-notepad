@@ -1,7 +1,7 @@
 const CACHE_NAME = 'david888-wiki-shell-v5'
 const IMAGE_CACHE_NAME = 'david888-wiki-images-v1'
-const OFFLINE_URL = '/_pwa-offline'
 const MAX_IMAGE_CACHE_ITEMS = 60
+const OFFLINE_URL = '/_pwa-offline'
 
 const PRECACHE_URLS = [
     OFFLINE_URL,
