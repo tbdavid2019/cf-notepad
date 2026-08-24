@@ -94,7 +94,7 @@
 - **🔢 程式碼區塊行號與檔名標籤**：支援起始行號 ```` ```js= ```` (第 1 行起) 或 ```` ```js=10 ```` (指定行號起)，以及檔案名稱標籤 ```` ```js [app.js] ```` 或 ```` ```js=1 [server.mjs] ````，自動生成獨立行號槽與檔名 Header。
 - **📋 程式碼區塊一鍵複製按鈕**：所有程式碼區塊自動掛載一鍵複製按鈕，點擊提供即時狀態反饋與 Toast 提示。
 - **💬 GitHub Alert 提示區塊自動補完與工具列**：行首輸入 `> [!` 即時彈出 NOTE、TIP、IMPORTANT、WARNING、CAUTION 快速選單，支援鍵盤導覽與 Enter 插入；工具列同步提供「⚠️ GitHub 提示區塊」按鈕。
-- **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），支援**滑鼠與觸控拖拉調整側邊欄寬度（Splitter Resizer）**，自動保存寬度偏好並支援雙擊重設（290px）；右側採用高規格原生嵌入渲染（`?embed=1`），零秒極速切換章節，頂部提供導覽列與快捷鍵（`[` 上一章、`]` 下一章）。
+- **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），支援**滑鼠與觸控拖拉調整側邊欄寬度（Splitter Resizer）**，自動保存寬度偏好並支援雙擊重設（290px）；右側採用高規格原生嵌入渲染（`?embed=1`），零秒極速切換章節，頂部提供導覽列與快捷鍵（`[` 上一章、`]` 下一章），**支援 PWA 一鍵離線預抓快取整本書**與**三合一多格式匯出（合併 Markdown、單一離線 HTML 電子書、列印 PDF）**。
 - **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML)**：橫向投影片使用 `---`，縱向深入子投影片使用 `--`；支援方向鍵四向導覽（`↑` `↓` `←` `→`）與大綱總覽（`O`）2D 矩陣縮圖，文首支援 YAML 宣告自訂轉場效果（`fade`, `slide`, `zoom` 等）。
 - **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
 - **📝 論文級雙向註腳與毛玻璃預覽 (`[^1]` / `^[...]`)**：支援標準註腳 `[^1]` 與 Pandoc/HackMD 行內註腳 `^[說明]`，自動進行數字編號與文末清單聚合；游標懸浮註腳編號立即彈出毛玻璃卡片（Hover Popover）預覽註釋內容，點擊平滑雙向跳轉（`↩` 一鍵返回內文定位點），修復深層錨點與文章目錄 (`[TOC]`) 乾淨排版；工具列提供「插入註腳 ([^1])」快捷按鈕。
@@ -142,9 +142,15 @@
 3. **右側極速原生渲染（`?embed=1`）**：
    - 點擊左側章節立即載入對應文章，零秒原生渲染，KaTeX 公式、程式碼行號、Alert 提示框、Mermaid 圖表與主題樣式全數支援。
 4. **翻頁與導航**：
-   - 頂部提供「← 上一章」與「下一章 →」切換按鈕，支援鍵盤快速鍵 `[`（上一章）與 `]`（下一章）。
+   - 頂部提供「← 上一章」與「下一章 →」切換按鈕，支援鍵盤快速鍵 `[`（上一章）與 `]`（下一章）以及手機左右滑動翻頁手勢。
    - 頂部 `↗` 按鈕可一鍵在新分頁開啟當前章節。
    - 左上角「`← 退出書本`」可精確返回標準閱讀或編輯模式。
+5. **📥 一鍵離線快取整本書 (Offline Cache)**：
+   - 點擊頂部「📥 離線快取」按鈕，背景自動並行預載整本書所有章節與插圖至 Service Worker Cache，斷網或飛行模式下依然能完整閱讀！
+6. **📤 三合一電子書匯出 (Multi-Format Book Export)**：
+   - **📄 合併 Markdown (.md)**：一鍵整合全書所有章節為單一完整的 Markdown 檔案。
+   - **🌐 單一離線 HTML 電子書 (.html)**：匯出包含雙欄目錄與所有章節內容的獨立 HTML 檔案，離線雙擊即可瀏覽。
+   - **🖨️ 匯出 PDF / 列印 (.pdf)**：自動將全書章節排版並加入分頁符號，一鍵列印為 PDF 手冊。
 
 #### 🤖 AI Agent 4 步驟自動串書工作流 (Multi-Article Book Orchestration SOP for LLMs)
 當要求 AI 撰寫一整套教學、技術文檔手冊或系列課程時，LLM 應依循標準 4 步驟自主發布電子書：
@@ -446,7 +452,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **🔢 Code Block Line Numbers &amp; Filename Tabs**: Specify starting line numbers with ```` ```js= ```` (start from line 1) or ```` ```js=10 ````, and title headers with ```` ```js [app.js] ```` or ```` ```js=1 [server.mjs] ````.
 - **📋 Code Block One-Click Copy**: Automatically mounts an instant copy button on every code block with animated state feedback.
 - **💬 GitHub Alert Autocomplete &amp; Toolbar Button**: Typing `> [!` on a new line immediately summons a popup menu to choose `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, or `CAUTION` with keyboard navigation and Enter insertion; also available via toolbar button (`⚠️`).
-- **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth native embed chapter loading (`?embed=1`), draggable sidebar resizer with local storage persistence and double-click reset, next/prev chapter flip cards, and keyboard navigation (`[` and `]`).
+- **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth native embed chapter loading (`?embed=1`), draggable sidebar resizer with local storage persistence and double-click reset, next/prev chapter flip cards, keyboard navigation (`[` and `]`), **PWA one-click offline pre-caching for the entire book**, and **3-in-1 multi-format export (Combined Markdown, Standalone Offline HTML eBook, and Print PDF)**.
 - **📽️ 2D Vertical Sub-Slides (`--`) &amp; YAML Frontmatter**: Use `---` for horizontal slides and `--` for deep-dive vertical sub-slides with 2D arrow navigation (`↑` `↓` `←` `→`) and overview matrix (`O`); customize transitions (`fade`, `slide`, `zoom`) via top YAML frontmatter.
 - **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
 - **📂 Multi-Format Drag & Drop Import & Smart Choice Modal**: Drag files directly into the Markdown editor:
@@ -499,9 +505,15 @@ Simply author a table of contents list with Markdown links (supports H3 group he
 3. **Right Content Native Embed (`?embed=1`)**:
    - Clicking a chapter loads content immediately via native Workers edge rendering with full KaTeX formulas, code block tabs, GitHub alerts, Mermaid diagrams, and CSS themes.
 4. **Navigation & Shortcuts**:
-   - Top bar provides "← Previous" and "Next →" buttons, with keyboard shortcuts `[` (previous) and `]` (next).
+   - Top bar provides "← Previous" and "Next →" buttons, with keyboard shortcuts `[` (previous) and `]` (next) as well as mobile touch swipe gestures.
    - Top `↗` button opens the current chapter in a new tab.
-    - Left top "← Exit Book" returns precisely to standard reading or edit mode.
+   - Left top "← Exit Book" returns precisely to standard reading or edit mode.
+5. **📥 One-Click Offline Book Pre-caching (Offline Cache)**:
+   - Click "📥 Offline Cache" on the top bar to automatically pre-load all chapters and media into Service Worker Cache, allowing 100% offline reading in flight or disconnected environments!
+6. **📤 3-in-1 Multi-Format Book Export**:
+   - **📄 Combined Markdown (.md)**: Merges all chapters into a single master `.full.md` document for LLMs or offline notes.
+   - **🌐 Standalone HTML eBook (.html)**: Packages the complete dual-pane reader and all chapter contents into an offline `.html` file with instant zero-server switching.
+   - **🖨️ Print / Export PDF (.pdf)**: Automatically formats all chapters with print page breaks for clean one-click PDF generation.
 
 #### 🤖 AI Agent 4-Step Multi-Article Book Orchestration SOP (For LLMs)
 When asked to author a tutorial series, documentation handbook, or comprehensive course, AI agents should follow this standard 4-step SOP:

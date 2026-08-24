@@ -2,6 +2,13 @@
 
 ## [2026-08-24]
 
+- **📖 書本模式 (Book Mode) 全面升級：PWA 一鍵離線整本預抓與多格式匯出 (Book Mode PWA Offline Pre-caching & Multi-Format Export)**：
+  - **📥 一鍵離線下載整本書 (Offline Book Pre-caching)**：在 `/share/:id/book` 頂部新增「📥 離線快取」按鈕，一鍵並行預抓目錄中所有章節的 HTML/Markdown 內文與 R2 圖片至 Cache Storage，並即時顯示快取進度（`快取中 3/12...` ➔ `🟢 已離線快取`），在飛行模式或斷網環境下依然能流暢切換整本手冊。
+  - **📤 三合一電子書匯出選單 (Multi-Format Book Export Menu)**：
+    1. **📄 合併 Markdown (.md)**：自動聚合全書目錄、前言與所有章節為單一完整的 `.full.md` 檔案，最適合知識庫備份與餵給 LLM 分析。
+    2. **🌐 單一離線 HTML 電子書 (.html)**：將整本書的雙欄樹狀目錄結構、全章節內文與 CSS 樣式封裝為單一 HTML 檔案，收件者無需安裝任何軟體或連網，用任何瀏覽器雙擊即可開啟 0 秒切換章節的完整電子書。
+    3. **🖨️ 全書整合式列印 / 匯出 PDF (.pdf)**：將所有章節依序排版並加入 `@media print` 分頁中斷符號（`page-break-after: always`），一鍵呼叫列印生成精美 PDF 手冊。
+  - **📱 閱讀進度記憶與行動端滑動手勢 (Reading State & Touch Gestures)**：透過 `localStorage` 自動記憶讀者上次閱讀的章節索引，重新開啟書本時自動回到該章；在行動裝置上支援左右滑動手勢（Swipe Left / Right）快速翻章。
 - **⚡ PWA 離線模式、衝突可視化比對、效能與無障礙全面健全 (Full-Featured PWA Offline Workstation, Conflict Diff & Code Review Hardening)**：
   - **Service Worker v5 智慧快取與 LRU 圖片庫 (Stale-While-Revalidate & Image Cache Eviction)**：全面升級 static/sw.js 至 v5，新增 david888-wiki-images-v1 專屬圖片快取庫，具備 LRU 60 項上限自動淘汰與精確子域名驗證，自動快取 R2 圖床（s3.wiki.david888.com）與外鏈多媒體；核心 Markdown 渲染管道（marked、purify、toolbar、extensions）預先快取，斷網環境下圖文筆記零破圖。
   - **精確版本衝突比對與無障礙 Diff 彈窗 (Exact Diff & Accessible Conflict Modal)**：

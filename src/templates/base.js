@@ -6526,6 +6526,12 @@ themeCss + '\\n' +
 
             sidebarHtml += '</div></div><div class="book-sidebar-backdrop" id="book-sidebar-backdrop"></div>';
 
+            var offlineBtnText = isZh ? '離線快取' : 'Offline Cache';
+            var exportBtnText = isZh ? '匯出 ▾' : 'Export ▾';
+            var exportMdText = isZh ? '合併 Markdown (.md)' : 'Combined Markdown (.md)';
+            var exportHtmlText = isZh ? '單一離線 HTML (.html)' : 'Offline Standalone HTML (.html)';
+            var exportPdfText = isZh ? '匯出 PDF / 列印 (.pdf)' : 'Print / Export PDF (.pdf)';
+
             var mainHtml = 
                 '<div class="book-main">' +
                     '<div class="book-topbar">' +
@@ -6538,6 +6544,25 @@ themeCss + '\\n' +
                             '</div>' +
                         '</div>' +
                         '<div class="book-top-nav-group">' +
+                            '<button type="button" id="book-offline-cache-btn" class="book-top-nav-btn" title="' + (isZh ? '📥 快取整本書至瀏覽器，離線或斷網時仍可流暢閱讀' : 'Cache entire book offline in browser') + '">' +
+                                '<span>📥</span> <span class="cache-btn-text">' + offlineBtnText + '</span>' +
+                            '</button>' +
+                            '<div class="book-export-dropdown">' +
+                                '<button type="button" id="book-export-toggle-btn" class="book-top-nav-btn" aria-haspopup="true" aria-expanded="false" title="' + (isZh ? '匯出電子書' : 'Export Book') + '">' +
+                                    '<span>📤</span> <span>' + exportBtnText + '</span>' +
+                                '</button>' +
+                                '<div class="book-export-menu" id="book-export-menu" role="menu">' +
+                                    '<button type="button" class="book-export-item" id="book-export-md-btn" role="menuitem">' +
+                                        '<span>📄</span> <span>' + exportMdText + '</span>' +
+                                    '</button>' +
+                                    '<button type="button" class="book-export-item" id="book-export-html-btn" role="menuitem">' +
+                                        '<span>🌐</span> <span>' + exportHtmlText + '</span>' +
+                                    '</button>' +
+                                    '<button type="button" class="book-export-item" id="book-export-pdf-btn" role="menuitem">' +
+                                        '<span>🖨️</span> <span>' + exportPdfText + '</span>' +
+                                    '</button>' +
+                                '</div>' +
+                            '</div>' +
                             '<button type="button" id="book-prev-btn" class="book-top-nav-btn" title="' + (isZh ? '上一章 ([)' : 'Previous ([)') + '">← ' + (isZh ? '上一章' : 'Prev') + '</button>' +
                             '<button type="button" id="book-next-btn" class="book-top-nav-btn" title="' + (isZh ? '下一章 (])' : 'Next (])') + '">' + (isZh ? '下一章' : 'Next') + ' →</button>' +
                             '<a href="#" id="book-open-tab-btn" class="book-top-nav-btn" target="_blank" rel="noopener noreferrer" title="' + (isZh ? '在新分頁開啟' : 'Open in tab') + '">↗</a>' +
@@ -6553,6 +6578,9 @@ themeCss + '\\n' +
             container.innerHTML = sidebarHtml + resizerHtml + mainHtml;
 
             var currentChapterIndex = 0;
+            var bookIdKey = APP_STATE.shareId || APP_STATE.path || 'book';
+            var offlineStorageKey = 'cf-notepad:book-offline:' + bookIdKey;
+            var readingProgressKey = 'cf-notepad:book-last-idx:' + bookIdKey;
 
             var searchInput = document.getElementById('book-search-input');
             if (searchInput) {
@@ -6672,6 +6700,247 @@ themeCss + '\\n' +
                 });
             }
 
+            var offlineBtn = document.getElementById('book-offline-cache-btn');
+            if (offlineBtn) {
+                try {
+                    if (localStorage.getItem(offlineStorageKey)) {
+                        offlineBtn.classList.add('cached');
+                        var btnTxt = offlineBtn.querySelector('.cache-btn-text');
+                        if (btnTxt) btnTxt.textContent = isZh ? '已離線快取' : 'Offline Cached';
+                    }
+                } catch(e) {}
+            }
+
+            async function cacheEntireBookOffline() {
+                if (!offlineBtn) return;
+                var btnTxt = offlineBtn.querySelector('.cache-btn-text');
+                var total = bookData.chapters.length;
+                if (btnTxt) btnTxt.textContent = (isZh ? '快取中 ' : 'Caching ') + '0/' + total;
+                try {
+                    var cache = ('caches' in window) ? await caches.open('david888-wiki-shell-v5') : null;
+                    var imgCache = ('caches' in window) ? await caches.open('david888-wiki-images-v1') : null;
+                    
+                    if (cache) {
+                        try { await cache.add(window.location.href); } catch(e) {}
+                    }
+
+                    for (var i = 0; i < bookData.chapters.length; i++) {
+                        var ch = bookData.chapters[i];
+                        if (btnTxt) btnTxt.textContent = (isZh ? '快取中 ' : 'Caching ') + (i + 1) + '/' + total;
+                        var targetUrl = (ch.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                        if (!targetUrl) continue;
+                        var embedUrl = targetUrl + (targetUrl.includes('?') ? '&' : '?') + 'embed=1';
+
+                        if (cache) {
+                            try {
+                                var resp = await fetch(embedUrl, { cache: 'reload' });
+                                if (resp.ok) {
+                                    await cache.put(embedUrl, resp.clone());
+                                    var text = await resp.text();
+                                    if (imgCache) {
+                                        var imgMatches = text.match(new RegExp('https:\\\\/\\\\/s3\\\\.wiki\\\\.david888\\\\.com\\\\/[^"\\'\\\\s)]+', 'g')) || [];
+                                        for (var j = 0; j < imgMatches.length; j++) {
+                                            try {
+                                                var imgResp = await fetch(imgMatches[j], { mode: 'no-cors' });
+                                                if (imgResp) await imgCache.put(imgMatches[j], imgResp);
+                                            } catch(e) {}
+                                        }
+                                    }
+                                }
+                            } catch(e) {}
+                        }
+                    }
+                    try { localStorage.setItem(offlineStorageKey, '1'); } catch(e) {}
+                    offlineBtn.classList.add('cached');
+                    if (btnTxt) btnTxt.textContent = isZh ? '已離線快取' : 'Offline Cached';
+                    if (typeof showToast === 'function') {
+                        showToast(isZh ? ('✅ 全書 ' + total + ' 個章節已全數離線儲存！') : ('✅ All ' + total + ' chapters cached offline!'));
+                    }
+                } catch(err) {
+                    if (btnTxt) btnTxt.textContent = isZh ? '快取失敗' : 'Cache Failed';
+                }
+            }
+
+            var exportToggleBtn = document.getElementById('book-export-toggle-btn');
+            var exportMenu = document.getElementById('book-export-menu');
+
+            if (exportToggleBtn && exportMenu) {
+                exportToggleBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    var isShown = exportMenu.classList.toggle('show');
+                    exportToggleBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
+                });
+                document.addEventListener('click', function(e) {
+                    if (!exportMenu.contains(e.target) && e.target !== exportToggleBtn) {
+                        exportMenu.classList.remove('show');
+                        exportToggleBtn.setAttribute('aria-expanded', 'false');
+                    }
+                });
+            }
+
+            async function exportCombinedMarkdown() {
+                if (exportMenu) exportMenu.classList.remove('show');
+                if (typeof showToast === 'function') {
+                    showToast(isZh ? '⏳ 正在合併全書 Markdown...' : '⏳ Compiling Book Markdown...');
+                }
+                var mdParts = ['# ' + bookData.title + '\\n\\n' + (isZh ? '> 本書由 David888 Wiki 電子書模式自動整合匯出。\\n\\n' : '> Automatically exported from David888 Wiki Book Mode.\\n\\n') + '[TOC]\\n'];
+                
+                for (var i = 0; i < bookData.chapters.length; i++) {
+                    var ch = bookData.chapters[i];
+                    var chUrl = (ch.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                    var mdText = '';
+                    try {
+                        var resp = await fetch(chUrl, { headers: { 'Accept': 'text/markdown' } });
+                        if (resp.ok) {
+                            mdText = await resp.text();
+                        }
+                    } catch(e) {}
+                    if (!mdText) mdText = '# ' + ch.title + '\\n\\n*(章節內容 / Content)*';
+                    mdParts.push('\\n\\n---\\n\\n' + mdText);
+                }
+
+                var fullMd = mdParts.join('');
+                var blob = new Blob([fullMd], { type: 'text/markdown;charset=utf-8' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                var cleanName = (bookData.title || 'book').replace(new RegExp('[^a-zA-Z0-9\\\\u4e00-\\\\u9fa5_-]', 'g'), '_');
+                a.download = cleanName + '.full.md';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                if (typeof showToast === 'function') {
+                    showToast(isZh ? '📄 已成功匯出合併 Markdown！' : '📄 Combined Markdown exported!');
+                }
+            }
+
+            async function exportStandaloneHtml() {
+                if (exportMenu) exportMenu.classList.remove('show');
+                if (typeof showToast === 'function') {
+                    showToast(isZh ? '⏳ 正在打包單一離線 HTML 電子書...' : '⏳ Packaging Standalone HTML eBook...');
+                }
+                var chapterData = [];
+                for (var i = 0; i < bookData.chapters.length; i++) {
+                    var ch = bookData.chapters[i];
+                    var chUrl = (ch.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                    var chHtml = '';
+                    try {
+                        var embedUrl = chUrl + (chUrl.includes('?') ? '&' : '?') + 'embed=1';
+                        var resp = await fetch(embedUrl);
+                        if (resp.ok) {
+                            var htmlText = await resp.text();
+                            var parser = new DOMParser();
+                            var doc = parser.parseFromString(htmlText, 'text/html');
+                            var bodyEl = doc.querySelector('.markdown-body') || doc.body;
+                            chHtml = bodyEl ? bodyEl.innerHTML : htmlText;
+                        }
+                    } catch(e) {}
+                    if (!chHtml) chHtml = '<h1>' + ch.title + '</h1><p><em>(載入中 / Loading)</em></p>';
+                    chapterData.push({
+                        index: ch.index,
+                        title: ch.title,
+                        level: ch.level,
+                        section: ch.section,
+                        html: chHtml
+                    });
+                }
+
+                var singleHtml = '<!DOCTYPE html>\\n<html lang="' + (isZh ? 'zh-TW' : 'en') + '">\\n<head>\\n<meta charset="utf-8">\\n<meta name="viewport" content="width=device-width, initial-scale=1">\\n<title>' + bookData.title + '</title>\\n<style>' +
+                    'body { margin:0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display:flex; height:100vh; overflow:hidden; background:#fff; color:#1f2328; }' +
+                    '.book-sidebar { width:290px; border-right:1px solid #e1e4e8; background:#f6f8fa; display:flex; flex-direction:column; height:100%; flex-shrink:0; }' +
+                    '.book-sidebar-header { padding:14px 16px; border-bottom:1px solid #e1e4e8; font-weight:700; font-size:15px; }' +
+                    '.book-toc-scroll { flex:1; overflow-y:auto; padding:10px; }' +
+                    '.book-toc-item { padding:8px 12px; margin:2px 0; border-radius:6px; cursor:pointer; font-size:13.5px; transition:0.15s; }' +
+                    '.book-toc-item:hover { background:#e1e4e8; }' +
+                    '.book-toc-item.active { background:#2563eb; color:#fff; font-weight:600; }' +
+                    '.book-main { flex:1; display:flex; flex-direction:column; height:100%; overflow:hidden; }' +
+                    '.book-topbar { padding:10px 20px; border-bottom:1px solid #e1e4e8; display:flex; justify-content:space-between; align-items:center; background:#fff; }' +
+                    '.book-content { flex:1; overflow-y:auto; padding:32px 40px; max-width:860px; margin:0 auto; width:100%; box-sizing:border-box; line-height:1.6; }' +
+                    '.btn { padding:5px 12px; border-radius:6px; border:1px solid #d1d5db; background:#fff; cursor:pointer; font-size:12.5px; }' +
+                    '.btn:hover { background:#f3f4f6; }' +
+                    '@media (max-width: 768px) { .book-sidebar { display:none; } }' +
+                    '</style>\\n</head>\\n<body>\\n' +
+                    '<div class="book-sidebar"><div class="book-sidebar-header">📖 ' + bookData.title + '</div><div class="book-toc-scroll" id="toc-list"></div></div>' +
+                    '<div class="book-main"><div class="book-topbar"><strong id="crumb"></strong><div><button class="btn" id="prev-btn">← ' + (isZh ? '上一章' : 'Prev') + '</button> <button class="btn" id="next-btn">' + (isZh ? '下一章' : 'Next') + ' →</button></div></div><div class="book-content" id="content-body"></div></div>' +
+                    '<script>' +
+                    'var chapters = ' + JSON.stringify(chapterData) + ';' +
+                    'var cur = 0;' +
+                    'var toc = document.getElementById("toc-list");' +
+                    'var crumb = document.getElementById("crumb");' +
+                    'var body = document.getElementById("content-body");' +
+                    'chapters.forEach(function(ch, idx) {' +
+                    '  var el = document.createElement("div");' +
+                    '  el.className = "book-toc-item" + (idx === 0 ? " active" : "");' +
+                    '  el.style.paddingLeft = (12 + ch.level * 14) + "px";' +
+                    '  el.textContent = ch.title;' +
+                    '  el.onclick = function() { render(idx); };' +
+                    '  toc.appendChild(el);' +
+                    '});' +
+                    'function render(idx) {' +
+                    '  if (idx < 0 || idx >= chapters.length) return;' +
+                    '  cur = idx;' +
+                    '  Array.from(toc.children).forEach(function(c, i) { c.className = "book-toc-item" + (i === idx ? " active" : ""); });' +
+                    '  crumb.textContent = chapters[idx].title;' +
+                    '  body.innerHTML = "<h1>" + chapters[idx].title + "</h1>" + chapters[idx].html;' +
+                    '  body.scrollTop = 0;' +
+                    '}' +
+                    'document.getElementById("prev-btn").onclick = function() { render(cur - 1); };' +
+                    'document.getElementById("next-btn").onclick = function() { render(cur + 1); };' +
+                    'render(0);' +
+                    '<\/script>\\n</body>\\n</html>';
+
+                var blob = new Blob([singleHtml], { type: 'text/html;charset=utf-8' });
+                var a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                var cleanName = (bookData.title || 'book').replace(new RegExp('[^a-zA-Z0-9\\\\u4e00-\\\\u9fa5_-]', 'g'), '_');
+                a.download = cleanName + '.html';
+                a.click();
+                URL.revokeObjectURL(a.href);
+                if (typeof showToast === 'function') {
+                    showToast(isZh ? '🌐 已成功匯出單一離線 HTML 電子書！' : '🌐 Standalone HTML eBook exported!');
+                }
+            }
+
+            async function exportPdfPrint() {
+                if (exportMenu) exportMenu.classList.remove('show');
+                if (typeof showToast === 'function') {
+                    showToast(isZh ? '⏳ 正在準備列印排版...' : '⏳ Preparing Print Layout...');
+                }
+                var printContainer = document.getElementById('book-print-container');
+                if (!printContainer) {
+                    printContainer = document.createElement('div');
+                    printContainer.id = 'book-print-container';
+                    document.body.appendChild(printContainer);
+                }
+                
+                var htmlParts = [
+                    '<div class="book-print-cover">' +
+                        '<h1>' + bookData.title + '</h1>' +
+                        '<p>' + (isZh ? 'David888 Wiki 電子書手冊' : 'David888 Wiki Book Edition') + '</p>' +
+                    '</div>'
+                ];
+
+                for (var i = 0; i < bookData.chapters.length; i++) {
+                    var ch = bookData.chapters[i];
+                    var chUrl = (ch.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                    var chHtml = '';
+                    try {
+                        var embedUrl = chUrl + (chUrl.includes('?') ? '&' : '?') + 'embed=1';
+                        var resp = await fetch(embedUrl);
+                        if (resp.ok) {
+                            var htmlText = await resp.text();
+                            var parser = new DOMParser();
+                            var doc = parser.parseFromString(htmlText, 'text/html');
+                            var bodyEl = doc.querySelector('.markdown-body') || doc.body;
+                            chHtml = bodyEl ? bodyEl.innerHTML : htmlText;
+                        }
+                    } catch(e) {}
+                    if (!chHtml) chHtml = '<p><em>' + ch.title + '</em></p>';
+                    htmlParts.push('<div class="book-print-chapter"><h2>' + ch.title + '</h2>' + chHtml + '</div>');
+                }
+
+                printContainer.innerHTML = htmlParts.join('');
+                window.print();
+            }
+
             function loadChapter(index) {
                 var iframe = document.getElementById('book-content-iframe');
                 var crumb = document.getElementById('book-crumb-current');
@@ -6696,6 +6965,7 @@ themeCss + '\\n' +
 
                 if (index < 0 || index >= bookData.chapters.length) return;
                 currentChapterIndex = index;
+                try { localStorage.setItem(readingProgressKey, index); } catch(e) {}
                 var chapter = bookData.chapters[index];
 
                 container.querySelectorAll('.book-toc-item').forEach(function(el) {
@@ -6738,6 +7008,34 @@ themeCss + '\\n' +
                     return;
                 }
 
+                var offlineAction = e.target.closest('#book-offline-cache-btn');
+                if (offlineAction) {
+                    e.preventDefault();
+                    cacheEntireBookOffline();
+                    return;
+                }
+
+                var mdBtn = e.target.closest('#book-export-md-btn');
+                if (mdBtn) {
+                    e.preventDefault();
+                    exportCombinedMarkdown();
+                    return;
+                }
+
+                var htmlBtn = e.target.closest('#book-export-html-btn');
+                if (htmlBtn) {
+                    e.preventDefault();
+                    exportStandaloneHtml();
+                    return;
+                }
+
+                var pdfBtn = e.target.closest('#book-export-pdf-btn');
+                if (pdfBtn) {
+                    e.preventDefault();
+                    exportPdfPrint();
+                    return;
+                }
+
                 var link = e.target.closest('.book-toc-link');
                 if (link) {
                     var chIdx = parseInt(link.getAttribute('data-chapter-index'), 10);
@@ -6775,7 +7073,39 @@ themeCss + '\\n' +
                 }
             });
 
-            loadChapter(0);
+            // Mobile touch swipe gestures for flip chapter
+            var touchStartX = 0;
+            var touchStartY = 0;
+            container.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 1) {
+                    touchStartX = e.touches[0].clientX;
+                    touchStartY = e.touches[0].clientY;
+                }
+            }, { passive: true });
+
+            container.addEventListener('touchend', function(e) {
+                if (e.changedTouches.length === 1) {
+                    var deltaX = e.changedTouches[0].clientX - touchStartX;
+                    var deltaY = e.changedTouches[0].clientY - touchStartY;
+                    if (Math.abs(deltaX) > 70 && Math.abs(deltaY) < 50) {
+                        if (deltaX < 0 && currentChapterIndex < bookData.chapters.length - 1) {
+                            loadChapter(currentChapterIndex + 1);
+                        } else if (deltaX > 0 && currentChapterIndex > 0) {
+                            loadChapter(currentChapterIndex - 1);
+                        }
+                    }
+                }
+            }, { passive: true });
+
+            var initialIdx = 0;
+            try {
+                var savedIdx = parseInt(localStorage.getItem(readingProgressKey), 10);
+                if (!isNaN(savedIdx) && savedIdx >= 0 && savedIdx < bookData.chapters.length) {
+                    initialIdx = savedIdx;
+                }
+            } catch(e) {}
+
+            loadChapter(initialIdx);
         };
 
         function maybeAutoStart() {

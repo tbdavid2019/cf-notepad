@@ -850,5 +850,109 @@ pre.has-line-numbers {
         grid-column: 1;
     }
 }
+
+/* Book Mode Export Dropdown & Offline Cache Badge */
+.book-export-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.book-export-menu {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    background: var(--surface-bg, #ffffff);
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+    min-width: 200px;
+    padding: 6px;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 1000;
+}
+
+[data-ui-theme="dark"] .book-export-menu {
+    background: #1e222b;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+}
+
+.book-export-menu.show {
+    display: flex;
+}
+
+.book-export-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-color, #1f2328);
+    text-decoration: none;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: background 0.15s ease;
+}
+
+[data-ui-theme="dark"] .book-export-item {
+    color: #e6edf3;
+}
+
+.book-export-item:hover {
+    background: rgba(37, 99, 235, 0.08);
+    color: var(--toolbar-accent, #2563eb);
+}
+
+.book-top-nav-btn.cached {
+    color: #10b981;
+    border-color: rgba(16, 185, 129, 0.3);
+    background: rgba(16, 185, 129, 0.08);
+}
+
+/* Multi-chapter Print Layout */
+#book-print-container {
+    display: none;
+}
+
+@media print {
+    body.book-mode-active {
+        overflow: visible !important;
+        background: #ffffff !important;
+        color: #000000 !important;
+    }
+    body.book-mode-active #book-mode-container {
+        display: none !important;
+    }
+    body.book-mode-active #book-print-container {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    .book-print-cover {
+        text-align: center;
+        padding: 120px 40px 80px;
+        page-break-after: always;
+    }
+    .book-print-cover h1 {
+        font-size: 32px;
+        margin-bottom: 20px;
+    }
+    .book-print-chapter {
+        page-break-after: always;
+        padding: 20px 0;
+    }
+    .book-print-chapter:last-child {
+        page-break-after: auto;
+    }
+}
 `
+
 

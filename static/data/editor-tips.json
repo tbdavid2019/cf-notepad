@@ -120,6 +120,11 @@
       "id": "pwa-offline-workstation",
       "zh-TW": "小訣竅：支援完整 PWA 離線模式！斷網時自動啟用雙欄 Markdown 離線工作站，具備即時預覽、主題切換、搜尋、備份與連線自動背景同步。",
       "en-US": "Tip: Full PWA offline mode supported! When offline, the dual-pane Markdown workstation automatically activates with live preview, themes, search, backup, and auto-sync."
+    },
+    {
+      "id": "book-mode-offline-export",
+      "zh-TW": "小訣竅：在書本模式 (/book) 中，點擊「📥 離線快取」可一鍵預先下載整本手冊離線閱讀；透過「📤 匯出」選單可匯出為合併 Markdown、單一離線 HTML 或列印 PDF！",
+      "en-US": "Tip: In Book Mode (/book), click '📥 Offline Cache' to pre-cache the entire handbook for offline reading, or use the '📤 Export' menu for Combined Markdown, Standalone HTML, or Print PDF!"
     }
   ]
 }
