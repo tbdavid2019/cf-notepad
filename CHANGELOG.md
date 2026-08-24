@@ -2,22 +2,19 @@
 
 ## [2026-08-24]
 
-- **⚡ PWA 離線模式、衝突可視化比對與多媒體快取全面升級 (Full-Featured PWA Offline Workstation, Conflict Diff & Media Caching)**：
-  - **Service Worker v5 智慧快取與多媒體支援 (Stale-While-Revalidate & Image Cache)**：全面升級 `static/sw.js` 至 v5，新增 `david888-wiki-images-v1` 專屬圖片快取庫，自動快取 R2 圖床（`s3.wiki.david888.com`）與外鏈多媒體資源；核心 Markdown 渲染管道（`marked.min.js`, `purify.min.js`, `markdown-toolbar.mjs`, `markdown-extensions.mjs`）與樣式字型納入預先快取，斷網環境下也能完整顯示圖文筆記。
-  - **雲端版本衝突可視化對比彈窗 (Visual 3-Way Conflict Diff Modal)**：在離線工作站同步草稿時，若偵測到雲端內容已被其他裝置或 API 修改，自動彈出 Diff 對比視窗（本機離線版本 vs 雲端最新版本），提供 **🟢 保留本機修改（覆蓋雲端）**、**🔵 採用雲端版本（更新本機）** 與 **📑 另存衝突副本** 3 大安全選項。
-  - **全新雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：重構離線工作區為獨立全功能 Markdown 編輯器：
-    - **多檢視模式 (Edit / Split / Preview)**：支援「✏️ 純編輯」、「🌗 雙欄對照」與「👁️ 即時預覽」三種版型切換，提供與主站一致的即時 Markdown、表格、代碼區塊與引文渲染。
-    - **多主題外觀切換 (Theme Switcher)**：內建 Dark (預設)、Light (明亮白)、Tokyo Night (東京之夜)、Dracula (德古拉)、Nord (極光北歐) 等主題切換，支援本機記憶偏好。
-    - **離線筆記即時搜尋與管理 (Search, Filter & Note Management)**：側邊欄提供標題與內文即時關鍵字搜尋過濾、筆記刪除、一鍵新增草稿與計數統計。
-    - **完整備份與匯入功能 (JSON Backup & Restore)**：支援一鍵匯出所有離線快取為單一 JSON 備份檔，並可從本機 JSON 檔案隨時匯入還原。
-    - **智慧平滑連線重連與背景自動同步 (Graceful Reconnection & Background Sync)**：支援 Service Worker 原生 `sync-pending-notes` 背景同步；網路恢復時自動將離線待同步（`pending`）的筆記在背景依序送往雲端，不再暴力重新整理頁面。
-    - **字數與閱讀時間即時統計 (Word Count & Reading Time)**：即時統計字元數、字詞數與預估閱讀分鐘數。
-  - **PWA Manifest 現代能力擴充與跨裝置檔案關聯 (File Handling API & Android WebAPK Intent)**：
-    - **跨裝置與 Android 檔案關聯 (File Handling & MIME Types)**：支援在桌面端（Windows / macOS / Linux）與 Android 裝置（透過 WebAPK intent-filter）中將 `.md`, `.markdown`, `.mdown`, `.mkd`, `.txt` 檔案直接關聯至 `david888 wiki` 開啟編輯。
-    - **Web Share Target API 整合**：支援在手機（iOS/Android）與電腦各類 App 中直接「分享」文字、文章標題與網頁連結至 david888 wiki，自動在 `/new/markdown` 建立新筆記並預填分享內容。
-    - **Window Controls Overlay 桌面整合**：支援桌面 PWA 融合標題列與控制項（`display_override: ["window-controls-overlay", "standalone", "minimal-ui"]`）。
-    - **快速動作捷徑 (App Shortcuts)**：新增「新增筆記」與「離線工作區」兩組桌面捷徑。
-  - **混合儲存庫模組 (`offline-store.mjs`) 能力擴充**：新增 `searchNotes`、`getAllNotes`、`getPendingSyncNotes`、`clearAllNotes`、`exportBackupJson` 與 `importBackupJson`，並健全 Node.js / 無存儲私密瀏覽下的 Memory Fallback 備援。
+- **⚡ PWA 離線模式、衝突可視化比對、效能與無障礙全面健全 (Full-Featured PWA Offline Workstation, Conflict Diff & Code Review Hardening)**：
+  - **Service Worker v5 智慧快取與 LRU 圖片庫 (Stale-While-Revalidate & Image Cache Eviction)**：全面升級 static/sw.js 至 v5，新增 david888-wiki-images-v1 專屬圖片快取庫，具備 LRU 60 項上限自動淘汰與精確子域名驗證，自動快取 R2 圖床（s3.wiki.david888.com）與外鏈多媒體；核心 Markdown 渲染管道（marked、purify、toolbar、extensions）預先快取，斷網環境下圖文筆記零破圖。
+  - **精確版本衝突比對與無障礙 Diff 彈窗 (Exact Diff & Accessible Conflict Modal)**：
+    - **精確正規化比對 (Exact Line-Normalized Diff)**：取代寬鬆的 trim() 比較，精確比對段落結構、縮排與換行。
+    - **請求量最佳化 (Zero Redundant GET)**：一般打字自動存檔直發 POST，僅在同步離線 pending 草稿、手動同步或連線重連時進行衝突檢查，大幅節省雲端請求。
+    - **健全無障礙與鍵盤導航 (ARIA & Keyboard Nav)**：配置 role="dialog"、aria-modal="true"、aria-labelledby、圖示 aria-hidden 與 Escape 鍵快速關閉。
+    - **切換筆記防競態 (Debounce Cleanup)**：在切換載入筆記時即刻清理計時器，杜絕跨筆記覆蓋風險。
+  - **Background Sync 雙向完整整合 (Service Worker SyncManager Registration)**：在離線儲存與網路重連時主動向瀏覽器註冊 sync-pending-notes 標籤，確保即使關閉分頁也能在恢復連線時由系統背景自動完成同步。
+  - **高效單次交易批次讀取 (store.getAll())**：重構 offline-store.mjs 中的 getAllNotes()，由過去 N+1 逐筆查詢改採原生 IndexedDB store.getAll() 單次交易，大幅提升大筆記量下的搜尋與備份效能。
+  - **全新雙欄 Markdown 離線工作站 (/_pwa-offline)**：提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理與一鍵 JSON 備份/匯入。
+  - **PWA Manifest 現代能力擴充與跨裝置檔案關聯 (File Handling API & Android WebAPK Intent)**：支援桌面與 Android 將 .md, .markdown, .mdown, .mkd, .txt 檔案直接關聯至 david888 wiki 開啟編輯；整合 Web Share Target 與桌面 Window Controls Overlay。
+  - **完整 HTML 轉義安全性 (XSS Hardening)**：完善 escapeHtml 包含單引號與反引號轉義，確保範本字串與屬性值安全。
+  - **混合儲存庫模組 (offline-store.mjs) 能力擴充**：新增 searchNotes、getAllNotes、getPendingSyncNotes、clearAllNotes、exportBackupJson 與 importBackupJson，並健全 Node.js / 無存儲私密瀏覽下的 Memory Fallback 備援。
 
 ## [2026-08-23]
 

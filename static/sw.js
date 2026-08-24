@@ -1,6 +1,8 @@
 const CACHE_NAME = 'david888-wiki-shell-v5'
 const IMAGE_CACHE_NAME = 'david888-wiki-images-v1'
 const OFFLINE_URL = '/_pwa-offline'
+const MAX_IMAGE_CACHE_ITEMS = 60
+
 const PRECACHE_URLS = [
     OFFLINE_URL,
     '/app.webmanifest',
@@ -16,6 +18,17 @@ const PRECACHE_URLS = [
     '/js/markdown-toolbar.mjs',
     '/js/markdown-extensions.mjs',
 ]
+
+async function limitCacheSize(cacheName, maxItems = MAX_IMAGE_CACHE_ITEMS) {
+    try {
+        const cache = await caches.open(cacheName)
+        const keys = await cache.keys()
+        if (keys.length > maxItems) {
+            const toDelete = keys.slice(0, keys.length - maxItems)
+            await Promise.all(toDelete.map(k => cache.delete(k)))
+        }
+    } catch {}
+}
 
 self.addEventListener('install', event => {
     event.waitUntil(
@@ -49,9 +62,10 @@ self.addEventListener('fetch', event => {
     if (request.mode === 'navigate') {
         if (url.origin !== self.location.origin) return
         event.respondWith(
-            fetch(request).catch(async () =>
-                (await caches.match(OFFLINE_URL)) || Response.error(),
-            ),
+            fetch(request).catch(async () => {
+                const offlineFallback = await caches.match(OFFLINE_URL)
+                return offlineFallback || new Response('Offline Workspace', { status: 503, headers: { 'Content-Type': 'text/plain' } })
+            }),
         )
         return
     }
@@ -71,11 +85,15 @@ self.addEventListener('fetch', event => {
     }
 
     // 3. Image & Media Caching (R2 images on s3.wiki.david888.com or local images)
+    const isImageHost = (
+        url.hostname === 's3.wiki.david888.com' ||
+        url.hostname === 'box.david888.com' ||
+        url.hostname.endsWith('.wiki.david888.com')
+    )
     const isImageRequest = (
         request.destination === 'image' ||
         /\.(png|jpe?g|gif|webp|svg|ico|avif)(\?.*)?$/i.test(url.pathname) ||
-        url.hostname.includes('s3.wiki.david888.com') ||
-        url.hostname.includes('box.david888.com')
+        isImageHost
     )
 
     if (isImageRequest) {
@@ -86,12 +104,18 @@ self.addEventListener('fetch', event => {
                     .then(res => {
                         if (res && (res.status === 200 || res.type === 'opaque')) {
                             imageCache.put(request, res.clone())
+                            limitCacheSize(IMAGE_CACHE_NAME, MAX_IMAGE_CACHE_ITEMS)
                         }
                         return res
                     })
                     .catch(() => null)
 
-                return cachedImage || (await networkFetch) || Response.error()
+                const resolved = cachedImage || (await networkFetch)
+                if (resolved) return resolved
+                return new Response(
+                    '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>',
+                    { headers: { 'Content-Type': 'image/svg+xml' } }
+                )
             }),
         )
         return
@@ -105,11 +129,7 @@ self.addEventListener('fetch', event => {
         url.pathname.startsWith('/js/') ||
         url.pathname.startsWith('/css/') ||
         url.pathname.startsWith('/fonts/') ||
-        url.pathname.startsWith('/img/') ||
-        url.pathname.startsWith('/wasm/') ||
-        url.pathname.endsWith('.png') ||
-        url.pathname.endsWith('.svg') ||
-        url.pathname.endsWith('.ico')
+        url.pathname.startsWith('/wasm/')
     )
 
     if (!isStaticAsset) return
@@ -126,7 +146,8 @@ self.addEventListener('fetch', event => {
                 })
                 .catch(() => null)
 
-            return cachedResponse || (await networkFetch) || Response.error()
+            const resolved = cachedResponse || (await networkFetch)
+            return resolved || Response.error()
         }),
     )
 })

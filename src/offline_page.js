@@ -690,34 +690,34 @@ export const createOfflinePageResponse = () => {
     </main>
 
     <!-- Conflict Diff Modal -->
-    <div id="conflict-modal" class="modal-overlay" style="display: none;">
+    <div id="conflict-modal" class="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="conflict-dialog-title" style="display: none;">
         <div class="modal-card">
             <div class="modal-header">
-                <h3>⚠️ 雲端版本衝突 (Sync Conflict)</h3>
-                <button type="button" class="btn btn-sm" id="conflict-close-btn">✕</button>
+                <h3 id="conflict-dialog-title"><span aria-hidden="true">⚠️ </span>雲端版本衝突 (Sync Conflict)</h3>
+                <button type="button" class="btn btn-sm" id="conflict-close-btn" aria-label="關閉對話框 (Close)">✕</button>
             </div>
             <div class="modal-body">
                 <p class="modal-tip">此筆記在雲端已被其他裝置修改，內容與您離線編輯的版本不同。請選擇處理方式：</p>
                 <div class="diff-container">
                     <div class="diff-pane">
-                        <div class="diff-title">🖥️ 本機離線版本 (Local)</div>
-                        <textarea class="diff-textarea" id="diff-local" readonly></textarea>
+                        <div class="diff-title"><span aria-hidden="true">🖥️ </span>本機離線版本 (Local)</div>
+                        <textarea class="diff-textarea" id="diff-local" readonly aria-label="本機離線版本內容"></textarea>
                     </div>
                     <div class="diff-pane">
-                        <div class="diff-title">☁️ 雲端最新版本 (Cloud Remote)</div>
-                        <textarea class="diff-textarea" id="diff-remote" readonly></textarea>
+                        <div class="diff-title"><span aria-hidden="true">☁️ </span>雲端最新版本 (Cloud Remote)</div>
+                        <textarea class="diff-textarea" id="diff-remote" readonly aria-label="雲端最新版本內容"></textarea>
                     </div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="conflict-keep-local">🟢 保留本機修改（覆蓋雲端）</button>
-                <button type="button" class="btn" id="conflict-keep-remote">🔵 採用雲端版本（更新本機）</button>
-                <button type="button" class="btn" id="conflict-save-copy">📑 另存衝突副本</button>
+                <button type="button" class="btn btn-primary" id="conflict-keep-local"><span aria-hidden="true">🟢 </span>保留本機修改（覆蓋雲端）</button>
+                <button type="button" class="btn" id="conflict-keep-remote"><span aria-hidden="true">🔵 </span>採用雲端版本（更新本機）</button>
+                <button type="button" class="btn" id="conflict-save-copy"><span aria-hidden="true">📑 </span>另存衝突副本</button>
             </div>
         </div>
     </div>
 
-    <div id="toast" class="toast"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <script type="module" src="/js/marked.min.js"></script>
     <script type="module" src="/js/purify.min.js"></script>
@@ -769,11 +769,16 @@ export const createOfflinePageResponse = () => {
             setTimeout(() => $toast.classList.remove('show'), 3000)
         }
 
+        function normalizeText(str) {
+            return String(str || '').replace(/\\r\\n/g, '\\n')
+        }
+
         function showConflictModal(path, localText, remoteText) {
             activeConflictInfo = { path, localText, remoteText }
             $diffLocal.value = localText
             $diffRemote.value = remoteText
             $conflictModal.style.display = 'flex'
+            $conflictKeepLocal.focus()
         }
 
         function closeConflictModal() {
@@ -786,7 +791,7 @@ export const createOfflinePageResponse = () => {
             if (!activeConflictInfo) return
             const { path, localText } = activeConflictInfo
             closeConflictModal()
-            await syncNoteToServer(path, localText, true)
+            await syncNoteToServer(path, localText, { isForce: true })
             showToast('✅ 已保留本機版本並同步覆蓋雲端！')
         }
 
@@ -852,7 +857,13 @@ export const createOfflinePageResponse = () => {
         }
 
         function escapeHtml(str) {
-            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/\`/g, '&#96;')
         }
 
         function updateStats() {
@@ -867,7 +878,8 @@ export const createOfflinePageResponse = () => {
         async function saveCurrent(options = { showNotification: true, manualSync: false }) {
             const title = $title.value.trim() || '未命名筆記'
             const content = $content.value
-            currentSyncStatus = navigator.onLine ? 'synced' : 'pending'
+            const isManualOrReconnection = options.manualSync || currentSyncStatus === 'pending'
+            currentSyncStatus = navigator.onLine ? (currentSyncStatus === 'pending' ? 'pending' : 'synced') : 'pending'
             await offlineStore.saveNote(currentPath, {
                 title,
                 content,
@@ -881,26 +893,27 @@ export const createOfflinePageResponse = () => {
             if (options.showNotification) {
                 showToast('💾 已儲存至本地 IndexedDB')
             }
-            if (navigator.onLine && (options.manualSync || currentSyncStatus === 'pending')) {
-                syncNoteToServer(currentPath, content)
+            if (navigator.onLine) {
+                // If manual sync or pending, perform conflict-checked sync; normal auto-save performs direct POST
+                syncNoteToServer(currentPath, content, { checkConflict: isManualOrReconnection })
             }
         }
 
-        async function syncNoteToServer(path, content, isForce = false) {
+        async function syncNoteToServer(path, content, options = { checkConflict: false, isForce: false }) {
             if (!navigator.onLine) return
             try {
                 const targetPath = path.startsWith('local/') ? path.replace('local/', '') : path
                 if (!targetPath || targetPath.startsWith('offline-draft')) return
 
-                // Conflict check if not forced
-                if (!isForce) {
+                // Conflict check ONLY when syncing pending offline notes or manual sync
+                if (options.checkConflict && !options.isForce) {
                     try {
                         const checkRes = await fetch('/' + encodeURIComponent(targetPath), {
                             headers: { 'Accept': 'text/plain' }
                         })
                         if (checkRes.ok && checkRes.status === 200) {
                             const serverRaw = await checkRes.text()
-                            if (serverRaw && serverRaw.trim() !== content.trim() && currentSyncStatus === 'pending') {
+                            if (serverRaw && normalizeText(serverRaw) !== normalizeText(content) && currentSyncStatus === 'pending') {
                                 showConflictModal(path, content, serverRaw)
                                 return
                             }
@@ -915,6 +928,7 @@ export const createOfflinePageResponse = () => {
                 })
                 const data = await res.json()
                 if (data.err === 0) {
+                    currentSyncStatus = 'synced'
                     await offlineStore.updateSyncStatus(path, 'synced')
                     $syncStatus.textContent = '🟢 雲端已同步'
                     await renderNoteList()
@@ -925,6 +939,11 @@ export const createOfflinePageResponse = () => {
         }
 
         async function loadNote(path) {
+            // Cancel running debounce timer before switching notes
+            if (debounceTimer) {
+                clearTimeout(debounceTimer)
+                debounceTimer = null
+            }
             currentPath = path
             $pathDisplay.textContent = path
             const note = await offlineStore.getNote(path)
@@ -938,6 +957,7 @@ export const createOfflinePageResponse = () => {
             } else {
                 $title.value = '未命名筆記'
                 $content.value = ''
+                currentSyncStatus = 'draft'
             }
             renderPreview()
             await renderNoteList()
@@ -950,7 +970,7 @@ export const createOfflinePageResponse = () => {
             if (!list.length) {
                 const li = document.createElement('li')
                 li.className = 'note-item active'
-                li.innerHTML = '<div class="note-item-info"><div class="note-item-title">' + ($title.value || '離線草稿') + '</div><div class="note-item-meta">無搜尋結果或暫無快取</div></div>'
+                li.innerHTML = '<div class="note-item-info"><div class="note-item-title">' + escapeHtml($title.value || '離線草稿') + '</div><div class="note-item-meta">無搜尋結果或暫無快取</div></div>'
                 $noteList.appendChild(li)
                 return
             }
@@ -971,7 +991,7 @@ export const createOfflinePageResponse = () => {
                             <span class="note-badge \${badgeClass}">\${badgeLabel}</span>
                         </div>
                     </div>
-                    <button type="button" class="note-item-delete" title="刪除本機快取">🗑️</button>
+                    <button type="button" class="note-item-delete" title="刪除本機快取" aria-label="刪除本機快取">🗑️</button>
                 \`
 
                 li.onclick = (e) => {
@@ -1046,6 +1066,7 @@ export const createOfflinePageResponse = () => {
         $saveBtn.onclick = () => saveCurrent({ showNotification: true, manualSync: true })
 
         $newBtn.onclick = async () => {
+            if (debounceTimer) clearTimeout(debounceTimer)
             currentPath = 'offline-draft-' + Date.now().toString(36)
             $title.value = '新離線筆記'
             $content.value = ''
@@ -1076,6 +1097,7 @@ export const createOfflinePageResponse = () => {
         $openLocalBtn.onclick = async () => {
             const file = await openLocalMarkdownFile()
             if (file) {
+                if (debounceTimer) clearTimeout(debounceTimer)
                 $title.value = file.name.replace(/\\.md$/i, '')
                 $content.value = file.text
                 currentPath = 'local/' + file.name
@@ -1107,6 +1129,7 @@ export const createOfflinePageResponse = () => {
 
         $clearAllBtn.onclick = async () => {
             if (confirm('⚠️ 警告：確定要清空所有離線快取筆記嗎？此操作不可逆！')) {
+                if (debounceTimer) clearTimeout(debounceTimer)
                 await offlineStore.clearAllNotes()
                 currentPath = 'offline-draft'
                 $title.value = '離線筆記'
@@ -1119,7 +1142,9 @@ export const createOfflinePageResponse = () => {
 
         // Shortcuts
         document.addEventListener('keydown', (e) => {
-            if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
+            if (e.key === 'Escape' && $conflictModal.style.display === 'flex') {
+                closeConflictModal()
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') {
                 e.preventDefault()
                 saveCurrent({ showNotification: true, manualSync: true })
             } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'o') {
@@ -1138,11 +1163,18 @@ export const createOfflinePageResponse = () => {
             if (navigator.onLine) {
                 $badge.textContent = '🟢 網路已連線 / Online'
                 $badge.classList.add('online')
+                if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        if (reg && 'sync' in reg) {
+                            reg.sync.register('sync-pending-notes').catch(() => {})
+                        }
+                    }).catch(() => {})
+                }
                 // Background sync all pending notes
                 offlineStore.getPendingSyncNotes().then(pending => {
                     if (pending.length > 0) {
                         showToast('🔄 正在同步 ' + pending.length + ' 篇離線筆記至雲端...')
-                        Promise.all(pending.map(p => syncNoteToServer(p.path, p.content))).then(() => {
+                        Promise.all(pending.map(p => syncNoteToServer(p.path, p.content, { checkConflict: true }))).then(() => {
                             showToast('☁️ 離線筆記已全數同步至雲端！')
                         })
                     }

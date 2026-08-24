@@ -116,19 +116,35 @@ class OfflineNoteStore {
                     const tx = this.db.transaction(STORE_NAME, 'readwrite')
                     const store = tx.objectStore(STORE_NAME)
                     const req = store.put(noteData)
-                    req.onsuccess = () => resolve(true)
+                    req.onsuccess = () => {
+                        this.registerBackgroundSyncIfPending(noteData.syncStatus)
+                        resolve(true)
+                    }
                     req.onerror = () => {
                         this.memoryFallback.set(path, noteData)
+                        this.registerBackgroundSyncIfPending(noteData.syncStatus)
                         resolve(true)
                     }
                 } catch {
                     this.memoryFallback.set(path, noteData)
+                    this.registerBackgroundSyncIfPending(noteData.syncStatus)
                     resolve(true)
                 }
             })
         } else {
             this.memoryFallback.set(path, noteData)
+            this.registerBackgroundSyncIfPending(noteData.syncStatus)
             return true
+        }
+    }
+
+    registerBackgroundSyncIfPending(syncStatus) {
+        if (syncStatus === 'pending' && typeof navigator !== 'undefined' && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(reg => {
+                if (reg && 'sync' in reg) {
+                    reg.sync.register('sync-pending-notes').catch(() => {})
+                }
+            }).catch(() => {})
         }
     }
 
@@ -202,6 +218,44 @@ class OfflineNoteStore {
         if (this.memoryFallback.size > 0 && !this.db) {
             return Array.from(this.memoryFallback.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
         }
+
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction([STORE_NAME], 'readonly')
+                    const store = tx.objectStore(STORE_NAME)
+                    if (typeof store.getAll === 'function') {
+                        const req = store.getAll()
+                        req.onsuccess = () => {
+                            const notes = (req.result || []).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                            resolve(notes)
+                        }
+                        req.onerror = () => resolve(this._fallbackGetAllFromMeta())
+                    } else {
+                        const notes = []
+                        const req = store.openCursor()
+                        req.onsuccess = (e) => {
+                            const cursor = e.target.result
+                            if (cursor) {
+                                notes.push(cursor.value)
+                                cursor.continue()
+                            } else {
+                                notes.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+                                resolve(notes)
+                            }
+                        }
+                        req.onerror = () => resolve(this._fallbackGetAllFromMeta())
+                    }
+                } catch {
+                    resolve(this._fallbackGetAllFromMeta())
+                }
+            })
+        }
+
+        return this._fallbackGetAllFromMeta()
+    }
+
+    async _fallbackGetAllFromMeta() {
         const metaList = this.getAllNotesMetadata()
         const notes = []
         for (const meta of metaList) {
