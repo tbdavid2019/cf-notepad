@@ -607,7 +607,8 @@ router.get('/app.webmanifest', () => {
                     }
                 ],
                 accept: {
-                    'text/markdown': ['.md', '.markdown'],
+                    'text/markdown': ['.md', '.markdown', '.mdown', '.mkd'],
+                    'text/x-markdown': ['.md', '.markdown'],
                     'text/plain': ['.txt']
                 }
             }

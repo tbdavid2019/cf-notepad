@@ -47,17 +47,20 @@ test('manifest describes a standalone david888 wiki installation with share_targ
     assert.ok(manifest.icons.some(icon => icon.src === '/notepad-icon.png' && icon.sizes === '512x512'))
 })
 
-test('service worker precaches safe application shell and applies stale-while-revalidate for static assets', () => {
+test('service worker precaches safe application shell, caches images, and applies stale-while-revalidate for static assets', () => {
     const worker = staticFile('sw.js')
 
     assert.match(worker, /const PRECACHE_URLS = \[/)
     assert.match(worker, /const OFFLINE_URL = '\/_pwa-offline'/)
+    assert.match(worker, /const IMAGE_CACHE_NAME = 'david888-wiki-images-v1'/)
     assert.match(worker, /\/js\/marked\.min\.js/)
     assert.match(worker, /\/js\/purify\.min\.js/)
     assert.match(worker, /request\.method !== 'GET'/)
     assert.match(worker, /request\.mode === 'navigate'/)
     assert.match(worker, /caches\.match\(OFFLINE_URL\)/)
+    assert.match(worker, /isImageRequest/)
     assert.match(worker, /isStaticAsset/)
+    assert.match(worker, /addEventListener\('sync'/)
     assert.doesNotMatch(worker, /\/share\//)
     assert.doesNotMatch(worker, /\/api\//)
 })

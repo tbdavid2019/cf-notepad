@@ -520,23 +520,97 @@ export const createOfflinePageResponse = () => {
                 padding: 8px 12px;
                 gap: 8px;
             }
-            .sidebar {
-                width: 100%;
-                max-height: 160px;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
-            main {
-                flex-direction: column;
-            }
-            .content-split-container {
-                flex-direction: column;
-            }
-            body.mode-split .editor-textarea {
-                height: 50%;
-                border-right: none;
-                border-bottom: 1px solid var(--border-color);
-            }
+        /* Conflict Diff Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 99990;
+            padding: 16px;
+        }
+        .modal-card {
+            background: var(--surface-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .modal-body {
+            padding: 16px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .modal-tip {
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+        .diff-container {
+            display: flex;
+            gap: 12px;
+            height: 300px;
+        }
+        .diff-pane {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        .diff-title {
+            padding: 6px 10px;
+            font-size: 12px;
+            font-weight: 600;
+            background: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+        }
+        .diff-textarea {
+            flex: 1;
+            padding: 10px;
+            font-family: ui-monospace, monospace;
+            font-size: 12.5px;
+            line-height: 1.5;
+            background: var(--editor-bg);
+            color: var(--text-color);
+            border: none;
+            outline: none;
+            resize: none;
+        }
+        .modal-footer {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 8px;
+            padding: 12px 16px;
+            border-top: 1px solid var(--border-color);
+            flex-wrap: wrap;
+        }
+        @media (max-width: 640px) {
+            .diff-container { flex-direction: column; height: 360px; }
+            .modal-footer { justify-content: stretch; }
+            .modal-footer .btn { flex: 1; min-width: 120px; justify-content: center; }
         }
     </style>
 </head>
@@ -615,6 +689,34 @@ export const createOfflinePageResponse = () => {
         </section>
     </main>
 
+    <!-- Conflict Diff Modal -->
+    <div id="conflict-modal" class="modal-overlay" style="display: none;">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3>⚠️ 雲端版本衝突 (Sync Conflict)</h3>
+                <button type="button" class="btn btn-sm" id="conflict-close-btn">✕</button>
+            </div>
+            <div class="modal-body">
+                <p class="modal-tip">此筆記在雲端已被其他裝置修改，內容與您離線編輯的版本不同。請選擇處理方式：</p>
+                <div class="diff-container">
+                    <div class="diff-pane">
+                        <div class="diff-title">🖥️ 本機離線版本 (Local)</div>
+                        <textarea class="diff-textarea" id="diff-local" readonly></textarea>
+                    </div>
+                    <div class="diff-pane">
+                        <div class="diff-title">☁️ 雲端最新版本 (Cloud Remote)</div>
+                        <textarea class="diff-textarea" id="diff-remote" readonly></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="conflict-keep-local">🟢 保留本機修改（覆蓋雲端）</button>
+                <button type="button" class="btn" id="conflict-keep-remote">🔵 採用雲端版本（更新本機）</button>
+                <button type="button" class="btn" id="conflict-save-copy">📑 另存衝突副本</button>
+            </div>
+        </div>
+    </div>
+
     <div id="toast" class="toast"></div>
 
     <script type="module" src="/js/marked.min.js"></script>
@@ -644,6 +746,14 @@ export const createOfflinePageResponse = () => {
         const $readingTime = document.getElementById('reading-time')
         const $toast = document.getElementById('toast')
 
+        const $conflictModal = document.getElementById('conflict-modal')
+        const $diffLocal = document.getElementById('diff-local')
+        const $diffRemote = document.getElementById('diff-remote')
+        const $conflictCloseBtn = document.getElementById('conflict-close-btn')
+        const $conflictKeepLocal = document.getElementById('conflict-keep-local')
+        const $conflictKeepRemote = document.getElementById('conflict-keep-remote')
+        const $conflictSaveCopy = document.getElementById('conflict-save-copy')
+
         const $modeEdit = document.getElementById('mode-edit-btn')
         const $modeSplit = document.getElementById('mode-split-btn')
         const $modePreview = document.getElementById('mode-preview-btn')
@@ -651,11 +761,73 @@ export const createOfflinePageResponse = () => {
         let currentPath = 'offline-draft'
         let currentSyncStatus = 'draft'
         let debounceTimer = null
+        let activeConflictInfo = null
 
         function showToast(msg) {
             $toast.textContent = msg
             $toast.classList.add('show')
             setTimeout(() => $toast.classList.remove('show'), 3000)
+        }
+
+        function showConflictModal(path, localText, remoteText) {
+            activeConflictInfo = { path, localText, remoteText }
+            $diffLocal.value = localText
+            $diffRemote.value = remoteText
+            $conflictModal.style.display = 'flex'
+        }
+
+        function closeConflictModal() {
+            $conflictModal.style.display = 'none'
+            activeConflictInfo = null
+        }
+        $conflictCloseBtn.onclick = closeConflictModal
+
+        $conflictKeepLocal.onclick = async () => {
+            if (!activeConflictInfo) return
+            const { path, localText } = activeConflictInfo
+            closeConflictModal()
+            await syncNoteToServer(path, localText, true)
+            showToast('✅ 已保留本機版本並同步覆蓋雲端！')
+        }
+
+        $conflictKeepRemote.onclick = async () => {
+            if (!activeConflictInfo) return
+            const { path, remoteText } = activeConflictInfo
+            closeConflictModal()
+            $content.value = remoteText
+            const title = String(remoteText || '').split('\\n')[0]?.replace(/^#*\\s*/, '').trim() || path
+            $title.value = title
+            await offlineStore.saveNote(path, {
+                title,
+                content: remoteText,
+                syncStatus: 'synced',
+            })
+            renderPreview()
+            await renderNoteList()
+            showToast('✅ 已採用雲端最新版本！')
+        }
+
+        $conflictSaveCopy.onclick = async () => {
+            if (!activeConflictInfo) return
+            const { path, localText, remoteText } = activeConflictInfo
+            closeConflictModal()
+            const copyPath = path + '-conflict-' + Date.now().toString(36)
+            await offlineStore.saveNote(copyPath, {
+                title: ($title.value || path) + ' (本機衝突副本)',
+                content: localText,
+                syncStatus: 'draft',
+            })
+            $content.value = remoteText
+            const title = String(remoteText || '').split('\\n')[0]?.replace(/^#*\\s*/, '').trim() || path
+            $title.value = title
+            await offlineStore.saveNote(path, {
+                title,
+                content: remoteText,
+                syncStatus: 'synced',
+            })
+            renderPreview()
+            await renderNoteList()
+            showToast('📑 已另存本機副本為：' + copyPath)
         }
 
         // Render Markdown content to Preview pane
@@ -714,10 +886,28 @@ export const createOfflinePageResponse = () => {
             }
         }
 
-        async function syncNoteToServer(path, content) {
+        async function syncNoteToServer(path, content, isForce = false) {
             if (!navigator.onLine) return
             try {
                 const targetPath = path.startsWith('local/') ? path.replace('local/', '') : path
+                if (!targetPath || targetPath.startsWith('offline-draft')) return
+
+                // Conflict check if not forced
+                if (!isForce) {
+                    try {
+                        const checkRes = await fetch('/' + encodeURIComponent(targetPath), {
+                            headers: { 'Accept': 'text/plain' }
+                        })
+                        if (checkRes.ok && checkRes.status === 200) {
+                            const serverRaw = await checkRes.text()
+                            if (serverRaw && serverRaw.trim() !== content.trim() && currentSyncStatus === 'pending') {
+                                showConflictModal(path, content, serverRaw)
+                                return
+                            }
+                        }
+                    } catch (checkErr) {}
+                }
+
                 const res = await fetch('/' + encodeURIComponent(targetPath), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -965,6 +1155,14 @@ export const createOfflinePageResponse = () => {
         window.addEventListener('online', updateNetworkState)
         window.addEventListener('offline', updateNetworkState)
 
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data?.type === 'BACKGROUND_SYNC_TRIGGER') {
+                    updateNetworkState()
+                }
+            })
+        }
+
         // Initialize from storage
         const savedTheme = localStorage.getItem('cf-notepad-offline-theme') || 'default'
         setTheme(savedTheme)
@@ -972,7 +1170,14 @@ export const createOfflinePageResponse = () => {
         offlineStore.init().then(async () => {
             updateNetworkState()
             const list = offlineStore.getAllNotesMetadata()
-            if (list.length > 0) {
+            
+            // Check if URL specifies a target note to load
+            const urlParams = new URLSearchParams(window.location.search)
+            const targetNotePath = urlParams.get('note') || (window.location.pathname !== '/_pwa-offline' ? window.location.pathname.replace(/^\\//, '') : '')
+            
+            if (targetNotePath && (await offlineStore.getNote(targetNotePath))) {
+                await loadNote(targetNotePath)
+            } else if (list.length > 0) {
                 await loadNote(list[0].path)
             } else {
                 renderPreview()

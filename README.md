@@ -222,13 +222,14 @@
   - **手機 Tap 喚起**：觸控輕點劃線段落彈出原位小卡或一鍵拉起底部抽屜討論區，並自動滾動與閃爍聚焦對應卡片。
   - **🗑️ 留言自行刪除與作者管理**：訪客可自行刪除自己在此裝置發布的留言（HMAC Token 鑑權，無法刪除他人留言）；文章擁有者（持有編輯權限）具備全域管理刪除權限。
 - **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
-- **PWA 獨立應用、Web Share Target、檔案關聯與全功能離線工作站 (PWA Offline Workstation)**：
+- **PWA 獨立應用、Web Share Target、跨裝置檔案關聯、衝突比對與全功能離線工作站 (PWA Offline Workstation)**：
   - **可安裝與桌面無縫整合 (Standalone & Window Controls Overlay)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式，桌面版支援 Window Controls Overlay 沉浸式頂部整合。
-  - **Web Share Target API**：可在手機或電腦的其他 App（如瀏覽器、社群媒體）透過系統「分享」選單，直接將網頁連結與文字一鍵分享至 david888 wiki 建立新筆記。
-  - **檔案關聯 (File Handling API)**：作業系統中右鍵點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
+  - **跨裝置與 Android 檔案關聯 (File Handling & WebAPK Intent)**：作業系統（macOS Finder、Windows 檔案總管）或 Android 檔案管理員中點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
+  - **Web Share Target API**：可在手機或電腦的其他 App（如瀏覽器、社群媒體、檔案管理器）透過系統「分享」選單，直接將網頁連結與文字一鍵分享至 david888 wiki 建立新筆記。
+  - **雲端版本衝突可視化比對 (Visual 3-Way Conflict Diff)**：連線同步時若偵測到雲端已被其他裝置修改，自動彈出 Diff 對照視窗，提供「保留本機（覆蓋雲端）」、「採用雲端版本」與「另存衝突副本」三種彈性選擇。
   - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理與一鍵 JSON 備份/匯入。
-  - **Service Worker v5 智慧快取 (Stale-While-Revalidate)**：預先快取核心 Markdown 渲染管道（marked、purify、toolbar、extensions）與樣式，靜態資產背景自動更新，徹底告別斷網白屏。
-  - **平滑重連與背景自動同步 (Graceful Background Sync)**：網路恢復時自動將離線待同步草稿依序上傳至雲端，無需重新整理頁面中斷打字體驗。
+  - **Service Worker v5 智慧快取與圖片多媒體庫 (Stale-While-Revalidate & Image Cache)**：預先快取核心 Markdown 渲染管道（marked、purify、toolbar、extensions）與樣式，並建立 `david888-wiki-images-v1` 專屬圖片快取庫，離線閱讀圖文筆記零破圖。
+  - **平滑重連與背景自動同步 (Graceful Background Sync)**：支援 Service Worker 原生 `sync-pending-notes`；網路恢復時自動將離線待同步草稿依序上傳至雲端，無需重新整理頁面中斷打字體驗。
   - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
@@ -547,12 +548,13 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - `POST /api/markdown/extract`: Extract plain text, heading hierarchy, links, and word/reading-time statistics.
   - `POST /api/markdown/lint`: Validate and auto-fix unclosed code fences, missing heading spaces, etc.
 - **PDF Export & Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
-- **PWA Application, Web Share Target, File Handling & Offline Workstation**:
+- **PWA Application, Web Share Target, Multi-Device File Handling, Conflict Diff & Offline Workstation**:
   - **Standalone & Window Controls Overlay**: Installs seamlessly on macOS, Windows, iOS, and Android; desktop versions support Window Controls Overlay for titlebar integration.
+  - **Multi-Device & Android File Association (File Handling & WebAPK Intent)**: Click or open `.md` / `.markdown` / `.txt` files directly in macOS Finder, Windows Explorer, or Android file managers to launch and edit in `wiki.david888.com`.
   - **Web Share Target API**: Share text, links, or articles directly from any mobile or desktop app into david888 wiki to instantly create a new note.
-  - **OS File Association (File Handling API)**: Right-click `.md` / `.markdown` / `.txt` files in macOS Finder or Windows Explorer to open directly in `wiki.david888.com`.
+  - **Visual 3-Way Conflict Diff Modal**: Detects remote server changes during sync and provides an interactive side-by-side Diff modal with "Keep Local", "Keep Remote", and "Save as Conflict Copy" actions.
   - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, and one-click JSON backup export/import.
-  - **Service Worker v5 Resilient Caching (Stale-While-Revalidate)**: Precaches core Markdown rendering pipeline (marked, purify, toolbar, extensions) and styles, serving assets instantly offline and updating in background.
+  - **Service Worker v5 Resilient Caching & Image Cache (`david888-wiki-images-v1`)**: Precaches core Markdown rendering pipeline and caches R2 images and external media to prevent broken images while offline.
   - **Graceful Reconnection & Background Sync**: Automatically synchronizes pending offline notes to cloud in the background upon reconnection without disruptive page reloads.
   - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badges (`🟢 Saved locally`, `☁️ Cloud synced`).
   - **Keyboard Shortcuts**:
