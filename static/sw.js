@@ -129,7 +129,8 @@ self.addEventListener('fetch', event => {
         url.pathname.startsWith('/js/') ||
         url.pathname.startsWith('/css/') ||
         url.pathname.startsWith('/fonts/') ||
-        url.pathname.startsWith('/wasm/')
+        url.pathname.startsWith('/wasm/') ||
+        /\.(css|js|mjs|wasm|woff2?|ttf|eot)$/i.test(url.pathname)
     )
 
     if (!isStaticAsset) return

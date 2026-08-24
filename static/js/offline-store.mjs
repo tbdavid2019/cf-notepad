@@ -122,18 +122,15 @@ class OfflineNoteStore {
                     }
                     req.onerror = () => {
                         this.memoryFallback.set(path, noteData)
-                        this.registerBackgroundSyncIfPending(noteData.syncStatus)
                         resolve(true)
                     }
                 } catch {
                     this.memoryFallback.set(path, noteData)
-                    this.registerBackgroundSyncIfPending(noteData.syncStatus)
                     resolve(true)
                 }
             })
         } else {
             this.memoryFallback.set(path, noteData)
-            this.registerBackgroundSyncIfPending(noteData.syncStatus)
             return true
         }
     }

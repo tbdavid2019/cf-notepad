@@ -520,6 +520,8 @@ export const createOfflinePageResponse = () => {
                 padding: 8px 12px;
                 gap: 8px;
             }
+        }
+
         /* Conflict Diff Modal */
         .modal-overlay {
             position: fixed;
@@ -770,7 +772,7 @@ export const createOfflinePageResponse = () => {
         }
 
         function normalizeText(str) {
-            return String(str || '').replace(/\\r\\n/g, '\\n')
+            return String(str || '').replace(/\\r\\n/g, '\\n').trim()
         }
 
         function showConflictModal(path, localText, remoteText) {
@@ -802,6 +804,7 @@ export const createOfflinePageResponse = () => {
             $content.value = remoteText
             const title = String(remoteText || '').split('\\n')[0]?.replace(/^#*\\s*/, '').trim() || path
             $title.value = title
+            currentSyncStatus = 'synced'
             await offlineStore.saveNote(path, {
                 title,
                 content: remoteText,
@@ -825,6 +828,7 @@ export const createOfflinePageResponse = () => {
             $content.value = remoteText
             const title = String(remoteText || '').split('\\n')[0]?.replace(/^#*\\s*/, '').trim() || path
             $title.value = title
+            currentSyncStatus = 'synced'
             await offlineStore.saveNote(path, {
                 title,
                 content: remoteText,
@@ -878,8 +882,12 @@ export const createOfflinePageResponse = () => {
         async function saveCurrent(options = { showNotification: true, manualSync: false }) {
             const title = $title.value.trim() || '未命名筆記'
             const content = $content.value
-            const isManualOrReconnection = options.manualSync || currentSyncStatus === 'pending'
-            currentSyncStatus = navigator.onLine ? (currentSyncStatus === 'pending' ? 'pending' : 'synced') : 'pending'
+            const isDraft = currentPath.startsWith('offline-draft') || currentPath.startsWith('local/')
+            
+            // Keystroke auto-save: always marks 'pending' (or 'draft') since it's saved locally to IDB first
+            // Only upon successful server POST response does it transition to 'synced'
+            currentSyncStatus = isDraft ? 'draft' : 'pending'
+
             await offlineStore.saveNote(currentPath, {
                 title,
                 content,
@@ -887,15 +895,15 @@ export const createOfflinePageResponse = () => {
                 syncStatus: currentSyncStatus
             })
             $pathDisplay.textContent = currentPath
-            $syncStatus.textContent = currentSyncStatus === 'synced' ? '🟢 已與雲端同步' : '🟡 待同步至雲端'
+            $syncStatus.textContent = currentSyncStatus === 'draft' ? '📝 本機草稿' : '🟡 待同步至雲端'
             $saveStatus.textContent = '🟢 已儲存至本地 IndexedDB (' + new Date().toLocaleTimeString() + ')'
             await renderNoteList()
             if (options.showNotification) {
                 showToast('💾 已儲存至本地 IndexedDB')
             }
-            if (navigator.onLine && options.manualSync) {
-                // Server sync ONLY on manual save or explicit sync trigger, avoiding server spam during typing
-                syncNoteToServer(currentPath, content, { checkConflict: isManualOrReconnection })
+            if (navigator.onLine && options.manualSync && !isDraft) {
+                // Server sync ONLY on manual save / Cmd+S, avoiding server spam during keystrokes
+                syncNoteToServer(currentPath, content, { checkConflict: true })
             }
         }
 
