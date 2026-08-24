@@ -6545,11 +6545,11 @@ themeCss + '\\n' +
                         '</div>' +
                         '<div class="book-top-nav-group">' +
                             '<button type="button" id="book-offline-cache-btn" class="book-top-nav-btn" title="' + (isZh ? '📥 快取整本書至瀏覽器，離線或斷網時仍可流暢閱讀' : 'Cache entire book offline in browser') + '">' +
-                                '<span>📥</span> <span class="cache-btn-text">' + offlineBtnText + '</span>' +
+                                '<span>📥</span> <span class="cache-btn-text book-btn-label">' + offlineBtnText + '</span>' +
                             '</button>' +
                             '<div class="book-export-dropdown">' +
                                 '<button type="button" id="book-export-toggle-btn" class="book-top-nav-btn" aria-haspopup="true" aria-expanded="false" title="' + (isZh ? '匯出電子書' : 'Export Book') + '">' +
-                                    '<span>📤</span> <span>' + exportBtnText + '</span>' +
+                                    '<span>📤</span> <span class="book-btn-label">' + exportBtnText + '</span>' +
                                 '</button>' +
                                 '<div class="book-export-menu" id="book-export-menu" role="menu">' +
                                     '<button type="button" class="book-export-item" id="book-export-md-btn" role="menuitem">' +
@@ -6563,8 +6563,8 @@ themeCss + '\\n' +
                                     '</button>' +
                                 '</div>' +
                             '</div>' +
-                            '<button type="button" id="book-prev-btn" class="book-top-nav-btn" title="' + (isZh ? '上一章 ([)' : 'Previous ([)') + '">← ' + (isZh ? '上一章' : 'Prev') + '</button>' +
-                            '<button type="button" id="book-next-btn" class="book-top-nav-btn" title="' + (isZh ? '下一章 (])' : 'Next (])') + '">' + (isZh ? '下一章' : 'Next') + ' →</button>' +
+                            '<button type="button" id="book-prev-btn" class="book-top-nav-btn" title="' + (isZh ? '上一章 ([)' : 'Previous ([)') + '"><span>←</span> <span class="book-btn-label">' + (isZh ? '上一章' : 'Prev') + '</span></button>' +
+                            '<button type="button" id="book-next-btn" class="book-top-nav-btn" title="' + (isZh ? '下一章 (])' : 'Next (])') + '"><span class="book-btn-label">' + (isZh ? '下一章' : 'Next') + '</span> <span>→</span></button>' +
                             '<a href="#" id="book-open-tab-btn" class="book-top-nav-btn" target="_blank" rel="noopener noreferrer" title="' + (isZh ? '在新分頁開啟' : 'Open in tab') + '">↗</a>' +
                         '</div>' +
                     '</div>' +
@@ -6770,12 +6770,14 @@ themeCss + '\\n' +
                     var isShown = exportMenu.classList.toggle('show');
                     exportToggleBtn.setAttribute('aria-expanded', isShown ? 'true' : 'false');
                 });
-                document.addEventListener('click', function(e) {
-                    if (!exportMenu.contains(e.target) && e.target !== exportToggleBtn) {
+                var closeExportIfOutside = function(e) {
+                    if (!exportMenu.contains(e.target) && e.target !== exportToggleBtn && !exportToggleBtn.contains(e.target)) {
                         exportMenu.classList.remove('show');
                         exportToggleBtn.setAttribute('aria-expanded', 'false');
                     }
-                });
+                };
+                document.addEventListener('click', closeExportIfOutside);
+                document.addEventListener('touchstart', closeExportIfOutside, { passive: true });
             }
 
             async function exportCombinedMarkdown() {

@@ -849,6 +849,44 @@ pre.has-line-numbers {
     .book-nav-card.next {
         grid-column: 1;
     }
+    .book-topbar {
+        padding: 8px 12px;
+        gap: 8px;
+    }
+    .book-top-nav-group {
+        gap: 4px;
+    }
+    .book-top-nav-btn {
+        font-size: 11.5px;
+        padding: 4px 8px;
+    }
+}
+
+@media (max-width: 640px) {
+    .book-topbar {
+        padding: 6px 10px;
+        gap: 6px;
+    }
+    .book-breadcrumbs {
+        max-width: 120px;
+        font-size: 12px;
+    }
+    .book-btn-label {
+        display: none !important;
+    }
+    .book-top-nav-btn {
+        padding: 4px 7px;
+        font-size: 12px;
+    }
+    .book-export-menu {
+        position: fixed;
+        top: 48px;
+        left: 12px;
+        right: 12px;
+        min-width: unset;
+        max-width: calc(100vw - 24px);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
 }
 
 /* Book Mode Export Dropdown & Offline Cache Badge */
@@ -928,7 +966,11 @@ pre.has-line-numbers {
         background: #ffffff !important;
         color: #000000 !important;
     }
-    body.book-mode-active #book-mode-container {
+    body.book-mode-active #book-mode-container,
+    body.book-mode-active .book-sidebar,
+    body.book-mode-active .book-topbar,
+    body.book-mode-active .book-sidebar-resizer,
+    body.book-mode-active .book-sidebar-backdrop {
         display: none !important;
     }
     body.book-mode-active #book-print-container {
