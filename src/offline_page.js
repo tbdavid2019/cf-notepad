@@ -901,9 +901,27 @@ export const createOfflinePageResponse = () => {
             if (options.showNotification) {
                 showToast('💾 已儲存至本地 IndexedDB')
             }
-            if (navigator.onLine && options.manualSync && !isDraft) {
-                // Server sync ONLY on manual save / Cmd+S, avoiding server spam during keystrokes
-                syncNoteToServer(currentPath, content, { checkConflict: true })
+            if (navigator.onLine && options.manualSync) {
+                if (isDraft) {
+                    const defaultSlug = encodeURIComponent(title.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5_-]+/gi, '-').replace(/^-+|-+$/g, '')) || 'note-' + Date.now().toString(36)
+                    const targetSlug = prompt('此為本機草稿，請輸入要發布至雲端的 Wiki 路徑名稱 (Wiki Path)：', defaultSlug)
+                    if (targetSlug && targetSlug.trim()) {
+                        const cleanPath = targetSlug.trim().replace(/^\/+/, '')
+                        await offlineStore.deleteNote(currentPath)
+                        currentPath = cleanPath
+                        $pathDisplay.textContent = currentPath
+                        currentSyncStatus = 'pending'
+                        await offlineStore.saveNote(currentPath, {
+                            title,
+                            content,
+                            theme: $themeSelect.value,
+                            syncStatus: 'pending'
+                        })
+                        await syncNoteToServer(currentPath, content, { checkConflict: true })
+                    }
+                } else {
+                    syncNoteToServer(currentPath, content, { checkConflict: true })
+                }
             }
         }
 

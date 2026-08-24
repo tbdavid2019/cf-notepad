@@ -265,7 +265,7 @@ class OfflineNoteStore {
 
     async getPendingSyncNotes() {
         const notes = await this.getAllNotes()
-        return notes.filter(note => note.syncStatus === 'pending' || note.syncStatus === 'draft')
+        return notes.filter(note => note.syncStatus === 'pending')
     }
 
     async searchNotes(query = '') {
