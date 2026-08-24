@@ -115,6 +115,11 @@
       "id": "fido-admin-login",
       "zh-TW": "小訣竅：管理員登入支援 Touch ID / 指紋 FIDO2 一鍵登入；登入後台後可隨時綁定您的筆電指紋、手機 Face ID 或 Passkey 裝置！",
       "en-US": "Tip: Admin login supports Touch ID / FIDO2 Passkey one-click login. After entering the dashboard, you can bind your laptop Touch ID, mobile Face ID, or Passkey device anytime!"
+    },
+    {
+      "id": "pwa-offline-workstation",
+      "zh-TW": "小訣竅：支援完整 PWA 離線模式！斷網時自動啟用雙欄 Markdown 離線工作站，具備即時預覽、主題切換、搜尋、備份與連線自動背景同步。",
+      "en-US": "Tip: Full PWA offline mode supported! When offline, the dual-pane Markdown workstation automatically activates with live preview, themes, search, backup, and auto-sync."
     }
   ]
 }

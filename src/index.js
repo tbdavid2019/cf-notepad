@@ -527,12 +527,29 @@ router.head('/', homePage)
 
 async function createNewNote(request, editorFormat) {
     const originUrl = new URL(request.url)
+    const shareTitle = originUrl.searchParams.get('title')
+    const shareText = originUrl.searchParams.get('text')
+    const shareLink = originUrl.searchParams.get('url')
+
+    let initialContent = ''
+    if (shareTitle || shareText || shareLink) {
+        const parts = []
+        if (shareTitle) parts.push(`# ${shareTitle}`)
+        if (shareText) parts.push(shareText)
+        if (shareLink) parts.push(shareLink)
+        initialContent = parts.join('\n\n')
+    }
+
     for (let attempt = 0; attempt < 12; attempt += 1) {
         const path = genRandomStr(getSlugLength())
         const existing = await driverQueryNote(path)
         if (existing.value || Object.keys(existing.metadata || {}).length > 0) continue
 
-        await driverPutNote(path, '', { editorFormat, blockDocumentVersion: editorFormat === 'block' ? 2 : undefined })
+        await driverPutNote(path, initialContent, {
+            editorFormat,
+            title: shareTitle || undefined,
+            blockDocumentVersion: editorFormat === 'block' ? 2 : undefined
+        })
         const nextUrl = new URL(`/${path}`, originUrl)
         nextUrl.searchParams.set('new', '1')
         return Response.redirect(nextUrl.href, 302)
@@ -553,6 +570,7 @@ router.get('/app.webmanifest', () => {
         start_url: '/',
         scope: '/',
         display: 'standalone',
+        display_override: ['window-controls-overlay', 'standalone', 'minimal-ui'],
         background_color: '#f9f6f0',
         theme_color: '#0f172a',
         categories: ['productivity', 'utilities'],
@@ -568,6 +586,15 @@ router.get('/app.webmanifest', () => {
                 type: 'image/png'
             }
         ],
+        share_target: {
+            action: '/new/markdown',
+            method: 'GET',
+            params: {
+                title: 'title',
+                text: 'text',
+                url: 'url'
+            }
+        },
         file_handlers: [
             {
                 action: '/',
@@ -591,6 +618,13 @@ router.get('/app.webmanifest', () => {
                 short_name: 'New Note',
                 description: 'Create a new note',
                 url: '/new/markdown',
+                icons: [{ src: '/notepad-icon-192.png', sizes: '192x192' }]
+            },
+            {
+                name: 'Offline Workspace',
+                short_name: 'Offline',
+                description: 'Open offline workspace with local notes',
+                url: '/_pwa-offline',
                 icons: [{ src: '/notepad-icon-192.png', sizes: '192x192' }]
             }
         ]

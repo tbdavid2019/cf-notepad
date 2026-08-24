@@ -222,14 +222,18 @@
   - **手機 Tap 喚起**：觸控輕點劃線段落彈出原位小卡或一鍵拉起底部抽屜討論區，並自動滾動與閃爍聚焦對應卡片。
   - **🗑️ 留言自行刪除與作者管理**：訪客可自行刪除自己在此裝置發布的留言（HMAC Token 鑑權，無法刪除他人留言）；文章擁有者（持有編輯權限）具備全域管理刪除權限。
 - **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
-- **PWA 獨立應用、檔案關聯 (File Handling) 與離線工作區 (Offline Workspace)**：
-  - **可安裝 (Add to Home Screen)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式。
-  - **檔案關聯 (File Handling API)**：作業系統（macOS Finder 或 Windows 檔案總管）中右鍵點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
-  - **離線工作區 (Offline Workspace)**：斷網時自動進入離線編輯模式，支援建立離線草稿、檢視所有本機快取筆記與匯出 `.md`。
-  - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），在無痕模式或不支援時自動降級至記憶體快取。
+- **PWA 獨立應用、Web Share Target、檔案關聯與全功能離線工作站 (PWA Offline Workstation)**：
+  - **可安裝與桌面無縫整合 (Standalone & Window Controls Overlay)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式，桌面版支援 Window Controls Overlay 沉浸式頂部整合。
+  - **Web Share Target API**：可在手機或電腦的其他 App（如瀏覽器、社群媒體）透過系統「分享」選單，直接將網頁連結與文字一鍵分享至 david888 wiki 建立新筆記。
+  - **檔案關聯 (File Handling API)**：作業系統中右鍵點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
+  - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理與一鍵 JSON 備份/匯入。
+  - **Service Worker v5 智慧快取 (Stale-While-Revalidate)**：預先快取核心 Markdown 渲染管道（marked、purify、toolbar、extensions）與樣式，靜態資產背景自動更新，徹底告別斷網白屏。
+  - **平滑重連與背景自動同步 (Graceful Background Sync)**：網路恢復時自動將離線待同步草稿依序上傳至雲端，無需重新整理頁面中斷打字體驗。
+  - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
     - `Cmd/Ctrl + O`：編輯模式快速選擇本機 Markdown 檔案載入。
+    - `Cmd/Ctrl + E`：離線工作站快速切換編輯/雙欄/預覽檢視。
 
 ![權限防護設計](image-2.png)
 
@@ -543,10 +547,18 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - `POST /api/markdown/extract`: Extract plain text, heading hierarchy, links, and word/reading-time statistics.
   - `POST /api/markdown/lint`: Validate and auto-fix unclosed code fences, missing heading spaces, etc.
 - **PDF Export & Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
-- **PWA App, File Handling & Offline Workspace**:
-  - **OS File Association (File Handling API)**: Right-click `.md` files in macOS Finder or Windows Explorer to open directly in `wiki.david888.com`.
-  - **Offline Workspace (`/_pwa-offline`)**: Work completely offline with local draft creation, caching, and export.
-  - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badge (`🟢 Saved locally`, `☁️ Cloud synced`).
+- **PWA Application, Web Share Target, File Handling & Offline Workstation**:
+  - **Standalone & Window Controls Overlay**: Installs seamlessly on macOS, Windows, iOS, and Android; desktop versions support Window Controls Overlay for titlebar integration.
+  - **Web Share Target API**: Share text, links, or articles directly from any mobile or desktop app into david888 wiki to instantly create a new note.
+  - **OS File Association (File Handling API)**: Right-click `.md` / `.markdown` / `.txt` files in macOS Finder or Windows Explorer to open directly in `wiki.david888.com`.
+  - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, and one-click JSON backup export/import.
+  - **Service Worker v5 Resilient Caching (Stale-While-Revalidate)**: Precaches core Markdown rendering pipeline (marked, purify, toolbar, extensions) and styles, serving assets instantly offline and updating in background.
+  - **Graceful Reconnection & Background Sync**: Automatically synchronizes pending offline notes to cloud in the background upon reconnection without disruptive page reloads.
+  - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badges (`🟢 Saved locally`, `☁️ Cloud synced`).
+  - **Keyboard Shortcuts**:
+    - `Cmd/Ctrl + S`: Instant save to IndexedDB & cloud in edit mode; download `.md` in share mode.
+    - `Cmd/Ctrl + O`: Fast local Markdown file picker in edit mode.
+    - `Cmd/Ctrl + E`: Toggle Edit / Split / Preview mode in offline workstation.
 
 ![Access Control Diagram](image-2.png)
 

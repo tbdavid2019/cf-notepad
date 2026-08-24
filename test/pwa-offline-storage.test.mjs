@@ -23,33 +23,47 @@ test('manifest and worker route define File Handling API for markdown and text f
     assert.match(workerSource, /text\/markdown/)
 })
 
-test('offline store module provides hybrid storage, export, and file opening methods', async () => {
+test('offline store module provides hybrid storage, export, search, backup, and sync methods', async () => {
     const offlineStoreModule = await import('../static/js/offline-store.mjs')
     assert.ok(offlineStoreModule.offlineStore, 'offlineStore instance exists')
     assert.equal(typeof offlineStoreModule.exportMarkdownFile, 'function')
     assert.equal(typeof offlineStoreModule.openLocalMarkdownFile, 'function')
 
-    // Test offline store save and retrieve in node environment (memory fallback)
+    // Test offline store save, search, and retrieve in node environment (memory fallback)
     const store = offlineStoreModule.offlineStore
     await store.saveNote('test-note-1', {
         title: 'Test Note Title',
-        content: '# Hello World\nThis is content',
+        content: '# Hello World\nThis is content for search test',
         theme: 'tokyo-night',
-        syncStatus: 'draft'
+        syncStatus: 'pending'
     })
 
     const note = await store.getNote('test-note-1')
     assert.ok(note)
     assert.equal(note.title, 'Test Note Title')
-    assert.equal(note.content, '# Hello World\nThis is content')
+    assert.equal(note.content, '# Hello World\nThis is content for search test')
     assert.equal(note.theme, 'tokyo-night')
+    assert.equal(note.syncStatus, 'pending')
 
+    // Search
+    const searchResults = await store.searchNotes('search test')
+    assert.ok(searchResults.some(n => n.path === 'test-note-1'))
+
+    // Pending notes
+    const pendingNotes = await store.getPendingSyncNotes()
+    assert.ok(pendingNotes.some(n => n.path === 'test-note-1'))
+
+    // Backup JSON
+    const backupJson = await store.exportBackupJson()
+    assert.ok(backupJson.includes('test-note-1'))
+
+    // Delete
     await store.deleteNote('test-note-1')
     const deleted = await store.getNote('test-note-1')
     assert.equal(deleted, null)
 })
 
-test('offline page provides interactive offline workspace with local cache listing and export button', async () => {
+test('offline page provides interactive offline workspace with live preview, search, mode and theme controls', async () => {
     const response = createOfflinePageResponse()
     const html = await response.text()
     assert.equal(response.status, 200)
@@ -57,7 +71,14 @@ test('offline page provides interactive offline workspace with local cache listi
     assert.match(html, /本機快取筆記/)
     assert.match(html, /導出 Markdown/)
     assert.match(html, /開啟本機 \.md/)
+    assert.match(html, /preview-area/)
+    assert.match(html, /mode-split-btn/)
+    assert.match(html, /theme-selector/)
+    assert.match(html, /search-notes/)
+    assert.match(html, /backup-btn/)
     assert.match(html, /\/js\/offline-store\.mjs/)
+    assert.match(html, /\/js\/marked\.min\.js/)
+    assert.match(html, /\/js\/purify\.min\.js/)
 })
 
 test('base template integrates offline store, Cmd+S shortcut, and PWA launch queue', () => {

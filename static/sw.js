@@ -1,4 +1,4 @@
-const CACHE_NAME = 'david888-wiki-shell-v4'
+const CACHE_NAME = 'david888-wiki-shell-v5'
 const OFFLINE_URL = '/_pwa-offline'
 const PRECACHE_URLS = [
     OFFLINE_URL,
@@ -7,8 +7,13 @@ const PRECACHE_URLS = [
     '/notepad-icon.png',
     '/notepad-icon.svg',
     '/favicon.ico',
+    '/css/app.css',
     '/js/offline-store.mjs',
     '/js/pwa-install.mjs',
+    '/js/marked.min.js',
+    '/js/purify.min.js',
+    '/js/markdown-toolbar.mjs',
+    '/js/markdown-extensions.mjs',
 ]
 
 self.addEventListener('install', event => {
@@ -39,6 +44,7 @@ self.addEventListener('fetch', event => {
     const url = new URL(request.url)
     if (url.origin !== self.location.origin) return
 
+    // 1. Navigation requests fallback to offline workspace if network fails
     if (request.mode === 'navigate') {
         event.respondWith(
             fetch(request).catch(async () =>
@@ -48,6 +54,7 @@ self.addEventListener('fetch', event => {
         return
     }
 
+    // 2. Web App Manifest
     if (url.pathname === '/app.webmanifest') {
         event.respondWith(
             fetch(request)
@@ -61,9 +68,34 @@ self.addEventListener('fetch', event => {
         return
     }
 
-    if (!PRECACHE_URLS.includes(url.pathname)) return
+    // 3. Stale-While-Revalidate for JS, CSS, Fonts, Images, and Precached Assets
+    const isStaticAsset = (
+        PRECACHE_URLS.includes(url.pathname) ||
+        url.pathname.startsWith('/js/') ||
+        url.pathname.startsWith('/css/') ||
+        url.pathname.startsWith('/fonts/') ||
+        url.pathname.startsWith('/img/') ||
+        url.pathname.startsWith('/wasm/') ||
+        url.pathname.endsWith('.png') ||
+        url.pathname.endsWith('.svg') ||
+        url.pathname.endsWith('.ico')
+    )
+
+    if (!isStaticAsset) return
 
     event.respondWith(
-        caches.match(request).then(response => response || fetch(request)),
+        caches.open(CACHE_NAME).then(async cache => {
+            const cachedResponse = await cache.match(request)
+            const networkFetch = fetch(request)
+                .then(networkResponse => {
+                    if (networkResponse && networkResponse.status === 200) {
+                        cache.put(request, networkResponse.clone())
+                    }
+                    return networkResponse
+                })
+                .catch(() => null)
+
+            return cachedResponse || (await networkFetch) || Response.error()
+        }),
     )
 })

@@ -6,6 +6,7 @@
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
+  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
   "background_color": "#f9f6f0",
   "theme_color": "#0f172a",
   "categories": ["productivity", "utilities"],
@@ -21,6 +22,15 @@
       "type": "image/png"
     }
   ],
+  "share_target": {
+    "action": "/new/markdown",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
   "file_handlers": [
     {
       "action": "/",
@@ -44,6 +54,13 @@
       "short_name": "New Note",
       "description": "Create a new note",
       "url": "/new/markdown",
+      "icons": [{ "src": "/notepad-icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Offline Workspace",
+      "short_name": "Offline",
+      "description": "Open offline workspace with local notes",
+      "url": "/_pwa-offline",
       "icons": [{ "src": "/notepad-icon-192.png", "sizes": "192x192" }]
     }
   ]

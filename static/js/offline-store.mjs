@@ -197,8 +197,117 @@ class OfflineNoteStore {
         return true
     }
 
+    async getAllNotes() {
+        await this.init()
+        if (this.memoryFallback.size > 0 && !this.db) {
+            return Array.from(this.memoryFallback.values()).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        }
+        const metaList = this.getAllNotesMetadata()
+        const notes = []
+        for (const meta of metaList) {
+            const note = await this.getNote(meta.path)
+            if (note) notes.push(note)
+            else notes.push({ ...meta, content: '' })
+        }
+        return notes
+    }
+
+    async getPendingSyncNotes() {
+        const notes = await this.getAllNotes()
+        return notes.filter(note => note.syncStatus === 'pending' || note.syncStatus === 'draft')
+    }
+
+    async searchNotes(query = '') {
+        const q = String(query || '').trim().toLowerCase()
+        if (!q) return this.getAllNotesMetadata()
+
+        const all = await this.getAllNotes()
+        return all
+            .filter(n =>
+                (n.title && n.title.toLowerCase().includes(q)) ||
+                (n.path && n.path.toLowerCase().includes(q)) ||
+                (n.content && n.content.toLowerCase().includes(q))
+            )
+            .map(n => ({
+                path: n.path,
+                title: n.title || n.path,
+                updatedAt: n.updatedAt,
+                size: n.size || (n.content ? n.content.length : 0),
+                theme: n.theme || 'default',
+                syncStatus: n.syncStatus || 'synced',
+                format: n.format || 'markdown',
+            }))
+    }
+
+    async clearAllNotes() {
+        await this.init()
+        try {
+            if (typeof localStorage !== 'undefined') {
+                localStorage.removeItem(META_KEY)
+            }
+        } catch {}
+        this.memoryFallback.clear()
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction(STORE_NAME, 'readwrite')
+                    const store = tx.objectStore(STORE_NAME)
+                    const req = store.clear()
+                    req.onsuccess = () => resolve(true)
+                    req.onerror = () => resolve(false)
+                } catch {
+                    resolve(false)
+                }
+            })
+        }
+        return true
+    }
+
+    async exportBackupJson() {
+        const notes = await this.getAllNotes()
+        return JSON.stringify({
+            version: 1,
+            exportedAt: Date.now(),
+            notes,
+        }, null, 2)
+    }
+
+    async importBackupJson(jsonStr) {
+        try {
+            const parsed = typeof jsonStr === 'string' ? JSON.parse(jsonStr) : jsonStr
+            const notes = Array.isArray(parsed?.notes) ? parsed.notes : (Array.isArray(parsed) ? parsed : [])
+            let importedCount = 0
+            for (const note of notes) {
+                if (note && note.path) {
+                    await this.saveNote(note.path, {
+                        title: note.title || note.path,
+                        content: note.content || '',
+                        theme: note.theme || 'default',
+                        format: note.format || 'markdown',
+                        syncStatus: note.syncStatus || 'synced',
+                    })
+                    importedCount++
+                }
+            }
+            return { success: true, count: importedCount }
+        } catch (err) {
+            return { success: false, error: err.message }
+        }
+    }
+
     getAllNotesMetadata() {
         const metaMap = this.getMetadataMap()
+        if (Object.keys(metaMap).length === 0 && this.memoryFallback.size > 0) {
+            return Array.from(this.memoryFallback.values()).map(n => ({
+                path: n.path,
+                title: n.title || n.path,
+                updatedAt: n.updatedAt || Date.now(),
+                size: n.size || (n.content ? n.content.length : 0),
+                theme: n.theme || 'default',
+                syncStatus: n.syncStatus || 'synced',
+                format: n.format || 'markdown',
+            })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+        }
         return Object.values(metaMap).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
     }
 }
