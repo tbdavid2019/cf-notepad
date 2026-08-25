@@ -444,7 +444,10 @@ ${getMarkdownCss()}
     ${MATH_FORMAT_MODAL(lang)}
     ${CITE_MODAL(lang)}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
-    ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `<script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>` : ''}
+    ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `
+    <script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>
+    <script src="/js/marked.min.js"></script>
+    ` : ''}
     
     <!-- KaTeX CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
@@ -1100,8 +1103,19 @@ ${getMarkdownCss()}
             if (!node) return;
             try {
                 const expanded = expandMarkdownExtensions(text);
-                const file = await processor.process(expanded);
-                const clean = DOMPurify.sanitize(String(file), {
+                let rawHtml = '';
+                if (typeof processor !== 'undefined' && processor && typeof processor.process === 'function') {
+                    try {
+                        const file = await processor.process(expanded);
+                        rawHtml = String(file);
+                    } catch (procErr) {
+                        console.warn('Unified processor failed, falling back to marked:', procErr);
+                        rawHtml = (window.marked && typeof window.marked.parse === 'function') ? window.marked.parse(expanded) : '';
+                    }
+                } else if (window.marked && typeof window.marked.parse === 'function') {
+                    rawHtml = window.marked.parse(expanded);
+                }
+                const clean = DOMPurify.sanitize(rawHtml, {
                     ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
                     ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title'],
                     WHOLE_DOCUMENT: false,

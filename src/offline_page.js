@@ -1,4 +1,5 @@
 import { APP_NAME } from './constant.js'
+import { getMarkdownCss } from './styles/markdown.css.js'
 
 export const createOfflinePageResponse = () => {
     const appName = APP_NAME || 'david888 wiki'
@@ -14,6 +15,7 @@ export const createOfflinePageResponse = () => {
     <style>
         :root {
             color-scheme: light dark;
+            --editor-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             --bg-color: #0f172a;
             --surface-bg: #1e293b;
             --card-bg: #1e293b;
@@ -29,7 +31,7 @@ export const createOfflinePageResponse = () => {
             --warning-color: #f59e0b;
             --editor-bg: #0b1120;
             --preview-bg: #0f172a;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            font-family: var(--editor-font-family);
         }
 
         body.theme-light {
@@ -426,6 +428,59 @@ export const createOfflinePageResponse = () => {
             overflow: hidden;
         }
 
+        .editor-pane {
+            border-right: 1px solid var(--border-color);
+        }
+
+        /* Offline Markdown Toolbar */
+        .offline-markdown-toolbar {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+            padding: 5px 8px;
+            background: var(--surface-bg);
+            border-bottom: 1px solid var(--border-color);
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: none;
+        }
+        .offline-markdown-toolbar::-webkit-scrollbar {
+            display: none;
+        }
+        .toolbar-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 28px;
+            height: 28px;
+            padding: 0 6px;
+            border-radius: 4px;
+            border: 1px solid transparent;
+            background: transparent;
+            color: var(--text-color);
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.12s;
+            user-select: none;
+        }
+        .toolbar-btn:hover {
+            background: var(--card-bg);
+            border-color: var(--border-color);
+            color: var(--primary-color);
+        }
+        .toolbar-btn:active {
+            transform: scale(0.96);
+        }
+        .toolbar-sep {
+            display: inline-block;
+            width: 1px;
+            height: 16px;
+            background: var(--border-color);
+            margin: 0 4px;
+            flex-shrink: 0;
+        }
+
         .editor-textarea {
             flex: 1;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -434,7 +489,6 @@ export const createOfflinePageResponse = () => {
             padding: 16px;
             background: var(--editor-bg);
             border: none;
-            border-right: 1px solid var(--border-color);
             color: var(--text-color);
             resize: none;
             outline: none;
@@ -443,35 +497,50 @@ export const createOfflinePageResponse = () => {
 
         .preview-area {
             flex: 1;
-            padding: 20px 24px;
+            padding: 24px 28px;
             background: var(--preview-bg);
             overflow-y: auto;
             color: var(--text-color);
             line-height: 1.7;
         }
 
-        /* Preview Markdown Typography */
-        .preview-area h1, .preview-area h2, .preview-area h3 { margin-top: 1.2em; margin-bottom: 0.5em; font-weight: 700; }
-        .preview-area h1 { font-size: 1.8em; border-bottom: 1px solid var(--border-color); padding-bottom: 0.3em; }
-        .preview-area h2 { font-size: 1.4em; }
-        .preview-area h3 { font-size: 1.15em; }
-        .preview-area p { margin-bottom: 1em; }
-        .preview-area code { font-family: monospace; font-size: 0.9em; background: rgba(148, 163, 184, 0.15); padding: 2px 6px; border-radius: 4px; }
-        .preview-area pre { background: var(--surface-bg); padding: 12px; border-radius: 6px; overflow-x: auto; margin-bottom: 1em; border: 1px solid var(--border-color); }
-        .preview-area pre code { background: none; padding: 0; }
-        .preview-area blockquote { border-left: 3px solid var(--primary-color); padding-left: 12px; color: var(--text-muted); margin: 1em 0; }
-        .preview-area table { border-collapse: collapse; width: 100%; margin-bottom: 1em; }
-        .preview-area th, .preview-area td { border: 1px solid var(--border-color); padding: 6px 10px; text-align: left; }
-        .preview-area th { background: var(--surface-bg); }
-        .preview-area ul, .preview-area ol { padding-left: 24px; margin-bottom: 1em; }
-        .preview-area a { color: var(--primary-color); text-decoration: none; }
-        .preview-area hr { border: none; border-top: 1px solid var(--border-color); margin: 1.5em 0; }
-        .preview-area img { max-width: 100%; border-radius: 6px; }
-
         /* View Mode Layouts */
         body.mode-edit .preview-area { display: none; }
-        body.mode-edit .editor-textarea { border-right: none; }
-        body.mode-preview .editor-textarea { display: none; }
+        body.mode-edit .editor-pane { border-right: none; }
+        body.mode-preview .editor-pane { display: none; }
+
+        /* Full Markdown Typography Styles */
+        ${getMarkdownCss()}
+
+        /* Theme adjustments for preview */
+        body.theme-light .markdown-body {
+            color: #0f172a;
+        }
+        body:not(.theme-light) .markdown-body {
+            color: #f8fafc;
+        }
+        body:not(.theme-light) .markdown-body table tr {
+            border-top: 1px solid var(--border-color);
+            background-color: var(--card-bg);
+        }
+        body:not(.theme-light) .markdown-body table th,
+        body:not(.theme-light) .markdown-body table td {
+            border: 1px solid var(--border-color);
+        }
+        body:not(.theme-light) .markdown-body table th {
+            background-color: var(--surface-bg);
+        }
+        body:not(.theme-light) .markdown-body code {
+            background-color: rgba(148, 163, 184, 0.2);
+            color: #f8fafc;
+        }
+        body:not(.theme-light) .markdown-body pre {
+            background-color: var(--surface-bg);
+            border: 1px solid var(--border-color);
+        }
+        body:not(.theme-light) .markdown-body hr {
+            background-color: var(--border-color);
+        }
 
         .editor-statusbar {
             display: flex;
@@ -628,9 +697,9 @@ export const createOfflinePageResponse = () => {
         <div class="header-controls">
             <!-- View Mode Selector -->
             <div class="btn-group">
-                <button type="button" class="btn" id="mode-edit-btn" title="純編輯模式">✏️ 編輯</button>
-                <button type="button" class="btn active" id="mode-split-btn" title="雙欄對照">🌗 雙欄</button>
-                <button type="button" class="btn" id="mode-preview-btn" title="預覽模式">👁️ 預覽</button>
+                <button type="button" class="btn" id="mode-edit-btn" title="純編輯模式 (Ctrl/Cmd+E)">✏️ 編輯</button>
+                <button type="button" class="btn active" id="mode-split-btn" title="雙欄對照 (Ctrl/Cmd+E)">🌗 雙欄</button>
+                <button type="button" class="btn" id="mode-preview-btn" title="預覽模式 (Ctrl/Cmd+E)">👁️ 預覽</button>
             </div>
 
             <!-- Theme Selector -->
@@ -645,6 +714,7 @@ export const createOfflinePageResponse = () => {
             <button type="button" class="btn" id="new-note-btn">➕ 新增</button>
             <button type="button" class="btn" id="open-local-btn">📂 開啟本機 .md</button>
             <button type="button" class="btn" id="export-md-btn">⭳ 導出 Markdown</button>
+            <button type="button" class="btn" id="export-html-btn" title="導出為獨立 HTML 網頁">⭳ 導出 HTML</button>
             <button type="button" class="btn" id="backup-btn" title="備份全部快取筆記">💾 備份 JSON</button>
             <button type="button" class="btn btn-primary" id="save-note-btn">💾 儲存</button>
         </div>
@@ -674,8 +744,33 @@ export const createOfflinePageResponse = () => {
             </div>
 
             <div class="content-split-container">
-                <textarea class="editor-textarea" id="note-content" placeholder="在此輸入 Markdown 內容... (支援離線編輯與本地儲存)"></textarea>
-                <div class="preview-area" id="preview-area"></div>
+                <div class="editor-pane pane">
+                    <div class="offline-markdown-toolbar" id="markdown-toolbar" role="toolbar" aria-label="Markdown 格式工具列">
+                        <button type="button" class="toolbar-btn" data-cmd="bold" title="粗體 (**Bold**)"><b>B</b></button>
+                        <button type="button" class="toolbar-btn" data-cmd="italic" title="斜體 (*Italic*)"><i>I</i></button>
+                        <button type="button" class="toolbar-btn" data-cmd="strike" title="刪除線 (~~Strike~~)"><del>S</del></button>
+                        <button type="button" class="toolbar-btn" data-cmd="highlight" title="重點螢光筆 (==Highlight==)"><mark style="background:#ffeb3b; color:#000; padding:0 2px; border-radius:2px;">H</mark></button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" class="toolbar-btn" data-cmd="heading1" title="大標題 (# H1)">H1</button>
+                        <button type="button" class="toolbar-btn" data-cmd="heading2" title="中標題 (## H2)">H2</button>
+                        <button type="button" class="toolbar-btn" data-cmd="heading3" title="小標題 (### H3)">H3</button>
+                        <button type="button" class="toolbar-btn" data-cmd="quote" title="引用區塊 (> Quote)">❝</button>
+                        <button type="button" class="toolbar-btn" data-cmd="inlineCode" title="行內代碼 (\`Code\`)">&lt;&gt;</button>
+                        <button type="button" class="toolbar-btn" data-cmd="codeBlock" title="代碼區塊 (\`\`\`Code Block\`\`\`)">\`\`\`</button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" class="toolbar-btn" data-cmd="bullet" title="無序清單 (- List)">•≡</button>
+                        <button type="button" class="toolbar-btn" data-cmd="ordered" title="數字清單 (1. List)">1.≡</button>
+                        <button type="button" class="toolbar-btn" data-cmd="task" title="待辦清單 (- [ ] Task)">☑</button>
+                        <button type="button" class="toolbar-btn" data-cmd="table" title="插入表格 (Table)">▦</button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" class="toolbar-btn" data-cmd="link" title="超連結 ([Link](url))">🔗</button>
+                        <button type="button" class="toolbar-btn" data-cmd="image" title="圖片 (![alt](url))">🖼️</button>
+                        <button type="button" class="toolbar-btn" data-cmd="alert" title="GitHub 提示框 (> [!NOTE])">💡</button>
+                        <button type="button" class="toolbar-btn" data-cmd="twoColumns" title="雙欄佈局 (Two Columns)">🏛️</button>
+                    </div>
+                    <textarea class="editor-textarea" id="note-content" placeholder="在此輸入 Markdown 內容... (支援完整離線語法編輯與即時 HTML 預覽)"></textarea>
+                </div>
+                <div class="preview-area markdown-body" id="preview-area"></div>
             </div>
 
             <div class="editor-statusbar">
@@ -707,24 +802,18 @@ export const createOfflinePageResponse = () => {
                     </div>
                     <div class="diff-pane">
                         <div class="diff-title"><span aria-hidden="true">☁️ </span>雲端最新版本 (Cloud Remote)</div>
-                        <textarea class="diff-textarea" id="diff-remote" readonly aria-label="雲端最新版本內容"></textarea>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="conflict-keep-local"><span aria-hidden="true">🟢 </span>保留本機修改（覆蓋雲端）</button>
-                <button type="button" class="btn" id="conflict-keep-remote"><span aria-hidden="true">🔵 </span>採用雲端版本（更新本機）</button>
-                <button type="button" class="btn" id="conflict-save-copy"><span aria-hidden="true">📑 </span>另存衝突副本</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-    <script type="module" src="/js/marked.min.js"></script>
-    <script type="module" src="/js/purify.min.js"></script>
+                        <textarea class="diff-textarea" id="diff-remote" readon    <script src="/js/marked.min.js"></script>
+    <script src="/js/purify.min.js"></script>
     <script type="module">
         import { offlineStore, exportMarkdownFile, openLocalMarkdownFile } from '/js/offline-store.mjs'
+        import {
+            expandMarkdownExtensions,
+            decorateColumnLayouts,
+            decorateCodeBlocks,
+            decorateFootnoteAndCitationPopovers,
+            decorateHeadingAnchors
+        } from '/js/markdown-extensions.mjs'
+        import { applyMarkdownCommand } from '/js/markdown-toolbar.mjs'
 
         const $title = document.getElementById('note-title')
         const $content = document.getElementById('note-content')
@@ -732,6 +821,7 @@ export const createOfflinePageResponse = () => {
         const $pathDisplay = document.getElementById('note-path-display')
         const $saveBtn = document.getElementById('save-note-btn')
         const $exportBtn = document.getElementById('export-md-btn')
+        const $exportHtmlBtn = document.getElementById('export-html-btn')
         const $backupBtn = document.getElementById('backup-btn')
         const $newBtn = document.getElementById('new-note-btn')
         const $openLocalBtn = document.getElementById('open-local-btn')
@@ -747,6 +837,7 @@ export const createOfflinePageResponse = () => {
         const $wordCount = document.getElementById('word-count')
         const $readingTime = document.getElementById('reading-time')
         const $toast = document.getElementById('toast')
+        const $toolbar = document.getElementById('markdown-toolbar')
 
         const $conflictModal = document.getElementById('conflict-modal')
         const $diffLocal = document.getElementById('diff-local')
@@ -764,6 +855,17 @@ export const createOfflinePageResponse = () => {
         let currentSyncStatus = 'draft'
         let debounceTimer = null
         let activeConflictInfo = null
+
+        // Configure marked parser options
+        if (typeof marked !== 'undefined') {
+            if (typeof marked.setOptions === 'function') {
+                marked.setOptions({
+                    gfm: true,
+                    breaks: true,
+                    pedantic: false,
+                })
+            }
+        }
 
         function showToast(msg) {
             $toast.textContent = msg
@@ -839,24 +941,117 @@ export const createOfflinePageResponse = () => {
             showToast('📑 已另存本機副本為：' + copyPath)
         }
 
+        function formatGithubAlerts(rootNode) {
+            if (!rootNode?.querySelectorAll) return
+            rootNode.querySelectorAll('blockquote').forEach(bq => {
+                const firstP = bq.querySelector('p')
+                if (!firstP) return
+                const html = firstP.innerHTML.trim()
+                const match = html.match(/^\\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\\](?:\\s*<br\\s*\\/?>|\\s*)/i)
+                if (match) {
+                    const type = match[1].toLowerCase()
+                    bq.classList.add('markdown-alert', 'markdown-alert-' + type)
+                    firstP.innerHTML = html.slice(match[0].length)
+                    if (!firstP.innerHTML.trim()) {
+                        firstP.remove()
+                    }
+                }
+            })
+        }
+
+        function renderFallbackMarkdown(md) {
+            let src = escapeHtml(md)
+            src = src.replace(/\\x60{3}([a-zA-Z0-9_-]*)\\n([\\s\\S]*?)\\x60{3}/g, (match, lang, code) => {
+                return '<pre><code class="language-' + lang + '">' + code + '</code></pre>'
+            })
+            src = src.replace(/\\x60([^\\x60\\n]+)\\x60/g, '<code>$1</code>')
+            src = src.replace(/^######\\s+(.+)$/gm, '<h6>$1</h6>')
+            src = src.replace(/^#####\\s+(.+)$/gm, '<h5>$1</h5>')
+            src = src.replace(/^####\\s+(.+)$/gm, '<h4>$1</h4>')
+            src = src.replace(/^###\\s+(.+)$/gm, '<h3>$1</h3>')
+            src = src.replace(/^##\\s+(.+)$/gm, '<h2>$1</h2>')
+            src = src.replace(/^#\\s+(.+)$/gm, '<h1>$1</h1>')
+            src = src.replace(/\\*\\*\\*([^*]+)\\*\\*\\*/g, '<strong><em>$1</em></strong>')
+            src = src.replace(/\\*\\*([^*]+)\\*\\*/g, '<strong>$1</strong>')
+            src = src.replace(/\\*([^*]+)\\*/g, '<em>$1</em>')
+            src = src.replace(/~~([^~]+)~~/g, '<del>$1</del>')
+            src = src.replace(/^>\\s+(.+)$/gm, '<blockquote><p>$1</p></blockquote>')
+            src = src.replace(/^-\\s+\\[([ xX])\\]\\s+(.+)$/gm, (m, check, text) => {
+                const checked = check.toLowerCase() === 'x' ? 'checked="" ' : ''
+                return '<li><input type="checkbox" ' + checked + 'disabled=""> ' + text + '</li>'
+            })
+            src = src.replace(/^-\\s+(.+)$/gm, '<li>$1</li>')
+            src = src.replace(/!\\[([^\\]]*)\\]\\(([^)]+)\\)/g, '<img src="$2" alt="$1">')
+            src = src.replace(/\\[([^\\]]+)\\]\\(([^)]+)\\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+            src = src.replace(/^---$/gm, '<hr>')
+            const paragraphs = src.split(/\\n{2,}/).map(p => {
+                p = p.trim()
+                if (!p) return ''
+                if (p.startsWith('<h') || p.startsWith('<pre') || p.startsWith('<blockquote') || p.startsWith('<li') || p.startsWith('<hr')) {
+                    return p
+                }
+                return '<p>' + p.replace(/\\n/g, '<br>') + '</p>'
+            })
+            return paragraphs.join('\\n')
+        }
+
         // Render Markdown content to Preview pane
         function renderPreview() {
             const raw = $content.value || ''
-            if (typeof marked !== 'undefined' && typeof DOMPurify !== 'undefined') {
-                $preview.innerHTML = DOMPurify.sanitize(marked.parse(raw))
-            } else if (typeof marked !== 'undefined') {
-                $preview.innerHTML = marked.parse(raw)
-            } else {
-                // Fallback lightweight parser
-                const lines = raw.split('\\n').map(l => {
-                    if (l.startsWith('# ')) return '<h1>' + escapeHtml(l.slice(2)) + '</h1>'
-                    if (l.startsWith('## ')) return '<h2>' + escapeHtml(l.slice(3)) + '</h2>'
-                    if (l.startsWith('### ')) return '<h3>' + escapeHtml(l.slice(4)) + '</h3>'
-                    if (l.startsWith('- ')) return '<li>' + escapeHtml(l.slice(2)) + '</li>'
-                    return l ? '<p>' + escapeHtml(l) + '</p>' : ''
-                }).join('')
-                $preview.innerHTML = lines || '<p style="color:var(--text-muted);">（預覽區域）</p>'
+            if (!raw.trim()) {
+                $preview.innerHTML = '<p style="color:var(--text-muted); font-style:italic;">（預覽區域 / Preview Area）</p>'
+                updateStats()
+                return
             }
+
+            try {
+                // 1. Expand custom markdown extensions (Highlights, Colors, Citations, Inline footnotes, HackMD images)
+                const expanded = typeof expandMarkdownExtensions === 'function'
+                    ? expandMarkdownExtensions(raw)
+                    : raw
+
+                // 2. Parse Markdown to HTML via marked or fallback
+                let html = ''
+                const markedParser = typeof marked !== 'undefined'
+                    ? (typeof marked.parse === 'function' ? marked.parse.bind(marked) : (typeof marked === 'function' ? marked : null))
+                    : (window.marked && typeof window.marked.parse === 'function' ? window.marked.parse.bind(window.marked) : null)
+
+                if (markedParser) {
+                    html = markedParser(expanded)
+                } else {
+                    html = renderFallbackMarkdown(expanded)
+                }
+
+                // 3. Sanitize HTML via DOMPurify
+                let clean = html
+                const purifySanitizer = typeof DOMPurify !== 'undefined' && typeof DOMPurify.sanitize === 'function'
+                    ? DOMPurify.sanitize.bind(DOMPurify)
+                    : (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function' ? window.DOMPurify.sanitize.bind(window.DOMPurify) : null)
+
+                if (purifySanitizer) {
+                    clean = purifySanitizer(html, {
+                        ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse', 'span', 'section', 'button'],
+                        ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title', 'target', 'rel'],
+                        WHOLE_DOCUMENT: false,
+                        FORCE_BODY: true
+                    })
+                }
+
+                $preview.innerHTML = clean
+
+                // 4. Post-processing DOM enhancements
+                formatGithubAlerts($preview)
+                if (typeof decorateColumnLayouts === 'function') decorateColumnLayouts($preview)
+                if (typeof decorateHeadingAnchors === 'function') decorateHeadingAnchors($preview)
+                if (typeof decorateCodeBlocks === 'function') decorateCodeBlocks($preview)
+                if (typeof decorateFootnoteAndCitationPopovers === 'function') decorateFootnoteAndCitationPopovers($preview)
+
+            } catch (err) {
+                console.error('Offline preview rendering error:', err)
+                $preview.innerHTML = '<div style="color:var(--danger-color); padding:10px; border:1px solid var(--danger-color); border-radius:6px;">' +
+                    '<strong>渲染錯誤 (Render Error):</strong> ' + escapeHtml(err.message) + '</div>'
+            }
+
             updateStats()
         }
 
@@ -867,7 +1062,7 @@ export const createOfflinePageResponse = () => {
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#39;')
-                .replace(/\`/g, '&#96;')
+                .replace(/\\x60/g, '&#96;')
         }
 
         function updateStats() {
@@ -877,6 +1072,38 @@ export const createOfflinePageResponse = () => {
             const minutes = Math.max(1, Math.ceil(wordCount / 200))
             $wordCount.textContent = '字數: ' + charCount + ' (' + wordCount + ' 字詞)'
             $readingTime.textContent = '預估閱讀: ' + minutes + ' 分鐘'
+        }
+
+        function exportHtmlFile(filename, title, contentHtml) {
+            const doc = '<!doctype html>\\n' +
+'<html lang="zh-Hant-TW">\\n' +
+'<head>\\n' +
+'    <meta charset="utf-8">\\n' +
+'    <meta name="viewport" content="width=device-width, initial-scale=1">\\n' +
+'    <title>' + escapeHtml(title) + '</title>\\n' +
+'    <style>\\n' +
+'        :root { --editor-font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; }\\n' +
+'        body { max-width: 880px; margin: 0 auto; padding: 40px 20px; font-family: var(--editor-font-family); color: #0f172a; background: #ffffff; line-height: 1.65; }\\n' +
+'        ' + ${JSON.stringify(getMarkdownCss())} + '\\n' +
+'    </style>\\n' +
+'</head>\\n' +
+'<body>\\n' +
+'    <header style="margin-bottom: 24px; padding-bottom: 12px; border-bottom: 1px solid #e2e8f0;">\\n' +
+'        <h1 style="font-size: 2em; margin-bottom: 4px;">' + escapeHtml(title) + '</h1>\\n' +
+'        <p style="color: #64748b; font-size: 12px;">匯出時間：' + new Date().toLocaleString() + ' · david888 wiki 離線工作區</p>\\n' +
+'    </header>\\n' +
+'    <main class="markdown-body">\\n' +
+'        ' + contentHtml + '\\n' +
+'    </main>\\n' +
+'</body>\\n' +
+'</html>'
+            const blob = new Blob([doc], { type: 'text/html;charset=utf-8' })
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = (filename || 'note').replace(/\\.html$/i, '') + '.html'
+            a.click()
+            URL.revokeObjectURL(url)
         }
 
         async function saveCurrent(options = { showNotification: true, manualSync: false }) {
@@ -1089,6 +1316,53 @@ export const createOfflinePageResponse = () => {
             renderNoteList($searchInput.value.trim())
         })
 
+        // Markdown Toolbar Buttons
+        if ($toolbar) {
+            $toolbar.addEventListener('click', (e) => {
+                const btn = e.target.closest('.toolbar-btn')
+                if (!btn) return
+                const cmd = btn.dataset.cmd
+                if (!cmd) return
+
+                const start = $content.selectionStart || 0
+                const end = $content.selectionEnd || 0
+                const updated = typeof applyMarkdownCommand === 'function'
+                    ? applyMarkdownCommand($content.value, start, end, cmd, 'zh-TW')
+                    : null
+
+                if (updated) {
+                    $content.value = updated.text
+                    $content.setSelectionRange(updated.selectionStart, updated.selectionEnd)
+                    $content.focus()
+                    renderPreview()
+                    if (debounceTimer) clearTimeout(debounceTimer)
+                    debounceTimer = setTimeout(() => {
+                        saveCurrent({ showNotification: false })
+                    }, 600)
+                }
+            })
+        }
+
+        // Scroll Sync between Editor and Preview
+        let isSyncingEditor = false
+        let isSyncingPreview = false
+
+        $content.addEventListener('scroll', () => {
+            if (isSyncingPreview || document.body.classList.contains('mode-edit')) return
+            isSyncingEditor = true
+            const scrollRatio = $content.scrollTop / Math.max(1, $content.scrollHeight - $content.clientHeight)
+            $preview.scrollTop = scrollRatio * ($preview.scrollHeight - $preview.clientHeight)
+            setTimeout(() => { isSyncingEditor = false }, 50)
+        })
+
+        $preview.addEventListener('scroll', () => {
+            if (isSyncingEditor || document.body.classList.contains('mode-preview')) return
+            isSyncingPreview = true
+            const scrollRatio = $preview.scrollTop / Math.max(1, $preview.scrollHeight - $preview.clientHeight)
+            $content.scrollTop = scrollRatio * ($content.scrollHeight - $content.clientHeight)
+            setTimeout(() => { isSyncingPreview = false }, 50)
+        })
+
         $saveBtn.onclick = () => saveCurrent({ showNotification: true, manualSync: true })
 
         $newBtn.onclick = async () => {
@@ -1106,6 +1380,13 @@ export const createOfflinePageResponse = () => {
             const title = $title.value.trim() || 'note'
             exportMarkdownFile(title + '.md', $content.value)
             showToast('📄 已匯出 Markdown 檔案')
+        }
+
+        $exportHtmlBtn.onclick = () => {
+            const title = $title.value.trim() || 'note'
+            renderPreview()
+            exportHtmlFile(title + '.html', title, $preview.innerHTML)
+            showToast('🌐 已匯出 HTML 網頁檔案')
         }
 
         $backupBtn.onclick = async () => {
@@ -1181,6 +1462,31 @@ export const createOfflinePageResponse = () => {
                 const modes = ['edit', 'split', 'preview']
                 const cur = document.body.classList.contains('mode-edit') ? 0 : (document.body.classList.contains('mode-split') ? 1 : 2)
                 setViewMode(modes[(cur + 1) % 3])
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'b') {
+                e.preventDefault()
+                const btn = $toolbar?.querySelector('[data-cmd="bold"]')
+                if (btn) btn.click()
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'i') {
+                e.preventDefault()
+                const btn = $toolbar?.querySelector('[data-cmd="italic"]')
+                if (btn) btn.click()
+            } else if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+                e.preventDefault()
+                const btn = $toolbar?.querySelector('[data-cmd="link"]')
+                if (btn) btn.click()
+            }
+        })
+
+        // Tab indentation in textarea
+        $content.addEventListener('keydown', (e) => {
+            if (e.key === 'Tab') {
+                e.preventDefault()
+                const start = $content.selectionStart
+                const end = $content.selectionEnd
+                const value = $content.value
+                $content.value = value.substring(0, start) + '    ' + value.substring(end)
+                $content.selectionStart = $content.selectionEnd = start + 4
+                renderPreview()
             }
         })
 
@@ -1253,4 +1559,5 @@ export const createOfflinePageResponse = () => {
         },
     })
 }
+
 

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'david888-wiki-shell-v5'
+const CACHE_NAME = 'david888-wiki-shell-v6'
 const IMAGE_CACHE_NAME = 'david888-wiki-images-v1'
 const MAX_IMAGE_CACHE_ITEMS = 60
 const OFFLINE_URL = '/_pwa-offline'
@@ -17,6 +17,7 @@ const PRECACHE_URLS = [
     '/js/purify.min.js',
     '/js/markdown-toolbar.mjs',
     '/js/markdown-extensions.mjs',
+    '/js/media-preview.mjs',
 ]
 
 async function limitCacheSize(cacheName, maxItems = MAX_IMAGE_CACHE_ITEMS) {
@@ -121,9 +122,42 @@ self.addEventListener('fetch', event => {
         return
     }
 
+    // 4. External CDN JS/CSS/Wasm Caching (esm.sh, jsdelivr, cdnjs for remark, rehype, katex, mermaid, etc.)
+    const isCdnHost = (
+        url.hostname === 'esm.sh' ||
+        url.hostname === 'cdn.jsdelivr.net' ||
+        url.hostname === 'cdnjs.cloudflare.com'
+    )
+    const isCdnAsset = isCdnHost && (
+        request.destination === 'script' ||
+        request.destination === 'style' ||
+        request.destination === 'font' ||
+        /\.(js|mjs|css|wasm|woff2?|ttf)(\?.*)?$/i.test(url.pathname)
+    )
+
+    if (isCdnAsset) {
+        event.respondWith(
+            caches.open(CACHE_NAME).then(async cache => {
+                const cachedResponse = await cache.match(request)
+                const networkFetch = fetch(request)
+                    .then(networkResponse => {
+                        if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+                            cache.put(request, networkResponse.clone())
+                        }
+                        return networkResponse
+                    })
+                    .catch(() => null)
+
+                const resolved = cachedResponse || (await networkFetch)
+                return resolved || Response.error()
+            }),
+        )
+        return
+    }
+
     if (url.origin !== self.location.origin) return
 
-    // 4. Stale-While-Revalidate for JS, CSS, Fonts, and Precached Assets
+    // 5. Stale-While-Revalidate for local JS, CSS, Fonts, and Precached Assets
     const isStaticAsset = (
         PRECACHE_URLS.includes(url.pathname) ||
         url.pathname.startsWith('/js/') ||

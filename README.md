@@ -233,14 +233,16 @@
   - **跨裝置與 Android 檔案關聯 (File Handling & WebAPK Intent)**：作業系統（macOS Finder、Windows 檔案總管）或 Android 檔案管理員中點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
   - **Web Share Target API**：可在手機或電腦的其他 App（如瀏覽器、社群媒體、檔案管理器）透過系統「分享」選單，直接將網頁連結與文字一鍵分享至 david888 wiki 建立新筆記。
   - **雲端版本衝突可視化比對 (Visual 3-Way Conflict Diff)**：連線同步時若偵測到雲端已被其他裝置修改，自動彈出 Diff 對照視窗，提供「保留本機（覆蓋雲端）」、「採用雲端版本」與「另存衝突副本」三種彈性選擇。
-  - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理與一鍵 JSON 備份/匯入。
-  - **Service Worker v5 智慧快取與圖片多媒體庫 (Stale-While-Revalidate & Image Cache)**：預先快取核心 Markdown 渲染管道（marked、purify、toolbar、extensions）與樣式，並建立 `david888-wiki-images-v1` 專屬圖片快取庫，離線閱讀圖文筆記零破圖。
+  - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理、獨立「⭳ 導出 HTML」網頁與一鍵 JSON 備份/匯入。
+  - **即時 Markdown-to-HTML 預覽與離線格式工具列 (Live Preview & Markdown Toolbar)**：內建離線格式工具列（粗體、斜體、螢光筆、H1-H3 標題、引用、行內/區塊代碼、清單、表格、超連結、圖片、GitHub Alert 提示框、雙欄佈局），注入完整 Markdown CSS 排版樣式（`.markdown-body`）與雙向捲動同步，支援 `Cmd+B`、`Cmd+I`、`Cmd+K` 與 `Tab` 縮排。
+  - **Service Worker v6 智慧快取與 CDN 動態攔截 (Stale-While-Revalidate & CDN Caching)**：全面升級至 `v6`，預先快取核心 Markdown 渲染管道（`marked`、`purify`、`markdown-extensions`、`media-preview`），並自動動態快取外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）與 R2 圖床媒體庫，離線閱讀圖文筆記零破圖。
   - **平滑重連與背景自動同步 (Graceful Background Sync)**：支援 Service Worker 原生 `sync-pending-notes`；網路恢復時自動將離線待同步草稿依序上傳至雲端，無需重新整理頁面中斷打字體驗。
   - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
     - `Cmd/Ctrl + O`：編輯模式快速選擇本機 Markdown 檔案載入。
     - `Cmd/Ctrl + E`：離線工作站快速切換編輯/雙欄/預覽檢視。
+    - `Cmd/Ctrl + B` / `I` / `K`：離線工具列粗體、斜體、插入連結快捷鍵。
 
 ![權限防護設計](image-2.png)
 
@@ -572,14 +574,16 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - **Multi-Device & Android File Association (File Handling & WebAPK Intent)**: Click or open `.md` / `.markdown` / `.txt` files directly in macOS Finder, Windows Explorer, or Android file managers to launch and edit in `wiki.david888.com`.
   - **Web Share Target API**: Share text, links, or articles directly from any mobile or desktop app into david888 wiki to instantly create a new note.
   - **Visual 3-Way Conflict Diff Modal**: Detects remote server changes during sync and provides an interactive side-by-side Diff modal with "Keep Local", "Keep Remote", and "Save as Conflict Copy" actions.
-  - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, and one-click JSON backup export/import.
-  - **Service Worker v5 Resilient Caching & Image Cache (`david888-wiki-images-v1`)**: Precaches core Markdown rendering pipeline and caches R2 images and external media to prevent broken images while offline.
+  - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, standalone "⭳ Export HTML", and one-click JSON backup export/import.
+  - **Live Markdown-to-HTML Preview & Offline Formatting Toolbar**: Built-in formatting toolbar (Bold, Italic, Strikethrough, Highlight, H1-H3, Blockquote, Inline/Fenced Code, Lists, Tasks, Tables, Links, Images, GitHub Alerts, Two Columns), injected with complete Markdown CSS typography (`.markdown-body`), bidirectional scroll synchronization, and keyboard shortcuts (`Cmd+B`, `Cmd+I`, `Cmd+K`, `Tab` 4-space indent).
+  - **Service Worker v6 Resilient Caching & Dynamic CDN Cache**: Precaches core Markdown rendering pipeline (`marked`, `purify`, `markdown-extensions`, `media-preview`) and dynamically intercepts & caches external CDN dependencies (`esm.sh`, `cdn.jsdelivr.net`, `cdnjs.cloudflare.com`) and R2 media images to guarantee zero broken images or missing styles while offline.
   - **Graceful Reconnection & Background Sync**: Automatically synchronizes pending offline notes to cloud in the background upon reconnection without disruptive page reloads.
   - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badges (`🟢 Saved locally`, `☁️ Cloud synced`).
   - **Keyboard Shortcuts**:
     - `Cmd/Ctrl + S`: Instant save to IndexedDB & cloud in edit mode; download `.md` in share mode.
     - `Cmd/Ctrl + O`: Fast local Markdown file picker in edit mode.
     - `Cmd/Ctrl + E`: Toggle Edit / Split / Preview mode in offline workstation.
+    - `Cmd/Ctrl + B` / `I` / `K`: Offline toolbar shortcuts for bold, italic, and links.
 
 ![Access Control Diagram](image-2.png)
 

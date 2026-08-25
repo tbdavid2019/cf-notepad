@@ -1,5 +1,16 @@
 # Changelog
 
+## [2026-08-25]
+
+- **⚡ PWA 離線模式即時 Markdown-to-HTML 預覽、格式工具列與樣式健全 (Offline PWA Markdown-to-HTML Live Preview, Toolbar & Typography Hardening)**：
+  - **修復離線預覽無法渲染問題 (UMD Script Loading & DOMPurify Sanitization)**：修復過往在離線工作區 (`/_pwa-offline`) 中以 `<script type="module">` 載入 `marked.min.js` 與 `purify.min.js` 導致全域物件在部分瀏覽器環境下未綁定至 `window` 的問題。改採正規同步腳本載入，並配置 `marked.setOptions({ gfm: true, breaks: true })` 與 `DOMPurify` 安全白名單防禦 XSS。
+  - **完整 Markdown CSS 排版注入 (`getMarkdownCss`)**：離線頁面樣式表整合注入 `${getMarkdownCss()}` 與 `--editor-font-family`，預覽容器配置 `.markdown-body`，確保 GitHub Alerts (`[!NOTE]`, `[!WARNING]`)、多欄版面配置 (`:::columns`)、行內螢光筆 (`==mark==`)、自訂顏色文字 (`{red}(text)`)、Pandoc 引用文獻 (`[@key]`)、代碼區塊高亮與自適應表格在離線環境下排版與線上 100% 一致。
+  - **離線 Markdown 格式工具列 (Offline Markdown Toolbar)**：在離線編輯器頂部新增格式工具列，支援粗體、斜體、刪除線、螢光筆、H1-H3 標題、引用區塊、行內/區塊代碼、清單、待辦項目、表格、超連結、圖片、GitHub Alert 提示框與雙欄佈局快捷按鈕，並支援鍵盤快捷鍵（`Cmd+B`、`Cmd+I`、`Cmd+K`、`Tab` 4 格縮排）。
+  - **雙向捲動同步 (Scroll Synchronization)**：在雙欄對照模式（`mode-split`）下，編輯器輸入區與即時預覽區域實現即時等比例捲動同步。
+  - **獨立 HTML 網頁單鍵匯出 (`⭳ 導出 HTML`)**：頂部控制列新增「⭳ 導出 HTML」按鈕，可將目前離線筆記內容連同完整內嵌 CSS 樣式封裝為獨立 `.html` 檔案下載，收件者免連網用任何瀏覽器即可直接閱讀。
+  - **Service Worker CDN 智慧快取 (Dynamic CDN Cache Intercept)**：升級 `static/sw.js` 至 `v6`，並為外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）配置 Stale-While-Revalidate 動態快取層，確保線上使用過的 Unified / KaTeX / Mermaid / ECharts 組件在斷網後可持續離線運作。
+  - **線上編輯器離線備援 (Online Editor Offline Resiliency)**：在 `base.js` 的 `window.renderMarkdown` 中加入 Unified processor 例外捕捉與 marked 自動備援降級機制。
+
 ## [2026-08-24]
 
 - **📖 書本模式 (Book Mode) 全面升級：PWA 一鍵離線整本預抓與多格式匯出 (Book Mode PWA Offline Pre-caching & Multi-Format Export)**：
