@@ -472,6 +472,17 @@ export const getEditorCss = () => `
     color: var(--toolbar-accent, #c8654b);
 }
 
+.markdown-toolbar-button.is-recording {
+    color: #dc2626;
+    border-color: color-mix(in srgb, #dc2626 45%, var(--toolbar-border, #e2dacd));
+    background: color-mix(in srgb, #dc2626 12%, var(--toolbar-bg, #f4f0e8));
+    animation: toolbar-recording-pulse 1.2s ease-in-out infinite;
+}
+
+@keyframes toolbar-recording-pulse {
+    50% { opacity: 0.58; }
+}
+
 .markdown-toolbar-button:focus-visible {
     outline: 2px solid var(--toolbar-accent, #c8654b);
     outline-offset: 1px;

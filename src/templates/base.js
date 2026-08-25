@@ -3032,9 +3032,9 @@ ${getMarkdownCss()}
                 return Boolean($textarea.value && $textarea.value.trim())
             }
         }
-        const processAudioTranscription = async (file, { smartFormat = false } = {}) => {
-            let insertMode = 'replace'
-            if (isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
+        const processAudioTranscription = async (file, { smartFormat = false, insertAtCursor = false } = {}) => {
+            let insertMode = insertAtCursor ? 'insert' : 'replace'
+            if (!insertAtCursor && isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
                 insertMode = await showImportOptionDialog()
             }
             if (insertMode === 'cancel') return
@@ -3087,7 +3087,11 @@ ${getMarkdownCss()}
                         const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length
                         const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length
                         const curVal = $textarea.value
-                        $textarea.value = curVal.substring(0, startPos) + transcript + curVal.substring(endPos)
+                        const prefix = startPos > 0 && !curVal.substring(0, startPos).endsWith('\\n') ? '\\n\\n' : ''
+                        const suffix = endPos < curVal.length && !curVal.substring(endPos).startsWith('\\n') ? '\\n\\n' : ''
+                        const insertion = prefix + transcript + suffix
+                        $textarea.value = curVal.substring(0, startPos) + insertion + curVal.substring(endPos)
+                        $textarea.setSelectionRange(startPos + insertion.length, startPos + insertion.length)
                     } else {
                         $textarea.value = transcript
                     }
@@ -3742,6 +3746,40 @@ ${getMarkdownCss()}
             }
             throw lastError || new Error('Upload to 888box failed');
         };
+
+        const insertRecordedAudio = (url, start, end) => {
+            const safeUrl = new URL(url)
+            if (safeUrl.protocol !== 'https:') throw new Error('recorded audio must use HTTPS')
+            const source = $textarea.value
+            const safeStart = Math.max(0, Math.min(Number(start) || 0, source.length))
+            const safeEnd = Math.max(safeStart, Math.min(Number(end) || safeStart, source.length))
+            const snippet = '<audio controls src="' + safeUrl.href.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></audio>'
+            const prefix = safeStart > 0 && !source.substring(0, safeStart).endsWith('\\n') ? '\\n\\n' : ''
+            const suffix = safeEnd < source.length && !source.substring(safeEnd).startsWith('\\n') ? '\\n\\n' : ''
+            const insertion = prefix + snippet + suffix
+            $textarea.value = source.substring(0, safeStart) + insertion + source.substring(safeEnd)
+            const next = safeStart + insertion.length
+            $textarea.setSelectionRange(next, next)
+            triggerRender($previewMd, $textarea.value)
+            $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+        }
+
+        document.addEventListener('cf-notepad-recorded-audio', async event => {
+            const detail = event.detail || {}
+            const audioFile = detail.file
+            if (!audioFile || typeof audioFile.size !== 'number') return
+            if (audioFile.size > 25 * 1024 * 1024) {
+                window.showAppDialog({ title: getI18n('err'), message: APP_STATE.lang === 'zh-TW' ? '錄音超過 25 MB，請縮短後再試。' : 'Recording exceeds the 25 MB transcription limit.', kind: 'error' })
+                return
+            }
+            try {
+                const url = await uploadTo888Box(audioFile)
+                insertRecordedAudio(url, detail.start, detail.end)
+                await processAudioTranscription(audioFile, { insertAtCursor: true })
+            } catch (error) {
+                window.showAppDialog({ title: getI18n('err'), message: error?.message || (APP_STATE.lang === 'zh-TW' ? '錄音處理失敗。' : 'Could not process recording.'), kind: 'error' })
+            }
+        })
 
         const showFileDropChoiceDialog = (file, kind) => new Promise(resolve => {
             const modal = document.querySelector('.file-drop-modal');

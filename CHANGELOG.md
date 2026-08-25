@@ -2,6 +2,8 @@
 
 ## [2026-08-25]
 
+- **🎙️ Markdown 工具列錄音、音檔保存與時間戳逐字稿 (Toolbar Recording, Audio Retention & Timestamped Transcript)**：在 Markdown Edit 模式頂部新增麥克風控制，可開始、暫停、繼續與停止錄音；停止後會將 WebM 音檔上傳至 888box、插入原生 `<audio>` 播放器並沿用既有 Whisper 多層備援產生時間戳逐字稿。錄音前要求確認參與者同意，且前後端均限制音檔為 25 MB。
+
 - **📱 書本模式行動版離線 HTML 匯出修復 (Mobile Book Standalone HTML Export Fix)**：修正單一離線 HTML 電子書的內嵌 `</script>` 未正確跳脫，造成瀏覽器提早結束書本頁面的用戶端腳本、將後續 JavaScript 顯示成本文文字的問題；行動版匯出選單現在可正常下載 `.html` 電子書。
 
 - **🧭 Share 分享模式「最近分享紀錄」功能支援與底欄暗黑模式按鈕歸類整合 (Share Mode Recent Shares Access & Appearance Bar Dark Mode Realignment)**：

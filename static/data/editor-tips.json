@@ -127,6 +127,11 @@
       "en-US": "Tip: In Book Mode (/book), click '📥 Offline Cache' to pre-cache the entire handbook for offline reading, or use the '📤 Export' menu for Combined Markdown, Standalone HTML, or Print PDF!"
     },
     {
+      "id": "toolbar-audio-recording",
+      "zh-TW": "小訣竅：Markdown 編輯器頂部的麥克風可直接錄音；可暫停、繼續或停止。停止後會插入音訊播放器與帶時間戳的逐字稿，錄音前請先取得所有參與者同意。",
+      "en-US": "Tip: Use the microphone in the Markdown toolbar to record, pause, resume, and stop. Stopping inserts an audio player and timestamped transcript; get every participant's consent before recording."
+    },
+    {
       "id": "pwa-offline-preview-toolbar",
       "zh-TW": "小訣竅：離線工作區支援完整 Markdown 格式工具列、雙向捲動同步與「⭳ 導出 HTML」單鍵封裝獨立網頁，免連網即可享受與線上 100% 一致的排版體驗！",
       "en-US": "Tip: The offline workspace supports a full Markdown toolbar, scroll synchronization, and one-click '⭳ Export HTML', providing a 100% consistent typography experience even without network!"

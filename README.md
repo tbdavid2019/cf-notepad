@@ -103,6 +103,7 @@
   - **音訊檔案**：彈窗提供三合一選項，預設「🎙️ 匯入音訊（逐字稿）」，亦可選擇「✨ 匯入音訊（智慧排版）」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
   - **圖片檔案**：直傳 Cloudflare R2 並在游標處插入 `![alt](url)`。
   - **Office / Markdown 文件**：支援 DOCX/PPTX/XLSX WASM 本地轉檔或 888box 上傳；拖曳 `.md`/`.txt` 提示游標插入或全篇替換。
+- **🎙️ 工具列錄音與逐字稿 (Toolbar Recording & Transcript)**：Markdown 編輯器頂部提供麥克風控制，可開始、暫停、繼續與停止錄音；停止後會將 WebM 音檔上傳至 888box、在游標處插入原生播放器，並以既有 Whisper 流程插入帶時間戳的逐字稿。錄音最大 25 MB，開始前必須確認所有參與者同意錄音與轉錄。
 - **🔑 管理員 Touch ID / FIDO2 指紋一鍵登入 (Admin Passkey & Touch ID)**：後台登入介面支援 WebAuthn / FIDO2 生物辨識一鍵刷指紋進入；後台支援隨時綁定新裝置（Mac Touch ID、iPhone Face ID、Windows Hello）與管理憑證。
 - **📐 自適應緊湊行號槽 (Adaptive Line Numbers Gutter)**：行號區塊採用動態寬度計算（1~99 行超緊湊 ~26px，並隨百行、千行、萬行平滑動態擴展），搭配 13px 輔助字號與垂直精準像素對齊，Textarea 左邊距從 72px 縮減至 42px，徹底解決傳統固定寬度過寬與喧賓奪主的問題。
 - **🎨 全面深色模式 (Full Dark Mode for Modals & Badges)**：版本紀錄（`.note-history-modal`）、最近分享（`.share-history-modal`）、本機已存狀態標籤（`.sync-status-badge`）與系統確認對話窗皆完整支援深色模式，使用現代 Slate 深藍冷色調與高對比文字排版。
@@ -465,6 +466,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
   - **Audio Files**: Modal provides a 3-way choice matching the menu, defaulting to "🎙️ Import audio (Transcript)", with options for "✨ Import audio (Smart format)" or "☁️ Upload to 888box Embedded `<audio controls>` Player".
   - **Images**: Direct upload to Cloudflare R2 and inserts `![alt](url)` at cursor.
   - **Office Documents & Markdown**: WASM AnyDocs conversion for DOCX/PPTX/XLSX or 888box attachment; dragging `.md`/`.txt` prompts insert at cursor or replace whole note.
+- **🎙️ Toolbar Recording & Transcript**: The Markdown toolbar provides microphone controls to start, pause, resume, and stop recording. On stop, the WebM audio is uploaded to 888box, a native player is inserted at the cursor, and the existing Whisper flow inserts a timestamped transcript. Recordings are capped at 25 MB, and the user must confirm participant consent before recording and transcription.
 - **🔑 Admin Touch ID / WebAuthn FIDO2 Biometric Login**: Admin login screen features one-click Touch ID / Passkey authentication using zero-dependency Web Crypto ECDSA P-256; admin dashboard allows binding and managing authenticators (MacBook Touch ID, iPhone Face ID, Windows Hello).
 - **📐 Adaptive &amp; Compact Line Numbers Gutter**: Dynamic digit-based gutter auto-sizing (~26px for 1-99 lines, smoothly expanding for hundreds/thousands of lines) with subtle 13px typography and pixel-perfect line-height matching, cutting total left margin from 72px down to 42px.
 - **🎨 Full Dark Mode for Modals &amp; Badges**: Version history modal (`.note-history-modal`), recent shares modal (`.share-history-modal`), local autosave status badge (`.sync-status-badge`), and system dialogs fully adapt to dark mode with high-contrast Slate themes.

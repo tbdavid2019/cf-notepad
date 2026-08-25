@@ -6,6 +6,7 @@ import { SUPPORTED_LANG } from '../src/constant.js'
 const commonSource = readFileSync(new URL('../src/templates/common.js', import.meta.url), 'utf8')
 const baseSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const toolbarSource = readFileSync(new URL('../static/js/markdown-toolbar.mjs', import.meta.url), 'utf8')
 
 test('import-md-input accepts audio file formats and new menu provides explicit audio import item', () => {
     assert.match(commonSource, /accept="[^"]*audio\/\*[^"]*\.mp3[^"]*\.wav[^"]*\.m4a/)
@@ -43,6 +44,17 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.ok(SUPPORTED_LANG['en-US'].transcribingAudioSmartFormat)
     assert.ok(SUPPORTED_LANG['en-US'].audioSmartFormatted)
     assert.doesNotMatch(baseSource, /diarize=1/)
+})
+
+test('Markdown editor toolbar records microphone audio and inserts both player and transcript', () => {
+    assert.match(commonSource, /command: 'record'/)
+    assert.match(commonSource, /command: 'recordPause'/)
+    assert.match(baseSource, /cf-notepad-recorded-audio/)
+    assert.match(baseSource, /insertAtCursor: true/)
+    assert.match(baseSource, /recorded audio must use HTTPS/)
+    assert.match(toolbarSource, /recordingConsent/)
+    assert.match(toolbarSource, /audioFile\.size > 25 \* 1024 \* 1024/)
+    assert.match(toolbarSource, /MediaRecorder/)
 })
 
 test('index.js registers audio transcribe routes and uses Groq whisper-large-v3 primary with multi-tier fallback pipeline', () => {
@@ -154,4 +166,3 @@ test('audio_transcribe formatTranscriptSegments handles audio longer than 1 hour
         '**[00:02:00]** 開場介紹\n\n**[01:02:05]** 一小時後的結論'
     )
 })
-

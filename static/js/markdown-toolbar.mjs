@@ -431,6 +431,91 @@ export const initMarkdownToolbar = (root = document) => {
         }
     }
 
+    const recordButton = toolbar.querySelector('[data-command="record"]')
+    const recordPauseButton = toolbar.querySelector('[data-command="recordPause"]')
+    let mediaRecorder = null
+    let recordingStream = null
+    let recordingChunks = []
+    let recordingSelection = null
+    let startingRecording = false
+
+    const setRecordingUi = state => {
+        const recording = state === 'recording'
+        const paused = state === 'paused'
+        if (recordButton) {
+            recordButton.classList.toggle('is-recording', recording || paused)
+            recordButton.setAttribute('aria-pressed', recording || paused ? 'true' : 'false')
+            const label = recording || paused ? (lang === 'zh-TW' ? '停止並插入錄音' : 'Stop and insert recording') : (lang === 'zh-TW' ? '開始錄音' : 'Start recording')
+            recordButton.setAttribute('aria-label', label)
+            recordButton.setAttribute('title', label)
+            recordButton.dataset.tooltip = label
+        }
+        if (recordPauseButton) {
+            recordPauseButton.disabled = !recording && !paused
+            const label = paused ? (lang === 'zh-TW' ? '繼續錄音' : 'Resume recording') : (lang === 'zh-TW' ? '暫停錄音' : 'Pause recording')
+            recordPauseButton.setAttribute('aria-label', label)
+            recordPauseButton.setAttribute('title', label)
+            recordPauseButton.dataset.tooltip = label
+        }
+    }
+
+    const stopRecordingTracks = () => {
+        recordingStream?.getTracks().forEach(track => track.stop())
+        recordingStream = null
+    }
+
+    const startRecording = async () => {
+        if (startingRecording) return
+        startingRecording = true
+        const recordingConsent = lang === 'zh-TW'
+            ? '請確認所有參與者已同意錄音與轉錄。要開始錄音嗎？'
+            : 'Confirm that all participants consent to recording and transcription. Start recording?'
+        if (!window.confirm(recordingConsent)) {
+            startingRecording = false
+            return
+        }
+        if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+            window.showToast?.(lang === 'zh-TW' ? '此瀏覽器不支援麥克風錄音。' : 'This browser does not support microphone recording.')
+            startingRecording = false
+            return
+        }
+        try {
+            recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+            const mimeType = MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : ''
+            mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
+            recordingChunks = []
+            recordingSelection = { start: textarea.selectionStart, end: textarea.selectionEnd }
+            mediaRecorder.addEventListener('dataavailable', event => {
+                if (event.data?.size) recordingChunks.push(event.data)
+            })
+            mediaRecorder.addEventListener('stop', () => {
+                const audioType = mediaRecorder?.mimeType || 'audio/webm'
+                const audioBlob = new Blob(recordingChunks, { type: audioType })
+                const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, { type: audioType })
+                stopRecordingTracks()
+                mediaRecorder = null
+                recordingChunks = []
+                setRecordingUi('idle')
+                if (audioFile.size > 25 * 1024 * 1024) {
+                    window.showToast?.(lang === 'zh-TW' ? '錄音超過 25 MB，請縮短後再試。' : 'Recording exceeds the 25 MB transcription limit.')
+                    return
+                }
+                document.dispatchEvent(new CustomEvent('cf-notepad-recorded-audio', {
+                    detail: { file: audioFile, ...recordingSelection },
+                }))
+            }, { once: true })
+            mediaRecorder.start(1000)
+            startingRecording = false
+            setRecordingUi('recording')
+        } catch (error) {
+            stopRecordingTracks()
+            mediaRecorder = null
+            startingRecording = false
+            setRecordingUi('idle')
+            window.showToast?.(error?.message || (lang === 'zh-TW' ? '無法取得麥克風權限。' : 'Unable to access the microphone.'))
+        }
+    }
+
     toolbar.querySelectorAll('button[data-command]').forEach(button => {
         button.addEventListener('mousedown', event => event.preventDefault())
         button.addEventListener('click', () => {
@@ -441,6 +526,21 @@ export const initMarkdownToolbar = (root = document) => {
             }
             if (command === 'fullscreen') {
                 toggleFullscreen()
+                return
+            }
+            if (command === 'record') {
+                if (mediaRecorder?.state === 'recording' || mediaRecorder?.state === 'paused') mediaRecorder.stop()
+                else startRecording()
+                return
+            }
+            if (command === 'recordPause' && mediaRecorder) {
+                if (mediaRecorder.state === 'recording') {
+                    mediaRecorder.pause()
+                    setRecordingUi('paused')
+                } else if (mediaRecorder.state === 'paused') {
+                    mediaRecorder.resume()
+                    setRecordingUi('recording')
+                }
                 return
             }
             if (command === 'image' && imageInput) {
@@ -511,6 +611,7 @@ export const initMarkdownToolbar = (root = document) => {
     })
 
     updateHistoryButtons()
+    setRecordingUi('idle')
     return true
 }
 
