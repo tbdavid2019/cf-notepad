@@ -220,10 +220,10 @@
   - 讀者在分享頁圈選任意文字，即刻彈出流暢的毛玻璃膠囊浮動工具列（`.selection-action-toolbar`）。
   - **📋 複製**：一鍵複製選取內容至剪貼簿。
   - **🌐 翻譯**：自動辨識語系進行中英雙向 AI 翻譯，並在原位小卡（Inline Popover）展示譯文與一鍵複製。
-  - **✨ 詢問 AI**：提供「🔍 解釋概念」、「💡 重點摘要」、「📐 公式推導」、「💻 程式碼解析」4 大快捷晶片與自訂問題輸入框，針對選取段落直接對答。
-  - **💬 註解**：一鍵開啟段落劃線討論側邊欄。
+  - **💬 註解**：一鍵開啟段落劃線討論側邊欄，支援連續多段劃線發起討論與平滑自動聚焦捲動，免重新載入頁面即可流暢連續註解。
 - **段落劃線註解與就地預覽 (Inline Popover & Deep Link)**：
   - 讀者可在分享頁劃線進行段落討論與「複製精準連結」，開啟時會自動跳轉並高亮指定段落。
+  - **連續劃線討論 (Continuous Annotations)**：圈選並送出留言後，工具列隨選即用，側邊欄留言框自動平滑捲動至視窗範圍內，支援連續多段劃線發起不同討論串。
   - **桌機 Hover 預覽**：滑鼠懸停劃線段落即時彈出迷你浮層（Tooltip），快速瀏覽最新留言與作者。
   - **手機 Tap 喚起**：觸控輕點劃線段落彈出原位小卡或一鍵拉起底部抽屜討論區，並自動滾動與閃爍聚焦對應卡片。
   - **🗑️ 留言自行刪除與作者管理**：訪客可自行刪除自己在此裝置發布的留言（HMAC Token 鑑權，無法刪除他人留言）；文章擁有者（持有編輯權限）具備全域管理刪除權限。
@@ -562,7 +562,7 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 - **Edit Lock vs View Lock**: Separate Salted MD5 password controls for editing permissions versus reading permissions.
 - **D1 Snapshot History**: Cloudflare D1 automatically backs up content (5-minute cooldown, retains 10 snapshots) for preview and restoration.
 - **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
-- **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`).
+- **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`). Features consecutive annotation creation across multiple text passages without reloading, smooth composer auto-scrolling, hover preview cards, touch action sheets, and device HMAC delete tokens.
 - **Stateless Markdown Processing Utilities**:
   - `POST /api/markdown/render`: Markdown to HTML with 20 CSS theme choices.
   - `POST /api/markdown/parse`: HTML / Web URL to clean Markdown.

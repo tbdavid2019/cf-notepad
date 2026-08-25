@@ -494,7 +494,7 @@ export function initShareAnnotations(options = {}) {
             title: '段落劃線討論',
             open: '開啟段落討論',
             move: '拖曳以調整按鈕位置',
-            copyLink: '複製連結',
+            copyLink: '🔗 複製連結',
             linkCopied: '已複製註解連結。',
             copyError: '無法複製連結，請手動複製網址。',
             close: '關閉',
@@ -521,13 +521,14 @@ export function initShareAnnotations(options = {}) {
             cancel: '取消',
             reply: '回覆',
             sendReply: '送出回覆',
-            detached: '原文已移除',
-            locate: '定位原文',
+            detached: '⚠️ 原文已移除',
+            locate: '🎯 定位原文',
             loading: '正在載入註解…',
             loadError: '註解載入失敗，請重新整理後再試。',
             saveError: '留言送出失敗，內容已保留，請再試一次。',
             stale: '文章內容已更新，請重新圈選文字。',
-            quoted: '你圈選的文字',
+            quoted: '📌 圈選原文',
+            discussion: '💬 討論留言',
             messages: '則留言',
             viewDiscussion: '查看完整討論 ➔',
             latestComment: '最新留言',
@@ -540,7 +541,7 @@ export function initShareAnnotations(options = {}) {
             title: 'Paragraph annotations',
             open: 'Open paragraph annotations',
             move: 'Drag to move the annotation button',
-            copyLink: 'Copy link',
+            copyLink: '🔗 Copy link',
             linkCopied: 'Annotation link copied.',
             copyError: 'The annotation link could not be copied. Try again.',
             close: 'Close',
@@ -567,13 +568,14 @@ export function initShareAnnotations(options = {}) {
             cancel: 'Cancel',
             reply: 'Reply',
             sendReply: 'Post reply',
-            detached: 'Original text removed',
-            locate: 'Locate original',
+            detached: '⚠️ Removed',
+            locate: '🎯 Locate',
             loading: 'Loading annotations…',
             loadError: 'Failed to load annotations. Refresh and try again.',
             saveError: 'Failed to post comment. Your text was preserved.',
             stale: 'Article updated. Please reselect text.',
-            quoted: 'Selected text',
+            quoted: '📌 Quoted passage',
+            discussion: '💬 Discussion',
             messages: 'comments',
             viewDiscussion: 'View discussion ➔',
             latestComment: 'Latest comment',
@@ -611,8 +613,12 @@ export function initShareAnnotations(options = {}) {
 
     const composer = createElement(document, 'form', 'annotation-composer')
     composer.hidden = true
-    const composerLabel = createElement(document, 'span', 'annotation-field-label', copy.quoted)
+    const composerQuoteBox = createElement(document, 'div', 'annotation-quote-box')
+    const composerQuoteHeader = createElement(document, 'div', 'annotation-quote-header')
+    const composerLabel = createElement(document, 'span', 'annotation-quote-badge', copy.quoted)
+    composerQuoteHeader.append(composerLabel)
     const composerQuote = createElement(document, 'blockquote', 'annotation-composer-quote')
+    composerQuoteBox.append(composerQuoteHeader, composerQuote)
     const authorInput = createElement(document, 'input', 'annotation-input')
     authorInput.name = 'authorName'
     authorInput.required = true
@@ -634,8 +640,7 @@ export function initShareAnnotations(options = {}) {
     submitButton.type = 'submit'
     composerActions.append(cancelButton, submitButton)
     composer.append(
-        composerLabel,
-        composerQuote,
+        composerQuoteBox,
         authorInput,
         bodyInput,
         composerError,
@@ -763,6 +768,9 @@ export function initShareAnnotations(options = {}) {
         composerError.textContent = ''
         composer.hidden = false
         setPanelOpen(true)
+        if (typeof composer.scrollIntoView === 'function') {
+            composer.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
+        }
         window.setTimeout(() => (authorInput.value ? bodyInput : authorInput).focus(), 0)
     }
 
@@ -770,7 +778,6 @@ export function initShareAnnotations(options = {}) {
         state.pendingAnchor = null
         composer.hidden = true
         composerError.textContent = ''
-        selectionButton.hidden = true
     }
 
     const setSaving = saving => {
@@ -866,8 +873,13 @@ export function initShareAnnotations(options = {}) {
         for (const thread of state.threads) {
             const card = createElement(document, 'article', 'annotation-thread')
             card.dataset.threadId = thread.id
-            const cardHeader = createElement(document, 'div', 'annotation-thread-header')
-            const quote = createElement(document, 'blockquote', 'annotation-thread-quote', thread.anchor.exact)
+
+            // 1. Quoted Source Header & Passage
+            const quoteBox = createElement(document, 'div', 'annotation-quote-box')
+            const quoteHeader = createElement(document, 'div', 'annotation-quote-header')
+            const quoteBadge = createElement(document, 'span', 'annotation-quote-badge', copy.quoted)
+            const quoteActions = createElement(document, 'div', 'annotation-quote-actions')
+
             const location = located.get(thread.id)
             const locationButton = createElement(
                 document,
@@ -898,19 +910,37 @@ export function initShareAnnotations(options = {}) {
                     status.textContent = copy.copyError
                 }
             })
-            cardHeader.append(quote, locationButton, copyLinkButton)
+            quoteActions.append(locationButton, copyLinkButton)
+            quoteHeader.append(quoteBadge, quoteActions)
+            const quote = createElement(document, 'blockquote', 'annotation-thread-quote', thread.anchor.exact)
+            quoteBox.append(quoteHeader, quote)
+
+            // 2. Discussion Comments Section
+            const discussionSection = createElement(document, 'div', 'annotation-discussion-section')
+            const discussionHeader = createElement(document, 'div', 'annotation-discussion-header')
+            const divLineLeft = createElement(document, 'span', 'annotation-discussion-divider-line')
+            const messageCount = thread.messageCount || thread.messages?.length || 0
+            const discussionLabel = createElement(document, 'span', 'annotation-discussion-label', `${copy.discussion} (${messageCount})`)
+            const divLineRight = createElement(document, 'span', 'annotation-discussion-divider-line')
+            discussionHeader.append(divLineLeft, discussionLabel, divLineRight)
+            discussionSection.append(discussionHeader)
 
             const messages = createElement(document, 'div', 'annotation-messages')
             for (const message of thread.messages) {
                 const item = createElement(document, 'div', 'annotation-message')
                 item.dataset.messageId = message.id
                 const meta = createElement(document, 'div', 'annotation-message-meta')
-                const author = createElement(document, 'strong', '', message.authorName)
+                
+                const authorGroup = createElement(document, 'div', 'annotation-author-group')
+                const avatar = createElement(document, 'span', 'annotation-author-avatar', (message.authorName || 'U').trim().charAt(0).toUpperCase())
+                const author = createElement(document, 'strong', 'annotation-author-name', message.authorName)
+                authorGroup.append(avatar, author)
+
                 const actions = createElement(document, 'div', 'annotation-message-meta-actions')
                 const date = createElement(
                     document,
                     'time',
-                    '',
+                    'annotation-message-time',
                     new Intl.DateTimeFormat(lang, {
                         dateStyle: 'medium',
                         timeStyle: 'short',
@@ -960,11 +990,13 @@ export function initShareAnnotations(options = {}) {
                     actions.append(deleteButton)
                 }
 
-                meta.append(author, actions)
-                item.append(meta, createElement(document, 'p', '', message.body))
+                meta.append(authorGroup, actions)
+                item.append(meta, createElement(document, 'p', 'annotation-message-body', message.body))
                 messages.append(item)
             }
+            discussionSection.append(messages)
 
+            // 3. Footer with Action Buttons
             const footer = createElement(document, 'div', 'annotation-thread-footer')
             const count = createElement(
                 document,
@@ -972,7 +1004,7 @@ export function initShareAnnotations(options = {}) {
                 'annotation-message-count',
                 `${thread.messageCount} ${copy.messages}`,
             )
-            const replyButton = createElement(document, 'button', 'annotation-secondary-button', copy.reply)
+            const replyButton = createElement(document, 'button', 'annotation-secondary-button annotation-reply-btn', `↩ ${copy.reply}`)
             replyButton.type = 'button'
             const replyForm = makeReplyForm(thread)
             replyButton.addEventListener('click', () => {
@@ -980,7 +1012,7 @@ export function initShareAnnotations(options = {}) {
                 if (!replyForm.hidden) replyForm.querySelector('textarea')?.focus()
             })
             footer.append(count, replyButton)
-            card.append(cardHeader, messages, footer, replyForm)
+            card.append(quoteBox, discussionSection, footer, replyForm)
             threadList.append(card)
         }
     }
@@ -1282,7 +1314,9 @@ export function initShareAnnotations(options = {}) {
     }
 
     const captureSelection = () => {
-        const selection = window.getSelection()
+        const win = articleRoot?.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null)
+        if (!win || typeof win.getSelection !== 'function') return
+        const selection = win.getSelection()
         if (!selection || selection.rangeCount !== 1 || selection.isCollapsed || !state.currentRevision) {
             selectionToolbar.hidden = true
             return
@@ -1308,6 +1342,7 @@ export function initShareAnnotations(options = {}) {
         } else {
             selectionToolbar.style.top = `${Math.min(window.innerHeight - 48, rect.bottom + 8)}px`
         }
+        selectionButton.hidden = false
         selectionToolbar.hidden = false
     }
 
@@ -1407,7 +1442,8 @@ export function initShareAnnotations(options = {}) {
     let pointerMoveThrottle = null
     articleRoot.addEventListener('pointermove', event => {
         if (event.pointerType === 'touch') return
-        const selection = window.getSelection()
+        const win = articleRoot?.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null)
+        const selection = win?.getSelection?.()
         if (selection && !selection.isCollapsed) return
         if (!aiPopover.hidden || !composer.hidden) return
 
@@ -1431,7 +1467,8 @@ export function initShareAnnotations(options = {}) {
 
     articleRoot.addEventListener('click', event => {
         if (event.button !== 0) return
-        const selection = window.getSelection()
+        const win = articleRoot?.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null)
+        const selection = win?.getSelection?.()
         if (selection && !selection.isCollapsed) return
         const hit = findThreadAtPoint(event.clientX, event.clientY)
         if (hit) {
@@ -1477,7 +1514,8 @@ export function initShareAnnotations(options = {}) {
             } catch {}
             bodyInput.value = ''
             hideComposer()
-            window.getSelection()?.removeAllRanges()
+            const win = articleRoot?.ownerDocument?.defaultView || (typeof window !== 'undefined' ? window : null)
+            win?.getSelection?.()?.removeAllRanges()
             renderThreads()
         } catch (error) {
             composerError.textContent = error.status === 409 ? copy.stale : (error.message || copy.saveError)

@@ -323,3 +323,165 @@ test('initShareAnnotations auto-discovers share root and mounts all annotation U
         globalThis.MutationObserver = originalMutationObserver
     }
 })
+
+test('allows consecutive annotations without requiring a full page reload', async () => {
+    const revision = 'f'.repeat(64)
+    const dom = new JSDOM(`
+        <!DOCTYPE html>
+        <html>
+        <body>
+            <div id="preview-md" class="contents markdown-body">
+                <p id="p1">First paragraph for first note.</p>
+                <p id="p2">Second paragraph for second note.</p>
+            </div>
+            <div id="share-annotation-root" data-share-id="test-share-consecutive" data-lang="zh-TW"></div>
+        </body>
+        </html>
+    `, { url: 'https://wiki.david888.com/share/test-share-consecutive' })
+
+    const originalDocument = globalThis.document
+    const originalWindow = globalThis.window
+    const originalFetch = globalThis.fetch
+    const originalMutationObserver = globalThis.MutationObserver
+
+    try {
+        globalThis.document = dom.window.document
+        globalThis.window = dom.window
+        globalThis.window.APP_STATE = { shareId: 'test-share-consecutive', lang: 'zh-TW' }
+
+        let createdCount = 0
+        globalThis.fetch = async (url, options = {}) => {
+            if (options.method === 'POST') {
+                createdCount += 1
+                const body = JSON.parse(options.body)
+                return {
+                    ok: true,
+                    json: async () => ({
+                        err: 0,
+                        data: {
+                            thread: {
+                                id: `thread-${createdCount}`,
+                                anchor: body.anchor,
+                                messages: [{
+                                    id: `msg-${createdCount}`,
+                                    authorName: body.authorName,
+                                    body: body.body,
+                                    createdAt: Math.floor(Date.now() / 1000),
+                                    deleteToken: `token-${createdCount}`,
+                                }],
+                                messageCount: 1,
+                                createdAt: Math.floor(Date.now() / 1000),
+                            },
+                        },
+                    }),
+                }
+            }
+            return {
+                ok: true,
+                json: async () => ({
+                    err: 0,
+                    data: {
+                        enabled: true,
+                        sourceRevision: revision,
+                        threads: [],
+                    },
+                }),
+            }
+        }
+        globalThis.MutationObserver = class {
+            observe() {}
+            disconnect() {}
+        }
+
+        initShareAnnotations()
+
+        // Wait for initial GET annotations to resolve
+        await new Promise(r => setTimeout(r, 50))
+
+        const appRoot = dom.window.document.querySelector('#share-annotation-root')
+        const selectionToolbar = appRoot.querySelector('.selection-action-toolbar')
+        const selectionButton = appRoot.querySelector('.annotation-selection-button')
+        const composer = appRoot.querySelector('.annotation-composer')
+        const quoteEl = composer.querySelector('.annotation-composer-quote')
+        const authorInput = composer.querySelector('input[name="authorName"]')
+        const bodyInput = composer.querySelector('textarea[name="body"]')
+
+        // Step 1: Select text in first paragraph
+        const p1 = dom.window.document.querySelector('#p1').firstChild
+        const range1 = dom.window.document.createRange()
+        range1.setStart(p1, 0)
+        range1.setEnd(p1, 15) // "First paragraph"
+        range1.getBoundingClientRect = () => ({ left: 100, top: 100, width: 80, height: 20 })
+
+        const selection = dom.window.getSelection()
+        selection.removeAllRanges()
+        selection.addRange(range1)
+
+        dom.window.document.dispatchEvent(new dom.window.Event('selectionchange'))
+        await new Promise(r => setTimeout(r, 100))
+
+        assert.equal(selectionToolbar.hidden, false, 'Toolbar should be visible on 1st selection')
+        assert.equal(selectionButton.hidden, false, 'Annotation button should be visible on 1st selection')
+
+        // Click annotate button
+        selectionButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+        assert.equal(composer.hidden, false, 'Composer should be visible')
+        assert.match(quoteEl.textContent, /First paragraph/)
+
+        // Fill and submit 1st annotation
+        authorInput.value = 'UserA'
+        bodyInput.value = 'Comment on paragraph 1'
+        composer.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }))
+        await new Promise(r => setTimeout(r, 50))
+
+        assert.equal(createdCount, 1, 'First annotation created')
+        assert.equal(composer.hidden, true, 'Composer should be hidden after submit')
+
+        // Step 2: Consecutive annotation on second paragraph without reload
+        const p2 = dom.window.document.querySelector('#p2').firstChild
+        const range2 = dom.window.document.createRange()
+        range2.setStart(p2, 0)
+        range2.setEnd(p2, 16) // "Second paragraph"
+        range2.getBoundingClientRect = () => ({ left: 100, top: 200, width: 80, height: 20 })
+
+        selection.removeAllRanges()
+        selection.addRange(range2)
+
+        dom.window.document.dispatchEvent(new dom.window.Event('selectionchange'))
+        await new Promise(r => setTimeout(r, 100))
+
+        assert.equal(selectionToolbar.hidden, false, 'Toolbar should be visible on 2nd selection')
+        assert.equal(selectionButton.hidden, false, 'Annotation button MUST NOT be hidden on consecutive selection')
+
+        // Click annotate button for 2nd note
+        selectionButton.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
+        assert.equal(composer.hidden, false, 'Composer should be visible for 2nd annotation')
+        assert.match(quoteEl.textContent, /Second paragraph/)
+
+        // Fill and submit 2nd annotation
+        authorInput.value = 'UserA'
+        bodyInput.value = 'Comment on paragraph 2'
+        composer.dispatchEvent(new dom.window.Event('submit', { bubbles: true, cancelable: true }))
+        await new Promise(r => setTimeout(r, 50))
+
+        assert.equal(createdCount, 2, 'Second consecutive annotation created successfully')
+
+        // Verify thread card structure
+        const threadCards = dom.window.document.querySelectorAll('.annotation-thread')
+        assert.equal(threadCards.length, 2, 'Two thread cards rendered')
+        for (const card of threadCards) {
+            assert.ok(card.querySelector('.annotation-quote-box'), 'Card contains quote box')
+            assert.ok(card.querySelector('.annotation-quote-badge'), 'Card contains quote badge')
+            assert.ok(card.querySelector('.annotation-thread-quote'), 'Card contains quote text')
+            assert.ok(card.querySelector('.annotation-discussion-section'), 'Card contains discussion section')
+            assert.ok(card.querySelector('.annotation-author-avatar'), 'Message contains author avatar')
+            assert.ok(card.querySelector('.annotation-author-name'), 'Message contains author name')
+            assert.ok(card.querySelector('.annotation-reply-btn'), 'Card contains reply button')
+        }
+    } finally {
+        globalThis.document = originalDocument
+        globalThis.window = originalWindow
+        globalThis.fetch = originalFetch
+        globalThis.MutationObserver = originalMutationObserver
+    }
+})

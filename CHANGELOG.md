@@ -2,6 +2,12 @@
 
 ## [2026-08-25]
 
+- **💬 劃線註解視覺層次重構與卡片化關係連結 (Annotation Card Hierarchy & Quoted Passage UI Redesign)**：
+  - **討論串卡片化獨立容器 (Independent Thread Card Container)**：將每個段落討論串重構為具備獨立圓角外框（`border-radius: 14px`）、陰影層次（`box-shadow`）與微浮 Hover 效果的獨立卡片容器，解決過往多則討論串僅以一條淡線分隔、界線模糊鬆散的問題。
+  - **「📌 圈選原文」引用專區與快捷膠囊 (Quoted Passage Callout Box & Pill Actions)**：卡片頂部明確劃分「📌 圈選原文」標籤，內嵌高亮引用盒（`border-left: 3.5px solid var(--annotation-accent)`），並將「🎯 定位原文」與「🔗 複製連結」重構為精緻的 Pill 膠囊按鈕，讓讀者一眼明瞭留言所對應的內文摘錄。
+  - **討論留言分隔與頭像識別 (Discussion Divider & Author Avatars)**：原文與留言之間引入「💬 討論留言 (N)」視覺分隔軸線，每則留言卡片化並附帶作者縮寫圓形頭像徽章（Avatar Badge）、發布時間與獨立刪除管理按鈕，清晰建立「圈選原文 ➔ 討論串」的上下游歸屬關係。
+  - **多主題無縫適配 (Full Theme Adaptive CSS Variables)**：支援全部 20 種明暗主題，深色模式（Dark / Tokyo Night / Dracula 等）自動切換最適文字對比、卡片底色與柔和外框。
+  - **連續劃線與平滑捲動健全 (Consecutive Annotations & Smooth Scroll)**：修復連續劃線後按鈕隱藏失效問題，圈選新段落隨選隨標，留言編輯框自動平滑捲動至視窗範圍內。
 - **⚡ PWA 離線模式即時 Markdown-to-HTML 預覽、格式工具列與樣式健全 (Offline PWA Markdown-to-HTML Live Preview, Toolbar & Typography Hardening)**：
   - **修復離線預覽無法渲染問題 (UMD Script Loading & DOMPurify Sanitization)**：修復過往在離線工作區 (`/_pwa-offline`) 中以 `<script type="module">` 載入 `marked.min.js` 與 `purify.min.js` 導致全域物件在部分瀏覽器環境下未綁定至 `window` 的問題。改採正規同步腳本載入，並配置 `marked.setOptions({ gfm: true, breaks: true })` 與 `DOMPurify` 安全白名單防禦 XSS。
   - **完整 Markdown CSS 排版注入 (`getMarkdownCss`)**：離線頁面樣式表整合注入 `${getMarkdownCss()}` 與 `--editor-font-family`，預覽容器配置 `.markdown-body`，確保 GitHub Alerts (`[!NOTE]`, `[!WARNING]`)、多欄版面配置 (`:::columns`)、行內螢光筆 (`==mark==`)、自訂顏色文字 (`{red}(text)`)、Pandoc 引用文獻 (`[@key]`)、代碼區塊高亮與自適應表格在離線環境下排版與線上 100% 一致。
@@ -9,7 +15,7 @@
   - **雙向捲動同步 (Scroll Synchronization)**：在雙欄對照模式（`mode-split`）下，編輯器輸入區與即時預覽區域實現即時等比例捲動同步。
   - **獨立 HTML 網頁單鍵匯出 (`⭳ 導出 HTML`)**：頂部控制列新增「⭳ 導出 HTML」按鈕，可將目前離線筆記內容連同完整內嵌 CSS 樣式封裝為獨立 `.html` 檔案下載，收件者免連網用任何瀏覽器即可直接閱讀。
   - **Service Worker CDN 智慧快取 (Dynamic CDN Cache Intercept)**：升級 `static/sw.js` 至 `v6`，並為外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）配置 Stale-While-Revalidate 動態快取層，確保線上使用過的 Unified / KaTeX / Mermaid / ECharts 組件在斷網後可持續離線運作。
-  - **線上編輯器離線備援 (Online Editor Offline Resiliency)**：在 `base.js` 的 `window.renderMarkdown` 中加入 Unified processor 例外捕捉與 marked 自動備援降級機制。
+  - **線上編輯器離線備援 (Online Editor Offline Resiliency)**：在 `base.js` 的 `window.renderMarkdown` 加入 Unified processor 例外捕捉與 marked 自動備援降級機制。
 
 ## [2026-08-24]
 

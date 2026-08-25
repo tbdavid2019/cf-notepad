@@ -10,6 +10,26 @@
     --annotation-danger: #a63d35;
 }
 
+[data-ui-theme="dark"],
+[data-theme="dark"],
+[data-theme="tokyo-night"],
+[data-theme="dracula"],
+[data-theme="terminal"],
+[data-theme="catppuccin-macchiato"],
+[data-theme="kanagawa"],
+[data-theme="x-ai"],
+[data-theme="neo-brutalism"] {
+    --annotation-accent: #e07a5f;
+    --annotation-accent-strong: #f28469;
+    --annotation-accent-soft: rgba(224, 122, 95, 0.16);
+    --annotation-panel: #1e1e24;
+    --annotation-surface: #282830;
+    --annotation-border: rgba(255, 255, 255, 0.12);
+    --annotation-text: #ececf1;
+    --annotation-muted: #9e9ea7;
+    --annotation-danger: #f87171;
+}
+
 ::highlight(share-annotations) {
     color: inherit;
     background: rgba(200, 101, 75, 0.28);
@@ -551,10 +571,12 @@
 .annotation-composer {
     display: grid;
     gap: 10px;
-    margin-block-end: 16px;
-    padding: 14px;
-    background: var(--annotation-surface);
+    margin-block-end: 20px;
+    padding: 16px;
+    background: var(--annotation-panel);
+    border: 1px solid var(--annotation-border);
     border-radius: 14px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
 }
 
 .annotation-composer[hidden],
@@ -568,6 +590,38 @@
     font-weight: 700;
 }
 
+.annotation-quote-box {
+    background: var(--annotation-surface);
+    border-inline-start: 3.5px solid var(--annotation-accent);
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-block-end: 6px;
+}
+
+.annotation-quote-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-block-end: 6px;
+}
+
+.annotation-quote-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    font-weight: 750;
+    color: var(--annotation-accent-strong);
+    letter-spacing: 0.2px;
+}
+
+.annotation-quote-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
 .annotation-composer-quote,
 .annotation-thread-quote {
     overflow-wrap: anywhere;
@@ -577,13 +631,23 @@
 .annotation-composer-quote {
     max-height: 110px;
     margin: 0;
-    padding: 10px 12px;
+    padding: 4px 0 0;
     overflow: auto;
     color: var(--annotation-text);
-    background: var(--annotation-panel);
-    border-radius: 10px;
-    font-size: 13px;
-    line-height: 1.55;
+    background: transparent;
+    font-size: 12.5px;
+    line-height: 1.5;
+    opacity: 0.92;
+}
+
+.annotation-thread-quote {
+    margin: 0;
+    padding: 2px 0 0;
+    color: var(--annotation-text);
+    font-size: 12.5px;
+    font-weight: 550;
+    line-height: 1.52;
+    opacity: 0.95;
 }
 
 .annotation-input,
@@ -591,22 +655,22 @@
     width: 100%;
     min-width: 0;
     color: var(--annotation-text);
-    background: var(--annotation-panel);
+    background: var(--annotation-surface);
     border: 1px solid var(--annotation-border);
     border-radius: 10px;
     outline: none;
     font: inherit;
-    font-size: 14px;
+    font-size: 13.5px;
 }
 
 .annotation-input {
-    min-height: 40px;
-    padding: 8px 10px;
+    min-height: 38px;
+    padding: 8px 11px;
 }
 
 .annotation-textarea {
     min-height: 82px;
-    padding: 10px;
+    padding: 10px 11px;
     resize: vertical;
     line-height: 1.55;
 }
@@ -614,6 +678,7 @@
 .annotation-input:focus,
 .annotation-textarea:focus {
     border-color: var(--annotation-accent);
+    background: var(--annotation-panel);
     box-shadow: 0 0 0 3px rgba(182, 83, 62, 0.14);
 }
 
@@ -627,12 +692,12 @@
 
 .annotation-primary-button,
 .annotation-secondary-button {
-    min-height: 36px;
-    padding: 7px 12px;
-    border-radius: 10px;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 9px;
     cursor: pointer;
-    font-size: 13px;
-    font-weight: 720;
+    font-size: 12.5px;
+    font-weight: 700;
 }
 
 .annotation-primary-button {
@@ -648,12 +713,12 @@
 
 .annotation-secondary-button {
     color: var(--annotation-text);
-    background: transparent;
+    background: var(--annotation-surface);
     border: 1px solid var(--annotation-border);
 }
 
 .annotation-secondary-button:hover {
-    background: var(--annotation-surface);
+    background: var(--annotation-border);
 }
 
 .annotation-primary-button:disabled,
@@ -680,13 +745,20 @@
     overscroll-behavior: contain;
 }
 
+/* Individual Thread Card with Distinct Visual Isolation */
 .annotation-thread {
-    padding: 16px 0 18px;
-    border-block-start: 1px solid var(--annotation-border);
+    background: var(--annotation-panel);
+    border: 1px solid var(--annotation-border);
+    border-radius: 14px;
+    padding: 14px 14px 12px;
+    margin-block-end: 16px;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.04), 0 1px 3px rgba(0, 0, 0, 0.02);
+    transition: border-color 160ms ease, box-shadow 160ms ease;
 }
 
-.annotation-thread:first-child {
-    border-block-start: 0;
+.annotation-thread:hover {
+    border-color: rgba(182, 83, 62, 0.4);
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
 }
 
 .annotation-thread-header {
@@ -694,87 +766,135 @@
     gap: 8px;
 }
 
-.annotation-thread-quote {
-    margin: 0;
-    color: var(--annotation-text);
-    font-size: 13px;
-    font-weight: 680;
-    line-height: 1.55;
-}
-
 .annotation-locate-button,
-.annotation-detached-label {
-    justify-self: start;
-    padding: 2px 0;
-    border: 0;
-    font-size: 12px;
-}
-
-.annotation-locate-button {
-    color: var(--annotation-accent-strong);
-    background: transparent;
-    cursor: pointer;
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
+.annotation-detached-label,
 .annotation-copy-link-button {
-    justify-self: start;
-    padding: 2px 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1.3;
+    border-radius: 6px;
+    background: var(--annotation-panel);
+    border: 1px solid var(--annotation-border);
     color: var(--annotation-muted);
-    background: transparent;
-    border: 0;
     cursor: pointer;
-    font-size: 12px;
-    text-decoration: underline;
-    text-underline-offset: 3px;
+    text-decoration: none;
+    transition: all 120ms ease;
 }
 
+.annotation-locate-button:hover,
 .annotation-copy-link-button:hover {
     color: var(--annotation-accent-strong);
+    background: var(--annotation-accent-soft);
+    border-color: rgba(182, 83, 62, 0.3);
 }
 
 .annotation-detached-label {
     color: var(--annotation-danger);
-    background: transparent;
+    background: var(--annotation-surface);
+    border-color: rgba(166, 61, 53, 0.25);
+    cursor: default;
+}
+
+/* Discussion Section within Card */
+.annotation-discussion-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-block: 8px 6px;
+}
+
+.annotation-discussion-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-block: 2px 4px;
+}
+
+.annotation-discussion-divider-line {
+    flex: 1;
+    height: 1px;
+    background: var(--annotation-border);
+    opacity: 0.6;
+}
+
+.annotation-discussion-label {
+    font-size: 11px;
+    font-weight: 750;
+    color: var(--annotation-muted);
+    white-space: nowrap;
+    letter-spacing: 0.2px;
 }
 
 .annotation-messages {
     display: grid;
-    gap: 12px;
-    margin-block: 14px;
+    gap: 8px;
+    margin-block: 0;
 }
 
 .annotation-message {
     min-width: 0;
-    padding: 11px 12px;
+    padding: 10px 12px;
     background: var(--annotation-surface);
-    border-radius: 12px;
+    border: 1px solid var(--annotation-border);
+    border-radius: 10px;
 }
 
 .annotation-message-meta {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px;
     color: var(--annotation-muted);
     font-size: 11px;
+    margin-block-end: 4px;
 }
 
-.annotation-message-meta strong {
+.annotation-author-group {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+}
+
+.annotation-author-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: var(--annotation-accent);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 750;
+    flex-shrink: 0;
+}
+
+.annotation-author-name {
     min-width: 0;
     overflow: hidden;
     color: var(--annotation-text);
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 13px;
+    font-size: 12.5px;
+    font-weight: 700;
+}
+
+.annotation-message-time {
+    font-size: 11px;
+    color: var(--annotation-muted);
+    white-space: nowrap;
 }
 
 .annotation-message-meta-actions {
     display: inline-flex;
     align-items: center;
     gap: 6px;
-    margin-left: auto;
+    margin-inline-start: auto;
     flex-shrink: 0;
 }
 
@@ -785,8 +905,8 @@
     cursor: pointer;
     font-size: 12px;
     line-height: 1;
-    padding: 3px 5px;
-    border-radius: 6px;
+    padding: 2px 4px;
+    border-radius: 5px;
     color: var(--annotation-muted);
     opacity: 0.55;
     transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease, transform 0.12s ease;
@@ -809,24 +929,58 @@
     pointer-events: none;
 }
 
-.annotation-message p {
-    margin: 7px 0 0;
+.annotation-message p,
+.annotation-message-body {
+    margin: 2px 0 0;
     overflow-wrap: anywhere;
     white-space: pre-wrap;
-    font-size: 14px;
-    line-height: 1.58;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--annotation-text);
+}
+
+.annotation-thread-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-block-start: 10px;
+    padding-block-start: 8px;
+    border-block-start: 1px dashed var(--annotation-border);
 }
 
 .annotation-message-count {
-    margin-inline-end: auto;
     color: var(--annotation-muted);
-    font-size: 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+}
+
+.annotation-reply-btn {
+    min-height: 28px;
+    padding: 4px 10px;
+    font-size: 11.5px;
+    font-weight: 650;
+    color: var(--annotation-accent-strong);
+    background: transparent;
+    border: 1px solid rgba(182, 83, 62, 0.35);
+    border-radius: 7px;
+    transition: all 120ms ease;
+}
+
+.annotation-reply-btn:hover {
+    background: var(--annotation-accent);
+    color: #fff;
+    border-color: var(--annotation-accent);
 }
 
 .annotation-reply-form {
     display: grid;
     gap: 8px;
-    margin-block-start: 12px;
+    margin-block-start: 10px;
+    padding: 10px;
+    background: var(--annotation-surface);
+    border: 1px solid var(--annotation-border);
+    border-radius: 10px;
 }
 
 .annotation-source-flash {
