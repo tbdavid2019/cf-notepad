@@ -50,6 +50,10 @@ test('book mode scripts have zero syntax errors when evaluated', () => {
 
     const scriptMatches = html.match(/<script[\s\S]*?>([\s\S]*?)<\/script>/gi) || []
     assert.ok(scriptMatches.length > 0, 'Found scripts')
+    assert.ok(
+        html.includes("'<\\\\/script>\\n</body>\\n</html>'"),
+        'Standalone HTML export must escape its closing script tag in the enclosing client script'
+    )
 
     for (const tag of scriptMatches) {
         if (tag.includes('text/template') || tag.includes('application/ld+json') || tag.includes('application/json') || tag.includes('src=')) continue

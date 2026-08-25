@@ -6910,7 +6910,7 @@ themeCss + '\\n' +
                     'document.getElementById("prev-btn").onclick = function() { render(cur - 1); };' +
                     'document.getElementById("next-btn").onclick = function() { render(cur + 1); };' +
                     'render(0);' +
-                    '<\/script>\\n</body>\\n</html>';
+                    '<\\\\/script>\\n</body>\\n</html>';
 
                 var blob = new Blob([singleHtml], { type: 'text/html;charset=utf-8' });
                 var a = document.createElement('a');

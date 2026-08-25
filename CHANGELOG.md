@@ -2,6 +2,8 @@
 
 ## [2026-08-25]
 
+- **📱 書本模式行動版離線 HTML 匯出修復 (Mobile Book Standalone HTML Export Fix)**：修正單一離線 HTML 電子書的內嵌 `</script>` 未正確跳脫，造成瀏覽器提早結束書本頁面的用戶端腳本、將後續 JavaScript 顯示成本文文字的問題；行動版匯出選單現在可正常下載 `.html` 電子書。
+
 - **🧭 Share 分享模式「最近分享紀錄」功能支援與底欄暗黑模式按鈕歸類整合 (Share Mode Recent Shares Access & Appearance Bar Dark Mode Realignment)**：
   - **Share 模式開放「最近分享紀錄」(`share-history-btn`)**：將過往僅限於 Edit 模式編輯器底欄的「最近分享紀錄」按鈕同步開放至 Share 公開分享頁面底欄工具列。讀者與作者可隨時於分享頁面一鍵喚起彈窗，在「我分享的 (Created)」與「我看過的 (Viewed)」切換瀏覽並快速複製跳轉其他筆記，提升閱讀流暢度。
   - **暗黑深淺切換按鈕回歸「外觀設定區」 (`footer-section-appearance`)**：將原先置於底欄資訊區 (`footer-section-info`) 中間、混雜於 App 安裝與 Skill/API 開發者連結間的「深淺模式切換按鈕 (`ui-theme-toggle-btn`)」移至「外觀設定區」，與 Markdown 20 種主題下拉選單、字體切換與語系按鈕緊密歸類，徹底釐清資訊架構。
