@@ -698,6 +698,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '嵌入' : 'Embed'}</span>
                         </button>
                         ` : ''}
+                        <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
+                            ${SVG_ICONS.shareHistory}
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '紀錄' : 'Recent'}</span>
+                        </button>
                     ` : '')}
                     <button type="button" class="toolbar-icon-button mobile-more-btn" id="mobile-more-btn" data-tooltip="${moreToolsTitle}" title="${moreToolsTitle}" aria-label="${moreToolsTitle}">
                         ${SVG_ICONS.more}
@@ -747,6 +751,11 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         ${WIDTH_DROPDOWN_MENU(lang, effectiveWidth)}
                         ${THEME_DROPDOWN_MENU(lang, theme, getThemeLabel)}
                     ` : ''}
+                    <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" data-tooltip="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
+                        <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
+                        <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
+                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '深淺' : 'Theme'}</span>
+                    </button>
                     ${sharePath ? `
                         <div id="share-analytics-hook">
                             ${safeViewCount === null ? '' : `
@@ -769,11 +778,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                     <button type="button" id="pwa-install-manual-btn" class="toolbar-icon-button pwa-install-manual-btn" onclick="window.__handlePwaInstall ? window.__handlePwaInstall(this) : (window.showToast ? window.showToast('App 安裝中...') : alert('App'))" data-tooltip="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}" title="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}" aria-label="${lang === 'zh-TW' ? '安裝 App' : 'Install App'}">
                         ${SVG_ICONS.install}
                         <span class="toolbar-button-label">${lang === 'zh-TW' ? '安裝' : 'App'}</span>
-                    </button>
-                    <button type="button" id="ui-theme-toggle-btn" class="toolbar-icon-button ui-theme-toggle-btn" data-tooltip="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" title="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}" aria-label="${lang === 'zh-TW' ? '切換介面深淺模式' : 'Toggle UI theme'}">
-                        <span class="ui-theme-icon-sun" aria-hidden="true">${SVG_ICONS.sun}</span>
-                        <span class="ui-theme-icon-moon" aria-hidden="true">${SVG_ICONS.moon}</span>
-                        <span class="toolbar-button-label">${lang === 'zh-TW' ? '深淺' : 'Theme'}</span>
                     </button>
                     <a class="toolbar-icon-link" data-tooltip="${t.skillTitle}" title="${t.skillTitle}" aria-label="${t.skillTitle}" target="_blank" href="/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" rel="noreferrer">
                         ${SVG_ICONS.sparkles}

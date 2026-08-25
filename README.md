@@ -216,6 +216,9 @@
 - **KaTeX 數學公式點擊複製 (7 種格式)**：
   - 點擊分享頁或預覽中的任一 KaTeX 數學公式即刻複製到剪貼簿。
   - 提供專屬設定選單（`fx` 按鈕），支援 7 種格式：自動判斷 (Auto)、LaTeX (含 $)、LaTeX 純文字 (無 $，適合 Desmos/WolframAlpha)、Notion (雙 $)、MathML (貼入 Word 轉為原生方程式)、PNG 圖片、SVG 向量。
+- **Share 模式「最近分享紀錄」與外觀深淺模式直覺分組**：
+  - **最近分享紀錄 (Recent Shares in Share Mode)**：在 Share 閱讀頁面底欄提供「`最近分享紀錄`」按鈕，訪客與作者皆可在閱讀時隨時開啟彈窗，自由在「我分享的」與「我看過的」分頁切換並快速複製網址。
+  - **外觀與深淺主題統一歸類 (Appearance Group)**：底欄「深淺模式切換按鈕 (`☀️/🌙`)」歸入「外觀設定區」，與 20 種 Markdown 主題、預覽寬度、字體與語系切換並列；底欄「資訊區」專注於 GitHub、App 安裝、Agent Skill 與 API 開發者文件。
 - **Share 模式圈選文字浮動工具列與 AI 原位小卡**：
   - 讀者在分享頁圈選任意文字，即刻彈出流暢的毛玻璃膠囊浮動工具列（`.selection-action-toolbar`）。
   - **📋 複製**：一鍵複製選取內容至剪貼簿。
@@ -561,6 +564,9 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 
 - **Edit Lock vs View Lock**: Separate Salted MD5 password controls for editing permissions versus reading permissions.
 - **D1 Snapshot History**: Cloudflare D1 automatically backs up content (5-minute cooldown, retains 10 snapshots) for preview and restoration.
+- **Recent Share Links in Share Mode & Appearance Grouping**:
+  - **Recent Shares (`#share-history-btn`) in Share Mode**: Readers and authors can now open the "Recent Share Links" modal directly from the Share page footer, easily toggling between "Created" and "Viewed" tabs to jump to previous notes.
+  - **Dark Mode Toggle in Appearance Group**: Re-positioned the UI Dark/Light mode toggle (`☀️/🌙`) into the Appearance footer group alongside themes and font toggles, keeping the Info group cleanly focused on GitHub, App install, Agent Skill, and API docs.
 - **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
 - **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`). Features consecutive annotation creation across multiple text passages without reloading, smooth composer auto-scrolling, hover preview cards, touch action sheets, and device HMAC delete tokens.
 - **Stateless Markdown Processing Utilities**:

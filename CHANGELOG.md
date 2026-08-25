@@ -2,6 +2,9 @@
 
 ## [2026-08-25]
 
+- **🧭 Share 分享模式「最近分享紀錄」功能支援與底欄暗黑模式按鈕歸類整合 (Share Mode Recent Shares Access & Appearance Bar Dark Mode Realignment)**：
+  - **Share 模式開放「最近分享紀錄」(`share-history-btn`)**：將過往僅限於 Edit 模式編輯器底欄的「最近分享紀錄」按鈕同步開放至 Share 公開分享頁面底欄工具列。讀者與作者可隨時於分享頁面一鍵喚起彈窗，在「我分享的 (Created)」與「我看過的 (Viewed)」切換瀏覽並快速複製跳轉其他筆記，提升閱讀流暢度。
+  - **暗黑深淺切換按鈕回歸「外觀設定區」 (`footer-section-appearance`)**：將原先置於底欄資訊區 (`footer-section-info`) 中間、混雜於 App 安裝與 Skill/API 開發者連結間的「深淺模式切換按鈕 (`ui-theme-toggle-btn`)」移至「外觀設定區」，與 Markdown 20 種主題下拉選單、字體切換與語系按鈕緊密歸類，徹底釐清資訊架構。
 - **💬 劃線註解視覺層次重構與卡片化關係連結 (Annotation Card Hierarchy & Quoted Passage UI Redesign)**：
   - **討論串卡片化獨立容器 (Independent Thread Card Container)**：將每個段落討論串重構為具備獨立圓角外框（`border-radius: 14px`）、陰影層次（`box-shadow`）與微浮 Hover 效果的獨立卡片容器，解決過往多則討論串僅以一條淡線分隔、界線模糊鬆散的問題。
   - **「📌 圈選原文」引用專區與快捷膠囊 (Quoted Passage Callout Box & Pill Actions)**：卡片頂部明確劃分「📌 圈選原文」標籤，內嵌高亮引用盒（`border-left: 3.5px solid var(--annotation-accent)`），並將「🎯 定位原文」與「🔗 複製連結」重構為精緻的 Pill 膠囊按鈕，讓讀者一眼明瞭留言所對應的內文摘錄。

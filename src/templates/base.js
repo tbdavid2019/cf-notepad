@@ -1686,12 +1686,12 @@ ${getMarkdownCss()}
 
     const setupShareHistory = () => {
         const modal = document.querySelector('.share-history-modal')
-        const openBtn = document.querySelector('#share-history-btn')
+        const openBtns = document.querySelectorAll('#share-history-btn, .share-history-trigger')
         const closeBtn = document.querySelector('.share-history-close')
         const mask = modal ? modal.querySelector('.modal-mask') : null
         const list = modal ? modal.querySelector('[data-share-history-list]') : null
         const tabs = modal ? modal.querySelectorAll('[data-share-history-tab]') : []
-        if (!modal || !openBtn || !list) return;
+        if (!modal || !openBtns.length || !list) return;
 
         let activeType = 'created'
         const render = () => {
@@ -1738,14 +1738,23 @@ ${getMarkdownCss()}
             })
         }
 
-        const open = () => {
-            openModal(modal, { initialFocus: closeBtn || tabs[0] || openBtn, trigger: openBtn })
-            openBtn.setAttribute('aria-expanded', 'true')
+        const open = (e) => {
+            const trigger = e ? e.currentTarget : openBtns[0]
+            if (document.body.classList.contains('share-view') && !readShareHistory('created').length && readShareHistory('viewed').length) {
+                activeType = 'viewed'
+                tabs.forEach(t => {
+                    const isViewed = t.getAttribute('data-share-history-tab') === 'viewed'
+                    t.classList.toggle('active', isViewed)
+                    t.setAttribute('aria-selected', isViewed ? 'true' : 'false')
+                })
+            }
+            openModal(modal, { initialFocus: closeBtn || tabs[0] || trigger, trigger })
+            openBtns.forEach(btn => btn.setAttribute('aria-expanded', 'true'))
             render()
         }
         const close = () => {
             closeModal(modal)
-            openBtn.setAttribute('aria-expanded', 'false')
+            openBtns.forEach(btn => btn.setAttribute('aria-expanded', 'false'))
         }
 
         tabs.forEach(tab => {
@@ -1760,7 +1769,7 @@ ${getMarkdownCss()}
             })
         })
 
-        openBtn.addEventListener('click', open)
+        openBtns.forEach(btn => btn.addEventListener('click', open))
         if (closeBtn) closeBtn.addEventListener('click', close)
         if (mask) mask.addEventListener('click', close)
         modal.addEventListener('keydown', e => {

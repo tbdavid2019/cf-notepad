@@ -58,3 +58,18 @@ test('share footer displays the D1 view count and omits it when unavailable', ()
     assert.match(sharedFooter, /42 次瀏覽/)
     assert.doesNotMatch(unavailableFooter, /id="share-view-count"/)
 })
+
+test('share footer provides recent shares history and groups dark mode toggle inside appearance section', () => {
+    const sharedFooter = FOOTER({
+        lang: 'zh-TW',
+        isEdit: false,
+        mode: 'md',
+        path: 'abc123',
+        sharePath: '/share/abc123',
+        shareId: 'abc123',
+    })
+
+    assert.match(sharedFooter, /id="share-history-btn"/)
+    assert.match(sharedFooter, /class="footer-section footer-section-appearance"[\s\S]*id="ui-theme-toggle-btn"[\s\S]*class="footer-section footer-section-info"/)
+    assert.doesNotMatch(sharedFooter, /class="footer-section footer-section-info"[\s\S]*id="ui-theme-toggle-btn"/)
+})
