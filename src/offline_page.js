@@ -767,6 +767,8 @@ export const createOfflinePageResponse = () => {
                         <button type="button" class="toolbar-btn" data-cmd="image" title="圖片 (![alt](url))">🖼️</button>
                         <button type="button" class="toolbar-btn" data-cmd="alert" title="GitHub 提示框 (> [!NOTE])">💡</button>
                         <button type="button" class="toolbar-btn" data-cmd="twoColumns" title="雙欄佈局 (Two Columns)">🏛️</button>
+                        <span class="toolbar-sep"></span>
+                        <button type="button" class="toolbar-btn" id="offline-record-btn" title="離線錄音 (Local Recording)">🎙️</button>
                     </div>
                     <textarea class="editor-textarea" id="note-content" placeholder="在此輸入 Markdown 內容... (支援完整離線語法編輯與即時 HTML 預覽)"></textarea>
                 </div>
@@ -802,7 +804,22 @@ export const createOfflinePageResponse = () => {
                     </div>
                     <div class="diff-pane">
                         <div class="diff-title"><span aria-hidden="true">☁️ </span>雲端最新版本 (Cloud Remote)</div>
-                        <textarea class="diff-textarea" id="diff-remote" readon    <script src="/js/marked.min.js"></script>
+                        <textarea class="diff-textarea" id="diff-remote" readonly aria-label="雲端最新版本內容"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="conflict-keep-local"><span aria-hidden="true">💾 </span>保留本機版本並覆蓋雲端</button>
+                <button type="button" class="btn btn-secondary" id="conflict-keep-remote"><span aria-hidden="true">☁️ </span>採用雲端最新版本</button>
+                <button type="button" class="btn" id="conflict-save-copy"><span aria-hidden="true">📄 </span>另存本機為衝突複本</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="/js/marked.min.js"></script>
     <script src="/js/purify.min.js"></script>
     <script type="module">
         import { offlineStore, exportMarkdownFile, openLocalMarkdownFile } from '/js/offline-store.mjs'
@@ -1030,8 +1047,8 @@ export const createOfflinePageResponse = () => {
 
                 if (purifySanitizer) {
                     clean = purifySanitizer(html, {
-                        ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse', 'span', 'section', 'button'],
-                        ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title', 'target', 'rel'],
+                        ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse', 'span', 'section', 'button', 'audio', 'source'],
+                        ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title', 'target', 'rel', 'data-offline-audio-id', 'controls', 'autoplay', 'loop', 'muted', 'preload'],
                         WHOLE_DOCUMENT: false,
                         FORCE_BODY: true
                     })
@@ -1490,6 +1507,125 @@ export const createOfflinePageResponse = () => {
             }
         })
 
+        // Offline Audio Recording
+        let offlineMediaRecorder = null
+        let offlineRecordingStream = null
+        let offlineRecordingChunks = []
+        const $offlineRecordBtn = document.getElementById('offline-record-btn')
+
+        if ($offlineRecordBtn) {
+            $offlineRecordBtn.onclick = async () => {
+                if (offlineMediaRecorder?.state === 'recording') {
+                    offlineMediaRecorder.stop()
+                    return
+                }
+                if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+                    showToast('❌ 此瀏覽器不支援麥克風錄音')
+                    return
+                }
+                if (!confirm('請確認參與者已同意錄音。要開始錄音嗎？')) return
+
+                try {
+                    offlineRecordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
+                    const mimeType = MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : ''
+                    offlineMediaRecorder = mimeType ? new MediaRecorder(offlineRecordingStream, { mimeType }) : new MediaRecorder(offlineRecordingStream)
+                    offlineRecordingChunks = []
+
+                    offlineMediaRecorder.ondataavailable = e => {
+                        if (e.data?.size) offlineRecordingChunks.push(e.data)
+                    }
+
+                    offlineMediaRecorder.onstop = async () => {
+                        const audioType = offlineMediaRecorder?.mimeType || 'audio/webm'
+                        const audioBlob = new Blob(offlineRecordingChunks, { type: audioType })
+                        offlineRecordingStream?.getTracks().forEach(t => t.stop())
+                        offlineRecordingStream = null
+                        offlineMediaRecorder = null
+                        offlineRecordingChunks = []
+
+                        $offlineRecordBtn.textContent = '🎙️'
+                        $offlineRecordBtn.style.background = ''
+
+                        if (audioBlob.size > 25 * 1024 * 1024) {
+                            showToast('❌ 錄音超過 25 MB，請縮短後再試')
+                            return
+                        }
+
+                        const audioId = 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+                        const blobUrl = URL.createObjectURL(audioBlob)
+
+                        // Save to IndexedDB
+                        await offlineStore.saveOfflineAudio(audioId, {
+                            blob: audioBlob,
+                            name: 'recording-' + Date.now() + '.webm',
+                            type: audioType,
+                            notePath: currentPath,
+                            syncStatus: 'pending'
+                        })
+
+                        // Insert audio tag into textarea
+                        const start = $content.selectionStart || 0
+                        const end = $content.selectionEnd || 0
+                        const source = $content.value
+                        const tag = '<audio controls data-offline-audio-id="' + audioId + '" src="' + blobUrl + '"></audio>'
+                        const prefix = start > 0 && !source.substring(0, start).endsWith('\\n') ? '\\n\\n' : ''
+                        const suffix = end < source.length && !source.substring(end).startsWith('\\n') ? '\\n\\n' : ''
+                        const insertion = prefix + tag + suffix
+                        $content.value = source.substring(0, start) + insertion + source.substring(end)
+                        $content.setSelectionRange(start + insertion.length, start + insertion.length)
+                        renderPreview()
+                        await saveCurrent({ showNotification: false })
+
+                        showToast('🎙️ 錄音已存於本機 (IndexedDB)，連線後將自動同步至雲端')
+                        if (navigator.onLine) syncPendingAudiosInOfflinePage()
+                    }
+
+                    offlineMediaRecorder.start(1000)
+                    $offlineRecordBtn.textContent = '⏹️ 停止錄音'
+                    $offlineRecordBtn.style.background = 'rgba(239, 68, 68, 0.2)'
+                    showToast('🎙️ 正在錄音中...')
+                } catch (err) {
+                    offlineRecordingStream?.getTracks().forEach(t => t.stop())
+                    offlineRecordingStream = null
+                    offlineMediaRecorder = null
+                    $offlineRecordBtn.textContent = '🎙️'
+                    $offlineRecordBtn.style.background = ''
+                    showToast('❌ 無法取得麥克風權限：' + err.message)
+                }
+            }
+        }
+
+        async function syncPendingAudiosInOfflinePage() {
+            if (!navigator.onLine) return
+            try {
+                const pendingAudios = await offlineStore.getPendingOfflineAudios(currentPath)
+                if (!pendingAudios || !pendingAudios.length) return
+                for (const item of pendingAudios) {
+                    if (item.blob) {
+                        const formData = new FormData()
+                        formData.append('file', item.blob, item.name || 'recording.webm')
+                        formData.append('title', item.name || 'attachment')
+                        const res = await fetch('https://box.david888.com/api.php?action=upload', { method: 'POST', body: formData }).catch(() => null)
+                        if (res && res.ok) {
+                            const payload = await res.json().catch(() => ({}))
+                            const url = payload?.data?.url || payload?.url
+                            if (url) {
+                                const curVal = $content.value
+                                const regex = new RegExp('<audio[^>]*data-offline-audio-id=["\']' + item.id + '["\'][^>]*><\\/audio>', 'g')
+                                const newTag = '<audio controls src="' + url + '"></audio>'
+                                if (regex.test(curVal)) {
+                                    $content.value = curVal.replace(regex, newTag)
+                                    renderPreview()
+                                    await saveCurrent({ showNotification: false })
+                                }
+                                await offlineStore.updateOfflineAudioStatus(item.id, 'synced', url)
+                            }
+                        }
+                    }
+                }
+            } catch (e) {}
+        }
+
         // Online & Offline State handling
         function updateNetworkState() {
             if (navigator.onLine) {
@@ -1502,6 +1638,7 @@ export const createOfflinePageResponse = () => {
                         }
                     }).catch(() => {})
                 }
+                syncPendingAudiosInOfflinePage()
                 // Background sync all pending notes
                 offlineStore.getPendingSyncNotes().then(pending => {
                     if (pending.length > 0) {

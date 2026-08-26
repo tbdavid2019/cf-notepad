@@ -7,8 +7,9 @@
  */
 
 const DB_NAME = 'CloudNotepadOfflineDB'
-const DB_VERSION = 1
+const DB_VERSION = 2
 const STORE_NAME = 'notes'
+const AUDIO_STORE_NAME = 'audios'
 const META_KEY = 'cf-notepad:notes-metadata'
 
 class OfflineNoteStore {
@@ -38,6 +39,9 @@ class OfflineNoteStore {
                     const db = e.target.result
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
                         db.createObjectStore(STORE_NAME, { keyPath: 'path' })
+                    }
+                    if (!db.objectStoreNames.contains(AUDIO_STORE_NAME)) {
+                        db.createObjectStore(AUDIO_STORE_NAME, { keyPath: 'id' })
                     }
                 }
                 req.onsuccess = (e) => {
@@ -360,6 +364,138 @@ class OfflineNoteStore {
             })).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
         }
         return Object.values(metaMap).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0))
+    }
+
+    async saveOfflineAudio(id, { blob, name = '', type = 'audio/webm', notePath = '', syncStatus = 'pending' } = {}) {
+        await this.init()
+        const audioRecord = {
+            id,
+            blob,
+            name: name || ('recording-' + Date.now() + '.webm'),
+            type: type || 'audio/webm',
+            notePath: notePath || '',
+            syncStatus: syncStatus || 'pending',
+            createdAt: Date.now(),
+            size: blob?.size || 0
+        }
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction(AUDIO_STORE_NAME, 'readwrite')
+                    const store = tx.objectStore(AUDIO_STORE_NAME)
+                    const req = store.put(audioRecord)
+                    req.onsuccess = () => resolve(true)
+                    req.onerror = () => {
+                        this.memoryFallback.set('audio:' + id, audioRecord)
+                        resolve(true)
+                    }
+                } catch {
+                    this.memoryFallback.set('audio:' + id, audioRecord)
+                    resolve(true)
+                }
+            })
+        } else {
+            this.memoryFallback.set('audio:' + id, audioRecord)
+            return true
+        }
+    }
+
+    async getOfflineAudio(id) {
+        await this.init()
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction(AUDIO_STORE_NAME, 'readonly')
+                    const store = tx.objectStore(AUDIO_STORE_NAME)
+                    const req = store.get(id)
+                    req.onsuccess = () => resolve(req.result || this.memoryFallback.get('audio:' + id) || null)
+                    req.onerror = () => resolve(this.memoryFallback.get('audio:' + id) || null)
+                } catch {
+                    resolve(this.memoryFallback.get('audio:' + id) || null)
+                }
+            })
+        }
+        return this.memoryFallback.get('audio:' + id) || null
+    }
+
+    async getPendingOfflineAudios(notePath = null) {
+        await this.init()
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction(AUDIO_STORE_NAME, 'readonly')
+                    const store = tx.objectStore(AUDIO_STORE_NAME)
+                    if (typeof store.getAll === 'function') {
+                        const req = store.getAll()
+                        req.onsuccess = () => {
+                            let items = (req.result || []).filter(item => item.syncStatus === 'pending')
+                            if (notePath) items = items.filter(item => !item.notePath || item.notePath === notePath)
+                            resolve(items)
+                        }
+                        req.onerror = () => resolve([])
+                    } else {
+                        const items = []
+                        const req = store.openCursor()
+                        req.onsuccess = (e) => {
+                            const cursor = e.target.result
+                            if (cursor) {
+                                if (cursor.value?.syncStatus === 'pending' && (!notePath || !cursor.value.notePath || cursor.value.notePath === notePath)) {
+                                    items.push(cursor.value)
+                                }
+                                cursor.continue()
+                            } else {
+                                resolve(items)
+                            }
+                        }
+                        req.onerror = () => resolve([])
+                    }
+                } catch {
+                    resolve([])
+                }
+            })
+        }
+        return Array.from(this.memoryFallback.entries())
+            .filter(([k, v]) => k.startsWith('audio:') && v.syncStatus === 'pending' && (!notePath || !v.notePath || v.notePath === notePath))
+            .map(([, v]) => v)
+    }
+
+    async updateOfflineAudioStatus(id, syncStatus = 'synced', permanentUrl = '') {
+        await this.init()
+        if (this.db) {
+            try {
+                const item = await this.getOfflineAudio(id)
+                if (item) {
+                    item.syncStatus = syncStatus
+                    if (permanentUrl) item.permanentUrl = permanentUrl
+                    const tx = this.db.transaction(AUDIO_STORE_NAME, 'readwrite')
+                    tx.objectStore(AUDIO_STORE_NAME).put(item)
+                }
+            } catch {}
+        }
+        const mem = this.memoryFallback.get('audio:' + id)
+        if (mem) {
+            mem.syncStatus = syncStatus
+            if (permanentUrl) mem.permanentUrl = permanentUrl
+        }
+    }
+
+    async deleteOfflineAudio(id) {
+        await this.init()
+        this.memoryFallback.delete('audio:' + id)
+        if (this.db) {
+            return new Promise((resolve) => {
+                try {
+                    const tx = this.db.transaction(AUDIO_STORE_NAME, 'readwrite')
+                    const store = tx.objectStore(AUDIO_STORE_NAME)
+                    const req = store.delete(id)
+                    req.onsuccess = () => resolve(true)
+                    req.onerror = () => resolve(false)
+                } catch {
+                    resolve(false)
+                }
+            })
+        }
+        return true
     }
 }
 

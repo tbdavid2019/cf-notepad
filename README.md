@@ -252,7 +252,10 @@
   - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理、獨立「⭳ 導出 HTML」網頁與一鍵 JSON 備份/匯入。
   - **即時 Markdown-to-HTML 預覽與離線格式工具列 (Live Preview & Markdown Toolbar)**：內建離線格式工具列（粗體、斜體、螢光筆、H1-H3 標題、引用、行內/區塊代碼、清單、表格、超連結、圖片、GitHub Alert 提示框、雙欄佈局），注入完整 Markdown CSS 排版樣式（`.markdown-body`）與雙向捲動同步，支援 `Cmd+B`、`Cmd+I`、`Cmd+K` 與 `Tab` 縮排。
   - **Service Worker v6 智慧快取與 CDN 動態攔截 (Stale-While-Revalidate & CDN Caching)**：全面升級至 `v6`，預先快取核心 Markdown 渲染管道（`marked`、`purify`、`markdown-extensions`、`media-preview`），並自動動態快取外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）與 R2 圖床媒體庫，離線閱讀圖文筆記零破圖。
-  - **平滑重連與背景自動同步 (Graceful Background Sync)**：支援 Service Worker 原生 `sync-pending-notes`；網路恢復時自動將離線待同步草稿依序上傳至雲端，無需重新整理頁面中斷打字體驗。
+  - **Local-First 本機離線錄音與延遲背景同步 (Local-First Offline Audio Recording & Deferred Sync)**：
+    - 錄音一鍵存入客戶端 **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**，游標處立即插入 `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>`，提供 0ms 本機即時播放。
+    - 斷網時狀態列顯示 `🟢 本機已存（音訊待同步）`；網路連線恢復時自動背景上傳 888box/S3 換取永久 HTTPS 連結，並自動請求 Cloudflare Workers AI Whisper 補齊時間戳逐字稿，狀態列切換為 `☁️ 雲端已同步`。
+    - 離線工作站 (`/_pwa-offline`) 工具列新增 `🎙️` 錄音按鈕，完全支援斷網錄音與多檔背景自動補推。
   - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
@@ -294,6 +297,7 @@
 | 類型           | Key / Database                                                                       | 用途                                          |
 | ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------- |
 | IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | 本機完整 Markdown 文章內容、離線草稿與歷史快照（大容量非同步儲存，0ms 延遲）  |
+| IndexedDB    | `CloudNotepadOfflineDB` (`audios` store)                                             | 本機 WebM Opus 離線錄音 Blob 暫存與待同步清單（支援大容量二進位檔案）         |
 | localStorage | `cf-notepad:notes-metadata`                                                          | 本機快取筆記元數據清單（path、title、updatedAt、size、syncStatus） |
 | localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | 介面佈局與視覺偏好鏡像                                 |
 | localStorage | `cf-notepad:publish-preferences`                                                     | 發布、自動儲存與公開索引的上次勾選偏好；首次預設全部開啟                |
@@ -600,7 +604,10 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, standalone "⭳ Export HTML", and one-click JSON backup export/import.
   - **Live Markdown-to-HTML Preview & Offline Formatting Toolbar**: Built-in formatting toolbar (Bold, Italic, Strikethrough, Highlight, H1-H3, Blockquote, Inline/Fenced Code, Lists, Tasks, Tables, Links, Images, GitHub Alerts, Two Columns), injected with complete Markdown CSS typography (`.markdown-body`), bidirectional scroll synchronization, and keyboard shortcuts (`Cmd+B`, `Cmd+I`, `Cmd+K`, `Tab` 4-space indent).
   - **Service Worker v6 Resilient Caching & Dynamic CDN Cache**: Precaches core Markdown rendering pipeline (`marked`, `purify`, `markdown-extensions`, `media-preview`) and dynamically intercepts & caches external CDN dependencies (`esm.sh`, `cdn.jsdelivr.net`, `cdnjs.cloudflare.com`) and R2 media images to guarantee zero broken images or missing styles while offline.
-  - **Graceful Reconnection & Background Sync**: Automatically synchronizes pending offline notes to cloud in the background upon reconnection without disruptive page reloads.
+  - **Local-First Offline Audio Recording & Deferred Sync**:
+    - Instant microphone recording to client-side **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**; instantly inserts `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>` at cursor for 0ms local playback.
+    - Offline badge displays `🟢 Saved locally (Audio pending sync)`; upon reconnection, automatically pushes audio to 888box/S3, updates audio tags with permanent HTTPS URLs, and requests Cloudflare Workers AI Whisper to append timestamped transcripts, updating badge to `☁️ Cloud synced`.
+    - Offline workstation (`/_pwa-offline`) toolbar includes `🎙️` record button with full offline recording and background synchronization.
   - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badges (`🟢 Saved locally`, `☁️ Cloud synced`).
   - **Keyboard Shortcuts**:
     - `Cmd/Ctrl + S`: Instant save to IndexedDB & cloud in edit mode; download `.md` in share mode.
@@ -639,6 +646,7 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 | Type         | Key                                                                                  | Description                                                                          |
 | ------------ | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
 | IndexedDB    | `CloudNotepadOfflineDB` (`notes` store)                                              | Complete Markdown note content, offline drafts & snapshots (0ms local-first storage) |
+| IndexedDB    | `CloudNotepadOfflineDB` (`audios` store)                                             | Local WebM Opus offline audio Blob storage & pending sync queue                      |
 | localStorage | `cf-notepad:notes-metadata`                                                          | Fast synchronous note metadata list (path, title, updatedAt, size, syncStatus)        |
 | localStorage | `cf-notepad-preview-width` / `cf-notepad-preview-device` / `share-font` / `ui-theme` | Mirror of layout and visual preferences                                              |
 | localStorage | `cf-notepad:publish-preferences`                                                     | Last confirmed Publish, Autosave, and Public Index choices; all enabled on first use |

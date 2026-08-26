@@ -46,12 +46,14 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.doesNotMatch(baseSource, /diarize=1/)
 })
 
-test('Markdown editor toolbar records microphone audio and inserts both player and transcript', () => {
+test('Markdown editor toolbar records microphone audio with Local-First IndexedDB and deferred sync', () => {
     assert.match(commonSource, /command: 'record'/)
     assert.match(commonSource, /command: 'recordPause'/)
     assert.match(baseSource, /cf-notepad-recorded-audio/)
-    assert.match(baseSource, /insertAtCursor: true/)
-    assert.match(baseSource, /recorded audio must use HTTPS/)
+    assert.match(baseSource, /data-offline-audio-id/)
+    assert.match(baseSource, /saveOfflineAudio/)
+    assert.match(baseSource, /syncPendingAudio/)
+    assert.match(baseSource, /syncAllPendingAudios/)
     assert.match(toolbarSource, /recordingConsent/)
     assert.match(toolbarSource, /audioFile\.size > 25 \* 1024 \* 1024/)
     assert.match(toolbarSource, /MediaRecorder/)
@@ -165,4 +167,50 @@ test('audio_transcribe formatTranscriptSegments handles audio longer than 1 hour
         formatted,
         '**[00:02:00]** 開場介紹\n\n**[01:02:05]** 一小時後的結論'
     )
+})
+
+import { offlineStore } from '../static/js/offline-store.mjs'
+
+test('offlineStore supports saving, retrieving, listing pending, and updating offline audios', async () => {
+    const audioId = 'test_rec_123'
+    const fakeBlob = { size: 1024, type: 'audio/webm' }
+
+    await offlineStore.saveOfflineAudio(audioId, {
+        blob: fakeBlob,
+        name: 'test-recording.webm',
+        type: 'audio/webm',
+        notePath: 'my-note',
+        syncStatus: 'pending'
+    })
+
+    const record = await offlineStore.getOfflineAudio(audioId)
+    assert.ok(record)
+    assert.equal(record.id, audioId)
+    assert.equal(record.syncStatus, 'pending')
+    assert.equal(record.notePath, 'my-note')
+
+    const pending = await offlineStore.getPendingOfflineAudios('my-note')
+    assert.ok(pending.some(item => item.id === audioId))
+
+    await offlineStore.updateOfflineAudioStatus(audioId, 'synced', 'https://s3.wiki.david888.com/my-audio.webm')
+    const updated = await offlineStore.getOfflineAudio(audioId)
+    assert.equal(updated.syncStatus, 'synced')
+    assert.equal(updated.permanentUrl, 'https://s3.wiki.david888.com/my-audio.webm')
+
+    const pendingAfter = await offlineStore.getPendingOfflineAudios('my-note')
+    assert.ok(!pendingAfter.some(item => item.id === audioId))
+
+    await offlineStore.deleteOfflineAudio(audioId)
+    const deleted = await offlineStore.getOfflineAudio(audioId)
+    assert.equal(deleted, null)
+})
+
+const offlinePageSource = readFileSync(new URL('../src/offline_page.js', import.meta.url), 'utf8')
+
+test('offline_page.js provides local microphone recording button and deferred sync logic', () => {
+    assert.match(offlinePageSource, /id="offline-record-btn"/)
+    assert.match(offlinePageSource, /offlineMediaRecorder/)
+    assert.match(offlinePageSource, /saveOfflineAudio/)
+    assert.match(offlinePageSource, /data-offline-audio-id/)
+    assert.match(offlinePageSource, /syncPendingAudiosInOfflinePage/)
 })

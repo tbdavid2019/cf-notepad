@@ -128,8 +128,8 @@
     },
     {
       "id": "toolbar-audio-recording",
-      "zh-TW": "小訣竅：Markdown 編輯器頂部的麥克風可直接錄音；可暫停、繼續或停止。停止後會插入音訊播放器與帶時間戳的逐字稿，錄音前請先取得所有參與者同意。",
-      "en-US": "Tip: Use the microphone in the Markdown toolbar to record, pause, resume, and stop. Stopping inserts an audio player and timestamped transcript; get every participant's consent before recording."
+      "zh-TW": "小訣竅：Markdown 編輯器頂部的麥克風支援 Local-First 離線錄音！斷網時音訊自動暫存於本機 IndexedDB 並插入本機播放器，恢復連線後自動上傳雲端並補齊時間戳逐字稿。",
+      "en-US": "Tip: The microphone supports Local-First offline recording! When offline, audio is stored in IndexedDB with instant local playback, automatically uploading and generating transcripts upon reconnection."
     },
     {
       "id": "pwa-offline-preview-toolbar",

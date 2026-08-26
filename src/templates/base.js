@@ -1117,7 +1117,7 @@ ${getMarkdownCss()}
                 }
                 const clean = DOMPurify.sanitize(rawHtml, {
                     ADD_TAGS: ['cite', 'mark', 'math', 'annotation', 'semantics', 'mtext', 'mn', 'mo', 'mi', 'sup', 'sub', 'mrow', 'table', 'thead', 'tbody', 'tr', 'td', 'th', 'input', 'div', 'svg', 'path', 'circle', 'rect', 'line', 'text', 'g', 'polygon', 'ellipse'],
-                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title'],
+                    ADD_ATTR: ['class', 'style', 'aria-hidden', 'aria-label', 'role', 'viewBox', 'd', 'xmlns', 'type', 'checked', 'disabled', 'width', 'height', 'fill', 'stroke', 'stroke-width', 'transform', 'font-family', 'font-size', 'text-anchor', 'id', 'data-processed', 'data-diagram-type', 'data-citation-key', 'data-locator', 'data-suppress-author', 'data-footnote-ref', 'data-footnote-backref', 'data-line-numbers', 'data-line-start', 'data-filename', 'title', 'data-offline-audio-id'],
                     WHOLE_DOCUMENT: false,
                     FORCE_BODY: true
                 });
@@ -3032,9 +3032,9 @@ ${getMarkdownCss()}
                 return Boolean($textarea.value && $textarea.value.trim())
             }
         }
-        const processAudioTranscription = async (file, { smartFormat = false, insertAtCursor = false } = {}) => {
+        const processAudioTranscription = async (file, { smartFormat = false, insertAtCursor = false, targetAudioUrl = '' } = {}) => {
             let insertMode = insertAtCursor ? 'insert' : 'replace'
-            if (!insertAtCursor && isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
+            if (!insertAtCursor && !targetAudioUrl && isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
                 insertMode = await showImportOptionDialog()
             }
             if (insertMode === 'cancel') return
@@ -3083,7 +3083,21 @@ ${getMarkdownCss()}
                 if (isCurrentBlockEditor()) {
                     await importIntoBlockEditor(transcript)
                 } else if (isCurrentMarkdownEditor()) {
-                    if (insertMode === 'insert') {
+                    if (targetAudioUrl && $textarea.value && $textarea.value.includes(targetAudioUrl)) {
+                        const curVal = $textarea.value
+                        const idx = curVal.indexOf(targetAudioUrl)
+                        const tagEndIdx = curVal.indexOf('</audio>', idx)
+                        if (tagEndIdx !== -1) {
+                            const insertPos = tagEndIdx + '</audio>'.length
+                            const insertion = '\\n\\n' + transcript + '\\n\\n'
+                            $textarea.value = curVal.substring(0, insertPos) + insertion + curVal.substring(insertPos)
+                        } else {
+                            $textarea.value = curVal + '\\n\\n' + transcript + '\\n\\n'
+                        }
+                        renderPlain($previewPlain, $textarea.value)
+                        triggerRender($previewMd, $textarea.value)
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                    } else if (insertMode === 'insert') {
                         const startPos = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length
                         const endPos = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length
                         const curVal = $textarea.value
@@ -3092,12 +3106,15 @@ ${getMarkdownCss()}
                         const insertion = prefix + transcript + suffix
                         $textarea.value = curVal.substring(0, startPos) + insertion + curVal.substring(endPos)
                         $textarea.setSelectionRange(startPos + insertion.length, startPos + insertion.length)
+                        renderPlain($previewPlain, $textarea.value)
+                        triggerRender($previewMd, $textarea.value)
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
                     } else {
                         $textarea.value = transcript
+                        renderPlain($previewPlain, $textarea.value)
+                        triggerRender($previewMd, $textarea.value)
+                        $textarea.dispatchEvent(new Event('input', { bubbles: true }))
                     }
-                    renderPlain($previewPlain, $textarea.value)
-                    triggerRender($previewMd, $textarea.value)
-                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
                 } else {
                     await createMarkdownNoteFromImport(transcript)
                 }
@@ -3747,13 +3764,11 @@ ${getMarkdownCss()}
             throw lastError || new Error('Upload to 888box failed');
         };
 
-        const insertRecordedAudio = (url, start, end) => {
-            const safeUrl = new URL(url)
-            if (safeUrl.protocol !== 'https:') throw new Error('recorded audio must use HTTPS')
+        const insertLocalRecordedAudio = (audioId, blobUrl, start, end) => {
             const source = $textarea.value
             const safeStart = Math.max(0, Math.min(Number(start) || 0, source.length))
             const safeEnd = Math.max(safeStart, Math.min(Number(end) || safeStart, source.length))
-            const snippet = '<audio controls src="' + safeUrl.href.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></audio>'
+            const snippet = '<audio controls data-offline-audio-id="' + audioId + '" src="' + blobUrl + '"></audio>'
             const prefix = safeStart > 0 && !source.substring(0, safeStart).endsWith('\\n') ? '\\n\\n' : ''
             const suffix = safeEnd < source.length && !source.substring(safeEnd).startsWith('\\n') ? '\\n\\n' : ''
             const insertion = prefix + snippet + suffix
@@ -3764,6 +3779,72 @@ ${getMarkdownCss()}
             $textarea.dispatchEvent(new Event('input', { bubbles: true }))
         }
 
+        const syncPendingAudio = async (audioId, audioFile, { notify = true } = {}) => {
+            if (!navigator.onLine) {
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                return false
+            }
+            try {
+                if (notify && typeof window.showToast === 'function') {
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '正在將錄音同步至雲端並產生逐字稿...' : 'Uploading recording to cloud and generating transcript...')
+                }
+                const url = await uploadTo888Box(audioFile)
+                if (!url) throw new Error('Upload to 888box returned no URL')
+
+                if ($textarea) {
+                    const curVal = $textarea.value
+                    const regex = new RegExp('<audio[^>]*data-offline-audio-id="?' + audioId + '"?[^>]*><\\/audio>', 'g')
+                    const newAudioTag = '<audio controls src="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></audio>'
+                    if (regex.test(curVal)) {
+                        $textarea.value = curVal.replace(regex, newAudioTag)
+                    } else if (curVal.includes(audioId)) {
+                        $textarea.value = curVal.replace(new RegExp(audioId, 'g'), url)
+                    }
+                    triggerRender($previewMd, $textarea.value)
+                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+                }
+
+                try {
+                    await processAudioTranscription(audioFile, { targetAudioUrl: url, insertAtCursor: false })
+                } catch (trErr) {
+                    console.warn('Transcription error:', trErr)
+                }
+
+                if (window.offlineStore) {
+                    await window.offlineStore.updateOfflineAudioStatus(audioId, 'synced', url)
+                }
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步' : '☁️ Cloud synced', false, 'cloud-synced')
+                return true
+            } catch (err) {
+                console.error('Audio sync error:', err)
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                return false
+            }
+        }
+
+        const syncAllPendingAudios = async () => {
+            if (!navigator.onLine || !window.offlineStore) return
+            try {
+                const pendingList = await window.offlineStore.getPendingOfflineAudios(APP_STATE.path)
+                if (!pendingList || !pendingList.length) return
+                for (const item of pendingList) {
+                    if (item.blob) {
+                        const audioFile = new File([item.blob], item.name || 'recording.webm', { type: item.type || 'audio/webm' })
+                        await syncPendingAudio(item.id, audioFile, { notify: false })
+                    }
+                }
+            } catch (e) {
+                console.warn('Sync pending audios error:', e)
+            }
+        }
+
+        window.addEventListener('online', () => {
+            syncAllPendingAudios()
+        })
+        if (navigator.onLine) {
+            setTimeout(() => syncAllPendingAudios(), 2000)
+        }
+
         document.addEventListener('cf-notepad-recorded-audio', async event => {
             const detail = event.detail || {}
             const audioFile = detail.file
@@ -3772,12 +3853,33 @@ ${getMarkdownCss()}
                 window.showAppDialog({ title: getI18n('err'), message: APP_STATE.lang === 'zh-TW' ? '錄音超過 25 MB，請縮短後再試。' : 'Recording exceeds the 25 MB transcription limit.', kind: 'error' })
                 return
             }
-            try {
-                const url = await uploadTo888Box(audioFile)
-                insertRecordedAudio(url, detail.start, detail.end)
-                await processAudioTranscription(audioFile, { insertAtCursor: true })
-            } catch (error) {
-                window.showAppDialog({ title: getI18n('err'), message: error?.message || (APP_STATE.lang === 'zh-TW' ? '錄音處理失敗。' : 'Could not process recording.'), kind: 'error' })
+
+            const audioId = 'rec_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7)
+            const localBlobUrl = URL.createObjectURL(audioFile)
+
+            if (window.offlineStore) {
+                try {
+                    await window.offlineStore.saveOfflineAudio(audioId, {
+                        blob: audioFile,
+                        name: audioFile.name,
+                        type: audioFile.type,
+                        notePath: APP_STATE.path,
+                        syncStatus: 'pending'
+                    })
+                } catch (storeErr) {
+                    console.warn('Failed to store offline audio:', storeErr)
+                }
+            }
+
+            insertLocalRecordedAudio(audioId, localBlobUrl, detail.start, detail.end)
+
+            if (navigator.onLine) {
+                await syncPendingAudio(audioId, audioFile, { notify: true })
+            } else {
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                if (typeof window.showToast === 'function') {
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 錄音已暫存於本機 (IndexedDB)，將於連線後自動上傳與轉錄。' : '🎙️ Recording saved locally (IndexedDB). Will sync and transcribe when online.')
+                }
             }
         })
 

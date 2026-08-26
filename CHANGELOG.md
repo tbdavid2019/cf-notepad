@@ -2,6 +2,11 @@
 
 ## [2026-08-26]
 
+- **🎙️ Local-First 本機離線錄音與延遲背景同步架構 (Local-First Offline Recording & Deferred Cloud Sync Architecture)**：
+  - **IndexedDB (`CloudNotepadOfflineDB` -> `audios`) 二進位音訊儲存**：升級客戶端離線資料庫版本至 `v2` 並開闢獨立 `audios` 物件儲存區，錄音停止時立即將原始 WebM Opus Blob 暫存於本機，徹底突破 `localStorage` 5MB 與純文字容量限制。
+  - **本機即時預覽與標記 (`data-offline-audio-id`)**：錄音結束後於游標處立即插入 `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>`，提供 0ms 本機即刻播放體驗；斷網時狀態列精確標記為 `🟢 本機已存（音訊待同步）`。
+  - **聯網自動背景補推 (Automatic Background Sync upon Reconnection)**：網路恢復時（`online` 事件或工作區啟動），系統自動掃描待同步清單，將音訊推送到 888box/S3 換取永久 HTTPS 連結，依 `data-offline-audio-id` 精確將筆記中暫存標籤替換為永久外鏈，並自動呼叫 Cloudflare Workers AI Whisper 補齊時間戳逐字稿，狀態列平滑切換為 `☁️ 雲端已同步`。
+  - **離線工作站 (`/_pwa-offline`) 錄音工具列支援**：離線雙欄工作站頂部工具列同步新增 `🎙️` 錄音按鈕，支援完整離線麥克風錄音、即時波形預覽與多檔案背景補推同步。
 - **🔀 Share 分享模式「編輯此篇 / 新增筆記」分割複合膠囊鈕 (Share Mode Split Action Capsule)**：
   - **複合操作膠囊 (`.split-action-group`)**：在 Share 閱讀模式底欄左側，將原先孤立分散的「返回編輯」按鈕與「＋ 新增選單」合併為現代化的分割膠囊按鈕（Split Pill Button）。
   - **直覺左側主動作 (`.split-action-main`)**：左側為「`✏️ 編輯`」主按鈕，具備密碼鎖自動鑑權相容，一鍵快速進入或解鎖編輯模式。
