@@ -252,10 +252,11 @@
   - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理、獨立「⭳ 導出 HTML」網頁與一鍵 JSON 備份/匯入。
   - **即時 Markdown-to-HTML 預覽與離線格式工具列 (Live Preview & Markdown Toolbar)**：內建離線格式工具列（粗體、斜體、螢光筆、H1-H3 標題、引用、行內/區塊代碼、清單、表格、超連結、圖片、GitHub Alert 提示框、雙欄佈局），注入完整 Markdown CSS 排版樣式（`.markdown-body`）與雙向捲動同步，支援 `Cmd+B`、`Cmd+I`、`Cmd+K` 與 `Tab` 縮排。
   - **Service Worker v6 智慧快取與 CDN 動態攔截 (Stale-While-Revalidate & CDN Caching)**：全面升級至 `v6`，預先快取核心 Markdown 渲染管道（`marked`、`purify`、`markdown-extensions`、`media-preview`），並自動動態快取外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）與 R2 圖床媒體庫，離線閱讀圖文筆記零破圖。
-  - **Local-First 本機離線錄音與延遲背景同步 (Local-First Offline Audio Recording & Deferred Sync)**：
-    - 錄音一鍵存入客戶端 **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**，游標處立即插入 `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>`，提供 0ms 本機即時播放。
-    - 斷網時狀態列顯示 `🟢 本機已存（音訊待同步）`；網路連線恢復時自動背景上傳 888box/S3 換取永久 HTTPS 連結，並自動請求 Cloudflare Workers AI Whisper 補齊時間戳逐字稿，狀態列切換為 `☁️ 雲端已同步`。
-    - 離線工作站 (`/_pwa-offline`) 工具列新增 `🎙️` 錄音按鈕，完全支援斷網錄音與多檔背景自動補推。
+  - **Local-First 本機離線錄音、連線 ASR 轉錄與發布延遲 S3 雲端同步 (Local-First Offline Audio Recording, Online ASR & Deferred S3 Upload)**：
+    - 錄音完成音檔立即存入客戶端 **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**，游標處插入本機播放器 `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>`，提供 0ms 本機即時播放。
+    - **連線即時 ASR 辨識**：有網路或恢復連線時，直接呼叫 Cloudflare Workers AI Whisper 將逐字稿補齊於播放器下方，**完全不上傳音檔至 S3 / 888box**，避免浪費雲端儲存空間。
+    - **發布 / 儲存時才上傳 S3**：只有當使用者點擊「發布筆記」或「儲存至雲端」時，系統才會將 IndexedDB 的音訊 Blob 上傳至 S3 換取永久 HTTPS 連結，並自動將文章中的本機標籤替換為正式網址，狀態列切換為 `☁️ 雲端已同步`。
+    - 離線工作站 (`/_pwa-offline`) 工具列新增 `🎙️` 錄音按鈕，支援完整斷網錄音、即時 ASR 與筆記同步時 S3 自動補推。
   - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（`CloudNotepadOfflineDB`），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。
@@ -604,10 +605,11 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - **Full-Featured Dual-Pane Offline Workstation (`/_pwa-offline`)**: Work completely offline with Edit/Split/Preview views, multi-theme selector (Dark, Light, Tokyo Night, Dracula, Nord), full-text search & filtering, note management, standalone "⭳ Export HTML", and one-click JSON backup export/import.
   - **Live Markdown-to-HTML Preview & Offline Formatting Toolbar**: Built-in formatting toolbar (Bold, Italic, Strikethrough, Highlight, H1-H3, Blockquote, Inline/Fenced Code, Lists, Tasks, Tables, Links, Images, GitHub Alerts, Two Columns), injected with complete Markdown CSS typography (`.markdown-body`), bidirectional scroll synchronization, and keyboard shortcuts (`Cmd+B`, `Cmd+I`, `Cmd+K`, `Tab` 4-space indent).
   - **Service Worker v6 Resilient Caching & Dynamic CDN Cache**: Precaches core Markdown rendering pipeline (`marked`, `purify`, `markdown-extensions`, `media-preview`) and dynamically intercepts & caches external CDN dependencies (`esm.sh`, `cdn.jsdelivr.net`, `cdnjs.cloudflare.com`) and R2 media images to guarantee zero broken images or missing styles while offline.
-  - **Local-First Offline Audio Recording & Deferred Sync**:
-    - Instant microphone recording to client-side **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**; instantly inserts `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>` at cursor for 0ms local playback.
-    - Offline badge displays `🟢 Saved locally (Audio pending sync)`; upon reconnection, automatically pushes audio to 888box/S3, updates audio tags with permanent HTTPS URLs, and requests Cloudflare Workers AI Whisper to append timestamped transcripts, updating badge to `☁️ Cloud synced`.
-    - Offline workstation (`/_pwa-offline`) toolbar includes `🎙️` record button with full offline recording and background synchronization.
+  - **Local-First Offline Audio Recording, Online ASR & Deferred S3 Upload**:
+    - Instant microphone recording directly to client-side **IndexedDB (`CloudNotepadOfflineDB` -> `audios` store)**; inserts `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>` for 0ms local playback.
+    - **Online Instant ASR Transcription**: When online or upon reconnection, requests Cloudflare Workers AI Whisper to append timestamped transcripts right below the player **WITHOUT uploading the audio file to S3**, preventing premature cloud storage consumption.
+    - **Upload to S3 only on Publish / Save**: Only when the user clicks "Publish" or "Save to Cloud" does the system upload the IndexedDB audio Blob to S3, replace the local tag with the permanent HTTPS URL, and persist the note to cloud, updating status to `☁️ Cloud synced`.
+    - Offline workstation (`/_pwa-offline`) toolbar includes `🎙️` record button with full offline recording, instant ASR, and background synchronization on note sync.
   - **Local-First Hybrid Storage**: 0ms local saves to IndexedDB (`CloudNotepadOfflineDB`), synchronous metadata in `localStorage`, and smart background cloud sync with visible status badges (`🟢 Saved locally`, `☁️ Cloud synced`).
   - **Keyboard Shortcuts**:
     - `Cmd/Ctrl + S`: Instant save to IndexedDB & cloud in edit mode; download `.md` in share mode.

@@ -46,14 +46,15 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.doesNotMatch(baseSource, /diarize=1/)
 })
 
-test('Markdown editor toolbar records microphone audio with Local-First IndexedDB and deferred sync', () => {
+test('Markdown editor toolbar records microphone audio with Local-First IndexedDB and deferred S3 upload upon publishing', () => {
     assert.match(commonSource, /command: 'record'/)
     assert.match(commonSource, /command: 'recordPause'/)
     assert.match(baseSource, /cf-notepad-recorded-audio/)
     assert.match(baseSource, /data-offline-audio-id/)
     assert.match(baseSource, /saveOfflineAudio/)
-    assert.match(baseSource, /syncPendingAudio/)
-    assert.match(baseSource, /syncAllPendingAudios/)
+    assert.match(baseSource, /transcribePendingAudio/)
+    assert.match(baseSource, /uploadPendingAudiosToCloud/)
+    assert.match(baseSource, /transcribeAllPendingAudios/)
     assert.match(toolbarSource, /recordingConsent/)
     assert.match(toolbarSource, /audioFile\.size > 25 \* 1024 \* 1024/)
     assert.match(toolbarSource, /MediaRecorder/)
@@ -212,5 +213,5 @@ test('offline_page.js provides local microphone recording button and deferred sy
     assert.match(offlinePageSource, /offlineMediaRecorder/)
     assert.match(offlinePageSource, /saveOfflineAudio/)
     assert.match(offlinePageSource, /data-offline-audio-id/)
-    assert.match(offlinePageSource, /syncPendingAudiosInOfflinePage/)
+    assert.match(offlinePageSource, /syncNoteToServer/)
 })

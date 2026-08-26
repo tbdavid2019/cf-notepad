@@ -2139,11 +2139,18 @@ ${getMarkdownCss()}
             }
         }
 
+        let uploadPendingAudiosToCloud = async () => false;
+
         const saveCurrentNote = async ({ showBlocked = true } = {}) => {
             if (!$textarea) return false
             if (!APP_STATE.isPublished) {
                 if (showBlocked) window.showToast?.(getSaveBlockedMessage())
                 return false
+            }
+            try {
+                await uploadPendingAudiosToCloud()
+            } catch (e) {
+                console.warn('Upload pending audios error:', e)
             }
             if (!hasUnsavedChanges()) {
                 showSaveStatus(APP_STATE.lang === 'zh-TW' ? '內容已是最新' : 'Content is already saved', false, 'cloud-synced')
@@ -3032,9 +3039,9 @@ ${getMarkdownCss()}
                 return Boolean($textarea.value && $textarea.value.trim())
             }
         }
-        const processAudioTranscription = async (file, { smartFormat = false, insertAtCursor = false, targetAudioUrl = '' } = {}) => {
+        const processAudioTranscription = async (file, { smartFormat = false, insertAtCursor = false, targetAudioUrl = '', targetAudioId = '' } = {}) => {
             let insertMode = insertAtCursor ? 'insert' : 'replace'
-            if (!insertAtCursor && !targetAudioUrl && isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
+            if (!insertAtCursor && !targetAudioUrl && !targetAudioId && isCurrentMarkdownEditor() && $textarea.value && $textarea.value.trim().length > 0) {
                 insertMode = await showImportOptionDialog()
             }
             if (insertMode === 'cancel') return
@@ -3083,9 +3090,10 @@ ${getMarkdownCss()}
                 if (isCurrentBlockEditor()) {
                     await importIntoBlockEditor(transcript)
                 } else if (isCurrentMarkdownEditor()) {
-                    if (targetAudioUrl && $textarea.value && $textarea.value.includes(targetAudioUrl)) {
+                    const targetKey = targetAudioId || targetAudioUrl
+                    if (targetKey && $textarea.value && $textarea.value.includes(targetKey)) {
                         const curVal = $textarea.value
-                        const idx = curVal.indexOf(targetAudioUrl)
+                        const idx = curVal.indexOf(targetKey)
                         const tagEndIdx = curVal.indexOf('</audio>', idx)
                         if (tagEndIdx !== -1) {
                             const insertPos = tagEndIdx + '</audio>'.length
@@ -3540,7 +3548,12 @@ ${getMarkdownCss()}
             syncPublicationStatus()
         }
 
-        const publishCurrentNote = (preferences = defaultPublishPreferences) => {
+        const publishCurrentNote = async (preferences = defaultPublishPreferences) => {
+            try {
+                await uploadPendingAudiosToCloud()
+            } catch (e) {
+                console.warn('Upload pending audios error before publish:', e)
+            }
             const wasPublished = APP_STATE.isPublished === true
             const currentWidth = APP_STATE.noteSettings.width || (APP_STATE.isEdit ? '1200px' : '100%')
             const currentTheme = APP_STATE.theme || 'claude-canvas'
@@ -3779,70 +3792,123 @@ ${getMarkdownCss()}
             $textarea.dispatchEvent(new Event('input', { bubbles: true }))
         }
 
-        const syncPendingAudio = async (audioId, audioFile, { notify = true } = {}) => {
+        const transcribePendingAudio = async (audioId, audioFile, { notify = true } = {}) => {
             if (!navigator.onLine) {
-                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待辨識）' : '🟢 Saved locally (Audio pending ASR)', false, 'local')
                 return false
             }
             try {
                 if (notify && typeof window.showToast === 'function') {
-                    window.showToast(APP_STATE.lang === 'zh-TW' ? '正在將錄音同步至雲端並產生逐字稿...' : 'Uploading recording to cloud and generating transcript...')
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 正在進行語音轉錄 (Whisper ASR)...' : '🎙️ Transcribing audio (Whisper ASR)...')
                 }
-                const url = await uploadTo888Box(audioFile)
-                if (!url) throw new Error('Upload to 888box returned no URL')
-
-                if ($textarea) {
-                    const curVal = $textarea.value
-                    const regex = new RegExp('<audio[^>]*data-offline-audio-id="?' + audioId + '"?[^>]*><\\/audio>', 'g')
-                    const newAudioTag = '<audio controls src="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></audio>'
-                    if (regex.test(curVal)) {
-                        $textarea.value = curVal.replace(regex, newAudioTag)
-                    } else if (curVal.includes(audioId)) {
-                        $textarea.value = curVal.replace(new RegExp(audioId, 'g'), url)
-                    }
-                    triggerRender($previewMd, $textarea.value)
-                    $textarea.dispatchEvent(new Event('input', { bubbles: true }))
-                }
-
-                try {
-                    await processAudioTranscription(audioFile, { targetAudioUrl: url, insertAtCursor: false })
-                } catch (trErr) {
-                    console.warn('Transcription error:', trErr)
-                }
-
+                await processAudioTranscription(audioFile, { targetAudioId: audioId, insertAtCursor: false })
                 if (window.offlineStore) {
-                    await window.offlineStore.updateOfflineAudioStatus(audioId, 'synced', url)
+                    await window.offlineStore.updateOfflineAudioStatus(audioId, 'transcribed')
                 }
-                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步' : '☁️ Cloud synced', false, 'cloud-synced')
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（已產生逐字稿）' : '🟢 Saved locally (Transcribed)', false, 'local')
                 return true
             } catch (err) {
-                console.error('Audio sync error:', err)
-                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                console.error('Audio transcribe error:', err)
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（轉錄失敗，可稍後重試）' : '🟢 Saved locally (ASR failed)', false, 'local')
                 return false
             }
         }
 
-        const syncAllPendingAudios = async () => {
-            if (!navigator.onLine || !window.offlineStore) return
+        uploadPendingAudiosToCloud = async () => {
+            if (!$textarea || !window.offlineStore) return false
+            const curVal = $textarea.value
+            if (!curVal || !curVal.includes('data-offline-audio-id')) return false
+
+            const matches = [...curVal.matchAll(/data-offline-audio-id="?([a-zA-Z0-9_-]+)"?/g)]
+            if (!matches.length) return false
+
+            let modified = false
+            let updatedText = $textarea.value
+
+            for (const match of matches) {
+                const audioId = match[1]
+                try {
+                    const record = await window.offlineStore.getOfflineAudio(audioId)
+                    if (record && record.blob && record.syncStatus !== 'synced') {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(APP_STATE.lang === 'zh-TW' ? '正在將錄音檔上傳至雲端 S3...' : 'Uploading recording to S3...')
+                        }
+                        const audioFile = new File([record.blob], record.name || 'recording.webm', { type: record.type || 'audio/webm' })
+                        const url = await uploadTo888Box(audioFile)
+                        if (url) {
+                            const regex = new RegExp('<audio[^>]*data-offline-audio-id="?' + audioId + '"?[^>]*><\\/audio>', 'g')
+                            const newTag = '<audio controls src="' + url.replace(/&/g, '&amp;').replace(/"/g, '&quot;') + '"></audio>'
+                            if (regex.test(updatedText)) {
+                                updatedText = updatedText.replace(regex, newTag)
+                                modified = true
+                            }
+                            await window.offlineStore.updateOfflineAudioStatus(audioId, 'synced', url)
+                        }
+                    }
+                } catch (err) {
+                    console.warn('Failed to upload audio ' + audioId + ' to S3:', err)
+                }
+            }
+
+            if (modified) {
+                $textarea.value = updatedText
+                triggerRender($previewMd, $textarea.value)
+                $textarea.dispatchEvent(new Event('input', { bubbles: true }))
+            }
+            return modified
+        }
+
+        const transcribeAllPendingAudios = async () => {
+            if (!navigator.onLine || !window.offlineStore || !$textarea) return
             try {
-                const pendingList = await window.offlineStore.getPendingOfflineAudios(APP_STATE.path)
+                const pendingList = await window.offlineStore.getPendingOfflineAudios(APP_STATE.path, 'pending')
                 if (!pendingList || !pendingList.length) return
                 for (const item of pendingList) {
-                    if (item.blob) {
+                    if (item.blob && $textarea.value.includes(item.id)) {
                         const audioFile = new File([item.blob], item.name || 'recording.webm', { type: item.type || 'audio/webm' })
-                        await syncPendingAudio(item.id, audioFile, { notify: false })
+                        await transcribePendingAudio(item.id, audioFile, { notify: false })
                     }
                 }
             } catch (e) {
-                console.warn('Sync pending audios error:', e)
+                console.warn('Transcribe pending audios error:', e)
+            }
+        }
+
+        const restoreLocalAudioBlobs = async () => {
+            if (!$textarea || !window.offlineStore) return
+            const curVal = $textarea.value
+            if (!curVal || !curVal.includes('data-offline-audio-id')) return
+            const matches = [...curVal.matchAll(/data-offline-audio-id="?([a-zA-Z0-9_-]+)"?/g)]
+            let modified = false
+            let updatedText = curVal
+            for (const match of matches) {
+                const audioId = match[1]
+                try {
+                    const record = await window.offlineStore.getOfflineAudio(audioId)
+                    if (record && record.blob && record.syncStatus !== 'synced') {
+                        const freshBlobUrl = URL.createObjectURL(record.blob)
+                        const regex = new RegExp('(<audio[^>]*data-offline-audio-id="?' + audioId + '"?[^>]*src=")[^"]*(")', 'g')
+                        if (regex.test(updatedText)) {
+                            updatedText = updatedText.replace(regex, '$1' + freshBlobUrl + '$2')
+                            modified = true
+                        }
+                    }
+                } catch (e) {}
+            }
+            if (modified) {
+                $textarea.value = updatedText
+                triggerRender($previewMd, $textarea.value)
             }
         }
 
         window.addEventListener('online', () => {
-            syncAllPendingAudios()
+            transcribeAllPendingAudios()
         })
         if (navigator.onLine) {
-            setTimeout(() => syncAllPendingAudios(), 2000)
+            setTimeout(() => {
+                restoreLocalAudioBlobs()
+                transcribeAllPendingAudios()
+            }, 1000)
         }
 
         document.addEventListener('cf-notepad-recorded-audio', async event => {
@@ -3874,11 +3940,11 @@ ${getMarkdownCss()}
             insertLocalRecordedAudio(audioId, localBlobUrl, detail.start, detail.end)
 
             if (navigator.onLine) {
-                await syncPendingAudio(audioId, audioFile, { notify: true })
+                await transcribePendingAudio(audioId, audioFile, { notify: true })
             } else {
-                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待同步）' : '🟢 Saved locally (Audio pending sync)', false, 'local')
+                showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待辨識）' : '🟢 Saved locally (Audio pending ASR)', false, 'local')
                 if (typeof window.showToast === 'function') {
-                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 錄音已暫存於本機 (IndexedDB)，將於連線後自動上傳與轉錄。' : '🎙️ Recording saved locally (IndexedDB). Will sync and transcribe when online.')
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 錄音已暫存於本機 (IndexedDB)，連線後將自動產生逐字稿；發布時才會上傳至 S3。' : '🎙️ Recording saved locally (IndexedDB). Will transcribe when online, and upload to S3 upon publishing.')
                 }
             }
         })

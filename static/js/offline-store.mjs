@@ -418,8 +418,14 @@ class OfflineNoteStore {
         return this.memoryFallback.get('audio:' + id) || null
     }
 
-    async getPendingOfflineAudios(notePath = null) {
+    async getPendingOfflineAudios(notePath = null, targetStatus = null) {
         await this.init()
+        const isTarget = (itemStatus) => {
+            if (targetStatus === 'pending') return itemStatus === 'pending'
+            if (targetStatus === 'transcribed') return itemStatus === 'transcribed'
+            if (targetStatus) return itemStatus === targetStatus
+            return itemStatus !== 'synced'
+        }
         if (this.db) {
             return new Promise((resolve) => {
                 try {
@@ -428,7 +434,7 @@ class OfflineNoteStore {
                     if (typeof store.getAll === 'function') {
                         const req = store.getAll()
                         req.onsuccess = () => {
-                            let items = (req.result || []).filter(item => item.syncStatus === 'pending')
+                            let items = (req.result || []).filter(item => isTarget(item.syncStatus))
                             if (notePath) items = items.filter(item => !item.notePath || item.notePath === notePath)
                             resolve(items)
                         }
@@ -439,7 +445,7 @@ class OfflineNoteStore {
                         req.onsuccess = (e) => {
                             const cursor = e.target.result
                             if (cursor) {
-                                if (cursor.value?.syncStatus === 'pending' && (!notePath || !cursor.value.notePath || cursor.value.notePath === notePath)) {
+                                if (isTarget(cursor.value?.syncStatus) && (!notePath || !cursor.value.notePath || cursor.value.notePath === notePath)) {
                                     items.push(cursor.value)
                                 }
                                 cursor.continue()
@@ -455,7 +461,7 @@ class OfflineNoteStore {
             })
         }
         return Array.from(this.memoryFallback.entries())
-            .filter(([k, v]) => k.startsWith('audio:') && v.syncStatus === 'pending' && (!notePath || !v.notePath || v.notePath === notePath))
+            .filter(([k, v]) => k.startsWith('audio:') && isTarget(v.syncStatus) && (!notePath || !v.notePath || v.notePath === notePath))
             .map(([, v]) => v)
     }
 

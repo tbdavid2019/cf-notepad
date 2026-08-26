@@ -1175,6 +1175,39 @@ export const createOfflinePageResponse = () => {
                 const targetPath = path.startsWith('local/') ? path.replace('local/', '') : path
                 if (!targetPath || targetPath.startsWith('offline-draft')) return
 
+                let finalContent = content
+                if (finalContent && finalContent.includes('data-offline-audio-id')) {
+                    try {
+                        const matches = [...finalContent.matchAll(/data-offline-audio-id="?([a-zA-Z0-9_-]+)"?/g)]
+                        for (const match of matches) {
+                            const audioId = match[1]
+                            const record = await offlineStore.getOfflineAudio(audioId)
+                            if (record && record.blob && record.syncStatus !== 'synced') {
+                                const formData = new FormData()
+                                formData.append('file', record.blob, record.name || 'recording.webm')
+                                formData.append('title', record.name || 'attachment')
+                                const upRes = await fetch('https://box.david888.com/api.php?action=upload', { method: 'POST', body: formData }).catch(() => null)
+                                if (upRes && upRes.ok) {
+                                    const payload = await upRes.json().catch(() => ({}))
+                                    const url = payload?.data?.url || payload?.url
+                                    if (url) {
+                                        const regex = new RegExp('<audio[^>]*data-offline-audio-id="?' + audioId + '"?[^>]*><\\/audio>', 'g')
+                                        const newTag = '<audio controls src="' + url + '"></audio>'
+                                        finalContent = finalContent.replace(regex, newTag)
+                                        await offlineStore.updateOfflineAudioStatus(audioId, 'synced', url)
+                                    }
+                                }
+                            }
+                        }
+                        if (path === currentPath) {
+                            $content.value = finalContent
+                            renderPreview()
+                        }
+                    } catch (e) {
+                        console.warn('Audio sync error in offline page:', e)
+                    }
+                }
+
                 // Conflict check ONLY when syncing pending offline notes or manual sync
                 if (options.checkConflict && !options.isForce) {
                     try {
@@ -1183,8 +1216,8 @@ export const createOfflinePageResponse = () => {
                         })
                         if (checkRes.ok && checkRes.status === 200) {
                             const serverRaw = await checkRes.text()
-                            if (serverRaw && normalizeText(serverRaw) !== normalizeText(content) && currentSyncStatus === 'pending') {
-                                showConflictModal(path, content, serverRaw)
+                            if (serverRaw && normalizeText(serverRaw) !== normalizeText(finalContent) && currentSyncStatus === 'pending') {
+                                showConflictModal(path, finalContent, serverRaw)
                                 return
                             }
                         }
@@ -1194,7 +1227,7 @@ export const createOfflinePageResponse = () => {
                 const res = await fetch('/' + encodeURIComponent(targetPath), {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                    body: new URLSearchParams({ t: content }),
+                    body: new URLSearchParams({ t: finalContent }),
                 })
                 const data = await res.json()
                 if (data.err === 0) {
@@ -1576,8 +1609,31 @@ export const createOfflinePageResponse = () => {
                         renderPreview()
                         await saveCurrent({ showNotification: false })
 
-                        showToast('🎙️ 錄音已存於本機 (IndexedDB)，連線後將自動同步至雲端')
-                        if (navigator.onLine) syncPendingAudiosInOfflinePage()
+                        showToast('🎙️ 錄音已存於本機 (IndexedDB)，發布/同步時才會上傳至 S3')
+
+                        if (navigator.onLine) {
+                            try {
+                                showToast('🎙️ 正在使用 AI (Whisper) 轉錄音訊...')
+                                const formData = new FormData()
+                                formData.append('file', audioBlob)
+                                const trRes = await fetch('/api/audio/transcribe', { method: 'POST', body: formData })
+                                const trData = await trRes.json()
+                                const transcript = trData?.data?.markdown || trData?.data?.text
+                                if (transcript && $content.value.includes(audioId)) {
+                                    const curVal = $content.value
+                                    const idx = curVal.indexOf(audioId)
+                                    const tagEndIdx = curVal.indexOf('</audio>', idx)
+                                    if (tagEndIdx !== -1) {
+                                        const insPos = tagEndIdx + '</audio>'.length
+                                        $content.value = curVal.substring(0, insPos) + '\n\n' + transcript + '\n\n' + curVal.substring(insPos)
+                                        renderPreview()
+                                        await saveCurrent({ showNotification: false })
+                                    }
+                                }
+                            } catch (e) {
+                                console.warn('ASR transcribe error in offline page:', e)
+                            }
+                        }
                     }
 
                     offlineMediaRecorder.start(1000)
@@ -1595,37 +1651,6 @@ export const createOfflinePageResponse = () => {
             }
         }
 
-        async function syncPendingAudiosInOfflinePage() {
-            if (!navigator.onLine) return
-            try {
-                const pendingAudios = await offlineStore.getPendingOfflineAudios(currentPath)
-                if (!pendingAudios || !pendingAudios.length) return
-                for (const item of pendingAudios) {
-                    if (item.blob) {
-                        const formData = new FormData()
-                        formData.append('file', item.blob, item.name || 'recording.webm')
-                        formData.append('title', item.name || 'attachment')
-                        const res = await fetch('https://box.david888.com/api.php?action=upload', { method: 'POST', body: formData }).catch(() => null)
-                        if (res && res.ok) {
-                            const payload = await res.json().catch(() => ({}))
-                            const url = payload?.data?.url || payload?.url
-                            if (url) {
-                                const curVal = $content.value
-                                const regex = new RegExp('<audio[^>]*data-offline-audio-id=["\']' + item.id + '["\'][^>]*><\\/audio>', 'g')
-                                const newTag = '<audio controls src="' + url + '"></audio>'
-                                if (regex.test(curVal)) {
-                                    $content.value = curVal.replace(regex, newTag)
-                                    renderPreview()
-                                    await saveCurrent({ showNotification: false })
-                                }
-                                await offlineStore.updateOfflineAudioStatus(item.id, 'synced', url)
-                            }
-                        }
-                    }
-                }
-            } catch (e) {}
-        }
-
         // Online & Offline State handling
         function updateNetworkState() {
             if (navigator.onLine) {
@@ -1638,7 +1663,6 @@ export const createOfflinePageResponse = () => {
                         }
                     }).catch(() => {})
                 }
-                syncPendingAudiosInOfflinePage()
                 // Background sync all pending notes
                 offlineStore.getPendingSyncNotes().then(pending => {
                     if (pending.length > 0) {
