@@ -490,36 +490,35 @@ export const getEditorCss = () => `
     50% { opacity: 0.55; transform: scale(0.96); }
 }
 
-/* --- Floating Recording HUD Pill --- */
+/* --- Floating Recording HUD (Dynamic Island Glassmorphism) --- */
 .editor-recording-hud {
     position: fixed;
-    top: 20px;
+    top: 22px;
     left: 50%;
     transform: translateX(-50%) translateY(0);
     z-index: 10000;
     display: inline-flex;
     align-items: center;
-    gap: 12px;
-    padding: 6px 14px 6px 12px;
-    background: color-mix(in srgb, var(--editor-surface, #1e1e2e) 90%, transparent);
+    gap: 8px;
+    padding: 4px 6px 4px 14px;
+    background: color-mix(in srgb, var(--editor-surface, #1e1e2e) 88%, #000000);
     color: var(--editor-text, #f8f8f2);
-    border: 1px solid rgba(239, 68, 68, 0.45);
+    border: 1px solid rgba(239, 68, 68, 0.4);
     border-radius: 9999px;
-    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.35), 0 0 20px rgba(239, 68, 68, 0.25);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.45), 0 0 20px rgba(239, 68, 68, 0.25);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 13px;
-    font-weight: 500;
     user-select: none;
     pointer-events: auto;
-    animation: recording-hud-appear 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    animation: recording-hud-appear 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: border-color 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
 }
 
 .editor-recording-hud.is-paused {
-    border-color: rgba(245, 158, 11, 0.5);
-    box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.35), 0 0 20px rgba(245, 158, 11, 0.2);
+    border-color: rgba(245, 158, 11, 0.45);
+    box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.45), 0 0 20px rgba(245, 158, 11, 0.2);
 }
 
 .editor-recording-hud.is-leaving {
@@ -528,39 +527,27 @@ export const getEditorCss = () => `
 }
 
 @keyframes recording-hud-appear {
-    from {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-16px) scale(0.94);
-    }
-    to {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
-    }
+    from { opacity: 0; transform: translateX(-50%) translateY(-20px) scale(0.92); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
 }
 
 @keyframes recording-hud-leave {
-    from {
-        opacity: 1;
-        transform: translateX(-50%) translateY(0) scale(1);
-    }
-    to {
-        opacity: 0;
-        transform: translateX(-50%) translateY(-12px) scale(0.94);
-    }
+    from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+    to { opacity: 0; transform: translateX(-50%) translateY(-14px) scale(0.92); }
 }
 
-.recording-hud-indicator {
+.recording-hud-live-pill {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
 }
 
 .recording-hud-dot {
-    width: 10px;
-    height: 10px;
+    width: 8px;
+    height: 8px;
     border-radius: 50%;
     background: #ef4444;
-    box-shadow: 0 0 8px #ef4444;
+    box-shadow: 0 0 10px #ef4444;
     animation: recording-dot-pulse 1.2s ease-in-out infinite;
 }
 
@@ -568,64 +555,59 @@ export const getEditorCss = () => `
     background: #f59e0b;
     box-shadow: 0 0 8px #f59e0b;
     animation: none;
-    opacity: 0.9;
 }
 
 @keyframes recording-dot-pulse {
     0%, 100% { transform: scale(1); opacity: 1; }
-    50% { transform: scale(1.25); opacity: 0.45; }
+    50% { transform: scale(1.3); opacity: 0.4; }
 }
 
 .recording-hud-waves {
     display: inline-flex;
     align-items: center;
     gap: 2px;
-    height: 14px;
+    height: 12px;
 }
 
 .recording-hud-waves span {
     display: inline-block;
-    width: 2.5px;
+    width: 2px;
     height: 12px;
     background: #ef4444;
     border-radius: 2px;
-    animation: recording-wave-anim 1s ease-in-out infinite alternate;
+    animation: recording-wave-anim 0.9s ease-in-out infinite alternate;
 }
 
-.recording-hud-waves span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
-.recording-hud-waves span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
-.recording-hud-waves span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
-.recording-hud-waves span:nth-child(4) { height: 8px; animation-delay: 0.4s; }
+.recording-hud-waves span:nth-child(1) { height: 5px; animation-delay: 0.1s; }
+.recording-hud-waves span:nth-child(2) { height: 12px; animation-delay: 0.3s; }
+.recording-hud-waves span:nth-child(3) { height: 8px; animation-delay: 0.2s; }
+.recording-hud-waves span:nth-child(4) { height: 6px; animation-delay: 0.4s; }
 
 .editor-recording-hud.is-paused .recording-hud-waves span {
     animation-play-state: paused;
     background: #f59e0b;
-    height: 4px !important;
+    height: 3px !important;
 }
 
 @keyframes recording-wave-anim {
-    0% { transform: scaleY(0.3); }
+    0% { transform: scaleY(0.25); }
     100% { transform: scaleY(1); }
 }
 
-.recording-hud-info {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-}
-
 .recording-hud-status {
-    font-size: 12.5px;
+    font-size: 12px;
     font-weight: 600;
-    letter-spacing: 0.2px;
+    color: rgba(255, 255, 255, 0.88);
+    letter-spacing: 0.3px;
 }
 
 .recording-hud-timer {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 13px;
+    font-size: 12.5px;
     font-weight: 700;
     color: #ef4444;
-    min-width: 44px;
+    min-width: 40px;
+    font-variant-numeric: tabular-nums;
 }
 
 .editor-recording-hud.is-paused .recording-hud-timer {
@@ -635,67 +617,88 @@ export const getEditorCss = () => `
 .recording-hud-actions {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
+    gap: 5px;
     margin-left: 4px;
     padding-left: 8px;
     border-left: 1px solid rgba(255, 255, 255, 0.15);
 }
 
-.recording-hud-btn {
+.recording-hud-icon-btn,
+.recording-hud-pill-btn {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    height: 28px;
-    padding: 0 10px;
-    border-radius: 9999px;
+    justify-content: center;
     border: 1px solid transparent;
-    font-family: inherit;
-    font-size: 12px;
-    font-weight: 600;
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.14s ease;
     user-select: none;
     line-height: 1;
-}
-
-.recording-hud-btn:active {
-    transform: scale(0.94);
-}
-
-.recording-hud-btn.hud-btn-pause {
-    background: rgba(255, 255, 255, 0.12);
     color: inherit;
-    border-color: rgba(255, 255, 255, 0.18);
+    background: transparent;
 }
-.recording-hud-btn.hud-btn-pause:hover {
-    background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.32);
+
+.recording-hud-icon-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    padding: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.12);
 }
-.editor-recording-hud.is-paused .recording-hud-btn.hud-btn-pause {
+
+.recording-hud-icon-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.25);
+    transform: scale(1.05);
+}
+
+.recording-hud-icon-btn:active,
+.recording-hud-pill-btn:active {
+    transform: scale(0.92);
+}
+
+.recording-hud-icon-btn.hud-btn-cancel {
+    color: rgba(255, 255, 255, 0.6);
+    background: transparent;
+    border-color: transparent;
+}
+
+.recording-hud-icon-btn.hud-btn-cancel:hover {
+    background: rgba(239, 68, 68, 0.18);
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.editor-recording-hud.is-paused .recording-hud-icon-btn.hud-btn-pause {
     background: rgba(245, 158, 11, 0.2);
     border-color: rgba(245, 158, 11, 0.4);
     color: #f59e0b;
 }
 
-.recording-hud-btn.hud-btn-stop {
-    background: #ef4444;
+.recording-hud-pill-btn.hud-btn-stop {
+    height: 28px;
+    padding: 0 12px 0 10px;
+    gap: 5px;
+    border-radius: 9999px;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
     color: #ffffff;
-    border-color: #dc2626;
-    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4);
-}
-.recording-hud-btn.hud-btn-stop:hover {
-    background: #dc2626;
-    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5);
+    font-size: 12px;
+    font-weight: 600;
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 2px 10px rgba(239, 68, 68, 0.4);
 }
 
-.recording-hud-btn.hud-btn-cancel {
-    background: transparent;
-    color: rgba(255, 255, 255, 0.65);
-    padding: 0 8px;
+.recording-hud-pill-btn.hud-btn-stop:hover {
+    background: linear-gradient(135deg, #f87171, #ef4444);
+    box-shadow: 0 3px 14px rgba(239, 68, 68, 0.6);
+    transform: scale(1.02);
 }
-.recording-hud-btn.hud-btn-cancel:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #ffffff;
+
+.hud-svg {
+    display: block;
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
 }
 
 .markdown-toolbar-button:focus-visible {

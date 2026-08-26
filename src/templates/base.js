@@ -3778,16 +3778,22 @@ ${getMarkdownCss()}
         };
 
         const insertLocalRecordedAudio = (audioId, blobUrl, start, end) => {
-            const source = $textarea.value
-            const safeStart = Math.max(0, Math.min(Number(start) || 0, source.length))
-            const safeEnd = Math.max(safeStart, Math.min(Number(end) || safeStart, source.length))
             const snippet = '<audio controls data-offline-audio-id="' + audioId + '" src="' + blobUrl + '"></audio>'
+            if (isCurrentBlockEditor() && typeof window.__insertBlockEditorMarkdown === 'function') {
+                window.__insertBlockEditorMarkdown(snippet)
+                return
+            }
+            if (!$textarea) return
+            const source = $textarea.value || ''
+            const safeStart = typeof start === 'number' ? Math.max(0, Math.min(start, source.length)) : source.length
+            const safeEnd = typeof end === 'number' ? Math.max(safeStart, Math.min(end, source.length)) : safeStart
             const prefix = safeStart > 0 && !source.substring(0, safeStart).endsWith('\\n') ? '\\n\\n' : ''
             const suffix = safeEnd < source.length && !source.substring(safeEnd).startsWith('\\n') ? '\\n\\n' : ''
             const insertion = prefix + snippet + suffix
             $textarea.value = source.substring(0, safeStart) + insertion + source.substring(safeEnd)
             const next = safeStart + insertion.length
             $textarea.setSelectionRange(next, next)
+            renderPlain($previewPlain, $textarea.value)
             triggerRender($previewMd, $textarea.value)
             $textarea.dispatchEvent(new Event('input', { bubbles: true }))
         }

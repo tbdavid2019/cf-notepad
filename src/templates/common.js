@@ -91,7 +91,6 @@ const EDITOR_TOOLBAR_COMMANDS = [
     { command: 'undo', glyph: SVG_ICONS.undo, zh: '復原', en: 'Undo' },
     { command: 'redo', glyph: SVG_ICONS.redo, zh: '重做', en: 'Redo' },
     { command: 'record', glyph: SVG_ICONS.mic, zh: '開始錄音', en: 'Start recording' },
-    { command: 'recordPause', glyph: SVG_ICONS.pause, zh: '暫停錄音', en: 'Pause recording' },
     { separator: true },
     { command: 'heading1', glyph: 'H1', zh: '一級標題', en: 'Heading 1' },
     { command: 'heading2', glyph: 'H2', zh: '二級標題', en: 'Heading 2' },

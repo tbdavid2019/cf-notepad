@@ -2,15 +2,19 @@
 
 ## [2026-08-26]
 
-- **🎙️ 錄音即時狀態提醒懸浮膠囊 (Live Recording HUD) 與全功能錄音控制 (Pause, Resume, Stop, Cancel)**：
-  - **懸浮狀態膠囊 (`.editor-recording-hud`)**：錄音開始時於視窗頂部展開兼具現代毛玻璃與主題感知的懸浮膠囊（HUD），不受頁面長滾動影響，清楚提示「🎙️ 正在錄音中...」。
-  - **即時動畫與計時器 (Pulsing Dot, Waveform & Live Timer)**：內建呼吸光暈紅點、聲波動畫條與 `MM:SS` 即時計時器，錄音狀態一眼可辨。
-  - **全功能即時操作鍵 (Interactive Controls)**：
-    - **⏸️ / ▶️ 暫停與繼續 (Pause & Resume)**：一鍵無縫暫停錄音與計時，切換為琥珀色光暈並動態更新提示文案；隨時點擊一鍵繼續錄音。
-    - **⏹️ 完成並插入 (Stop & Insert)**：高辨識度紅色按鈕，停止錄音並自動存入 IndexedDB 與生成時間戳逐字稿。
-    - **✕ 取消放棄 (Cancel & Discard)**：提供乾淨的取消機制，立即釋放麥克風並放棄錄音片段，不污染筆記內容。
-  - **工具列雙向即時聯動**：Markdown 工具列頂部的開始/停止鈕與暫停/繼續鈕（`SVG_ICONS.pause` / `SVG_ICONS.play`）與懸浮 HUD 狀態 100% 雙向同步。
-  - **離線工作站完全相容**：離線雙欄工作區 (`/_pwa-offline`) 同步搭載 Recording HUD，離線錄音體驗絲滑一致。
+- **🎙️ 錄音即時狀態提醒懸浮膠囊 (Dynamic Island Recording HUD) 旗艦視覺重構 ＆ 頂部工具列極簡淨化**：
+  - **Dynamic Island 旗艦懸浮膠囊 (`.editor-recording-hud`)**：
+    - 採用現代毛玻璃（`backdrop-filter: blur(20px) saturate(180%)`）與動態島微互動設計，錄音時從頂部優雅滑下。
+    - **左側狀態指示**：具備呼吸脈衝光暈紅點、4 柱均衡聲波動畫、狀態標籤（`錄音中` / `已暫停`）與等寬計時器（`00:00`）。
+    - **右側現代 SVG 設計按鈕**：
+      - **⏸️ / ▶️ 圓形懸浮控制鈕 (`.hud-btn-pause`)**：內嵌純向量 SVG 圖示，暫停時切換為琥珀色光暈與繼續圖示。
+      - **⏹️ 「完成」膠囊主按鈕 (`.hud-btn-stop`)**：高對比漸層紅色膠囊（`linear-gradient`）搭配向量勾選圖示，一鍵結束並插入筆記。
+      - **✕ 圓形幽靈取消鈕 (`.hud-btn-cancel`)**：懸停淡紅警示，一鍵乾淨釋放麥克風並丟棄音訊。
+  - **頂部 Markdown 工具列極簡化**：移除工具列多餘的常駐暫停按鈕，只保留最純粹的 `🎙️` 錄音按鈕；所有暫停、繼續、停止與取消操作一律收斂至頂部 Dynamic Island 懸浮膠囊。
+  - **音訊切片與停止可靠度優化 (250ms Chunking & Reliable Audio Finalization)**：
+    - 將 MediaRecorder 時間切片由 1000ms 精密提升至 250ms，並在調用 `stop()` 前主動執行 `requestData()`，徹底解決短時間錄音停止後音訊 buffer 未 flush 導致 IndexedDB 無法寫入與 ASR 轉錄中斷的問題。
+    - 支援 Safari (`audio/mp4`) 與 Chrome/Firefox (`audio/webm`) 自動副檔名相容。
+  - **離線工作站完全同步**：離線雙欄工作區 (`/_pwa-offline`) 同步升級至 Dynamic Island Recording HUD 與 250ms 精準切片。
 - **🎙️ Local-First 本機離線錄音、連線即時 ASR 辨識與發布延遲 S3 雲端同步架構 (Local-First Offline Recording, Online ASR & Deferred S3 Upload upon Publish)**：
   - **二階段完全解耦架構 (Decoupled ASR Transcription & S3 Cloud Upload)**：
     - **第一階段（錄音與 ASR 轉錄）**：錄音結束後音訊 Blob **僅保存於本機 IndexedDB (`CloudNotepadOfflineDB` -> `audios`)**，游標處插入本機播放器 `<audio data-offline-audio-id="rec_..." src="blob:..."></audio>`。有網路時立即發起 Whisper ASR 轉錄將逐字稿補插入播放器下方，**完全不上傳音檔至 S3 / 888box**，避免浪費雲端儲存空間與頻寬。
