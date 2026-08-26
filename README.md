@@ -56,7 +56,7 @@
     1. **🎙️ 匯入音訊（逐字稿）**（**推薦預設**）：輸出 100% 原音忠實逐字稿附帶精確時間戳記，**零幻覺、零額外摘要、無多餘大綱腦補**，極速且純淨。
     2. **✨ 匯入音訊（智慧排版）**（**可選模式**）：Whisper 先產出結構化時間逐字稿，再由 LLM 釐清語句、整理重點與 Markdown 排版；不自行捏造原文沒有的事實。
 - **AI 排版優化 (AI Format)**：採用 Workers AI（`gpt-oss-20b`），自動梳理 Markdown 標題、清單與空白，100% 保留原文語言與內容。支援圈選局部排版。
-- **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、內容擴充或整篇文稿生成。
+- **AI 輔助編輯與生成 (AI Edit &amp; Draft)**：採用 `gpt-oss-120b` 模型，提供指令式的段落改寫、表格整理、內容擴充或整篇文稿生成。
 - **AI 翻譯／雙語生成 (AI Translate &amp; Bilingual)**：一鍵將文章翻譯為指定目標語言，或產生排版完美的「原文 + 譯文」雙語對照版本。
 - **選取文字浮動 AI 捷徑**：在編輯器中選取任意文字，自動彈出浮動選單，一鍵觸發排版、AI 編輯或翻譯。
 - **Agent 生態 (MCP, WebMCP &amp; Skills)**：提供原生 HTTP JSON-RPC 2.0 端點（`/mcp`，完美相容 Cloudflare WebMCP 1-Click 整合與 Chrome 146+ `document.modelContext`）、遠端 Python FastMCP 伺服器 (`uv run server.py`)，並發布 `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`，可直接作為 Antigravity、Cursor、Claude Desktop 或 n8n 的發文大腦。
@@ -441,7 +441,7 @@ npm run deploy
   - **Timestamped Paragraph Segmentation**: Eliminates single-block text walls by automatically grouping spoken cues into structured paragraphs prefixed with `**[mm:ss]**` timestamps.
   - **Dual Modes**: **Transcript Only** (100% faithful verbatim transcription with timestamps) or **Smart Layout** (LLM clarifies wording, organizes headings, and structures Markdown).
 - **AI Formatting (AI Format)**: Workers AI (`gpt-oss-20b`) restructures Markdown headings, lists, and whitespace while preserving original language and text. Supports selection-only formatting.
-- **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, content expansion, or full article generation.
+- **AI Editing &amp; Drafting (AI Edit)**: `gpt-oss-120b` model provides instruction-based section rewrites, table formatting, content expansion, or full article generation.
 - **AI Translation &amp; Bilingual Output**: Translate content to target languages or generate side-by-side bilingual documents.
 - **Floating Selection AI Menu**: Selecting text in the editor automatically triggers floating AI Format, AI Edit, and Translate shortcuts.
 - **Agent Ecosystem (MCP, WebMCP &amp; Skills)**: Serves a native HTTP JSON-RPC 2.0 MCP endpoint (`/mcp`, fully compatible with Cloudflare WebMCP 1-Click toggle and Chrome 146+ `document.modelContext`), a remote Python FastMCP server (`uv run server.py`), and standard Agent Skill at `/.well-known/agent-skills/david888-wiki-publisher/SKILL.md`.

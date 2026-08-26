@@ -2,8 +2,8 @@
  * src/templates/pages.js
  * NeedPasswd and Page404 template functions
  */
-import { SUPPORTED_LANG } from '../constant'
-import { HTML } from './base'
+import { SUPPORTED_LANG } from '../constant.js'
+import { HTML } from './base.js'
 import { EDITOR_PREFERENCE_MODAL } from './common.js'
 
 const escapeHtml = value => String(value || '')

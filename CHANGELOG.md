@@ -2,6 +2,10 @@
 
 ## [2026-08-26]
 
+- **🐛 修復 AI 編輯與整理時 ReferenceError: normalizeTranslationTargetLanguage 異常 (Fix AI Assistant Policy Module Imports in Worker Entry)**：
+  - 修復 `src/index.js` 缺少 `ai_assistant_policy.mjs` 模組引入，導致在編輯器中選取文字調用「AI 編輯」（如「要求整理成表格」）或「排版」時擲出 `Worker Error: normalizeTranslationTargetLanguage is not defined (HTTP 500)` 的問題。
+  - 補齊 `src/index.js` 完整引入 `normalizeTranslationTargetLanguage`、`AI_FORMAT_SYSTEM_PROMPT`、`buildAiUserPrompt`、`buildTranslationSystemPrompt`、`preservesFormatLanguage` 等模組，並健全 Node.js ESM 相對路徑與新增完整端點單元測試。
+
 - **📄 Takumi-PDF 原生向量 PDF 直接導出引擎 (Native Vector PDF Export via Takumi-PDF WebAssembly)**：
   - **Chromium-Free 原生向量排版**：全面整合 Rust/Wasm 驅動的 `takumi-pdf` 向量渲染引擎，無須啟動肥大耗能的 Chromium / Puppeteer，在 Cloudflare Workers 邊緣運算環境即可以毫秒級高速將 Markdown/HTML 直接編譯為高解析度、可全選複製 (Selectable & Searchable) 的多頁向量 PDF。
   - **一鍵直接下載免預覽列印 (Direct Download without Print Dialog)**：

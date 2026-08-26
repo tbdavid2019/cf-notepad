@@ -2,10 +2,10 @@ import dayjs from 'dayjs'
 import { Router } from 'itty-router'
 import Cookies from 'cookie'
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper'
-import { APP_NAME, getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant'
-import { NOTEPAD_ICON_SVG } from './icon'
-import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets'
+import { queryNote, MD5, checkAuth, genRandomStr, returnPage, returnJSON, saltPw, passwordMatches, getPasswordRole, getI18n, deleteEmptyPages, deleteNoteHistoryForPath } from './helper.js'
+import { APP_NAME, getSlugLength, getAdminPath, getAdminPassword, getEnableR2, getR2Domain, getGaMeasurementId, getWebtalkConfig, getSecret, DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant.js'
+import { NOTEPAD_ICON_SVG } from './icon.js'
+import { NOTEPAD_FAVICON_ICO, NOTEPAD_ICON_PNG, NOTEPAD_OG_IMAGE_PNG } from './icon_assets.js'
 import { handleMcpRequest } from './mcp_server.mjs'
 import {
     generateChallenge,
@@ -19,7 +19,7 @@ import {
     storeFidoChallenge,
     verifyAndConsumeFidoChallenge,
 } from './fido_auth.mjs'
-import { createOfflinePageResponse } from './offline_page'
+import { createOfflinePageResponse } from './offline_page.js'
 import {
     extractNoteDescription,
     extractNoteTitle,
@@ -28,11 +28,11 @@ import {
     resolveAnnotationsEnabled,
     resolveEditorFormat,
     resolveLockedEditorFormat,
-} from './note_meta'
+} from './note_meta.js'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
 import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
-import { summarizeHistoryContent } from './note_history_presenter'
+import { summarizeHistoryContent } from './note_history_presenter.js'
 import {
     AGENT_SKILL_MARKDOWN,
     AUTH_MD_MARKDOWN,
@@ -83,6 +83,15 @@ import {
     validateAnnotationMessage,
     verifyAnnotationDeleteToken,
 } from './annotation_data.mjs'
+import {
+    AI_FORMAT_SYSTEM_PROMPT,
+    AUDIO_SMART_FORMAT_SYSTEM_PROMPT,
+    buildAudioSmartFormatPrompt,
+    buildAiUserPrompt,
+    buildTranslationSystemPrompt,
+    normalizeTranslationTargetLanguage,
+    preservesFormatLanguage,
+} from './ai_assistant_policy.mjs'
 
 // init
 const router = Router()
@@ -3267,9 +3276,6 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(10002, 'Password auth failed!', { status: 401 })
     }
 
-    console.log('[AI] env.AI type:', typeof env.AI)
-    console.log('[AI] env.AI keys:', env.AI ? Object.keys(env.AI) : 'null')
-
     if (!env.AI) {
         return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
     }
@@ -3339,18 +3345,12 @@ router.post('/:path/ai-format', async (request, { env }) => {
         }
     ]
 
-    console.log('[AI] Calling model:', model)
-    console.log('[AI] Input text length:', normalizedText.length)
-
     try {
         const aiResponse = await runAiWithTimeout(env.AI, model, {
             messages,
             reasoning_effort: 'low',
             max_completion_tokens: 8192,
         }, 120000)
-        console.log('[AI] Response type:', typeof aiResponse)
-        console.log('[AI] Response keys:', aiResponse ? Object.keys(aiResponse) : 'null')
-        console.log('[AI] Response preview:', JSON.stringify(aiResponse).substring(0, 500))
         const resultText = extractAiText(aiResponse)
         if (resultText) {
             const formatSource = hasSelection ? normalizedText.slice(selectionStart, selectionEnd) : normalizedText

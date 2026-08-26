@@ -15,11 +15,11 @@
  *   - src/scripts/admin.js     → getAdminScript (AdminController)
  *   - src/scripts/editor.js    → getEditorScript
  */
-export { Edit } from './templates/edit'
-export { Share } from './templates/share'
-export { Admin } from './templates/admin'
-export { Home, NeedPasswd, Page404 } from './templates/pages'
+export { Edit } from './templates/edit.js'
+export { Share } from './templates/share.js'
+export { Admin } from './templates/admin.js'
+export { Home, NeedPasswd, Page404 } from './templates/pages.js'
 
 // Also re-export shared utilities for any code that imports them from template.js
-export { FOOTER, MODAL, SWITCHER } from './templates/common'
-export { HTML } from './templates/base'
+export { FOOTER, MODAL, SWITCHER } from './templates/common.js'
+export { HTML } from './templates/base.js'
