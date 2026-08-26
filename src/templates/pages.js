@@ -54,6 +54,12 @@ export const Home = ({ lang = 'zh-TW', canonicalUrl, ogImageUrl }) => `
         .modal { display: none; }
         .modal-mask { position: fixed; inset: 0; z-index: 1000; background: rgba(37, 35, 32, .48); }
         .editor-preference-content { position: fixed; top: 50%; left: 50%; z-index: 1001; width: min(560px, calc(100vw - 32px)); box-sizing: border-box; padding: 26px; transform: translate(-50%, -50%); border: 1px solid #e2dacd; border-radius: 14px; background: #fff; box-shadow: 0 18px 48px rgba(37,35,32,.24); }
+        .editor-preference-header-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .editor-preference-lang-group { display: inline-flex; align-items: center; background: #f5f0e8; border: 1px solid #e2dacd; border-radius: 999px; padding: 2px; gap: 2px; }
+        .editor-pref-lang-btn { border: 0; background: transparent; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; color: #6b6965; cursor: pointer; transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease; line-height: 1.2; }
+        .editor-pref-lang-btn:hover { color: #24292f; }
+        .editor-pref-lang-btn.is-active { background: #fff; color: #c8654b; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12); }
+        .editor-preference-close { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; line-height: 1; padding: 0 4px; }
         .editor-preference-content h2 { margin: 0 0 8px; font-size: 20px; }
         .editor-preference-content > p { margin: 0 0 18px; color: #6b6965; font-size: 14px; line-height: 1.55; }
         .editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }

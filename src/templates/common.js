@@ -394,48 +394,97 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
             <div class="footer-section footer-section-create">
                 <div class="footer-section-body">
                     <div class="footer-control-group">
-                        <div class="dropdown-container new-note-dropdown" id="new-note-dropdown">
-                            <button type="button" id="new-note-menu-btn" class="toolbar-icon-button dropdown-trigger new-note-menu-trigger" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
-                                <span class="new-note-plus" aria-hidden="true">＋</span>
-                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
-                                <span class="toolbar-button-caret" aria-hidden="true">▾</span>
-                            </button>
-                            <div class="dropdown-menu new-note-dropdown-menu" role="menu">
-                                <div class="dropdown-menu-label">${createSectionTitle}</div>
-                                <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">
-                                    ${SVG_ICONS.editLock}
-                                    <span class="dropdown-item-copy">
-                                        <strong>${newMarkdownTitle}</strong>
-                                        <small>${newMarkdownDescription}</small>
-                                    </span>
-                                </a>
-                                <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">
-                                    ${SVG_ICONS.sparkles}
-                                    <span class="dropdown-item-copy">
-                                        <strong>${newBlockTitle}</strong>
-                                        <small>${newBlockDescription}</small>
-                                    </span>
-                                </a>
-                                ${!isBlockEditor ? `
-                                <div class="dropdown-divider"></div>
-                                <div class="dropdown-menu-label">${importSectionTitle}</div>
-                                <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
-                                <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatMarkdown}</span></button>
-                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
-                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
-                                ` : ''}
-                                ${isBlockEditor ? `
-                                <div class="dropdown-divider"></div>
-                                <div class="dropdown-menu-label">${importSectionTitle}</div>
-                                <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioBlock}</span></button>
-                                <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatBlock}</span></button>
-                                <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
-                                <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
-                                ` : ''}
-                                <div class="dropdown-divider"></div>
-                                <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
+                        ${!isEdit && path ? `
+                            <div class="split-action-group">
+                                ${authPath
+                                    ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button split-action-main" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
+                                    : `<a href="/${path}" class="toolbar-icon-button split-action-main readonly-edit-link" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
+                                }
+                                <div class="dropdown-container new-note-dropdown" id="new-note-dropdown">
+                                    <button type="button" id="new-note-menu-btn" class="toolbar-icon-button dropdown-trigger new-note-menu-trigger split-action-dropdown" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
+                                        <span class="new-note-plus" aria-hidden="true">＋</span>
+                                        <span class="toolbar-button-caret" aria-hidden="true">▾</span>
+                                    </button>
+                                    <div class="dropdown-menu new-note-dropdown-menu" role="menu">
+                                        <div class="dropdown-menu-label">${lang === 'zh-TW' ? '目前與新增' : 'Current & New'}</div>
+                                        <a class="dropdown-item dropdown-item-rich" href="${authPath ? '#auth' : `/${path}`}" ${authPath ? 'onclick="document.getElementById(\'readonly-edit-btn\')?.click(); return false;"' : ''}>
+                                            ${SVG_ICONS.editLock}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${lang === 'zh-TW' ? '編輯目前這篇筆記' : 'Edit this note'}</strong>
+                                                <small>${lang === 'zh-TW' ? '進入此文章的編輯模式' : 'Switch to editing mode'}</small>
+                                            </span>
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-menu-label">${createSectionTitle}</div>
+                                        <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">
+                                            ${SVG_ICONS.editLock}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${newMarkdownTitle}</strong>
+                                                <small>${newMarkdownDescription}</small>
+                                            </span>
+                                        </a>
+                                        <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">
+                                            ${SVG_ICONS.sparkles}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${newBlockTitle}</strong>
+                                                <small>${newBlockDescription}</small>
+                                            </span>
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                        <div class="dropdown-menu-label">${importSectionTitle}</div>
+                                        <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
+                                        <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatMarkdown}</span></button>
+                                        <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
+                                        <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
+                                        <div class="dropdown-divider"></div>
+                                        <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
+                                    </div>
+                                </div>
                             </div>
-                        </div>
+                        ` : `
+                            <div class="dropdown-container new-note-dropdown" id="new-note-dropdown">
+                                <button type="button" id="new-note-menu-btn" class="toolbar-icon-button dropdown-trigger new-note-menu-trigger" data-tooltip="${newNoteTitle}" title="${newNoteTitle}" aria-label="${newNoteTitle}" aria-haspopup="menu" aria-expanded="false">
+                                    <span class="new-note-plus" aria-hidden="true">＋</span>
+                                    <span class="toolbar-button-label">${lang === 'zh-TW' ? '新增' : 'New'}</span>
+                                    <span class="toolbar-button-caret" aria-hidden="true">▾</span>
+                                </button>
+                                <div class="dropdown-menu new-note-dropdown-menu" role="menu">
+                                    <div class="dropdown-menu-label">${createSectionTitle}</div>
+                                    <a id="new-markdown-note-link" class="dropdown-item dropdown-item-rich" href="/new/markdown">
+                                        ${SVG_ICONS.editLock}
+                                        <span class="dropdown-item-copy">
+                                            <strong>${newMarkdownTitle}</strong>
+                                            <small>${newMarkdownDescription}</small>
+                                        </span>
+                                    </a>
+                                    <a id="new-block-note-link" class="dropdown-item dropdown-item-rich" href="/new/block">
+                                        ${SVG_ICONS.sparkles}
+                                        <span class="dropdown-item-copy">
+                                            <strong>${newBlockTitle}</strong>
+                                            <small>${newBlockDescription}</small>
+                                        </span>
+                                    </a>
+                                    ${!isBlockEditor ? `
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-menu-label">${importSectionTitle}</div>
+                                    <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioMarkdown}</span></button>
+                                    <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatMarkdown}</span></button>
+                                    <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
+                                    <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
+                                    ` : ''}
+                                    ${isBlockEditor ? `
+                                    <div class="dropdown-divider"></div>
+                                    <div class="dropdown-menu-label">${importSectionTitle}</div>
+                                    <button type="button" id="dropdown-import-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.importAudioBlock}</span></button>
+                                    <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatBlock}</span></button>
+                                    <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileBlock}</span></button>
+                                    <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteBlock}</span></button>
+                                    ` : ''}
+                                    <div class="dropdown-divider"></div>
+                                    <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
+                                </div>
+                            </div>
+                        `}
                         <input id="import-md-input" type="file" accept=".md,.markdown,text/markdown,text/plain,.doc,.docx,.docm,.odt,.rtf,.epub,.pdf,.ppt,.pps,.pot,.pptx,.pptm,.ppsx,.ppsm,.odp,.xls,.xlsx,.xlsm,.xlsb,.ods,.csv,audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.mp4,.opus" class="visually-hidden-file-input" aria-hidden="true">
                         <input id="import-audio-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
                         <input id="import-audio-smart-format-input" type="file" accept="audio/*,.mp3,.wav,.m4a,.aac,.ogg,.webm,.flac,.opus,.mp4,.m4v" class="visually-hidden-file-input" aria-hidden="true">
@@ -672,10 +721,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         </div>
                         ` : ''}
                     ` : (path ? `
-                        ${authPath
-                            ? `<button type="button" id="readonly-edit-btn" class="toolbar-icon-button" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></button>`
-                            : `<a href="/${path}" class="toolbar-icon-button readonly-edit-link" data-tooltip="${t.backToEdit}" title="${t.backToEdit}" aria-label="${t.backToEdit}">${SVG_ICONS.editLock}<span class="toolbar-button-label">${lang === 'zh-TW' ? '編輯' : 'Edit'}</span></a>`
-                        }
                         ${EXPORT_DROPDOWN_MENU(lang)}
                         ${COPY_DROPDOWN_MENU(lang)}
                         <button type="button" id="cite-share-btn" class="toolbar-icon-button cite-share-btn" data-tooltip="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" title="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}" aria-label="${lang === 'zh-TW' ? '引用此文章 (Cite)' : 'Cite this note'}">
@@ -845,38 +890,44 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
 <div class="modal editor-preference-modal" role="dialog" aria-modal="true" aria-labelledby="editor-preference-title" aria-describedby="editor-preference-description" aria-hidden="true" data-editor-preference-dialog${autoOpen ? ' data-editor-preference-auto-open="true"' : ''}>
     <div class="modal-mask" data-editor-preference-close></div>
     <form class="editor-preference-content" data-editor-preference-form>
-        ${autoOpen ? '' : `<button type="button" class="close-btn editor-preference-close" data-editor-preference-close aria-label="${zh ? '關閉' : 'Close'}">×</button>`}
-        <h2 id="editor-preference-title">${title}</h2>
-        <p id="editor-preference-description">${description}</p>
+        <div class="editor-preference-header-bar">
+            <div class="editor-preference-lang-group" role="group" aria-label="${zh ? '切換語言 / Switch language' : 'Switch language / 切換語言'}">
+                <button type="button" class="editor-pref-lang-btn ${zh ? 'is-active' : ''}" data-editor-pref-lang="zh-TW" title="繁體中文">中</button>
+                <button type="button" class="editor-pref-lang-btn ${!zh ? 'is-active' : ''}" data-editor-pref-lang="en-US" title="English">En</button>
+            </div>
+            ${autoOpen ? '' : `<button type="button" class="close-btn editor-preference-close" data-editor-preference-close aria-label="${zh ? '關閉' : 'Close'}">×</button>`}
+        </div>
+        <h2 id="editor-preference-title" data-i18n-key="title">${title}</h2>
+        <p id="editor-preference-description" data-i18n-key="description">${description}</p>
         <fieldset class="editor-preference-options editor-preference-grid">
-            <legend class="sr-only">${title}</legend>
+            <legend class="sr-only" data-i18n-key="title">${title}</legend>
             <label class="editor-preference-option is-selected is-recommended" data-editor-card="markdown">
                 <input type="radio" name="editor-format" value="markdown" checked>
                 <span class="editor-preference-copy">
                     <span class="editor-preference-header">
-                        <strong>${markdownTitle}</strong>
-                        <span class="editor-preference-badge editor-preference-badge-accent">${markdownBadge}</span>
+                        <strong data-i18n-key="markdownTitle">${markdownTitle}</strong>
+                        <span class="editor-preference-badge editor-preference-badge-accent" data-i18n-key="markdownBadge">${markdownBadge}</span>
                     </span>
-                    <small>${markdownDescription}</small>
-                    <button type="button" class="opt-button opt-button-accent editor-card-action" data-editor-format-choice="markdown">${markdownAction}</button>
+                    <small data-i18n-key="markdownDescription">${markdownDescription}</small>
+                    <button type="button" class="opt-button opt-button-accent editor-card-action" data-editor-format-choice="markdown" data-i18n-key="markdownAction">${markdownAction}</button>
                 </span>
             </label>
             <label class="editor-preference-option" data-editor-card="block">
                 <input type="radio" name="editor-format" value="block">
                 <span class="editor-preference-copy">
                     <span class="editor-preference-header">
-                        <strong>${blockTitle}</strong>
-                        <span class="editor-preference-badge">${blockBadge}</span>
+                        <strong data-i18n-key="blockTitle">${blockTitle}</strong>
+                        <span class="editor-preference-badge" data-i18n-key="blockBadge">${blockBadge}</span>
                     </span>
-                    <small>${blockDescription}</small>
-                    <button type="button" class="opt-button editor-card-action" data-editor-format-choice="block">${blockAction}</button>
+                    <small data-i18n-key="blockDescription">${blockDescription}</small>
+                    <button type="button" class="opt-button editor-card-action" data-editor-format-choice="block" data-i18n-key="blockAction">${blockAction}</button>
                 </span>
             </label>
         </fieldset>
-        <label class="editor-preference-remember"><input type="checkbox" data-editor-preference-remember><span>${zh ? '記住我的選擇' : 'Remember my choice'}</span></label>
+        <label class="editor-preference-remember"><input type="checkbox" data-editor-preference-remember><span data-i18n-key="remember">${zh ? '記住我的選擇' : 'Remember my choice'}</span></label>
         <div class="editor-preference-actions">
-            ${autoOpen ? '' : `<button type="button" class="opt-button" data-editor-preference-close>${zh ? '取消' : 'Cancel'}</button>`}
-            <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm>${zh ? '確定' : 'Save'}</button>
+            ${autoOpen ? '' : `<button type="button" class="opt-button" data-editor-preference-close data-i18n-key="cancel">${zh ? '取消' : 'Cancel'}</button>`}
+            <button type="submit" class="opt-button opt-button-accent" data-editor-preference-confirm data-i18n-key="confirm">${zh ? '確定' : 'Save'}</button>
         </div>
     </form>
 </div>`

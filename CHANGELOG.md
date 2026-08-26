@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-08-26]
+
+- **🔀 Share 分享模式「編輯此篇 / 新增筆記」分割複合膠囊鈕 (Share Mode Split Action Capsule)**：
+  - **複合操作膠囊 (`.split-action-group`)**：在 Share 閱讀模式底欄左側，將原先孤立分散的「返回編輯」按鈕與「＋ 新增選單」合併為現代化的分割膠囊按鈕（Split Pill Button）。
+  - **直覺左側主動作 (`.split-action-main`)**：左側為「`✏️ 編輯`」主按鈕，具備密碼鎖自動鑑權相容，一鍵快速進入或解鎖編輯模式。
+  - **右側展開延伸選單 (`.split-action-dropdown`)**：右側為精緻的「`＋ ▾`」下拉觸發鈕，點擊展開選單並於首項提供「`✏️ 編輯目前這篇筆記`」，並完整保留新增 Markdown、新增 Block、語音轉文字、文件匯入等強大擴充功能，大幅精簡底欄橫向版面空間。
+- **🌐 編輯器偏好選擇彈窗「即時雙語切換」支援 (Interactive En/中 Language Switcher in Editor Preference Modal)**：
+  - **彈窗頂部語言切換膠囊 (`.editor-preference-lang-group`)**：在「選擇你的編輯方式 (`EDITOR_PREFERENCE_MODAL`)」彈窗右上角新增「`中 / En`」即時語系切換按鈕。
+  - **零跳轉即時多語系渲染**：無論設備或瀏覽器語系自動偵測為何，外籍使用者可在彈窗內一鍵切換至英文，標題、說明文案、Markdown/Block 卡片介紹、徽章、按鈕與確認勾選框即刻動態轉為流暢英文，並同步持久化使用者語系偏好至 `localStorage`。
+
 ## [2026-08-25]
 
 - **🎙️ Markdown 工具列錄音、音檔保存與時間戳逐字稿 (Toolbar Recording, Audio Retention & Timestamped Transcript)**：在 Markdown Edit 模式頂部新增麥克風控制，可開始、暫停、繼續與停止錄音；停止後會將 WebM 音檔上傳至 888box、插入原生 `<audio>` 播放器並沿用既有 Whisper 多層備援產生時間戳逐字稿。錄音前要求確認參與者同意，且前後端均限制音檔為 25 MB。

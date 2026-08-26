@@ -2,6 +2,39 @@ export const EDITOR_PREFERENCE_STORAGE_KEY = 'cf-notepad:editor-preference'
 export const EDITOR_SESSION_PREFERENCE_KEY = 'cf-notepad:editor-session-preference'
 export const DEFAULT_EDITOR_FORMAT = 'markdown'
 
+export const I18N_STRINGS = {
+    'zh-TW': {
+        title: '選擇你的編輯方式',
+        description: '這會決定新筆記的預設方式，隨時可於底欄設定中切換。',
+        markdownTitle: 'Markdown 編輯器',
+        markdownBadge: '推薦預設',
+        markdownDescription: '純文字高效寫作，支援即時雙向預覽、數學公式與快捷語法。',
+        markdownAction: '以 Markdown 開始',
+        blockTitle: '視覺化區塊 (Block)',
+        blockBadge: 'Notion 風格',
+        blockDescription: '所見即所得排版、拖拉區塊與 Slash 斜線指令。',
+        blockAction: '以 Block 開始',
+        remember: '記住我的選擇',
+        cancel: '取消',
+        confirm: '確定',
+    },
+    'en-US': {
+        title: 'Choose your editor',
+        description: 'This sets your default for new notes. You can change it anytime in settings.',
+        markdownTitle: 'Markdown editor',
+        markdownBadge: 'Recommended',
+        markdownDescription: 'Fast plain-text writing with live side-by-side preview and math formulas.',
+        markdownAction: 'Start with Markdown',
+        blockTitle: 'Visual Block editor',
+        blockBadge: 'Notion style',
+        blockDescription: 'What-you-see-is-what-you-get, drag handles, and slash commands.',
+        blockAction: 'Start with Block',
+        remember: 'Remember my choice',
+        cancel: 'Cancel',
+        confirm: 'Save',
+    }
+}
+
 const isEditorFormat = value => value === 'block' || value === 'markdown'
 
 const storageGet = (storage, key) => {
@@ -64,10 +97,33 @@ export function initializeEditorPreference(documentRef = document, windowRef = w
     const closeButtons = [...modal.querySelectorAll('[data-editor-preference-close]')]
     const options = [...modal.querySelectorAll('input[name="editor-format"]')]
     const cardActions = [...modal.querySelectorAll('[data-editor-format-choice]')]
+    const langButtons = [...modal.querySelectorAll('[data-editor-pref-lang]')]
     const autoOpen = modal.dataset.editorPreferenceAutoOpen === 'true'
     let trigger = null
     let keyHandler = null
     let pendingNewNote = false
+
+    const updateModalLanguage = (newLang) => {
+        const dict = I18N_STRINGS[newLang] || I18N_STRINGS['zh-TW']
+        modal.querySelectorAll('[data-i18n-key]').forEach(el => {
+            const key = el.dataset.i18nKey
+            if (dict[key]) el.textContent = dict[key]
+        })
+        langButtons.forEach(btn => {
+            const isActive = btn.dataset.editorPrefLang === newLang
+            btn.classList.toggle('is-active', isActive)
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false')
+        })
+        storageSet(windowRef.localStorage, 'cf-notepad:lang', newLang)
+        if (windowRef.APP_STATE) windowRef.APP_STATE.lang = newLang
+    }
+    langButtons.forEach(btn => {
+        btn.addEventListener('click', event => {
+            event.preventDefault()
+            const newLang = btn.dataset.editorPrefLang || 'zh-TW'
+            updateModalLanguage(newLang)
+        })
+    })
 
     const selectedFormat = () => options.find(option => option.checked)?.value || DEFAULT_EDITOR_FORMAT
     const syncOptionState = () => options.forEach(option => {

@@ -91,3 +91,45 @@ test('homepage asks until it has a remembered editor choice', () => {
     initializeEditorPreference(firstWindow.document, firstWindow, { navigate: format => secondNavigations.push(format) })
     assert.deepEqual(secondNavigations, ['markdown'])
 })
+
+test('editor preference modal provides interactive language switch buttons for foreign visitors', () => {
+    const window = createWindow(EDITOR_PREFERENCE_MODAL('zh-TW', { autoOpen: true }))
+    const { document } = window
+    initializeEditorPreference(document, window)
+
+    const zhBtn = document.querySelector('[data-editor-pref-lang="zh-TW"]')
+    const enBtn = document.querySelector('[data-editor-pref-lang="en-US"]')
+    assert.ok(zhBtn, 'zh-TW button should exist')
+    assert.ok(enBtn, 'en-US button should exist')
+    assert.ok(zhBtn.classList.contains('is-active'))
+
+    const titleEl = document.querySelector('#editor-preference-title')
+    assert.equal(titleEl.textContent, '選擇你的編輯方式')
+
+    // Click English switch button
+    enBtn.click()
+    assert.equal(titleEl.textContent, 'Choose your editor')
+    assert.equal(document.querySelector('#editor-preference-description').textContent, 'This sets your default for new notes. You can change it anytime in settings.')
+    assert.ok(enBtn.classList.contains('is-active'))
+    assert.equal(window.localStorage.getItem('cf-notepad:lang'), 'en-US')
+
+    // Click Traditional Chinese switch button
+    zhBtn.click()
+    assert.equal(titleEl.textContent, '選擇你的編輯方式')
+    assert.ok(zhBtn.classList.contains('is-active'))
+    assert.equal(window.localStorage.getItem('cf-notepad:lang'), 'zh-TW')
+})
+
+test('share mode combines edit note link and new note menu into a split action capsule', () => {
+    const shareFooter = FOOTER({
+        lang: 'zh-TW',
+        isEdit: false,
+        path: 'note123',
+        sharePath: '/share/note123',
+    })
+
+    assert.match(shareFooter, /class="split-action-group"/)
+    assert.match(shareFooter, /class="toolbar-icon-button split-action-main readonly-edit-link"/)
+    assert.match(shareFooter, /class="toolbar-icon-button dropdown-trigger new-note-menu-trigger split-action-dropdown"/)
+    assert.match(shareFooter, /<strong>編輯目前這篇筆記<\/strong>/)
+})

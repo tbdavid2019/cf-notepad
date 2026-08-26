@@ -228,9 +228,48 @@ body { padding: 0; margin: 0; background: #f9f6f0; font-family: -apple-system, B
     color: var(--toolbar-text, #24292f);
     box-shadow: 0 18px 48px rgba(37, 35, 32, 0.24);
 }
-.editor-preference-content h2 { margin: 0 30px 8px 0; font-size: 20px; }
+.editor-preference-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+}
+.editor-preference-lang-group {
+    display: inline-flex;
+    align-items: center;
+    background: color-mix(in srgb, var(--toolbar-bg-hover, #f5f0e8) 85%, transparent);
+    border: 1px solid var(--toolbar-border, #e2dacd);
+    border-radius: 999px;
+    padding: 2px;
+    gap: 2px;
+}
+.editor-pref-lang-btn {
+    border: 0;
+    background: transparent;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--toolbar-muted, #6b6965);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    line-height: 1.2;
+}
+.editor-pref-lang-btn:hover {
+    color: var(--toolbar-text, #24292f);
+}
+.editor-pref-lang-btn.is-active {
+    background: var(--toolbar-bg, #fff);
+    color: var(--toolbar-accent, #c8654b);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
+    background: color-mix(in srgb, var(--toolbar-bg, #1e1e1e) 90%, #fff);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+}
+.editor-preference-content h2 { margin: 0 0 8px 0; font-size: 20px; }
 .editor-preference-content > p { margin: 0 0 18px; color: var(--toolbar-muted, #6b6965); font-size: 14px; line-height: 1.55; }
-.editor-preference-close { position: absolute; top: 12px; right: 14px; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; line-height: 1; }
+.editor-preference-close { border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 22px; line-height: 1; padding: 0 4px; }
 .editor-preference-close:focus-visible { outline: 2px solid var(--toolbar-accent, #c8654b); outline-offset: 2px; }
 .editor-preference-options { display: grid; gap: 10px; margin: 0; padding: 0; border: 0; }
 .editor-preference-grid { grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 12px; }
@@ -793,6 +832,74 @@ html[data-ui-theme="dark"] .share-menu-trigger.is-published {
     font-size: 15px;
     font-weight: 600;
     line-height: 1;
+}
+
+/* Split action capsule for Share mode (Edit + New dropdown) */
+.split-action-group {
+    display: inline-flex;
+    align-items: stretch;
+    background: var(--toolbar-bg);
+    border: 1px solid var(--toolbar-border);
+    border-radius: var(--toolbar-radius);
+    height: var(--toolbar-height);
+    box-sizing: border-box;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+}
+.split-action-group:hover {
+    border-color: var(--toolbar-border-hover, var(--toolbar-accent));
+}
+.split-action-group .split-action-main {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0 9px;
+    height: 100%;
+    border: 0;
+    background: transparent;
+    color: var(--toolbar-text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    border-top-left-radius: calc(var(--toolbar-radius) - 1px);
+    border-bottom-left-radius: calc(var(--toolbar-radius) - 1px);
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+.split-action-group .split-action-main:hover {
+    background: var(--toolbar-bg-hover);
+    color: var(--toolbar-accent);
+}
+.split-action-group .split-action-dropdown {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    padding: 0 7px;
+    height: 100%;
+    border: 0;
+    border-left: 1px solid var(--toolbar-border);
+    background: transparent;
+    color: var(--toolbar-text);
+    cursor: pointer;
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-top-right-radius: calc(var(--toolbar-radius) - 1px);
+    border-bottom-right-radius: calc(var(--toolbar-radius) - 1px);
+    transition: background-color 0.12s ease, color 0.12s ease;
+}
+.split-action-group .split-action-dropdown:hover {
+    background: var(--toolbar-bg-hover);
+    color: var(--toolbar-accent);
+}
+.split-action-group .split-action-dropdown .new-note-plus {
+    font-size: 13px;
+    line-height: 1;
+}
+.split-action-group .split-action-dropdown .toolbar-button-caret {
+    font-size: 10px;
+    opacity: 0.75;
 }
 
 .theme-dropdown .dropdown-menu {

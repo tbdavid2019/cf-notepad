@@ -110,6 +110,15 @@
 - **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；編輯器預設固定為桌面預覽（100% 全寬度），並支援隨時切換左右/上下分割與桌面/手機模式。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
 
+    ┌──────────────────────────────────────┬───────────────────────────────────┬─────────────────────────────────┐
+    │ 1. 操作區 (Publish / Read Actions)   │ 2. 外觀設定區 (Appearance)        │ 3. 系統與開發者資訊區 (Info)    │
+    ├──────────────────────────────────────┼───────────────────────────────────┼─────────────────────────────────┤
+    │ [編輯] [匯出▾] [複製▾] [引用] [公式]   │ [字體: JB/Maple] [語系: 中/En]   │ [ GitHub ]                      │
+    │ [簡報] [書本] [嵌入] [🧭 紀錄]       │ [寬度 ▾] [🎨 主題 ▾] [☀️/🌙 深淺] │ [ 📥 安裝 App ]                 │
+    │                                      │ [👁️ 閱讀次數]                     │ [ ✨ Skill ] [ 📄 API ]         │
+    └──────────────────────────────────────┴───────────────────────────────────┴─────────────────────────────────┘
+
+    
 ### 📚 3. 書本模式使用與製作指南 (Book Mode Guide)
 
 任何包含**章節清單與超連結**的 Markdown 筆記，都能一秒變身為現代化的**線上雙欄電子書**！
@@ -217,9 +226,12 @@
 - **KaTeX 數學公式點擊複製 (7 種格式)**：
   - 點擊分享頁或預覽中的任一 KaTeX 數學公式即刻複製到剪貼簿。
   - 提供專屬設定選單（`fx` 按鈕），支援 7 種格式：自動判斷 (Auto)、LaTeX (含 $)、LaTeX 純文字 (無 $，適合 Desmos/WolframAlpha)、Notion (雙 $)、MathML (貼入 Word 轉為原生方程式)、PNG 圖片、SVG 向量。
-- **Share 模式「最近分享紀錄」與外觀深淺模式直覺分組**：
+- **Share 模式「編輯 / 新增」分割膠囊鈕與外觀深淺模式直覺分組**：
+  - **分割複合膠囊鈕 (Split Action Capsule in Share Mode)**：在 Share 閱讀頁面底欄左側，將「返回編輯」與「＋ 新增」整合成現代化分割膠囊。左側為「`✏️ 編輯`」主動作，右側為「`＋ ▾`」延伸選單（含「編輯目前這篇筆記」、新增 Markdown、新增 Block 與多格式匯入），大幅節省水平排版空間。
   - **最近分享紀錄 (Recent Shares in Share Mode)**：在 Share 閱讀頁面底欄提供「`最近分享紀錄`」按鈕，訪客與作者皆可在閱讀時隨時開啟彈窗，自由在「我分享的」與「我看過的」分頁切換並快速複製網址。
   - **外觀與深淺主題統一歸類 (Appearance Group)**：底欄「深淺模式切換按鈕 (`☀️/🌙`)」歸入「外觀設定區」，與 20 種 Markdown 主題、預覽寬度、字體與語系切換並列；底欄「資訊區」專注於 GitHub、App 安裝、Agent Skill 與 API 開發者文件。
+- **🌐 編輯器偏好選擇彈窗「即時雙語切換」支援 (Interactive En/中 Language Switcher)**：
+  - 在「選擇你的編輯方式 (`EDITOR_PREFERENCE_MODAL`)」彈窗右上角提供「`中 / En`」即時語言切換鈕，外國訪客可一鍵切換英文，標題、說明與卡片即刻轉換，並同步記住語系設定。
 - **Share 模式圈選文字浮動工具列與 AI 原位小卡**：
   - 讀者在分享頁圈選任意文字，即刻彈出流暢的毛玻璃膠囊浮動工具列（`.selection-action-toolbar`）。
   - **📋 複製**：一鍵複製選取內容至剪貼簿。
@@ -567,8 +579,11 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 - **Edit Lock vs View Lock**: Separate Salted MD5 password controls for editing permissions versus reading permissions.
 - **D1 Snapshot History**: Cloudflare D1 automatically backs up content (5-minute cooldown, retains 10 snapshots) for preview and restoration.
 - **Recent Share Links in Share Mode & Appearance Grouping**:
+  - **Split Action Capsule (`.split-action-group`) in Share Mode**: Merges the standalone "Back to edit" and "New note" dropdown into a modern split capsule button on the left of the Share page footer. Left action triggers "Edit" for the current note, while the right dropdown trigger provides quick note creation and multi-format importing.
   - **Recent Shares (`#share-history-btn`) in Share Mode**: Readers and authors can now open the "Recent Share Links" modal directly from the Share page footer, easily toggling between "Created" and "Viewed" tabs to jump to previous notes.
   - **Dark Mode Toggle in Appearance Group**: Re-positioned the UI Dark/Light mode toggle (`☀️/🌙`) into the Appearance footer group alongside themes and font toggles, keeping the Info group cleanly focused on GitHub, App install, Agent Skill, and API docs.
+- **Interactive Language Switcher in Editor Preference Modal**:
+  - Embedded `En / 中` toggle pill buttons in the top-right of the "Choose your editor" dialog (`EDITOR_PREFERENCE_MODAL`). International visitors can switch to English with zero page reloads, instantly updating card descriptions, badges, and action buttons.
 - **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
 - **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`). Features consecutive annotation creation across multiple text passages without reloading, smooth composer auto-scrolling, hover preview cards, touch action sheets, and device HMAC delete tokens.
 - **Stateless Markdown Processing Utilities**:
