@@ -244,6 +244,71 @@ export async function convertMermaidBlocksToSvg(html) {
 }
 
 /**
+ * Normalizes all SVG elements in HTML with explicit, readable print dimensions
+ * preventing them from being shrunk to tiny thumbnails in Takumi-PDF layout.
+ * @param {string} html - Input HTML
+ * @param {number} maxContentWidth - Maximum content width in px (default 520 for A4 portrait, 740 for landscape)
+ * @returns {string} HTML with scaled and dimensioned SVGs
+ */
+export function normalizeAllSvgsInHtml(html, maxContentWidth = 520) {
+    if (!html || !html.includes('<svg')) return html
+
+    return html.replace(/<svg\b[^>]*>[\s\S]*?<\/svg>/gi, (svgMatch) => {
+        const viewBoxMatch = svgMatch.match(/viewBox=["']\s*([-\d.]+)\s+([-\d.]+)\s+([\d.]+)\s+([\d.]+)\s*["']/i)
+
+        let vbWidth = 0
+        let vbHeight = 0
+        if (viewBoxMatch) {
+            vbWidth = parseFloat(viewBoxMatch[3])
+            vbHeight = parseFloat(viewBoxMatch[4])
+        } else {
+            const widthMatch = svgMatch.match(/\bwidth=["']([\d.]+)p?x?["']/i)
+            const heightMatch = svgMatch.match(/\bheight=["']([\d.]+)p?x?["']/i)
+            if (widthMatch) vbWidth = parseFloat(widthMatch[1])
+            if (heightMatch) vbHeight = parseFloat(heightMatch[1])
+        }
+
+        if (vbWidth > 0 && vbHeight > 0) {
+            let targetWidth = vbWidth
+            let targetHeight = vbHeight
+
+            // If diagram is small or narrow (< 380px), scale it up for clear readability on A4
+            if (vbWidth < 380) {
+                const scale = Math.min(380 / vbWidth, 540 / vbHeight)
+                if (scale > 1) {
+                    targetWidth = Math.round(vbWidth * scale)
+                    targetHeight = Math.round(vbHeight * scale)
+                }
+            }
+
+            // If diagram is wider than printable page width, scale down proportionally
+            if (targetWidth > maxContentWidth) {
+                const scale = maxContentWidth / targetWidth
+                targetWidth = Math.round(targetWidth * scale)
+                targetHeight = Math.round(targetHeight * scale)
+            }
+
+            // Clean existing width, height, and style attributes from opening <svg> tag
+            const openTagMatch = svgMatch.match(/<svg\b[^>]*>/i)
+            if (!openTagMatch) return svgMatch
+
+            let cleanOpenTag = openTagMatch[0]
+                .replace(/\sstyle=["'][^"']*["']/i, '')
+                .replace(/\swidth=["'][^"']*["']/i, '')
+                .replace(/\sheight=["'][^"']*["']/i, '')
+
+            cleanOpenTag = cleanOpenTag.replace(
+                /<svg/i,
+                `<svg width="${targetWidth}" height="${targetHeight}" style="width: ${targetWidth}px; height: ${targetHeight}px; max-width: 100%; display: block; margin: 0 auto;"`
+            )
+
+            return svgMatch.replace(openTagMatch[0], cleanOpenTag)
+        }
+        return svgMatch
+    })
+}
+
+/**
  * Renders HTML content directly to a PDF binary buffer (Uint8Array)
  * @param {string} rawHtml - Input HTML content
  * @param {object} options - PDF rendering options
@@ -260,9 +325,13 @@ export async function renderHtmlToPdf(rawHtml = '', options = {}) {
     } = options
 
     // 1. Convert any unrendered Mermaid diagrams to vector SVG
-    const processedHtml = await convertMermaidBlocksToSvg(rawHtml)
+    let processedHtml = await convertMermaidBlocksToSvg(rawHtml)
 
-    // 2. Wrap with styled layout
+    // 2. Normalize and scale all SVG dimensions for high-resolution A4 readability
+    const maxContentWidth = landscape ? 740 : 520
+    processedHtml = normalizeAllSvgsInHtml(processedHtml, maxContentWidth)
+
+    // 3. Wrap with styled layout
     const documentHtml = buildPdfDocumentHtml(processedHtml, { title })
 
     // 3. Parse to Takumi node tree and extract Emojis
