@@ -67,8 +67,7 @@ import {
     normalizeTranscriptionSegments,
     formatTranscriptSegments,
 } from './audio_transcribe.mjs'
-import { AI_FORMAT_SYSTEM_PROMPT, AUDIO_SMART_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildAudioSmartFormatPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
-import { renderMarkdownToPdf, createPdfResponse } from './pdf_service.mjs'
+import { renderMarkdownToPdf, renderHtmlToPdf, createPdfResponse } from './pdf_service.mjs'
 import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import {
     addAnnotationMessage,
@@ -1533,10 +1532,11 @@ router.post('/api/markdown/lint', async (request) => {
     }
 })
 
-// Takumi-PDF Direct PDF Generation Endpoints
+// Direct PDF Generation Endpoints
 async function handleDirectPdfExport(request) {
     try {
         let markdown = ''
+        let html = ''
         let title = 'Document'
         let size = 'a4'
         let landscape = false
@@ -1552,16 +1552,20 @@ async function handleDirectPdfExport(request) {
         if (contentType.includes('application/json')) {
             const body = await request.json().catch(() => ({}))
             markdown = body.markdown ?? body.text ?? body.content ?? ''
+            html = body.html ?? ''
             if (body.title) title = body.title
             if (body.size) size = body.size
             if (body.landscape !== undefined) landscape = Boolean(body.landscape)
             if (body.theme) theme = body.theme
         } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
             markdown = await request.text().catch(() => '')
+        } else if (contentType.includes('text/html')) {
+            html = await request.text().catch(() => '')
         } else if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
             const formData = await request.formData().catch(() => null)
             if (formData) {
                 markdown = formData.get('markdown') || formData.get('text') || formData.get('content') || ''
+                html = formData.get('html') || ''
                 if (formData.get('title')) title = formData.get('title')
                 if (formData.get('size')) size = formData.get('size')
                 if (formData.get('landscape')) landscape = formData.get('landscape') === 'true'
@@ -1569,22 +1573,30 @@ async function handleDirectPdfExport(request) {
             }
         }
 
-        if (!markdown && url.searchParams.get('text')) {
+        if (!markdown && !html && url.searchParams.get('text')) {
             markdown = url.searchParams.get('text')
         }
 
         if (!title || title === 'Document') {
-            title = extractNoteTitle(markdown, 'Document')
+            title = extractNoteTitle(markdown || html, 'Document')
         }
 
         const siteUrl = `${url.protocol}//${url.host}`
-        const pdfBytes = await renderMarkdownToPdf(markdown, {
-            title,
-            size,
-            landscape,
-            theme,
-            siteUrl,
-        })
+        const pdfBytes = html
+            ? await renderHtmlToPdf(html, {
+                title,
+                size,
+                landscape,
+                theme,
+                siteUrl,
+            })
+            : await renderMarkdownToPdf(markdown, {
+                title,
+                size,
+                landscape,
+                theme,
+                siteUrl,
+            })
 
         const filename = `${title.replace(/[\/\\:*?"<>|]/g, '_') || 'document'}.pdf`
         return createPdfResponse(pdfBytes, filename)

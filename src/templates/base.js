@@ -5326,6 +5326,7 @@ themeCss + '\\n' +
                 }
                 try {
                     const mdContent = getExportMarkdown();
+                    const exportHtml = getExportHtmlContent();
                     const filename = getExportFilename('pdf');
                     const title = filename.replace(/\\.pdf$/, '') || 'Document';
 
@@ -5334,6 +5335,7 @@ themeCss + '\\n' +
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             markdown: mdContent,
+                            html: exportHtml,
                             title: title,
                             theme: (window.APP_STATE && window.APP_STATE.theme) || 'claude-canvas'
                         })

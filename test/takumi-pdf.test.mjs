@@ -79,3 +79,12 @@ test('mcp_server defines and handles export_pdf tool', () => {
     assert.match(mcpSource, /case 'export_pdf':/)
     assert.match(mcpSource, /renderMarkdownToPdf/)
 })
+
+test('pdf_service renders markdown with Mermaid diagram into PDF', async () => {
+    const md = '# 架構圖\n\n```mermaid\ngraph TD\n  A[用戶] --> B[系統]\n```\n'
+    const pdfBytes = await renderMarkdownToPdf(md, { title: 'Mermaid 架構測試' })
+    assert.ok(pdfBytes instanceof Uint8Array)
+    assert.ok(pdfBytes.length > 5000)
+    const header = String.fromCharCode(...pdfBytes.slice(0, 5))
+    assert.equal(header, '%PDF-')
+})

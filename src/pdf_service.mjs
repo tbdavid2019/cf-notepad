@@ -169,27 +169,101 @@ export function buildPdfDocumentHtml(rawHtml, meta = {}) {
 }
 
 /**
- * Renders Markdown text to a PDF binary buffer (Uint8Array)
- * @param {string} markdown - Input Markdown content
+ * Automatically converts Mermaid code blocks in HTML to vector SVG elements
+ * @param {string} html - HTML string
+ * @returns {Promise<string>} HTML with embedded vector SVG diagrams
+ */
+export async function convertMermaidBlocksToSvg(html) {
+    if (!html || !html.includes('mermaid')) return html
+
+    // 1. Match <pre><code class="language-mermaid">...</code></pre>
+    const codeRegex = /<pre><code class="language-mermaid">([\s\S]*?)<\/code><\/pre>/gi
+    const codeMatches = [...html.matchAll(codeRegex)]
+
+    let resultHtml = html
+    for (const match of codeMatches) {
+        const fullMatch = match[0]
+        const rawCode = match[1]
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .trim()
+
+        if (!rawCode) continue
+
+        try {
+            const obj = { code: rawCode, mermaid: { theme: 'default' } }
+            const b64 = Buffer.from(JSON.stringify(obj)).toString('base64')
+            const resp = await fetch(`https://mermaid.ink/svg/${b64}`, { signal: AbortSignal.timeout(4000) })
+            if (resp.ok) {
+                const svg = await resp.text()
+                if (svg && svg.includes('<svg')) {
+                    const wrappedSvg = `<div class="diagram-mermaid-render" style="display: flex; justify-content: center; margin: 18px 0; break-inside: avoid;">${svg}</div>`
+                    resultHtml = resultHtml.replace(fullMatch, wrappedSvg)
+                }
+            }
+        } catch (e) {
+            console.warn('[pdf_service] Mermaid diagram rendering failed:', e.message)
+        }
+    }
+
+    // 2. Match un-rendered diagram-mermaid-wrapper / diagram-source
+    const wrapperRegex = /<div class="diagram-block-wrapper diagram-mermaid-wrapper">[\s\S]*?<div class="diagram-mermaid-container diagram-source"[^>]*>([\s\S]*?)<\/div>[\s\S]*?<div class="diagram-mermaid-render"[^>]*><\/div><\/div>/gi
+    const wrapperMatches = [...resultHtml.matchAll(wrapperRegex)]
+    for (const match of wrapperMatches) {
+        const fullMatch = match[0]
+        const rawCode = match[1]
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&')
+            .replace(/&quot;/g, '"')
+            .replace(/&#39;/g, "'")
+            .trim()
+
+        if (!rawCode) continue
+
+        try {
+            const obj = { code: rawCode, mermaid: { theme: 'default' } }
+            const b64 = Buffer.from(JSON.stringify(obj)).toString('base64')
+            const resp = await fetch(`https://mermaid.ink/svg/${b64}`, { signal: AbortSignal.timeout(4000) })
+            if (resp.ok) {
+                const svg = await resp.text()
+                if (svg && svg.includes('<svg')) {
+                    const wrappedSvg = `<div class="diagram-mermaid-render" style="display: flex; justify-content: center; margin: 18px 0; break-inside: avoid;">${svg}</div>`
+                    resultHtml = resultHtml.replace(fullMatch, wrappedSvg)
+                }
+            }
+        } catch (e) {
+            console.warn('[pdf_service] Mermaid wrapper diagram rendering failed:', e.message)
+        }
+    }
+
+    return resultHtml
+}
+
+/**
+ * Renders HTML content directly to a PDF binary buffer (Uint8Array)
+ * @param {string} rawHtml - Input HTML content
  * @param {object} options - PDF rendering options
  * @returns {Promise<Uint8Array>} PDF binary bytes
  */
-export async function renderMarkdownToPdf(markdown = '', options = {}) {
+export async function renderHtmlToPdf(rawHtml = '', options = {}) {
     const {
         title = 'Document',
         author = 'David888 Wiki',
         size = 'a4',
         margin = { top: 40, right: 36, bottom: 40, left: 36 },
         landscape = false,
-        theme = 'claude-canvas',
         siteUrl = 'https://wiki.david888.com',
     } = options
 
-    // 1. Render Markdown to HTML string
-    const rawHtml = renderMarkdownToHtml(markdown, { theme, fullHtml: false, title })
+    // 1. Convert any unrendered Mermaid diagrams to vector SVG
+    const processedHtml = await convertMermaidBlocksToSvg(rawHtml)
 
     // 2. Wrap with styled layout
-    const documentHtml = buildPdfDocumentHtml(rawHtml, { title })
+    const documentHtml = buildPdfDocumentHtml(processedHtml, { title })
 
     // 3. Parse to Takumi node tree and extract Emojis
     const { node } = fromHtml(documentHtml)
@@ -233,6 +307,18 @@ export async function renderMarkdownToPdf(markdown = '', options = {}) {
     })
 
     return pdfBytes
+}
+
+/**
+ * Renders Markdown text to a PDF binary buffer (Uint8Array)
+ * @param {string} markdown - Input Markdown content
+ * @param {object} options - PDF rendering options
+ * @returns {Promise<Uint8Array>} PDF binary bytes
+ */
+export async function renderMarkdownToPdf(markdown = '', options = {}) {
+    const { theme = 'claude-canvas', title = 'Document' } = options
+    const rawHtml = renderMarkdownToHtml(markdown, { theme, fullHtml: false, title })
+    return renderHtmlToPdf(rawHtml, options)
 }
 
 /**

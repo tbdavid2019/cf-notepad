@@ -12,10 +12,12 @@
     - 內建 `twemoji` 向量圖示轉譯，文章中所有 Emoji（🎉🚀✅ 等）皆能清晰向量化輸出，零亂碼零破圖。
   - **智慧頁首頁尾與分頁控制 (Headers, Footers & Page Counters)**：
     - 自動注入文檔標題與品牌頁首，以及包含頁碼計數器（`<span class="pageNumber"></span> / <span class="totalPages"></span>`）的頁尾。
-    - 程式碼區塊（`<pre>`）與表格（`<table>`）預設啟用 `break-inside: avoid`，避免跨頁截斷。
+  - **Mermaid 向量架構圖與流程圖完美轉譯 (Mermaid Diagram Vector Rendering via SVG)**：
+    - **雙軌向量編譯**：編輯器匯出時主動擷取客戶端渲染之向量 Mermaid `<svg>`；若為無狀態 API / Headless / 後端調用，系統自動透過 `convertMermaidBlocksToSvg` 異步將 Mermaid 代碼區塊（`<pre><code class="language-mermaid">`）轉譯為原生向量 `<svg>` 嵌入 PDF，徹底解決 Mermaid 只顯示原始文字碼的問題。
+    - **向量圖形與排版保護**：Mermaid 向量圖形居中展示，並預設套用 `break-inside: avoid` 防止跨頁截斷。
   - **電子書手冊 (Book Mode) 全書 PDF 編譯**：Book Mode (`/share/:shareId/book`) 匯出選單支援直接將全書所有章節編譯為一本完整的 PDF 電子書手冊。
   - **REST API 與 MCP Server 工具端點支援**：
-    - `POST /api/pdf/export` 與 `POST /api/markdown/pdf`：無狀態 Markdown 轉 PDF 導出端點。
+    - `POST /api/pdf/export` 與 `POST /api/markdown/pdf`：無狀態 Markdown / HTML 轉 PDF 導出端點（支援 `html` 與 `markdown` 雙模式）。
     - `GET /:path/export/pdf` 與 `GET /share/:shareId/export/pdf`：筆記與分享連結專屬直接下載端點（支援 View Lock 密碼驗證）。
     - MCP Server 工具 `export_pdf`：AI Agent 可直接調用產出 PDF 檔案與下載連結。
 
