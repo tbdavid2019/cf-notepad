@@ -243,7 +243,12 @@
   - **桌機 Hover 預覽**：滑鼠懸停劃線段落即時彈出迷你浮層（Tooltip），快速瀏覽最新留言與作者。
   - **手機 Tap 喚起**：觸控輕點劃線段落彈出原位小卡或一鍵拉起底部抽屜討論區，並自動滾動與閃爍聚焦對應卡片。
   - **🗑️ 留言自行刪除與作者管理**：訪客可自行刪除自己在此裝置發布的留言（HMAC Token 鑑權，無法刪除他人留言）；文章擁有者（持有編輯權限）具備全域管理刪除權限。
-- **PDF 匯出與列印優化**：`@media print` 徹底重置頁面與表格邊界，自動隱藏所有工具列，確保表格文字完全不被裁剪。
+- **📄 Takumi-PDF 原生向量 PDF 直接導出引擎 (Native Vector PDF Export)**：
+  - **Chromium-Free 毫秒級向量編譯**：整合基於 Rust/WebAssembly 的 `takumi-pdf`，免啟動 Chromium 即可直接在邊緣端將 Markdown 編譯為高解析度向量 PDF。
+  - **一鍵直接下載**：編輯模式匯出選單提供「🚀 直接導出 PDF (.pdf)」，點擊直接下載完整檔案，不再彈出繁瑣的瀏覽器列印視窗；同時保留「🖨️ 瀏覽器列印預覽 (Print)」雙軌選項。
+  - **自動字型子集與 Emoji**：自動按需下載 Google Fonts (`Noto Sans TC`, `JetBrains Mono`, `Inter`) 字型子集，完美支援繁體中文、日韓文與 `twemoji` 向量圖示，零破圖零亂碼。
+  - **全書 PDF 編譯**：電子書手冊模式 (`/share/:shareId/book`) 支援一鍵將全書所有章節合併編譯為完整 PDF 電子書。
+  - **REST API 與 MCP 端點**：提供 `POST /api/pdf/export`、`GET /:path/export/pdf`、`GET /share/:shareId/export/pdf` 與 MCP `export_pdf` 工具。
 - **PWA 獨立應用、Web Share Target、跨裝置檔案關聯、衝突比對與全功能離線工作站 (PWA Offline Workstation)**：
   - **可安裝與桌面無縫整合 (Standalone & Window Controls Overlay)**：支援 macOS、Windows、iOS、Android 瀏覽器安裝為獨立 PWA 應用程式，桌面版支援 Window Controls Overlay 沉浸式頂部整合。
   - **跨裝置與 Android 檔案關聯 (File Handling & WebAPK Intent)**：作業系統（macOS Finder、Windows 檔案總管）或 Android 檔案管理員中點擊 `.md` / `.markdown` / `.txt` 檔案，可直接以 `wiki.david888.com` 開啟並載入編輯！
@@ -598,7 +603,12 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
   - `POST /api/markdown/parse`: HTML / Web URL to clean Markdown.
   - `POST /api/markdown/extract`: Extract plain text, heading hierarchy, links, and word/reading-time statistics.
   - `POST /api/markdown/lint`: Validate and auto-fix unclosed code fences, missing heading spaces, etc.
-- **PDF Export & Print Optimization**: `@media print` rules hide UI overlays and reset table margins to prevent text clipping.
+- **📄 Takumi-PDF Native Vector PDF Export Engine**:
+  - **Chromium-Free Vector Rendering**: Integrated Rust/WebAssembly-powered `takumi-pdf` to compile Markdown directly into crisp, selectable, searchable paged vector PDFs on Cloudflare Workers in milliseconds without headless browsers.
+  - **Direct Download Without Print Dialog**: The export menu provides "🚀 Direct Export PDF (.pdf)" to download `.pdf` files instantly without triggering system print dialogs, while keeping "🖨️ Browser Print Preview" as an alternative.
+  - **Font Subsetting & Emoji Support**: Automatic Google Fonts (`Noto Sans TC`, `JetBrains Mono`, `Inter`) subsetting and `twemoji` vector graphics prevent missing glyphs across Traditional Chinese, CJK, and emojis.
+  - **Book Mode Full-Volume Compilation**: eBook Mode (`/share/:shareId/book`) supports one-click compilation of all chapters into a unified PDF eBook manual.
+  - **REST API & MCP Tool**: Endpoints `POST /api/pdf/export`, `GET /:path/export/pdf`, `GET /share/:shareId/export/pdf`, and MCP tool `export_pdf`.
 - **PWA Application, Web Share Target, Multi-Device File Handling, Conflict Diff & Offline Workstation**:
   - **Standalone & Window Controls Overlay**: Installs seamlessly on macOS, Windows, iOS, and Android; desktop versions support Window Controls Overlay for titlebar integration.
   - **Multi-Device & Android File Association (File Handling & WebAPK Intent)**: Click or open `.md` / `.markdown` / `.txt` files directly in macOS Finder, Windows Explorer, or Android file managers to launch and edit in `wiki.david888.com`.

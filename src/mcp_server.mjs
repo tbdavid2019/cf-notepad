@@ -1,6 +1,7 @@
 import dayjs from 'dayjs'
 import { driverQueryNote, driverPutNote, driverQueryShare, driverPutShare } from './storage_driver.mjs'
 import { renderMarkdownToHtml, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
+import { renderMarkdownToPdf } from './pdf_service.mjs'
 import { getNoteStatsDb, getNoteViewCount } from './note_stats.mjs'
 import { resolvePasswordRole } from './password_policy.mjs'
 import { DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant.js'
@@ -165,6 +166,37 @@ export const MCP_TOOLS_DEFINITIONS = [
                 },
             },
             required: ['path'],
+        },
+    },
+    {
+        name: 'export_pdf',
+        description: 'Render Markdown text into a downloadable paged vector PDF via Takumi-PDF without Chromium. Returns document metadata and download endpoint.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                markdown: {
+                    type: 'string',
+                    description: 'The markdown content to render into PDF.',
+                },
+                title: {
+                    type: 'string',
+                    description: 'Optional document title for headers and metadata.',
+                },
+                size: {
+                    type: 'string',
+                    enum: ['a4', 'letter', 'a5', 'b5'],
+                    description: 'Page size (default: "a4").',
+                },
+                landscape: {
+                    type: 'boolean',
+                    description: 'Whether to render in landscape mode (default: false).',
+                },
+                theme: {
+                    type: 'string',
+                    description: 'Optional visual theme (e.g. "claude-canvas", "retro", "professional").',
+                },
+            },
+            required: ['markdown'],
         },
     },
     {
@@ -509,6 +541,39 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             return {
                 isError: false,
                 text: JSON.stringify({ path, uniqueViews: viewCount }, null, 2),
+            }
+        }
+
+        case 'export_pdf': {
+            const markdown = typeof args.markdown === 'string' ? args.markdown : ''
+            if (!markdown) {
+                return { isError: true, text: 'Error: "markdown" parameter is required.' }
+            }
+            const title = args.title || 'Document'
+            const size = args.size || 'a4'
+            const landscape = Boolean(args.landscape)
+            const theme = args.theme || 'claude-canvas'
+
+            const pdfBytes = await renderMarkdownToPdf(markdown, {
+                title,
+                size,
+                landscape,
+                theme,
+                siteUrl: origin,
+            })
+
+            const downloadUrl = `${origin}/api/pdf/export?title=${encodeURIComponent(title)}&size=${encodeURIComponent(size)}`
+            return {
+                isError: false,
+                text: JSON.stringify({
+                    success: true,
+                    title,
+                    size,
+                    landscape,
+                    byteLength: pdfBytes.length,
+                    downloadEndpoint: downloadUrl,
+                    message: 'Vector PDF rendered successfully with Takumi-PDF engine.',
+                }, null, 2),
             }
         }
 

@@ -280,15 +280,15 @@ export const EXPORT_DROPDOWN_MENU = (lang, { includeMarkdown = true } = {}) => {
                     <button type="button" class="dropdown-item dropdown-item-rich" id="export-pdf-btn" role="menuitem">
                         ${SVG_ICONS.pdf}
                         <span class="dropdown-item-copy">
-                            <strong>${isZh ? '另存 PDF / 列印預覽' : 'Save as PDF / Print Preview'}</strong>
-                            <small>${isZh ? '最佳化 A4 列印排版與 PDF 輸出' : 'Optimized A4 print & PDF export'}</small>
+                            <strong>${isZh ? '直接導出 PDF (.pdf)' : 'Direct Export PDF (.pdf)'}</strong>
+                            <small>${isZh ? 'Takumi-PDF 向量排版直接下載免對話框' : 'Native vector PDF download without print dialog'}</small>
                         </span>
                     </button>
-                    <button type="button" class="dropdown-item dropdown-item-rich" id="print-preview-btn" role="menuitem" style="display:none;">
+                    <button type="button" class="dropdown-item dropdown-item-rich" id="print-preview-btn" role="menuitem">
                         ${SVG_ICONS.pdf}
                         <span class="dropdown-item-copy">
-                            <strong>${isZh ? '列印預覽 (Print)' : 'Print Preview'}</strong>
-                            <small>${isZh ? '呼叫系統列印對話框' : 'Open system print dialog'}</small>
+                            <strong>${isZh ? '瀏覽器列印預覽 (Print)' : 'Browser Print Preview'}</strong>
+                            <small>${isZh ? '呼叫系統實體列印對話框' : 'Open system print dialog'}</small>
                         </span>
                     </button>
                 </div>

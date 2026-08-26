@@ -68,6 +68,7 @@ import {
     formatTranscriptSegments,
 } from './audio_transcribe.mjs'
 import { AI_FORMAT_SYSTEM_PROMPT, AUDIO_SMART_FORMAT_SYSTEM_PROMPT, buildAiUserPrompt, buildAudioSmartFormatPrompt, buildTranslationSystemPrompt, normalizeTranslationTargetLanguage, preservesFormatLanguage } from './ai_assistant_policy.mjs'
+import { renderMarkdownToPdf, createPdfResponse } from './pdf_service.mjs'
 import { getNoteStatsDb, getNoteViewCount, hashViewDeviceId, recordUniqueNoteView, resolveViewDeviceId, shouldCountShareView } from './note_stats.mjs'
 import {
     addAnnotationMessage,
@@ -1532,6 +1533,71 @@ router.post('/api/markdown/lint', async (request) => {
     }
 })
 
+// Takumi-PDF Direct PDF Generation Endpoints
+async function handleDirectPdfExport(request) {
+    try {
+        let markdown = ''
+        let title = 'Document'
+        let size = 'a4'
+        let landscape = false
+        let theme = 'claude-canvas'
+
+        const url = new URL(request.url)
+        if (url.searchParams.get('title')) title = url.searchParams.get('title')
+        if (url.searchParams.get('size')) size = url.searchParams.get('size')
+        if (url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1') landscape = true
+        if (url.searchParams.get('theme')) theme = url.searchParams.get('theme')
+
+        const contentType = (request.headers.get('content-type') || '').toLowerCase()
+        if (contentType.includes('application/json')) {
+            const body = await request.json().catch(() => ({}))
+            markdown = body.markdown ?? body.text ?? body.content ?? ''
+            if (body.title) title = body.title
+            if (body.size) size = body.size
+            if (body.landscape !== undefined) landscape = Boolean(body.landscape)
+            if (body.theme) theme = body.theme
+        } else if (contentType.includes('text/markdown') || contentType.includes('text/plain')) {
+            markdown = await request.text().catch(() => '')
+        } else if (contentType.includes('multipart/form-data') || contentType.includes('application/x-www-form-urlencoded')) {
+            const formData = await request.formData().catch(() => null)
+            if (formData) {
+                markdown = formData.get('markdown') || formData.get('text') || formData.get('content') || ''
+                if (formData.get('title')) title = formData.get('title')
+                if (formData.get('size')) size = formData.get('size')
+                if (formData.get('landscape')) landscape = formData.get('landscape') === 'true'
+                if (formData.get('theme')) theme = formData.get('theme')
+            }
+        }
+
+        if (!markdown && url.searchParams.get('text')) {
+            markdown = url.searchParams.get('text')
+        }
+
+        if (!title || title === 'Document') {
+            title = extractNoteTitle(markdown, 'Document')
+        }
+
+        const siteUrl = `${url.protocol}//${url.host}`
+        const pdfBytes = await renderMarkdownToPdf(markdown, {
+            title,
+            size,
+            landscape,
+            theme,
+            siteUrl,
+        })
+
+        const filename = `${title.replace(/[\/\\:*?"<>|]/g, '_') || 'document'}.pdf`
+        return createPdfResponse(pdfBytes, filename)
+    } catch (e) {
+        console.error('PDF Export Error:', e)
+        return returnJSON(500, `PDF Generation Error: ${e.message}`)
+    }
+}
+
+router.post('/api/pdf/export', async (request) => handleDirectPdfExport(request))
+router.post('/api/markdown/pdf', async (request) => handleDirectPdfExport(request))
+router.get('/api/pdf/export', async (request) => handleDirectPdfExport(request))
+
 router.post('/api/new-note', async (request) => {
     try {
         const body = await request.json().catch(() => ({}))
@@ -1754,6 +1820,61 @@ router.get('/share/:shareId/book', async (request, execution) => {
 router.head('/share/:shareId/book', async (request, execution) => {
     return renderSharePage(request, false, execution, true)
 })
+
+async function handleSharePdfExport(request) {
+    try {
+        const { shareId } = request.params
+        const path = await driverQueryShare(shareId)
+        if (!path) return returnJSON(404, 'Share not found', { status: 404 })
+
+        const { value, metadata } = await queryNote(path)
+        if (metadata.share !== true) return returnJSON(404, 'Share not found', { status: 404 })
+
+        const url = new URL(request.url)
+        if (metadata.vpw) {
+            const queryPw = url.searchParams.get('pw')
+            const authHeader = request.headers.get('Authorization')
+            const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+            const { valid } = await checkAuth(cookie, path)
+
+            const providedPw = queryPw || headerPw
+            const hasViewAccess = valid || (providedPw && await passwordMatches(providedPw, metadata.vpw))
+            if (!hasViewAccess) {
+                return returnJSON(401, 'Unauthorized: Share view password required', { status: 401 })
+            }
+        }
+
+        let markdown = value || ''
+        if (resolveEditorFormat(metadata) === 'block') {
+            const doc = parseBlockDocument(value)
+            markdown = blockToMarkdown(doc)
+        }
+
+        const title = extractNoteTitle(markdown, path)
+        const size = url.searchParams.get('size') || 'a4'
+        const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
+        const theme = metadata.theme || 'claude-canvas'
+        const siteUrl = `${url.protocol}//${url.host}`
+
+        const pdfBytes = await renderMarkdownToPdf(markdown, {
+            title,
+            size,
+            landscape,
+            theme,
+            siteUrl,
+        })
+
+        const filename = `${title.replace(/[\/\\:*?"<>|]/g, '_') || shareId}.pdf`
+        return createPdfResponse(pdfBytes, filename)
+    } catch (e) {
+        console.error('Share PDF Export Error:', e)
+        return returnJSON(500, `Share PDF Export Error: ${e.message}`)
+    }
+}
+
+router.get('/share/:shareId/export/pdf', async (request) => handleSharePdfExport(request))
+router.get('/api/shares/:shareId/pdf', async (request) => handleSharePdfExport(request))
 
 router.get('/api/shares/:shareId/annotations', async request => {
     const { shareId } = request.params
@@ -2469,6 +2590,64 @@ router.get('/api/:path', async (request) => {
         }
     })
 })
+
+async function handleNotePdfExport(request) {
+    try {
+        const { path } = request.params
+        const { value, metadata } = await queryNote(path)
+        if (!value && Object.keys(metadata || {}).length === 0) {
+            return returnJSON(404, 'Note not found', { status: 404 })
+        }
+
+        const url = new URL(request.url)
+        if (metadata.pw || metadata.vpw) {
+            const queryPw = url.searchParams.get('pw')
+            const authHeader = request.headers.get('Authorization')
+            const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+            const { valid } = await checkAuth(cookie, path)
+
+            const providedPw = queryPw || headerPw
+            const hasViewAccess = valid || (providedPw && (
+                (metadata.vpw && await passwordMatches(providedPw, metadata.vpw)) ||
+                (metadata.pw && await passwordMatches(providedPw, metadata.pw))
+            ))
+
+            if (!hasViewAccess) {
+                return returnJSON(401, 'Unauthorized: Password required to export PDF', { status: 401 })
+            }
+        }
+
+        let markdown = value || ''
+        if (resolveEditorFormat(metadata) === 'block') {
+            const doc = parseBlockDocument(value)
+            markdown = blockToMarkdown(doc)
+        }
+
+        const title = extractNoteTitle(markdown, path)
+        const size = url.searchParams.get('size') || 'a4'
+        const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
+        const theme = metadata.theme || 'claude-canvas'
+        const siteUrl = `${url.protocol}//${url.host}`
+
+        const pdfBytes = await renderMarkdownToPdf(markdown, {
+            title,
+            size,
+            landscape,
+            theme,
+            siteUrl,
+        })
+
+        const filename = `${title.replace(/[\/\\:*?"<>|]/g, '_') || path}.pdf`
+        return createPdfResponse(pdfBytes, filename)
+    } catch (e) {
+        console.error('Note PDF Export Error:', e)
+        return returnJSON(500, `Note PDF Export Error: ${e.message}`)
+    }
+}
+
+router.get('/:path/export/pdf', async (request) => handleNotePdfExport(request))
+router.get('/api/:path/pdf', async (request) => handleNotePdfExport(request))
 
 router.post('/api/upload', async (request) => {
     if (!getEnableR2()) return returnJSON(403, 'R2 Upload Disabled')

@@ -2,6 +2,23 @@
 
 ## [2026-08-26]
 
+- **📄 Takumi-PDF 原生向量 PDF 直接導出引擎 (Native Vector PDF Export via Takumi-PDF WebAssembly)**：
+  - **Chromium-Free 原生向量排版**：全面整合 Rust/Wasm 驅動的 `takumi-pdf` 向量渲染引擎，無須啟動肥大耗能的 Chromium / Puppeteer，在 Cloudflare Workers 邊緣運算環境即可以毫秒級高速將 Markdown/HTML 直接編譯為高解析度、可全選複製 (Selectable & Searchable) 的多頁向量 PDF。
+  - **一鍵直接下載免預覽列印 (Direct Download without Print Dialog)**：
+    - 編輯模式匯出選單中，原先需跳出瀏覽器列印視窗的「另存 PDF」正式升級為「🚀 直接導出 PDF (.pdf)」，點擊直接串流下載 `.pdf` 檔案。
+    - 保留「🖨️ 瀏覽器列印預覽 (Print)」作為雙軌備援選項，滿足實體紙本列印需求。
+  - **自動字型子集與 Emoji 支援 (Google Fonts Subset & Twemoji)**：
+    - 整合 `@takumi-rs/helpers` 自動載入 `Noto Sans TC`（繁體中文）、`JetBrains Mono`（程式碼等寬字型）與 `Inter` 字型子集，完美支援繁簡中文、日韓文及特殊符號。
+    - 內建 `twemoji` 向量圖示轉譯，文章中所有 Emoji（🎉🚀✅ 等）皆能清晰向量化輸出，零亂碼零破圖。
+  - **智慧頁首頁尾與分頁控制 (Headers, Footers & Page Counters)**：
+    - 自動注入文檔標題與品牌頁首，以及包含頁碼計數器（`<span class="pageNumber"></span> / <span class="totalPages"></span>`）的頁尾。
+    - 程式碼區塊（`<pre>`）與表格（`<table>`）預設啟用 `break-inside: avoid`，避免跨頁截斷。
+  - **電子書手冊 (Book Mode) 全書 PDF 編譯**：Book Mode (`/share/:shareId/book`) 匯出選單支援直接將全書所有章節編譯為一本完整的 PDF 電子書手冊。
+  - **REST API 與 MCP Server 工具端點支援**：
+    - `POST /api/pdf/export` 與 `POST /api/markdown/pdf`：無狀態 Markdown 轉 PDF 導出端點。
+    - `GET /:path/export/pdf` 與 `GET /share/:shareId/export/pdf`：筆記與分享連結專屬直接下載端點（支援 View Lock 密碼驗證）。
+    - MCP Server 工具 `export_pdf`：AI Agent 可直接調用產出 PDF 檔案與下載連結。
+
 - **🎙️ 錄音即時狀態提醒懸浮膠囊 (Dynamic Island Recording HUD) 旗艦視覺重構 ＆ 頂部工具列極簡淨化**：
   - **Dynamic Island 旗艦懸浮膠囊 (`.editor-recording-hud`)**：
     - 採用現代毛玻璃（`backdrop-filter: blur(20px) saturate(180%)`）與動態島微互動設計，錄音時從頂部優雅滑下。

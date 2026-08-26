@@ -30,12 +30,14 @@
     "@mantine/core": "^9.5.1",
     "@mantine/hooks": "^9.5.1",
     "@mantine/utils": "^6.0.22",
+    "@takumi-rs/helpers": "^2.12.0",
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",
     "cookie": "^0.5.0",
     "dayjs": "^1.11.2",
     "itty-router": "^2.6.1",
     "jsdom": "^29.1.1",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "takumi-pdf": "^0.11.3"
   }
 }

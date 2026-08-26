@@ -5316,9 +5316,48 @@ themeCss + '\\n' +
                 });
             }
 
-            // 6. Print & Save as PDF
+            // 6. Direct Takumi-PDF Vector Export & Browser Print Preview
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const printPreviewBtn = document.getElementById('print-preview-btn');
+
+            const handleDirectPdfDownload = async () => {
+                if (typeof window.showToast === 'function') {
+                    window.showToast(isZh ? '🚀 正在使用 Takumi-PDF 向量引擎產生 PDF...' : '🚀 Generating vector PDF with Takumi-PDF...');
+                }
+                try {
+                    const mdContent = getMarkdownContent();
+                    const title = getExportFilenameTitle(mdContent) || 'Document';
+                    const filename = title + '.pdf';
+
+                    const resp = await fetch('/api/pdf/export', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            markdown: mdContent,
+                            title: title,
+                            theme: (window.APP_STATE && window.APP_STATE.theme) || 'claude-canvas'
+                        })
+                    });
+
+                    if (!resp.ok) {
+                        const errJson = await resp.json().catch(() => ({}));
+                        throw new Error(errJson.msg || ('HTTP ' + resp.status));
+                    }
+
+                    const pdfBlob = await resp.blob();
+                    triggerDownload(pdfBlob, filename);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? '✅ PDF 已成功直接下載！' : '✅ PDF downloaded successfully!');
+                    }
+                } catch (err) {
+                    console.error('Takumi-PDF Export failed, falling back to print dialog:', err);
+                    if (typeof window.showToast === 'function') {
+                        window.showToast(isZh ? '⚠️ 線上引擎暫不可用，切換為瀏覽器列印...' : '⚠️ Online engine unavailable, opening print dialog...');
+                    }
+                    handlePrint();
+                }
+            };
+
             const handlePrint = () => {
                 const printContent = document.createElement('div');
                 printContent.className = 'print-export-content markdown-body';
@@ -5334,7 +5373,8 @@ themeCss + '\\n' +
                 window.addEventListener('afterprint', cleanup, { once: true });
                 window.print();
             };
-            if (exportPdfBtn) exportPdfBtn.addEventListener('click', handlePrint);
+
+            if (exportPdfBtn) exportPdfBtn.addEventListener('click', handleDirectPdfDownload);
             if (printPreviewBtn) printPreviewBtn.addEventListener('click', handlePrint);
 
             // 7. Image Export & Copy Image (html2canvas with offscreen sandbox)
@@ -7139,8 +7179,61 @@ themeCss + '\\n' +
             async function exportPdfPrint() {
                 if (exportMenu) exportMenu.classList.remove('show');
                 if (typeof showToast === 'function') {
-                    showToast(isZh ? '⏳ 正在準備列印排版...' : '⏳ Preparing Print Layout...');
+                    showToast(isZh ? '🚀 正在使用 Takumi-PDF 向量引擎編譯整本電子書 PDF...' : '🚀 Compiling eBook vector PDF with Takumi-PDF...');
                 }
+
+                try {
+                    var combinedMd = '# ' + bookData.title + '\\n\\n' + (bookData.summary ? '> ' + bookData.summary + '\\n\\n' : '');
+                    for (var i = 0; i < bookData.chapters.length; i++) {
+                        var ch = bookData.chapters[i];
+                        var chUrl = (ch.url || '').replace(new RegExp('\\\\/book\\\\/?(\\\\?.*)?$'), '$1').replace(new RegExp('\\\\/book\\\\/?$'), '');
+                        try {
+                            var resp = await fetch(chUrl, { headers: { 'Accept': 'text/markdown' } });
+                            if (resp.ok) {
+                                var mdText = await resp.text();
+                                combinedMd += '\\n\\n---\\n\\n# ' + ch.title + '\\n\\n' + mdText + '\\n';
+                            } else {
+                                combinedMd += '\\n\\n---\\n\\n# ' + ch.title + '\\n\\n*(' + ch.title + ')*\\n';
+                            }
+                        } catch(e) {
+                            combinedMd += '\\n\\n---\\n\\n# ' + ch.title + '\\n\\n*(' + ch.title + ')*\\n';
+                        }
+                    }
+
+                    var pdfResp = await fetch('/api/pdf/export', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            markdown: combinedMd,
+                            title: bookData.title,
+                            theme: 'claude-canvas'
+                        })
+                    });
+
+                    if (!pdfResp.ok) {
+                        throw new Error('Takumi-PDF server returned ' + pdfResp.status);
+                    }
+
+                    var pdfBlob = await pdfResp.blob();
+                    var blobUrl = URL.createObjectURL(pdfBlob);
+                    var a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = (bookData.title || 'eBook').replace(/[/\\\\:*?"<>|]/g, '_') + '.pdf';
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(function() { a.remove(); URL.revokeObjectURL(blobUrl); }, 2000);
+
+                    if (typeof showToast === 'function') {
+                        showToast(isZh ? '✅ 電子書 PDF 已成功直接下載！' : '✅ eBook PDF downloaded successfully!');
+                    }
+                    return;
+                } catch(pdfErr) {
+                    console.warn('Direct Takumi-PDF eBook export failed, falling back to print dialog:', pdfErr);
+                    if (typeof showToast === 'function') {
+                        showToast(isZh ? '⚠️ 向量編譯未完成，切換至瀏覽器列印排版...' : '⚠️ Opening browser print layout fallback...');
+                    }
+                }
+
                 var printContainer = document.getElementById('book-print-container');
                 if (!printContainer) {
                     printContainer = document.createElement('div');
