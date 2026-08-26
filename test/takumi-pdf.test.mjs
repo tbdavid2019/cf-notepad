@@ -56,7 +56,7 @@ test('index.js registers Takumi-PDF routes for direct, note, and share exports',
 test('base.js exports direct vector PDF via /api/pdf/export with print preview fallback', () => {
     assert.match(baseSource, /handleDirectPdfDownload/)
     assert.match(baseSource, /\/api\/pdf\/export/)
-    assert.match(baseSource, /Takumi-PDF/)
+    assert.match(baseSource, /getExportMarkdown/)
     assert.match(baseSource, /exportPdfBtn\.addEventListener\('click', handleDirectPdfDownload\)/)
 })
 

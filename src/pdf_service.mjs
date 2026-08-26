@@ -227,7 +227,7 @@ export async function renderMarkdownToPdf(markdown = '', options = {}) {
         metadata: {
             title,
             authors: [author],
-            creator: 'David888 Wiki (takumi-pdf)',
+            creator: 'David888 Wiki',
             creationDate: new Date().toISOString().split('.')[0] + 'Z',
         },
     })

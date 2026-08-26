@@ -281,7 +281,7 @@ export const EXPORT_DROPDOWN_MENU = (lang, { includeMarkdown = true } = {}) => {
                         ${SVG_ICONS.pdf}
                         <span class="dropdown-item-copy">
                             <strong>${isZh ? '直接導出 PDF (.pdf)' : 'Direct Export PDF (.pdf)'}</strong>
-                            <small>${isZh ? 'Takumi-PDF 向量排版直接下載免對話框' : 'Native vector PDF download without print dialog'}</small>
+                            <small>${isZh ? '直接下載高解析度向量 PDF 檔案' : 'Directly download high-resolution vector PDF'}</small>
                         </span>
                     </button>
                     <button type="button" class="dropdown-item dropdown-item-rich" id="print-preview-btn" role="menuitem">

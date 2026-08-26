@@ -5316,18 +5316,18 @@ themeCss + '\\n' +
                 });
             }
 
-            // 6. Direct Takumi-PDF Vector Export & Browser Print Preview
+            // 6. Direct Vector PDF Export & Browser Print Preview
             const exportPdfBtn = document.getElementById('export-pdf-btn');
             const printPreviewBtn = document.getElementById('print-preview-btn');
 
             const handleDirectPdfDownload = async () => {
                 if (typeof window.showToast === 'function') {
-                    window.showToast(isZh ? '🚀 正在使用 Takumi-PDF 向量引擎產生 PDF...' : '🚀 Generating vector PDF with Takumi-PDF...');
+                    window.showToast(isZh ? '🚀 正在產生 PDF 檔案...' : '🚀 Generating PDF file...');
                 }
                 try {
-                    const mdContent = getMarkdownContent();
-                    const title = getExportFilenameTitle(mdContent) || 'Document';
-                    const filename = title + '.pdf';
+                    const mdContent = getExportMarkdown();
+                    const filename = getExportFilename('pdf');
+                    const title = filename.replace(/\\.pdf$/, '') || 'Document';
 
                     const resp = await fetch('/api/pdf/export', {
                         method: 'POST',
@@ -5347,12 +5347,12 @@ themeCss + '\\n' +
                     const pdfBlob = await resp.blob();
                     triggerDownload(pdfBlob, filename);
                     if (typeof window.showToast === 'function') {
-                        window.showToast(isZh ? '✅ PDF 已成功直接下載！' : '✅ PDF downloaded successfully!');
+                        window.showToast(isZh ? '✅ PDF 已成功下載！' : '✅ PDF downloaded successfully!');
                     }
                 } catch (err) {
-                    console.error('Takumi-PDF Export failed, falling back to print dialog:', err);
+                    console.error('Direct PDF export failed, opening print dialog fallback:', err);
                     if (typeof window.showToast === 'function') {
-                        window.showToast(isZh ? '⚠️ 線上引擎暫不可用，切換為瀏覽器列印...' : '⚠️ Online engine unavailable, opening print dialog...');
+                        window.showToast(isZh ? '⚠️ 雲端轉換未完成，切換至列印預覽...' : '⚠️ Online conversion unavailable, opening print dialog...');
                     }
                     handlePrint();
                 }
@@ -7179,7 +7179,7 @@ themeCss + '\\n' +
             async function exportPdfPrint() {
                 if (exportMenu) exportMenu.classList.remove('show');
                 if (typeof showToast === 'function') {
-                    showToast(isZh ? '🚀 正在使用 Takumi-PDF 向量引擎編譯整本電子書 PDF...' : '🚀 Compiling eBook vector PDF with Takumi-PDF...');
+                    showToast(isZh ? '🚀 正在編譯整本電子書 PDF...' : '🚀 Compiling eBook PDF...');
                 }
 
                 try {
@@ -7211,7 +7211,7 @@ themeCss + '\\n' +
                     });
 
                     if (!pdfResp.ok) {
-                        throw new Error('Takumi-PDF server returned ' + pdfResp.status);
+                        throw new Error('PDF export server returned ' + pdfResp.status);
                     }
 
                     var pdfBlob = await pdfResp.blob();
@@ -7224,13 +7224,13 @@ themeCss + '\\n' +
                     setTimeout(function() { a.remove(); URL.revokeObjectURL(blobUrl); }, 2000);
 
                     if (typeof showToast === 'function') {
-                        showToast(isZh ? '✅ 電子書 PDF 已成功直接下載！' : '✅ eBook PDF downloaded successfully!');
+                        showToast(isZh ? '✅ 電子書 PDF 已成功下載！' : '✅ eBook PDF downloaded successfully!');
                     }
                     return;
                 } catch(pdfErr) {
-                    console.warn('Direct Takumi-PDF eBook export failed, falling back to print dialog:', pdfErr);
+                    console.warn('Direct eBook export failed, falling back to print dialog:', pdfErr);
                     if (typeof showToast === 'function') {
-                        showToast(isZh ? '⚠️ 向量編譯未完成，切換至瀏覽器列印排版...' : '⚠️ Opening browser print layout fallback...');
+                        showToast(isZh ? '⚠️ 雲端轉換未完成，切換至列印預覽...' : '⚠️ Opening browser print layout fallback...');
                     }
                 }
 
