@@ -431,6 +431,9 @@ export const initMarkdownToolbar = (root = document) => {
         }
     }
 
+    const PAUSE_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`
+    const PLAY_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
+
     const recordButton = toolbar.querySelector('[data-command="record"]')
     const recordPauseButton = toolbar.querySelector('[data-command="recordPause"]')
     let mediaRecorder = null
@@ -438,24 +441,159 @@ export const initMarkdownToolbar = (root = document) => {
     let recordingChunks = []
     let recordingSelection = null
     let startingRecording = false
+    let isRecordingCanceled = false
+    let recordingSeconds = 0
+    let recordingTimer = null
+    let recordingHud = null
+
+    const formatHudTime = sec => {
+        const m = Math.floor(sec / 60).toString().padStart(2, '0')
+        const s = (sec % 60).toString().padStart(2, '0')
+        return `${m}:${s}`
+    }
+
+    const ensureRecordingHud = () => {
+        if (recordingHud && document.body.contains(recordingHud)) return recordingHud
+        const existing = document.getElementById('editor-recording-hud')
+        if (existing) {
+            recordingHud = existing
+            return recordingHud
+        }
+        const hud = document.createElement('div')
+        hud.className = 'editor-recording-hud'
+        hud.id = 'editor-recording-hud'
+        hud.setAttribute('role', 'region')
+        hud.setAttribute('aria-label', lang === 'zh-TW' ? '錄音控制列' : 'Recording controls')
+
+        const isZh = lang === 'zh-TW'
+        hud.innerHTML = `
+            <div class="recording-hud-indicator">
+                <span class="recording-hud-dot"></span>
+                <div class="recording-hud-waves" aria-hidden="true">
+                    <span></span><span></span><span></span><span></span>
+                </div>
+            </div>
+            <div class="recording-hud-info">
+                <span class="recording-hud-status">${isZh ? '🎙️ 正在錄音中...' : '🎙️ Recording...'}</span>
+                <span class="recording-hud-timer">00:00</span>
+            </div>
+            <div class="recording-hud-actions">
+                <button type="button" class="recording-hud-btn hud-btn-pause" data-recording-action="toggle-pause" title="${isZh ? '暫停錄音 (Pause)' : 'Pause recording'}">
+                    <span class="hud-btn-icon">⏸️</span>
+                    <span class="hud-btn-label">${isZh ? '暫停' : 'Pause'}</span>
+                </button>
+                <button type="button" class="recording-hud-btn hud-btn-stop" data-recording-action="stop" title="${isZh ? '停止並插入錄音逐字稿 (Stop & Insert)' : 'Stop and insert recording'}">
+                    <span class="hud-btn-icon">⏹️</span>
+                    <span class="hud-btn-label">${isZh ? '完成' : 'Done'}</span>
+                </button>
+                <button type="button" class="recording-hud-btn hud-btn-cancel" data-recording-action="cancel" title="${isZh ? '取消並放棄錄音 (Cancel & Discard)' : 'Cancel recording'}">
+                    <span class="hud-btn-icon">✕</span>
+                    <span class="hud-btn-label">${isZh ? '取消' : 'Cancel'}</span>
+                </button>
+            </div>
+        `
+
+        hud.querySelector('[data-recording-action="toggle-pause"]')?.addEventListener('click', e => {
+            e.preventDefault()
+            e.stopPropagation()
+            togglePauseRecording()
+        })
+        hud.querySelector('[data-recording-action="stop"]')?.addEventListener('click', e => {
+            e.preventDefault()
+            e.stopPropagation()
+            stopRecording()
+        })
+        hud.querySelector('[data-recording-action="cancel"]')?.addEventListener('click', e => {
+            e.preventDefault()
+            e.stopPropagation()
+            cancelRecording()
+        })
+
+        document.body.appendChild(hud)
+        recordingHud = hud
+        return recordingHud
+    }
+
+    const updateHudTimerDisplay = () => {
+        if (!recordingHud) return
+        const timerEl = recordingHud.querySelector('.recording-hud-timer')
+        if (timerEl) timerEl.textContent = formatHudTime(recordingSeconds)
+    }
+
+    const startHudTimer = () => {
+        if (recordingTimer) clearInterval(recordingTimer)
+        recordingTimer = setInterval(() => {
+            recordingSeconds += 1
+            updateHudTimerDisplay()
+        }, 1000)
+    }
+
+    const pauseHudTimer = () => {
+        if (recordingTimer) {
+            clearInterval(recordingTimer)
+            recordingTimer = null
+        }
+    }
+
+    const removeRecordingHud = () => {
+        pauseHudTimer()
+        recordingSeconds = 0
+        if (recordingHud) {
+            recordingHud.classList.add('is-leaving')
+            setTimeout(() => {
+                recordingHud?.remove()
+                recordingHud = null
+            }, 220)
+        }
+    }
 
     const setRecordingUi = state => {
         const recording = state === 'recording'
         const paused = state === 'paused'
+        const active = recording || paused
+        const isZh = lang === 'zh-TW'
+
+        if (active) {
+            const hud = ensureRecordingHud()
+            hud.classList.toggle('is-paused', paused)
+            const statusEl = hud.querySelector('.recording-hud-status')
+            const pauseBtn = hud.querySelector('.hud-btn-pause')
+            if (statusEl) {
+                statusEl.textContent = paused
+                    ? (isZh ? '⏸️ 錄音已暫停' : '⏸️ Recording paused')
+                    : (isZh ? '🎙️ 正在錄音中...' : '🎙️ Recording...')
+            }
+            if (pauseBtn) {
+                const iconEl = pauseBtn.querySelector('.hud-btn-icon')
+                const labelEl = pauseBtn.querySelector('.hud-btn-label')
+                if (iconEl) iconEl.textContent = paused ? '▶️' : '⏸️'
+                if (labelEl) labelEl.textContent = paused ? (isZh ? '繼續' : 'Resume') : (isZh ? '暫停' : 'Pause')
+                pauseBtn.title = paused ? (isZh ? '繼續錄音 (Resume)' : 'Resume recording') : (isZh ? '暫停錄音 (Pause)' : 'Pause recording')
+            }
+        } else {
+            removeRecordingHud()
+        }
+
         if (recordButton) {
-            recordButton.classList.toggle('is-recording', recording || paused)
-            recordButton.setAttribute('aria-pressed', recording || paused ? 'true' : 'false')
-            const label = recording || paused ? (lang === 'zh-TW' ? '停止並插入錄音' : 'Stop and insert recording') : (lang === 'zh-TW' ? '開始錄音' : 'Start recording')
+            recordButton.classList.toggle('is-recording', active)
+            recordButton.setAttribute('aria-pressed', active ? 'true' : 'false')
+            const label = active ? (isZh ? '停止並插入錄音' : 'Stop and insert recording') : (isZh ? '開始錄音' : 'Start recording')
             recordButton.setAttribute('aria-label', label)
             recordButton.setAttribute('title', label)
             recordButton.dataset.tooltip = label
         }
+
         if (recordPauseButton) {
-            recordPauseButton.disabled = !recording && !paused
-            const label = paused ? (lang === 'zh-TW' ? '繼續錄音' : 'Resume recording') : (lang === 'zh-TW' ? '暫停錄音' : 'Pause recording')
+            recordPauseButton.disabled = !active
+            recordPauseButton.classList.toggle('is-paused', paused)
+            const label = paused ? (isZh ? '繼續錄音' : 'Resume recording') : (isZh ? '暫停錄音' : 'Pause recording')
             recordPauseButton.setAttribute('aria-label', label)
             recordPauseButton.setAttribute('title', label)
             recordPauseButton.dataset.tooltip = label
+            const glyphEl = recordPauseButton.querySelector('.markdown-toolbar-glyph')
+            if (glyphEl) {
+                glyphEl.innerHTML = paused ? PLAY_SVG : PAUSE_SVG
+            }
         }
     }
 
@@ -464,9 +602,43 @@ export const initMarkdownToolbar = (root = document) => {
         recordingStream = null
     }
 
+    const stopRecording = () => {
+        if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+            mediaRecorder.stop()
+        }
+    }
+
+    const togglePauseRecording = () => {
+        if (!mediaRecorder) return
+        if (mediaRecorder.state === 'recording') {
+            mediaRecorder.pause()
+            pauseHudTimer()
+            setRecordingUi('paused')
+        } else if (mediaRecorder.state === 'paused') {
+            mediaRecorder.resume()
+            startHudTimer()
+            setRecordingUi('recording')
+        }
+    }
+
+    const cancelRecording = () => {
+        isRecordingCanceled = true
+        stopRecordingTracks()
+        if (mediaRecorder && (mediaRecorder.state === 'recording' || mediaRecorder.state === 'paused')) {
+            try {
+                mediaRecorder.stop()
+            } catch (e) {}
+        }
+        mediaRecorder = null
+        recordingChunks = []
+        setRecordingUi('idle')
+        window.showToast?.(lang === 'zh-TW' ? '🗑️ 已取消錄音' : '🗑️ Recording canceled')
+    }
+
     const startRecording = async () => {
         if (startingRecording) return
         startingRecording = true
+        isRecordingCanceled = false
         const recordingConsent = lang === 'zh-TW'
             ? '請確認所有參與者已同意錄音與轉錄。要開始錄音嗎？'
             : 'Confirm that all participants consent to recording and transcription. Start recording?'
@@ -484,11 +656,20 @@ export const initMarkdownToolbar = (root = document) => {
             const mimeType = MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : ''
             mediaRecorder = mimeType ? new MediaRecorder(recordingStream, { mimeType }) : new MediaRecorder(recordingStream)
             recordingChunks = []
+            recordingSeconds = 0
             recordingSelection = { start: textarea.selectionStart, end: textarea.selectionEnd }
             mediaRecorder.addEventListener('dataavailable', event => {
                 if (event.data?.size) recordingChunks.push(event.data)
             })
             mediaRecorder.addEventListener('stop', () => {
+                if (isRecordingCanceled) {
+                    isRecordingCanceled = false
+                    stopRecordingTracks()
+                    mediaRecorder = null
+                    recordingChunks = []
+                    setRecordingUi('idle')
+                    return
+                }
                 const audioType = mediaRecorder?.mimeType || 'audio/webm'
                 const audioBlob = new Blob(recordingChunks, { type: audioType })
                 const audioFile = new File([audioBlob], `recording-${Date.now()}.webm`, { type: audioType })
@@ -507,6 +688,7 @@ export const initMarkdownToolbar = (root = document) => {
             mediaRecorder.start(1000)
             startingRecording = false
             setRecordingUi('recording')
+            startHudTimer()
         } catch (error) {
             stopRecordingTracks()
             mediaRecorder = null
@@ -529,18 +711,12 @@ export const initMarkdownToolbar = (root = document) => {
                 return
             }
             if (command === 'record') {
-                if (mediaRecorder?.state === 'recording' || mediaRecorder?.state === 'paused') mediaRecorder.stop()
+                if (mediaRecorder?.state === 'recording' || mediaRecorder?.state === 'paused') stopRecording()
                 else startRecording()
                 return
             }
-            if (command === 'recordPause' && mediaRecorder) {
-                if (mediaRecorder.state === 'recording') {
-                    mediaRecorder.pause()
-                    setRecordingUi('paused')
-                } else if (mediaRecorder.state === 'paused') {
-                    mediaRecorder.resume()
-                    setRecordingUi('recording')
-                }
+            if (command === 'recordPause') {
+                if (mediaRecorder) togglePauseRecording()
                 return
             }
             if (command === 'image' && imageInput) {

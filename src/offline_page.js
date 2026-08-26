@@ -481,6 +481,99 @@ export const createOfflinePageResponse = () => {
             flex-shrink: 0;
         }
 
+        .toolbar-btn.is-recording {
+            color: #ef4444 !important;
+            border-color: rgba(239, 68, 68, 0.5) !important;
+            background: rgba(239, 68, 68, 0.15) !important;
+            animation: offline-rec-pulse 1.2s ease-in-out infinite;
+        }
+        @keyframes offline-rec-pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.55; }
+        }
+
+        /* Floating Recording HUD in Offline Workstation */
+        .editor-recording-hud {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(0);
+            z-index: 10000;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 6px 14px 6px 12px;
+            background: color-mix(in srgb, var(--surface-bg, #1e1e2e) 92%, transparent);
+            color: var(--text-color, #f8f8f2);
+            border: 1px solid rgba(239, 68, 68, 0.45);
+            border-radius: 9999px;
+            box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.35), 0 0 20px rgba(239, 68, 68, 0.25);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            user-select: none;
+            pointer-events: auto;
+            animation: recording-hud-appear 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+        }
+        .editor-recording-hud.is-paused {
+            border-color: rgba(245, 158, 11, 0.5);
+            box-shadow: 0 10px 30px -4px rgba(0, 0, 0, 0.35), 0 0 20px rgba(245, 158, 11, 0.2);
+        }
+        .editor-recording-hud.is-leaving {
+            animation: recording-hud-leave 0.2s ease forwards;
+            pointer-events: none;
+        }
+        @keyframes recording-hud-appear {
+            from { opacity: 0; transform: translateX(-50%) translateY(-16px) scale(0.94); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+        }
+        @keyframes recording-hud-leave {
+            from { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+            to { opacity: 0; transform: translateX(-50%) translateY(-12px) scale(0.94); }
+        }
+        .recording-hud-indicator { display: inline-flex; align-items: center; gap: 6px; }
+        .recording-hud-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444;
+            animation: recording-dot-pulse 1.2s ease-in-out infinite;
+        }
+        .editor-recording-hud.is-paused .recording-hud-dot { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: none; }
+        @keyframes recording-dot-pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.25); opacity: 0.45; }
+        }
+        .recording-hud-waves { display: inline-flex; align-items: center; gap: 2px; height: 14px; }
+        .recording-hud-waves span {
+            display: inline-block; width: 2.5px; height: 12px; background: #ef4444; border-radius: 2px;
+            animation: recording-wave-anim 1s ease-in-out infinite alternate;
+        }
+        .recording-hud-waves span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+        .recording-hud-waves span:nth-child(2) { height: 14px; animation-delay: 0.3s; }
+        .recording-hud-waves span:nth-child(3) { height: 10px; animation-delay: 0.2s; }
+        .recording-hud-waves span:nth-child(4) { height: 8px; animation-delay: 0.4s; }
+        .editor-recording-hud.is-paused .recording-hud-waves span { animation-play-state: paused; background: #f59e0b; height: 4px !important; }
+        @keyframes recording-wave-anim { 0% { transform: scaleY(0.3); } 100% { transform: scaleY(1); } }
+        .recording-hud-info { display: inline-flex; align-items: center; gap: 8px; }
+        .recording-hud-status { font-size: 12.5px; font-weight: 600; }
+        .recording-hud-timer { font-family: ui-monospace, SFMono-Regular, monospace; font-size: 13px; font-weight: 700; color: #ef4444; min-width: 44px; }
+        .editor-recording-hud.is-paused .recording-hud-timer { color: #f59e0b; }
+        .recording-hud-actions { display: inline-flex; align-items: center; gap: 6px; margin-left: 4px; padding-left: 8px; border-left: 1px solid rgba(255, 255, 255, 0.15); }
+        .recording-hud-btn {
+            display: inline-flex; align-items: center; gap: 4px; height: 28px; padding: 0 10px; border-radius: 9999px;
+            border: 1px solid transparent; font-family: inherit; font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: all 0.15s ease; user-select: none; line-height: 1;
+        }
+        .recording-hud-btn:active { transform: scale(0.94); }
+        .recording-hud-btn.hud-btn-pause { background: rgba(255, 255, 255, 0.12); color: inherit; border-color: rgba(255, 255, 255, 0.18); }
+        .recording-hud-btn.hud-btn-pause:hover { background: rgba(255, 255, 255, 0.22); }
+        .editor-recording-hud.is-paused .recording-hud-btn.hud-btn-pause { background: rgba(245, 158, 11, 0.2); border-color: rgba(245, 158, 11, 0.4); color: #f59e0b; }
+        .recording-hud-btn.hud-btn-stop { background: #ef4444; color: #ffffff; border-color: #dc2626; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.4); }
+        .recording-hud-btn.hud-btn-stop:hover { background: #dc2626; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.5); }
+        .recording-hud-btn.hud-btn-cancel { background: transparent; color: rgba(255, 255, 255, 0.65); padding: 0 8px; }
+        .recording-hud-btn.hud-btn-cancel:hover { background: rgba(255, 255, 255, 0.12); color: #ffffff; }
+
         .editor-textarea {
             flex: 1;
             font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
@@ -1540,16 +1633,161 @@ export const createOfflinePageResponse = () => {
             }
         })
 
-        // Offline Audio Recording
+        // Offline Audio Recording with HUD & Controls
         let offlineMediaRecorder = null
         let offlineRecordingStream = null
         let offlineRecordingChunks = []
+        let offlineRecordingSeconds = 0
+        let offlineRecordingTimer = null
+        let offlineIsCanceled = false
+        let offlineHud = null
         const $offlineRecordBtn = document.getElementById('offline-record-btn')
+
+        function formatOfflineHudTime(sec) {
+            const m = Math.floor(sec / 60).toString().padStart(2, '0')
+            const s = (sec % 60).toString().padStart(2, '0')
+            return m + ':' + s
+        }
+
+        function ensureOfflineRecordingHud() {
+            if (offlineHud && document.body.contains(offlineHud)) return offlineHud
+            const existing = document.getElementById('editor-recording-hud')
+            if (existing) { offlineHud = existing; return offlineHud; }
+            const hud = document.createElement('div')
+            hud.className = 'editor-recording-hud'
+            hud.id = 'editor-recording-hud'
+            hud.setAttribute('role', 'region')
+            hud.innerHTML = '<div class="recording-hud-indicator">' +
+                '<span class="recording-hud-dot"></span>' +
+                '<div class="recording-hud-waves" aria-hidden="true">' +
+                '<span></span><span></span><span></span><span></span>' +
+                '</div></div>' +
+                '<div class="recording-hud-info">' +
+                '<span class="recording-hud-status">🎙️ 正在錄音中...</span>' +
+                '<span class="recording-hud-timer">00:00</span>' +
+                '</div>' +
+                '<div class="recording-hud-actions">' +
+                '<button type="button" class="recording-hud-btn hud-btn-pause" data-recording-action="toggle-pause" title="暫停錄音 (Pause)">' +
+                '<span class="hud-btn-icon">⏸️</span>' +
+                '<span class="hud-btn-label">暫停</span>' +
+                '</button>' +
+                '<button type="button" class="recording-hud-btn hud-btn-stop" data-recording-action="stop" title="停止並插入錄音逐字稿 (Stop & Insert)">' +
+                '<span class="hud-btn-icon">⏹️</span>' +
+                '<span class="hud-btn-label">完成</span>' +
+                '</button>' +
+                '<button type="button" class="recording-hud-btn hud-btn-cancel" data-recording-action="cancel" title="取消並放棄錄音 (Cancel)">' +
+                '<span class="hud-btn-icon">✕</span>' +
+                '<span class="hud-btn-label">取消</span>' +
+                '</button>' +
+                '</div>';
+            hud.querySelector('[data-recording-action="toggle-pause"]')?.addEventListener('click', (e) => {
+                e.preventDefault()
+                toggleOfflinePause()
+            })
+            hud.querySelector('[data-recording-action="stop"]')?.addEventListener('click', (e) => {
+                e.preventDefault()
+                stopOfflineRecording()
+            })
+            hud.querySelector('[data-recording-action="cancel"]')?.addEventListener('click', (e) => {
+                e.preventDefault()
+                cancelOfflineRecording()
+            })
+            document.body.appendChild(hud)
+            offlineHud = hud
+            return offlineHud
+        }
+
+        function removeOfflineHud() {
+            if (offlineRecordingTimer) {
+                clearInterval(offlineRecordingTimer)
+                offlineRecordingTimer = null
+            }
+            offlineRecordingSeconds = 0
+            if (offlineHud) {
+                offlineHud.classList.add('is-leaving')
+                setTimeout(() => {
+                    offlineHud?.remove()
+                    offlineHud = null
+                }, 220)
+            }
+        }
+
+        function setOfflineRecordingUi(state) {
+            const recording = state === 'recording'
+            const paused = state === 'paused'
+            const active = recording || paused
+
+            if (active) {
+                const hud = ensureOfflineRecordingHud()
+                hud.classList.toggle('is-paused', paused)
+                const statusEl = hud.querySelector('.recording-hud-status')
+                const pauseBtn = hud.querySelector('.hud-btn-pause')
+                if (statusEl) statusEl.textContent = paused ? '⏸️ 錄音已暫停' : '🎙️ 正在錄音中...'
+                if (pauseBtn) {
+                    const iconEl = pauseBtn.querySelector('.hud-btn-icon')
+                    const labelEl = pauseBtn.querySelector('.hud-btn-label')
+                    if (iconEl) iconEl.textContent = paused ? '▶️' : '⏸️'
+                    if (labelEl) labelEl.textContent = paused ? '繼續' : '暫停'
+                    pauseBtn.title = paused ? '繼續錄音 (Resume)' : '暫停錄音 (Pause)'
+                }
+            } else {
+                removeOfflineHud()
+            }
+
+            if ($offlineRecordBtn) {
+                $offlineRecordBtn.classList.toggle('is-recording', active)
+                $offlineRecordBtn.textContent = active ? (paused ? '⏸️ 錄音暫停中' : '⏹️ 停止錄音') : '🎙️'
+                $offlineRecordBtn.title = active ? '點擊停止錄音並插入' : '開始麥克風錄音'
+            }
+        }
+
+        function stopOfflineRecording() {
+            if (offlineMediaRecorder && (offlineMediaRecorder.state === 'recording' || offlineMediaRecorder.state === 'paused')) {
+                offlineMediaRecorder.stop()
+            }
+        }
+
+        function toggleOfflinePause() {
+            if (!offlineMediaRecorder) return
+            if (offlineMediaRecorder.state === 'recording') {
+                offlineMediaRecorder.pause()
+                if (offlineRecordingTimer) {
+                    clearInterval(offlineRecordingTimer)
+                    offlineRecordingTimer = null
+                }
+                setOfflineRecordingUi('paused')
+            } else if (offlineMediaRecorder.state === 'paused') {
+                offlineMediaRecorder.resume()
+                if (!offlineRecordingTimer) {
+                    offlineRecordingTimer = setInterval(() => {
+                        offlineRecordingSeconds += 1
+                        if (offlineHud) {
+                            const timerEl = offlineHud.querySelector('.recording-hud-timer')
+                            if (timerEl) timerEl.textContent = formatOfflineHudTime(offlineRecordingSeconds)
+                        }
+                    }, 1000)
+                }
+                setOfflineRecordingUi('recording')
+            }
+        }
+
+        function cancelOfflineRecording() {
+            offlineIsCanceled = true
+            offlineRecordingStream?.getTracks().forEach(t => t.stop())
+            if (offlineMediaRecorder && (offlineMediaRecorder.state === 'recording' || offlineMediaRecorder.state === 'paused')) {
+                try { offlineMediaRecorder.stop() } catch (e) {}
+            }
+            offlineRecordingStream = null
+            offlineMediaRecorder = null
+            offlineRecordingChunks = []
+            setOfflineRecordingUi('idle')
+            showToast('🗑️ 已取消錄音')
+        }
 
         if ($offlineRecordBtn) {
             $offlineRecordBtn.onclick = async () => {
-                if (offlineMediaRecorder?.state === 'recording') {
-                    offlineMediaRecorder.stop()
+                if (offlineMediaRecorder?.state === 'recording' || offlineMediaRecorder?.state === 'paused') {
+                    stopOfflineRecording()
                     return
                 }
                 if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
@@ -1563,12 +1801,23 @@ export const createOfflinePageResponse = () => {
                     const mimeType = MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : ''
                     offlineMediaRecorder = mimeType ? new MediaRecorder(offlineRecordingStream, { mimeType }) : new MediaRecorder(offlineRecordingStream)
                     offlineRecordingChunks = []
+                    offlineRecordingSeconds = 0
+                    offlineIsCanceled = false
 
                     offlineMediaRecorder.ondataavailable = e => {
                         if (e.data?.size) offlineRecordingChunks.push(e.data)
                     }
 
                     offlineMediaRecorder.onstop = async () => {
+                        if (offlineIsCanceled) {
+                            offlineIsCanceled = false
+                            offlineRecordingStream?.getTracks().forEach(t => t.stop())
+                            offlineRecordingStream = null
+                            offlineMediaRecorder = null
+                            offlineRecordingChunks = []
+                            setOfflineRecordingUi('idle')
+                            return
+                        }
                         const audioType = offlineMediaRecorder?.mimeType || 'audio/webm'
                         const audioBlob = new Blob(offlineRecordingChunks, { type: audioType })
                         offlineRecordingStream?.getTracks().forEach(t => t.stop())
@@ -1576,8 +1825,7 @@ export const createOfflinePageResponse = () => {
                         offlineMediaRecorder = null
                         offlineRecordingChunks = []
 
-                        $offlineRecordBtn.textContent = '🎙️'
-                        $offlineRecordBtn.style.background = ''
+                        setOfflineRecordingUi('idle')
 
                         if (audioBlob.size > 25 * 1024 * 1024) {
                             showToast('❌ 錄音超過 25 MB，請縮短後再試')
@@ -1637,15 +1885,20 @@ export const createOfflinePageResponse = () => {
                     }
 
                     offlineMediaRecorder.start(1000)
-                    $offlineRecordBtn.textContent = '⏹️ 停止錄音'
-                    $offlineRecordBtn.style.background = 'rgba(239, 68, 68, 0.2)'
+                    setOfflineRecordingUi('recording')
+                    offlineRecordingTimer = setInterval(() => {
+                        offlineRecordingSeconds += 1
+                        if (offlineHud) {
+                            const timerEl = offlineHud.querySelector('.recording-hud-timer')
+                            if (timerEl) timerEl.textContent = formatOfflineHudTime(offlineRecordingSeconds)
+                        }
+                    }, 1000)
                     showToast('🎙️ 正在錄音中...')
                 } catch (err) {
                     offlineRecordingStream?.getTracks().forEach(t => t.stop())
                     offlineRecordingStream = null
                     offlineMediaRecorder = null
-                    $offlineRecordBtn.textContent = '🎙️'
-                    $offlineRecordBtn.style.background = ''
+                    setOfflineRecordingUi('idle')
                     showToast('❌ 無法取得麥克風權限：' + err.message)
                 }
             }

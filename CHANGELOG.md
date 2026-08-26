@@ -2,6 +2,15 @@
 
 ## [2026-08-26]
 
+- **🎙️ 錄音即時狀態提醒懸浮膠囊 (Live Recording HUD) 與全功能錄音控制 (Pause, Resume, Stop, Cancel)**：
+  - **懸浮狀態膠囊 (`.editor-recording-hud`)**：錄音開始時於視窗頂部展開兼具現代毛玻璃與主題感知的懸浮膠囊（HUD），不受頁面長滾動影響，清楚提示「🎙️ 正在錄音中...」。
+  - **即時動畫與計時器 (Pulsing Dot, Waveform & Live Timer)**：內建呼吸光暈紅點、聲波動畫條與 `MM:SS` 即時計時器，錄音狀態一眼可辨。
+  - **全功能即時操作鍵 (Interactive Controls)**：
+    - **⏸️ / ▶️ 暫停與繼續 (Pause & Resume)**：一鍵無縫暫停錄音與計時，切換為琥珀色光暈並動態更新提示文案；隨時點擊一鍵繼續錄音。
+    - **⏹️ 完成並插入 (Stop & Insert)**：高辨識度紅色按鈕，停止錄音並自動存入 IndexedDB 與生成時間戳逐字稿。
+    - **✕ 取消放棄 (Cancel & Discard)**：提供乾淨的取消機制，立即釋放麥克風並放棄錄音片段，不污染筆記內容。
+  - **工具列雙向即時聯動**：Markdown 工具列頂部的開始/停止鈕與暫停/繼續鈕（`SVG_ICONS.pause` / `SVG_ICONS.play`）與懸浮 HUD 狀態 100% 雙向同步。
+  - **離線工作站完全相容**：離線雙欄工作區 (`/_pwa-offline`) 同步搭載 Recording HUD，離線錄音體驗絲滑一致。
 - **🎙️ Local-First 本機離線錄音、連線即時 ASR 辨識與發布延遲 S3 雲端同步架構 (Local-First Offline Recording, Online ASR & Deferred S3 Upload upon Publish)**：
   - **二階段完全解耦架構 (Decoupled ASR Transcription & S3 Cloud Upload)**：
     - **第一階段（錄音與 ASR 轉錄）**：錄音結束後音訊 Blob **僅保存於本機 IndexedDB (`CloudNotepadOfflineDB` -> `audios`)**，游標處插入本機播放器 `<audio data-offline-audio-id="rec_..." src="blob:..."></audio>`。有網路時立即發起 Whisper ASR 轉錄將逐字稿補插入播放器下方，**完全不上傳音檔至 S3 / 888box**，避免浪費雲端儲存空間與頻寬。

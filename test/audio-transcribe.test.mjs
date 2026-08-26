@@ -46,7 +46,7 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.doesNotMatch(baseSource, /diarize=1/)
 })
 
-test('Markdown editor toolbar records microphone audio with Local-First IndexedDB and deferred S3 upload upon publishing', () => {
+test('Markdown editor toolbar records microphone audio with Local-First IndexedDB, Recording HUD, live timer, and deferred S3 upload upon publishing', () => {
     assert.match(commonSource, /command: 'record'/)
     assert.match(commonSource, /command: 'recordPause'/)
     assert.match(baseSource, /cf-notepad-recorded-audio/)
@@ -58,6 +58,12 @@ test('Markdown editor toolbar records microphone audio with Local-First IndexedD
     assert.match(toolbarSource, /recordingConsent/)
     assert.match(toolbarSource, /audioFile\.size > 25 \* 1024 \* 1024/)
     assert.match(toolbarSource, /MediaRecorder/)
+    assert.match(toolbarSource, /editor-recording-hud/)
+    assert.match(toolbarSource, /recording-hud-timer/)
+    assert.match(toolbarSource, /recording-hud-waves/)
+    assert.match(toolbarSource, /togglePauseRecording/)
+    assert.match(toolbarSource, /stopRecording/)
+    assert.match(toolbarSource, /cancelRecording/)
 })
 
 test('index.js registers audio transcribe routes and uses Groq whisper-large-v3 primary with multi-tier fallback pipeline', () => {
@@ -208,10 +214,13 @@ test('offlineStore supports saving, retrieving, listing pending, and updating of
 
 const offlinePageSource = readFileSync(new URL('../src/offline_page.js', import.meta.url), 'utf8')
 
-test('offline_page.js provides local microphone recording button and deferred sync logic', () => {
+test('offline_page.js provides local microphone recording button, Recording HUD, and deferred sync logic', () => {
     assert.match(offlinePageSource, /id="offline-record-btn"/)
     assert.match(offlinePageSource, /offlineMediaRecorder/)
     assert.match(offlinePageSource, /saveOfflineAudio/)
     assert.match(offlinePageSource, /data-offline-audio-id/)
     assert.match(offlinePageSource, /syncNoteToServer/)
+    assert.match(offlinePageSource, /editor-recording-hud/)
+    assert.match(offlinePageSource, /toggleOfflinePause/)
+    assert.match(offlinePageSource, /cancelOfflineRecording/)
 })

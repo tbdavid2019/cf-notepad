@@ -128,8 +128,8 @@
     },
     {
       "id": "toolbar-audio-recording",
-      "zh-TW": "小訣竅：Markdown 編輯器頂部的麥克風支援 Local-First 離線錄音！斷網時音訊自動暫存於本機 IndexedDB 並插入本機播放器，恢復連線後自動上傳雲端並補齊時間戳逐字稿。",
-      "en-US": "Tip: The microphone supports Local-First offline recording! When offline, audio is stored in IndexedDB with instant local playback, automatically uploading and generating transcripts upon reconnection."
+      "zh-TW": "小訣竅：Markdown 編輯器頂部的麥克風支援 Local-First 離線錄音！錄音時會展開即時計時懸浮膠囊 (HUD)，支援隨時暫停/繼續、完成插入或取消，發布時才會上傳至 S3。",
+      "en-US": "Tip: Microphone recording includes a floating HUD with live timer, pause/resume, stop & insert, and cancel controls. Audio stays local in IndexedDB until published to S3."
     },
     {
       "id": "pwa-offline-preview-toolbar",
