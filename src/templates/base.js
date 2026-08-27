@@ -1548,8 +1548,17 @@ ${getMarkdownCss()}
         const closeBtn = modal ? modal.querySelector('.password-modal-close') : null
         const mask = modal ? modal.querySelector('.modal-mask') : null
 
+        const options = (arguments && arguments[0]) || {}
+        const customMessage = typeof options.message === 'string' ? options.message : ''
+        const inputType = options.inputType || 'password'
+        const placeholder = options.placeholder || ''
+        const customConfirmText = options.confirmText || ''
+        const customCancelText = options.cancelText || ''
+        const prevConfirmText = confirmBtn ? confirmBtn.textContent : ''
+        const prevCancelText = cancelBtn ? cancelBtn.textContent : ''
+
         if (!modal || !form || !input || !titleNode || !confirmBtn || !cancelBtn || !closeBtn || !mask) {
-            resolve(window.prompt(title || getI18n('pepw')))
+            resolve(window.prompt(title || getI18n('pepw'), initialValue))
             return
         }
 
@@ -1559,6 +1568,10 @@ ${getMarkdownCss()}
             settled = true
             closeModal(modal)
             input.value = ''
+            input.type = 'password'
+            input.placeholder = ''
+            if (confirmBtn && prevConfirmText) confirmBtn.textContent = prevConfirmText
+            if (cancelBtn && prevCancelText) cancelBtn.textContent = prevCancelText
             input.removeEventListener('keydown', onKeyDown)
             form.removeEventListener('submit', onSubmit)
             cancelBtn.removeEventListener('click', onCancel)
@@ -1567,10 +1580,13 @@ ${getMarkdownCss()}
             resolve(result)
         }
 
-            const onConfirm = () => {
-                const value = input.value
-                if (!allowEmpty && !value.trim()) {
-                window.showAppDialog({ title: getI18n('err'), message: getI18n('pwcnbe'), kind: 'error' })
+        const onConfirm = () => {
+            const value = input.value
+            if (!allowEmpty && !value.trim()) {
+                const errMsg = inputType === 'password'
+                    ? getI18n('pwcnbe')
+                    : (APP_STATE.lang === 'zh-TW' ? '輸入內容不能為空！' : 'Input cannot be empty!')
+                window.showAppDialog({ title: getI18n('err'), message: errMsg, kind: 'error' })
                 input.focus()
                 return
             }
@@ -1595,9 +1611,17 @@ ${getMarkdownCss()}
 
         titleNode.textContent = title || getI18n('pepw')
         if (messageNode) {
-            messageNode.textContent = allowEmpty ? getI18n('enpw') : getI18n('pepw')
+            if (customMessage) {
+                messageNode.textContent = customMessage
+            } else {
+                messageNode.textContent = allowEmpty ? getI18n('enpw') : getI18n('pepw')
+            }
         }
+        input.type = inputType
+        input.placeholder = placeholder
         input.value = initialValue
+        if (customConfirmText && confirmBtn) confirmBtn.textContent = customConfirmText
+        if (customCancelText && cancelBtn) cancelBtn.textContent = customCancelText
         openModal(modal, { initialFocus: input })
         input.addEventListener('keydown', onKeyDown)
         form.addEventListener('submit', onSubmit)
@@ -1605,6 +1629,7 @@ ${getMarkdownCss()}
         closeBtn.addEventListener('click', onCancel)
         mask.addEventListener('click', onCancel)
     })
+    window.showAppPrompt = openPasswordModal
 
     const passwdPrompt = async () => {
         const passwd = await openPasswordModal({ title: getI18n('pepw') })
@@ -2495,11 +2520,30 @@ ${getMarkdownCss()}
                 const targetPrompt = APP_STATE.lang === 'zh-TW'
                     ? '請輸入目標語言，例如：英文、繁體中文、日文'
                     : 'Enter the target language, for example: English, Traditional Chinese, or Japanese'
-                targetLanguage = window.prompt(targetPrompt, defaultTargetLang)
+                targetLanguage = typeof window.showAppPrompt === 'function'
+                    ? await window.showAppPrompt({
+                        title: APP_STATE.lang === 'zh-TW' ? '設定翻譯目標語言' : 'Set Target Language',
+                        message: targetPrompt,
+                        initialValue: defaultTargetLang,
+                        inputType: 'text',
+                        allowEmpty: false
+                    })
+                    : window.prompt(targetPrompt, defaultTargetLang)
                 if (targetLanguage === null || !targetLanguage.trim()) return;
-                bilingual = window.confirm(APP_STATE.lang === 'zh-TW'
-                    ? '要保留原文並產生雙語版本嗎？\\n選擇「確定」＝雙語；「取消」＝只翻譯。'
-                    : 'Keep the original and create a bilingual version?\\nOK = bilingual; Cancel = translation only.')
+                bilingual = typeof window.showAppDialog === 'function'
+                    ? await window.showAppDialog({
+                        title: APP_STATE.lang === 'zh-TW' ? '雙語對照模式' : 'Bilingual Mode',
+                        message: APP_STATE.lang === 'zh-TW'
+                            ? '要保留原文並產生雙語版本嗎？\\n選擇「雙語對照」將在譯文下方保留原文段落。'
+                            : 'Keep the original text to create a bilingual parallel version?',
+                        kind: 'confirm',
+                        confirm: true,
+                        confirmText: APP_STATE.lang === 'zh-TW' ? '雙語對照' : 'Bilingual',
+                        cancelText: APP_STATE.lang === 'zh-TW' ? '僅翻譯' : 'Translate Only'
+                    })
+                    : window.confirm(APP_STATE.lang === 'zh-TW'
+                        ? '要保留原文並產生雙語版本嗎？\\n選擇「確定」＝雙語；「取消」＝只翻譯。'
+                        : 'Keep the original and create a bilingual version?\\nOK = bilingual; Cancel = translation only.')
             }
             const instructionPrompt = isEdit
                 ? (APP_STATE.lang === 'zh-TW'
@@ -2512,7 +2556,17 @@ ${getMarkdownCss()}
                 : (APP_STATE.lang === 'zh-TW'
                     ? '請輸入排版需求，例如：補標題、整理段落、改成條列重點'
                     : 'Enter formatting instructions, for example: add headings, clean paragraphs, and turn key points into bullets')
-            const instruction = isTranslate ? '' : window.prompt(instructionPrompt, '')
+            const instruction = isTranslate
+                ? ''
+                : (typeof window.showAppPrompt === 'function'
+                    ? await window.showAppPrompt({
+                        title: isEdit ? (APP_STATE.lang === 'zh-TW' ? 'AI 編輯要求' : 'AI Edit Instructions') : (APP_STATE.lang === 'zh-TW' ? 'AI 排版需求' : 'AI Format Instructions'),
+                        message: instructionPrompt,
+                        initialValue: '',
+                        inputType: 'text',
+                        allowEmpty: !isEdit
+                    })
+                    : window.prompt(instructionPrompt, ''))
             if (instruction === null) return;
             if (isEdit && !instruction.trim()) {
                 window.showToast(APP_STATE.lang === 'zh-TW' ? '請輸入編輯要求' : 'Please enter editing instructions')
@@ -6333,12 +6387,20 @@ themeCss + '\\n' +
                 }
             };
 
-            pageIndicator.onclick = function() {
+            pageIndicator.onclick = async function() {
                 var total = (typeof reveal.getTotalSlides === 'function')
                     ? reveal.getTotalSlides()
                     : (reveal.getSlides ? reveal.getSlides().length : 1);
                 var cur = (reveal.getIndices ? reveal.getIndices().h : 0) + 1;
-                var target = window.prompt(APP_STATE.lang === 'zh-TW' ? ('請輸入要跳轉的頁碼 (1 - ' + total + '):') : ('Jump to slide (1 - ' + total + '):'), cur);
+                var target = typeof window.showAppPrompt === 'function'
+                    ? await window.showAppPrompt({
+                        title: APP_STATE.lang === 'zh-TW' ? '跳轉投影片' : 'Jump to Slide',
+                        message: APP_STATE.lang === 'zh-TW' ? ('請輸入要跳轉的頁碼 (1 - ' + total + '):') : ('Jump to slide (1 - ' + total + '):'),
+                        initialValue: String(cur),
+                        inputType: 'text',
+                        allowEmpty: false
+                    })
+                    : window.prompt(APP_STATE.lang === 'zh-TW' ? ('請輸入要跳轉的頁碼 (1 - ' + total + '):') : ('Jump to slide (1 - ' + total + '):'), cur);
                 if (target !== null) {
                     var p = parseInt(target, 10);
                     if (Number.isInteger(p) && p >= 1 && p <= total) {
@@ -6409,8 +6471,7 @@ themeCss + '\\n' +
                     var canvas = await window.html2canvas(curSection, {
                         scale: 2,
                         useCORS: true,
-                        allowTaint: true,
-                        backgroundColor: null
+                        logging: false
                     });
                     var curIndex = (reveal.getIndices ? reveal.getIndices().h : 0) + 1;
                     var a = document.createElement('a');
@@ -6421,7 +6482,6 @@ themeCss + '\\n' +
                         window.showToast(APP_STATE.lang === 'zh-TW' ? '投影片圖片導出成功' : 'Slide image exported');
                     }
                 } catch (err) {
-                    console.error('Slide export error:', err);
                     if (typeof window.showToast === 'function') {
                         window.showToast('Export failed: ' + err.message);
                     }
@@ -6438,7 +6498,17 @@ themeCss + '\\n' +
                         window.showToast(APP_STATE.lang === 'zh-TW' ? '已複製當前投影片連結' : 'Slide link copied');
                     }
                 } catch (e) {
-                    window.prompt(APP_STATE.lang === 'zh-TW' ? '請複製投影片連結：' : 'Copy slide link:', slideUrl);
+                    if (typeof window.showAppPrompt === 'function') {
+                        await window.showAppPrompt({
+                            title: APP_STATE.lang === 'zh-TW' ? '複製投影片連結' : 'Copy Slide Link',
+                            message: APP_STATE.lang === 'zh-TW' ? '請複製投影片連結：' : 'Copy slide link:',
+                            initialValue: slideUrl,
+                            inputType: 'text',
+                            allowEmpty: true
+                        })
+                    } else {
+                        window.prompt(APP_STATE.lang === 'zh-TW' ? '請複製投影片連結：' : 'Copy slide link:', slideUrl);
+                    }
                 }
             };
 

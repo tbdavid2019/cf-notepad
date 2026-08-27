@@ -82,4 +82,6 @@ test('HTML base template openModal supports Escape, Tab focus trap, and data-mod
     assert.match(template, /event\.key === 'Escape'/)
     assert.match(template, /event\.target\.matches\('\[data-modal-close\], \.modal-mask, \.close-btn'\)/)
     assert.match(template, /closeModal\(modal\)/)
+    assert.match(template, /window\.showAppPrompt = openPasswordModal/)
+    assert.match(template, /window\.showAppDialog = openAppDialog/)
 })

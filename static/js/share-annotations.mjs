@@ -957,7 +957,15 @@ export function initShareAnnotations(options = {}) {
                     deleteButton.setAttribute('aria-label', copy.deleteComment)
                     deleteButton.addEventListener('click', async event => {
                         event.stopPropagation()
-                        if (!window.confirm(copy.confirmDelete)) return
+                        const confirmed = typeof window.showAppDialog === 'function'
+                            ? await window.showAppDialog({
+                                title: copy.deleteComment || (lang === 'zh-TW' ? '刪除留言' : 'Delete Comment'),
+                                message: copy.confirmDelete,
+                                kind: 'confirm',
+                                confirm: true
+                            })
+                            : window.confirm(copy.confirmDelete)
+                        if (!confirmed) return
                         deleteButton.disabled = true
                         try {
                             await requestJson(

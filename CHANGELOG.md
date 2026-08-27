@@ -7,6 +7,8 @@
     - 全面收斂所有彈窗（`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`）之卡片與遮罩樣式。
     - 徹底移除舊版寫死白色 `#ffffff` 的硬編碼樣式，全面採用 `--modal-bg`, `--modal-border`, `--modal-text`, `--modal-surface`, `--modal-accent` 等標準色彩變數族，100% 完美適配全站 20 款深淺主題（Tokyo Night, Dracula, Claude Canvas 等）。
     - 遮罩層全面引入現代毛玻璃質感（`backdrop-filter: blur(4px)`），卡片邊角統一為 12px 圓角與立體陰影。
+  - **淘汰原生對話框，收斂至網頁標準彈窗 (Eliminate Native `window.confirm` & `window.prompt`)**：
+    - 將錄音轉錄授權確認（`markdown-toolbar.mjs`）、AI 翻譯目標語言與雙語對照確認（`base.js`）、註釋留言刪除確認（`share-annotations.mjs`）、簡報跳轉頁碼等原先調用原生瀏覽器白色對話框的孤島，全面升級為統一非阻塞的 `window.showAppDialog` 與 `window.showAppPrompt` 網頁風格彈窗，支援深色背景與鍵盤無障礙操作。
   - **生命週期與事件委派統一 (`openModal` / `closeModal` & Data Attributes)**：
     - 將各功能獨立修改 `style.display = 'flex'` / `'block'` 的孤島開關收斂至全域 `openModal(modal, { initialFocus, trigger, onEscape })` 與 `closeModal(modal)` 管理。
     - 內建**全域 Escape 鍵快速關閉**、**Tab / Shift+Tab 雙向焦點循環鎖定 (Focus Trap)**、**點擊遮罩關閉** 與 **關閉後原觸發元件焦點復原 (Focus Restoration)**。

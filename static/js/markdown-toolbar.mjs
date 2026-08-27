@@ -632,7 +632,15 @@ export const initMarkdownToolbar = (root = document) => {
         const recordingConsent = lang === 'zh-TW'
             ? '請確認所有參與者已同意錄音與轉錄。要開始錄音嗎？'
             : 'Confirm that all participants consent to recording and transcription. Start recording?'
-        if (!window.confirm(recordingConsent)) {
+        const confirmed = typeof window.showAppDialog === 'function'
+            ? await window.showAppDialog({
+                title: lang === 'zh-TW' ? '錄音與轉錄確認' : 'Recording Consent',
+                message: recordingConsent,
+                kind: 'confirm',
+                confirm: true
+            })
+            : window.confirm(recordingConsent)
+        if (!confirmed) {
             startingRecording = false
             return
         }
