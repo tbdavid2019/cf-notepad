@@ -962,9 +962,9 @@ export const MATH_FORMAT_MODAL = (lang) => {
 
     return `
 <div id="math-format-modal" class="modal math-format-modal" role="dialog" aria-modal="true" aria-labelledby="math-format-title" aria-describedby="math-format-description" aria-hidden="true" style="display:none;">
-    <div class="modal-mask" id="math-format-mask"></div>
+    <div class="modal-mask" id="math-format-mask" data-modal-close></div>
     <form class="editor-preference-content math-format-content" id="math-format-form">
-        <button type="button" class="close-btn editor-preference-close" id="math-format-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <button type="button" class="close-btn editor-preference-close" id="math-format-close-btn" data-modal-close aria-label="${zh ? '關閉' : 'Close'}">×</button>
         <h2 id="math-format-title" style="display:flex; align-items:center; gap:8px;">
             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:18px;color:var(--toolbar-accent,#c8654b);">fx</span>
             <span>${title}</span>
@@ -1002,7 +1002,7 @@ export const MATH_FORMAT_MODAL = (lang) => {
             </label>
         </fieldset>
         <div class="editor-preference-actions">
-            <button type="button" class="opt-button" id="math-format-cancel-btn">${zh ? '取消' : 'Cancel'}</button>
+            <button type="button" class="opt-button" id="math-format-cancel-btn" data-modal-close>${zh ? '取消' : 'Cancel'}</button>
             <button type="submit" class="opt-button opt-button-accent" id="math-format-confirm-btn">${zh ? '儲存設定' : 'Save'}</button>
         </div>
     </form>
@@ -1018,9 +1018,9 @@ export const URL_IMPORT_MODAL = (lang) => {
     const submitText = zh ? '開始擷取' : 'Fetch & Convert'
     return `
 <div id="url-import-modal" class="modal url-import-modal" role="dialog" aria-modal="true" aria-labelledby="url-import-title" aria-hidden="true" style="display:none;">
-    <div class="modal-mask" id="url-import-mask"></div>
+    <div class="modal-mask" id="url-import-mask" data-modal-close></div>
     <div class="url-import-modal-content">
-        <button type="button" class="close-btn" id="url-import-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <button type="button" class="close-btn" id="url-import-close-btn" data-modal-close aria-label="${zh ? '關閉' : 'Close'}">×</button>
         <h3 id="url-import-title" class="url-import-modal-title">
             ${SVG_ICONS.globe} <span>${title}</span>
         </h3>
@@ -1031,7 +1031,7 @@ export const URL_IMPORT_MODAL = (lang) => {
             </div>
             <div id="url-import-status" style="margin-bottom: 14px; font-size: 0.88rem; display: none; padding: 8px 12px; border-radius: 6px;"></div>
             <div class="url-import-actions">
-                <button type="button" class="opt-button" id="url-import-cancel-btn">${cancelText}</button>
+                <button type="button" class="opt-button" id="url-import-cancel-btn" data-modal-close>${cancelText}</button>
                 <button type="submit" class="opt-button opt-button-accent" id="url-import-submit-btn">${submitText}</button>
             </div>
         </form>
@@ -1042,11 +1042,12 @@ export const URL_IMPORT_MODAL = (lang) => {
 export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     const t = getLangText(lang)
     const showNoteHistory = noteHistoryEnabled === true
+    const closeLabel = lang === 'zh-TW' ? '關閉' : 'Close'
     return `
 <div class="modal share-modal" role="dialog" aria-modal="true" aria-label="${lang === 'zh-TW' ? '分享連結' : 'Share link'}" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="modal-content">
-        <span class="close-btn">x</span>
+        <button type="button" class="close-btn share-modal-close" data-modal-close aria-label="${closeLabel}">×</button>
         <div class="modal-body">
             <input type="text" readonly value="" />
             <button class="opt-button share-modal-copy-btn">${t.copy}</button>
@@ -1054,9 +1055,9 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
 </div>
 </div>
 <div class="modal share-history-modal" role="dialog" aria-modal="true" aria-labelledby="share-history-title" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="share-history-content">
-        <button type="button" class="close-btn share-history-close" aria-label="${t.later}">x</button>
+        <button type="button" class="close-btn share-history-close" data-modal-close aria-label="${closeLabel}">×</button>
         <h2 id="share-history-title">${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent Share Links'}</h2>
         <div class="share-history-tabs" role="tablist">
             <button type="button" class="share-history-tab active" data-share-history-tab="created" aria-selected="true">${lang === 'zh-TW' ? '我分享的' : 'Created'}</button>
@@ -1066,9 +1067,9 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
 </div>
 </div>
 <div class="modal embed-modal" role="dialog" aria-modal="true" aria-labelledby="embed-modal-title" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="embed-modal-content">
-        <button type="button" class="close-btn embed-modal-close" aria-label="${t.later}">x</button>
+        <button type="button" class="close-btn embed-modal-close" data-modal-close aria-label="${closeLabel}">×</button>
         <h2 id="embed-modal-title">${lang === 'zh-TW' ? '嵌入分享頁' : 'Embed share page'}</h2>
         <p>${lang === 'zh-TW' ? '將以下 iframe 程式碼貼到你的網站即可嵌入此分享頁。' : 'Copy this iframe code into your website to embed this shared page.'}</p>
         <textarea class="embed-modal-code" readonly spellcheck="false" aria-label="${lang === 'zh-TW' ? '嵌入程式碼' : 'Embed code'}"></textarea>
@@ -1076,10 +1077,10 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     </div>
 </div>
 <div class="modal password-modal" role="dialog" aria-modal="true" aria-labelledby="password-modal-title" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="password-modal-content">
         <form class="password-modal-form" novalidate>
-            <button type="button" class="close-btn password-modal-close" aria-label="${t.passwordCancel}">x</button>
+            <button type="button" class="close-btn password-modal-close" data-modal-close aria-label="${t.passwordCancel || closeLabel}">×</button>
             <h2 id="password-modal-title"></h2>
             <p class="password-modal-message"></p>
             <input type="password" class="password-modal-input" autocomplete="current-password" />
@@ -1091,7 +1092,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     </div>
 </div>
 <div class="modal app-dialog-modal" role="alertdialog" aria-modal="true" aria-labelledby="app-dialog-title" aria-describedby="app-dialog-message" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="app-dialog-content" data-dialog-kind="info">
         <div class="app-dialog-icon" aria-hidden="true">i</div>
         <div class="app-dialog-copy">
@@ -1105,7 +1106,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     </div>
 </div>
 <div class="modal import-options-modal" role="dialog" aria-modal="true" aria-labelledby="import-options-title" aria-describedby="import-options-message" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="app-dialog-content" data-dialog-kind="confirm">
         <div class="app-dialog-icon" aria-hidden="true">?</div>
         <div class="app-dialog-copy">
@@ -1120,7 +1121,7 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
     </div>
 </div>
 <div class="modal file-drop-modal" role="dialog" aria-modal="true" aria-labelledby="file-drop-title" aria-describedby="file-drop-message" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="app-dialog-content file-drop-dialog-content" data-dialog-kind="confirm">
         <div class="app-dialog-icon file-drop-icon" aria-hidden="true">📄</div>
         <div class="app-dialog-copy">
@@ -1137,9 +1138,9 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
 </div>
 ${showNoteHistory ? `
 <div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title" aria-hidden="true">
-    <div class="modal-mask"></div>
+    <div class="modal-mask" data-modal-close></div>
     <div class="note-history-content">
-        <button type="button" class="close-btn note-history-close" aria-label="${t.later}">x</button>
+        <button type="button" class="close-btn note-history-close" data-modal-close aria-label="${closeLabel}">×</button>
         <h2 id="note-history-title">${t.history}</h2>
         <div class="note-history-toolbar">
             <div class="segmented-toggle note-history-render-toggle" role="group" aria-label="${t.history}">
@@ -1168,11 +1169,12 @@ ${showNoteHistory ? `
 
 export const CITE_MODAL = (lang) => {
     const zh = lang === 'zh-TW'
+    const closeLabel = zh ? '關閉' : 'Close'
     return `
 <div id="cite-modal" class="modal cite-modal" role="dialog" aria-modal="true" aria-labelledby="cite-modal-title" aria-hidden="true" style="display:none;">
-    <div class="modal-mask" id="cite-modal-mask"></div>
+    <div class="modal-mask" id="cite-modal-mask" data-modal-close></div>
     <div class="cite-modal-content">
-        <button type="button" class="close-btn" id="cite-modal-close-btn" aria-label="${zh ? '關閉' : 'Close'}">×</button>
+        <button type="button" class="close-btn" id="cite-modal-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
         <h3 id="cite-modal-title" class="cite-modal-title">
             ${SVG_ICONS.quote} <span>${zh ? '引用此文章 (Cite this Note)' : 'Cite this Note'}</span>
         </h3>
@@ -1189,7 +1191,7 @@ export const CITE_MODAL = (lang) => {
             <textarea id="cite-preview-text" class="cite-preview-text" readonly spellcheck="false" aria-label="${zh ? '引用預覽' : 'Citation preview'}"></textarea>
         </div>
         <div class="cite-modal-actions">
-            <button type="button" class="opt-button" id="cite-modal-cancel-btn">${zh ? '關閉' : 'Close'}</button>
+            <button type="button" class="opt-button" id="cite-modal-cancel-btn" data-modal-close>${closeLabel}</button>
             <button type="button" class="opt-button opt-button-accent" id="cite-modal-copy-btn">${zh ? '📋 複製引用' : '📋 Copy Citation'}</button>
         </div>
     </div>

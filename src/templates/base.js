@@ -1219,12 +1219,19 @@ ${getMarkdownCss()}
     const modalFocusState = new WeakMap()
     const getModalFocusableElements = modal => [...modal.querySelectorAll('button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
         .filter(element => !element.hidden && !element.closest('[hidden]'))
-    const openModal = (modal, { initialFocus = null, trigger = document.activeElement } = {}) => {
+    const openModal = (modal, { initialFocus = null, trigger = document.activeElement, onEscape = null } = {}) => {
         if (!modal) return
         const previousState = modalFocusState.get(modal)
         if (previousState?.onKeyDown) modal.removeEventListener('keydown', previousState.onKeyDown)
+        if (previousState?.onMaskClick) modal.removeEventListener('click', previousState.onMaskClick)
         if (previousState?.focusTimer) window.clearTimeout(previousState.focusTimer)
         const onKeyDown = event => {
+            if (event.key === 'Escape' && !modal.hasAttribute('data-prevent-escape-close')) {
+                event.preventDefault()
+                if (typeof onEscape === 'function') onEscape()
+                else closeModal(modal)
+                return
+            }
             if (event.key !== 'Tab') return
             const focusable = getModalFocusableElements(modal)
             if (!focusable.length) return
@@ -1238,11 +1245,17 @@ ${getMarkdownCss()}
                 first.focus()
             }
         }
-        const state = { trigger, onKeyDown, focusTimer: null }
+        const onMaskClick = event => {
+            if (event.target.matches('[data-modal-close], .modal-mask, .close-btn') && !modal.hasAttribute('data-prevent-mask-close')) {
+                closeModal(modal)
+            }
+        }
+        const state = { trigger, onKeyDown, onMaskClick, focusTimer: null }
         modalFocusState.set(modal, state)
         modal.style.display = 'block'
         modal.setAttribute('aria-hidden', 'false')
         modal.addEventListener('keydown', onKeyDown)
+        modal.addEventListener('click', onMaskClick)
         state.focusTimer = window.setTimeout(() => {
             if (modalFocusState.get(modal) === state) (initialFocus || getModalFocusableElements(modal)[0])?.focus()
         }, 0)
@@ -1251,6 +1264,7 @@ ${getMarkdownCss()}
         if (!modal) return
         const state = modalFocusState.get(modal)
         if (state?.onKeyDown) modal.removeEventListener('keydown', state.onKeyDown)
+        if (state?.onMaskClick) modal.removeEventListener('click', state.onMaskClick)
         if (state?.focusTimer) window.clearTimeout(state.focusTimer)
         modalFocusState.delete(modal)
         modal.style.display = 'none'
@@ -3182,8 +3196,7 @@ ${getMarkdownCss()}
 
         const openUrlImportModal = () => {
             if (!$urlImportModal) return
-            $urlImportModal.style.display = 'flex'
-            $urlImportModal.setAttribute('aria-hidden', 'false')
+            openModal($urlImportModal, { initialFocus: $urlImportInput, trigger: $dropdownImportUrlBtn })
             if ($urlImportInput) {
                 $urlImportInput.value = ''
                 $urlImportInput.focus()
@@ -3197,8 +3210,7 @@ ${getMarkdownCss()}
 
         const closeUrlImportModal = () => {
             if (!$urlImportModal) return
-            $urlImportModal.style.display = 'none'
-            $urlImportModal.setAttribute('aria-hidden', 'true')
+            closeModal($urlImportModal)
         }
 
         if ($dropdownImportUrlBtn) {
@@ -5677,12 +5689,11 @@ themeCss + '\\n' +
                 });
             }
 
-            function openCiteModal() {
+            function openCiteModal(triggerBtn) {
                 if (!citeModal) return;
                 currentCitationMap = buildCitationsForCurrentDoc();
                 updateCitePreview(currentCiteFormat);
-                citeModal.style.display = 'flex';
-                citeModal.setAttribute('aria-hidden', 'false');
+                openModal(citeModal, { initialFocus: citePreviewText, trigger: triggerBtn || document.activeElement });
                 if (citePreviewText) {
                     citePreviewText.focus();
                     citePreviewText.select();
@@ -5691,15 +5702,14 @@ themeCss + '\\n' +
 
             function closeCiteModal() {
                 if (!citeModal) return;
-                citeModal.style.display = 'none';
-                citeModal.setAttribute('aria-hidden', 'true');
+                closeModal(citeModal);
             }
 
             document.addEventListener('click', (e) => {
                 const trigger = e.target.closest('#cite-share-btn, #cite-edit-btn, #cite-note-btn, .cite-share-btn, .cite-edit-btn');
                 if (trigger) {
                     e.preventDefault();
-                    openCiteModal();
+                    openCiteModal(trigger);
                 }
             });
             if (citeModalMask) citeModalMask.addEventListener('click', closeCiteModal);
@@ -5834,20 +5844,18 @@ themeCss + '\\n' +
                 });
             }
 
-            function openMathFormatModal() {
+            function openMathFormatModal(e) {
                 if (!$mathFormatModal) return;
                 const currentFormat = getSavedMathFormat();
                 syncModalOptions(currentFormat);
-                $mathFormatModal.style.display = 'block';
-                $mathFormatModal.setAttribute('aria-hidden', 'false');
                 const checkedRadio = $mathFormatForm?.querySelector('input[name="math-copy-format"]:checked');
-                if (checkedRadio) checkedRadio.focus();
+                const trigger = (e && e.currentTarget) || document.activeElement;
+                openModal($mathFormatModal, { initialFocus: checkedRadio, trigger });
             }
 
             function closeMathFormatModal() {
                 if (!$mathFormatModal) return;
-                $mathFormatModal.style.display = 'none';
-                $mathFormatModal.setAttribute('aria-hidden', 'true');
+                closeModal($mathFormatModal);
             }
 
             $mathFormatTriggers.forEach(btn => btn.addEventListener('click', openMathFormatModal));

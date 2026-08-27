@@ -1,5 +1,20 @@
 # Changelog
 
+## [2026-08-27]
+
+- **✨ 全站彈出視窗架構標準化與生命週期統一 (Unified Modal Dialog Architecture & Design System)**：
+  - **CSS 變數與卡片風格完全統一 (Design System & Theme Convergence)**：
+    - 全面收斂所有彈窗（`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`）之卡片與遮罩樣式。
+    - 徹底移除舊版寫死白色 `#ffffff` 的硬編碼樣式，全面採用 `--modal-bg`, `--modal-border`, `--modal-text`, `--modal-surface`, `--modal-accent` 等標準色彩變數族，100% 完美適配全站 20 款深淺主題（Tokyo Night, Dracula, Claude Canvas 等）。
+    - 遮罩層全面引入現代毛玻璃質感（`backdrop-filter: blur(4px)`），卡片邊角統一為 12px 圓角與立體陰影。
+  - **生命週期與事件委派統一 (`openModal` / `closeModal` & Data Attributes)**：
+    - 將各功能獨立修改 `style.display = 'flex'` / `'block'` 的孤島開關收斂至全域 `openModal(modal, { initialFocus, trigger, onEscape })` 與 `closeModal(modal)` 管理。
+    - 內建**全域 Escape 鍵快速關閉**、**Tab / Shift+Tab 雙向焦點循環鎖定 (Focus Trap)**、**點擊遮罩關閉** 與 **關閉後原觸發元件焦點復原 (Focus Restoration)**。
+    - 支援 `data-modal-close` 統一屬性，點擊遮罩或任何帶有此屬性的關閉按鈕皆能自動執行關閉與狀態清理。
+  - **無障礙關閉按鈕與符號標準化 (Accessible Close Buttons & ARIA)**：
+    - 統一採用具備 `aria-label` 的標準 `<button type="button" class="close-btn ...">×</button>`，替換舊版英文字母 `x` 與純文字 `<span>`。
+    - 健全所有彈窗之 `role="dialog"` / `role="alertdialog"`、`aria-modal="true"` 與 `aria-hidden` 動態同步。
+
 ## [2026-08-26]
 
 - **🐛 修復 AI 編輯與整理時 ReferenceError: normalizeTranslationTargetLanguage 異常 (Fix AI Assistant Policy Module Imports in Worker Entry)**：
