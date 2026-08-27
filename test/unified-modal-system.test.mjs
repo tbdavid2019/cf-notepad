@@ -42,19 +42,31 @@ test('CITE_MODAL, URL_IMPORT_MODAL, and MATH_FORMAT_MODAL render data-modal-clos
     assert.match(mathZh, /id="math-format-cancel-btn" data-modal-close/)
 })
 
-test('BASE_CSS defines standard modal variables and cards across themes', () => {
+test('BASE_CSS defines standard modal variables and cards across light and dark themes', () => {
     const css = getBaseCss()
 
-    // Modal background & theme variables
+    // Light Theme variables
     assert.match(css, /--modal-bg:\s*#ffffff;/)
     assert.match(css, /--modal-border:\s*#d0d7de;/)
     assert.match(css, /--modal-text:\s*#24292f;/)
+    assert.match(css, /--modal-surface:\s*#f6f8fa;/)
 
-    // Standardized modal cards
+    // Dark Theme variables
+    assert.match(css, /html\[data-ui-theme="dark"\][\s\S]*--modal-bg:\s*#1e293b;/)
+    assert.match(css, /html\[data-ui-theme="dark"\][\s\S]*--modal-border:\s*#334155;/)
+    assert.match(css, /html\[data-ui-theme="dark"\][\s\S]*--modal-text:\s*#f1f5f9;/)
+    assert.match(css, /html\[data-ui-theme="dark"\][\s\S]*--modal-surface:\s*#0f172a;/)
+    assert.match(css, /html\[data-ui-theme="dark"\][\s\S]*--modal-accent:\s*#38bdf8;/)
+
+    // Standardized modal cards using CSS variables
     assert.match(css, /\.modal-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
     assert.match(css, /\.embed-modal-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
     assert.match(css, /\.url-import-modal-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
     assert.match(css, /\.cite-modal-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
+    assert.match(css, /\.editor-preference-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
+    assert.match(css, /\.publish-nudge-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
+    assert.match(css, /\.password-modal-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
+    assert.match(css, /\.app-dialog-content\s*\{[\s\S]*background:\s*var\(--modal-bg/)
     assert.match(css, /\.modal \.close-btn/)
 })
 
