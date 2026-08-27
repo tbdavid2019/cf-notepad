@@ -1537,7 +1537,7 @@ ${getMarkdownCss()}
         }
     }
 
-    const openPasswordModal = ({ title, initialValue = '', allowEmpty = false } = {}) => new Promise(resolve => {
+    const openPasswordModal = (options = {}) => new Promise(resolve => {
         const modal = document.querySelector('.password-modal')
         const form = modal ? modal.querySelector('.password-modal-form') : null
         const input = modal ? modal.querySelector('.password-modal-input') : null
@@ -1548,12 +1548,17 @@ ${getMarkdownCss()}
         const closeBtn = modal ? modal.querySelector('.password-modal-close') : null
         const mask = modal ? modal.querySelector('.modal-mask') : null
 
-        const options = (arguments && arguments[0]) || {}
-        const customMessage = typeof options.message === 'string' ? options.message : ''
-        const inputType = options.inputType || 'password'
-        const placeholder = options.placeholder || ''
-        const customConfirmText = options.confirmText || ''
-        const customCancelText = options.cancelText || ''
+        const {
+            title = '',
+            initialValue = '',
+            allowEmpty = false,
+            message: customMessage = '',
+            inputType = 'password',
+            placeholder = '',
+            confirmText: customConfirmText = '',
+            cancelText: customCancelText = '',
+        } = typeof options === 'string' ? { title: options } : (options || {})
+
         const prevConfirmText = confirmBtn ? confirmBtn.textContent : ''
         const prevCancelText = cancelBtn ? cancelBtn.textContent : ''
 
