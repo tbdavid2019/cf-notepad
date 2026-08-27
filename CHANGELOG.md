@@ -2,6 +2,14 @@
 
 ## [2026-08-27]
 
+- **🎨 分享與發布選單介面卡片化分組重構 (Card-Grouped Share & Publish Dropdown Redesign)**：
+  - **清晰分格與卡片底色 (Card Grouping & Surface Separation)**：
+    - 將發布選單全面重構為清晰的卡片分組結構（`.dropdown-group-card`），明確劃分「檢視閱讀模式」、「快速複製連結」、「分享設定」與「危險操作」四大區塊。
+    - 採用獨立表面底色（`var(--modal-surface)`）與高對比圓角外框（`border-radius: 8px`），各區塊一目了然，徹底解決以往條目擠成一團、界線模糊的問題。
+  - **解決行高與排版擁擠痛點 (Eliminate Cramped Vertical Spacing)**：
+    - 徹底重構 `<button>` 與 `<a>` 項目之彈性盒排版（Flexbox）、邊距與行高（`line-height: 1.35`），給予圖示、標題與副標題充裕的間距（Padding & Gap）。
+    - 懸停（Hover）背景與文字高亮平滑過渡，全面適配 20 款深淺主題（Dark Mode 下使用深 slate 表面底色與高對比文字）。
+
 - **✨ 全站彈出視窗架構標準化與生命週期統一 (Unified Modal Dialog Architecture & Design System)**：
   - **CSS 變數與卡片風格完全統一 (Design System & Theme Convergence)**：
     - 全面收斂所有彈窗（`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`）之卡片與遮罩樣式。
