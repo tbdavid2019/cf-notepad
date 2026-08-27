@@ -85,3 +85,32 @@ test('HTML base template openModal supports Escape, Tab focus trap, and data-mod
     assert.match(template, /window\.showAppPrompt = openPasswordModal/)
     assert.match(template, /window\.showAppDialog = openAppDialog/)
 })
+
+test('all modal dialogs and openers are properly wired in HTML base template', () => {
+    const template = HTML({
+        title: 'Modal Wiring Test',
+        body: '',
+        path: 'modal-wiring-test',
+        isPublished: true,
+    })
+
+    // Verify modal trigger and lifecycle functions exist
+    assert.match(template, /const setupShareHistory =/)
+    assert.match(template, /const setupNoteHistory =/)
+    assert.match(template, /(?:const|function)\s+openUrlImportModal/)
+    assert.match(template, /(?:const|function)\s+openCiteModal/)
+    assert.match(template, /(?:const|function)\s+openMathFormatModal/)
+    assert.match(template, /const openPasswordModal =/)
+    assert.match(template, /const openAppDialog =/)
+
+    // Verify safe parsing with new Function
+    const scriptMatches = [...template.matchAll(/<script\b[^>]*>([\s\S]*?)<\/script>/gi)]
+    for (const match of scriptMatches) {
+        const code = match[1].trim()
+        if (code && !match[0].includes('src=') && !match[0].includes('type="module"')) {
+            assert.doesNotThrow(() => {
+                new Function(code)
+            }, 'Client inline script must parse without syntax error')
+        }
+    }
+})
