@@ -1123,6 +1123,9 @@ ${getMarkdownCss()}
                 });
                 window.disposeEchartsCharts?.();
                 node.innerHTML = clean;
+                if (typeof window.syncRealtimeDocumentTitle === 'function') {
+                    window.syncRealtimeDocumentTitle(text);
+                }
                 decorateColumnLayouts(node);
                 decorateHeadingAnchors(node);
                 renderTableOfContents(node);
@@ -1184,10 +1187,64 @@ ${getMarkdownCss()}
             previewDevice: initialEditorPreviewDevice || ext.previewDevice || '',
             splitDirection: ext.splitDirection || '',
         },
+        appName: APP_NAME,
         lang,
         title: title || '',
         i18n: getLangText(lang),
     })}
+
+    const syncRealtimeDocumentTitle = (text) => {
+        if (typeof text !== 'string') return
+        const lines = text.split('\\n').slice(0, 50)
+        let inFence = false
+        let inFrontmatter = false
+        let sawContent = false
+        let h1Title = ''
+        let h2Title = ''
+        let firstParagraph = ''
+
+        for (const line of lines) {
+            const trimmed = line.trim()
+            if (!trimmed) continue
+            if (!sawContent && trimmed === '---') {
+                inFrontmatter = true
+                sawContent = true
+                continue
+            }
+            if (inFrontmatter) {
+                if (trimmed === '---' || trimmed === '...') inFrontmatter = false
+                continue
+            }
+            const backtickFence = String.fromCharCode(96, 96, 96)
+            if (trimmed.startsWith(backtickFence) || trimmed.startsWith('~~~')) {
+                inFence = !inFence
+                sawContent = true
+                continue
+            }
+            if (inFence) continue
+            if (/^\\[toc\\]$/i.test(trimmed) || /^\\{:toc\\}$/i.test(trimmed) || /^>\\s*\\[!/i.test(trimmed) || /^<!--/.test(trimmed) || /^[-*_]{3,}$/.test(trimmed)) continue
+            if (/^(好的[，,：:]|這是為您|以下是|Certainly[!,：:]|Here is|Below is|Sure[!,：:]|Okay[!,：:])/i.test(trimmed) && trimmed.length < 40) continue
+
+            const cleanHeading = str => str.split(String.fromCharCode(96)).join('').replace(/[*_~]/g, '').trim().substring(0, 70)
+            if (/^#\\s+/.test(trimmed) && !h1Title) {
+                h1Title = cleanHeading(trimmed.replace(/^#\\s+/, ''))
+                break
+            } else if (/^##\\s+/.test(trimmed) && !h2Title) {
+                h2Title = cleanHeading(trimmed.replace(/^##\\s+/, ''))
+            } else if (!firstParagraph) {
+                firstParagraph = cleanHeading(trimmed.replace(/^#{1,6}\\s*/, ''))
+            }
+            sawContent = true
+        }
+
+        const candidate = h1Title || h2Title || firstParagraph
+        if (candidate && candidate !== APP_STATE.title) {
+            APP_STATE.title = candidate
+            const appName = APP_STATE.appName || 'david888 wiki'
+            document.title = candidate + ' - ' + appName
+        }
+    }
+    window.syncRealtimeDocumentTitle = syncRealtimeDocumentTitle
     const PENDING_PRESENTATION_KEY = 'cf-notepad:pending-presentation-destination'
     const LANG_COOKIE_MAX_AGE = 60 * 60 * 24 * 365
     const NEW_ENTRY_WELCOME_STORAGE_KEY = 'cf-notepad:new-entry-welcome:' + APP_STATE.path
@@ -1665,6 +1722,7 @@ ${getMarkdownCss()}
 
     const triggerRender = (node, text) => {
         if (!node) return;
+        syncRealtimeDocumentTitle(text);
         if (window.renderMarkdown) {
             window.renderMarkdown(node, text);
             return;

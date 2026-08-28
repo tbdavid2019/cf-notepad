@@ -24,6 +24,33 @@ curl -fsSL -H "Cache-Control: no-cache" \
 
 Apply the fetched version's instructions for the rest of the task. If the canonical URL is temporarily unavailable, only use a local or cached copy as a fallback, clearly note that freshness could not be verified, and avoid assuming that undocumented behavior is supported. Always keep an eye out for newly added formatting tags and modern layout structures!
 
+## 👑 Mandatory Document Structure Rule for AI Agents & LLMs: Always Start with `# Title`
+
+> [!CRITICAL]
+> **RULE: ALWAYS Start Your Markdown Document with a Level-1 `# Document Title` on the Very First Line**:
+> 1. **HTML `<title>`, Open Graph (`og:title`), and Social Share Cards Depend on the First `# Title`**:
+>    The Wiki engine automatically extracts the first `# Heading` to derive the page title, browser tab `<title>`, Open Graph metadata (`og:title`), sitemap entries, and Book Mode manifests.
+> 2. **NEVER Output Conversational Chatter or Introductory Preamble Before `# Title`**:
+>    - ❌ **BAD**: `好的，這是為您整理的分析報告：\n\n# 2026年全球科技趨勢報告`
+>    - ❌ **BAD**: `Certainly! Here is the architecture document you requested:\n\n# Distributed Storage Spec`
+>    - ✅ **GOOD**: `# 2026年全球科技趨勢報告\n\n> 本文深入評估邊緣分散式計算...`
+>    - ✅ **GOOD**: `# Distributed Storage Spec\n\n> Executive Summary: An in-depth evaluation...`
+>    **AI agents MUST output pure, raw Markdown starting immediately with `# Document Title` (or optional YAML frontmatter `---`). NEVER prefix the response with conversational filler, small talk, or meta explanations.**
+> 3. **`[TOC]`, Blockquotes, and Alerts MUST Be Placed AFTER `# Title`**:
+>    - ❌ **BAD**: `[TOC]\n\n# Document Title` (corrupts automatic title extraction)
+>    - ❌ **BAD**: `> [!NOTE]\n> Preamble...\n\n# Document Title`
+>    - ✅ **GOOD**:
+>      ```markdown
+>      # 📚 分散式邊緣儲存架構白皮書
+>
+>      > 執行摘要：深入評估 Cloudflare Workers + D1 混合儲存引擎之全球效能。
+>
+>      [TOC]
+>
+>      ## 1. 架構背景與前言
+>      ...
+>      ```
+
 ## Quick Start Guide
 
 ### 1. Read a Wiki Page (GET)

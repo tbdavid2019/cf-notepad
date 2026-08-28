@@ -1,5 +1,15 @@
 # Changelog
 
+## [2026-08-28]
+
+- **👑 AI Agent Skill 大標題強制規範與強健標題解析 (Mandatory `# Title` Rule & Robust Title Extraction)**：
+  - **Skill 規格全面升級**：於 `skills/SKILL.md` 與 `.agent/skills/david888-wiki-publisher/SKILL.md` 新增核心規則，強制要求所有 AI Agent 與 LLM 生成 Markdown 文檔時，**第一行必須直接以一級標題 `# Document Title` 開始**。
+  - **嚴禁前置廢話與小作文**：明文規範 AI 禁止在 `# Title` 前輸出寒暄招呼、前言說明（如「好的，這是為您整理的...」、「Certainly! Here is...」），亦不可將 `[TOC]` 或提示區塊置於 `# Title` 之前，避免文章 HTML `<title>`、Open Graph 社交預覽卡片與 Sitemap 標題損毀。
+  - **強健標題提取器 (`extractContentTitle`)**：後端與客戶端全面升級標題提取邏輯，自動略過 `[TOC]`、`> [!NOTE]` 警示區塊、分隔線與常見寒暄前綴，永遠優先匹配最高權重的 `# Heading` (H1/H2) 作為文章標題。
+
+- **⚡ 編輯器即時動態標題同步 (Real-time Dynamic Document Title Synchronization)**：
+  - 在編輯器中實裝 `syncRealtimeDocumentTitle`，作者於 Textarea 或區塊編輯器輸入或修改 `# 標題` 時，瀏覽器分頁標籤（`<title>`）與全域應用程式狀態（`APP_STATE.title`）**在每次輸入瞬間即時同步更新**，徹底告別必須重新整理頁面（Reload）標題才會生效的問題。
+
 ## [2026-08-27]
 
 - **🎨 分享與發布選單介面卡片化分組重構 (Card-Grouped Share & Publish Dropdown Redesign)**：

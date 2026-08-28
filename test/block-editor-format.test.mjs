@@ -221,3 +221,40 @@ test('a block document without a heading or paragraph never exposes its JSON as 
 
     assert.equal(extractNoteTitle(json, '', 'fallback-title'), 'fallback-title')
 })
+
+test('extractNoteTitle prioritizes H1 heading and ignores [TOC], alerts, and conversational chatter', () => {
+    const mdWithToc = `[TOC]
+
+# 核心架構白皮書
+
+內文說明...`
+    assert.equal(extractNoteTitle(mdWithToc), '核心架構白皮書')
+
+    const mdWithAlert = `> [!NOTE]
+> 這是前言注意事項
+
+# 正式文件標題
+
+內容...`
+    assert.equal(extractNoteTitle(mdWithAlert), '正式文件標題')
+
+    const mdWithChatter = `好的，這是為您撰寫的分析報告：
+
+# 2026年AI技術展望
+
+這是內文段落。`
+    assert.equal(extractNoteTitle(mdWithChatter), '2026年AI技術展望')
+
+    const mdWithFrontmatter = `---
+theme: retro
+transition: slide
+---
+
+[TOC]
+
+# 分散式邊緣計算指南
+
+內文...`
+    assert.equal(extractNoteTitle(mdWithFrontmatter), '分散式邊緣計算指南')
+})
+

@@ -27,6 +27,11 @@ writeGeneratedModule({
     exportName: 'AGENT_SKILL_MARKDOWN',
 })
 
+const localAgentSkillPath = resolve(repoRoot, '.agent/skills/david888-wiki-publisher/SKILL.md')
+if (existsSync(dirname(localAgentSkillPath))) {
+    copyFileSync(resolve(repoRoot, 'skills/SKILL.md'), localAgentSkillPath)
+}
+
 writeGeneratedModule({
     sourcePath: resolve(repoRoot, 'LLM_API_DOCS.md'),
     outputPath: resolve(generatedDir, 'api-docs.generated.mjs'),

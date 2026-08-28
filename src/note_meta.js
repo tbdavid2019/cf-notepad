@@ -1,8 +1,20 @@
 const TITLE_MAX_LENGTH = 70
 
+function isIgnoredTitleLine(trimmed = '') {
+    if (!trimmed) return true
+    if (/^\[toc\]$/i.test(trimmed) || /^\{:toc\}$/i.test(trimmed)) return true
+    if (/^>\s*\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]/i.test(trimmed)) return true
+    if (/^<!--[\s\S]*-->$/.test(trimmed)) return true
+    if (/^[-*_]{3,}$/.test(trimmed)) return true
+    if (/^\[(color|bg)=[^\]]+\]$/i.test(trimmed) || /^\[\/(color|bg)\]$/i.test(trimmed)) return true
+    if (/^(好的[，,：:]|這是為您|以下是|Certainly[!,：:]|Here is|Below is|Sure[!,：:]|Okay[!,：:])/i.test(trimmed) && trimmed.length < 40) return true
+    return false
+}
+
 function normalizeTitleCandidate(value = '') {
-    return String(value || '')
-        .trim()
+    const trimmed = String(value || '').trim()
+    if (!trimmed || isIgnoredTitleLine(trimmed)) return ''
+    return trimmed
         .replace(/^#{1,6}\s*/, '')
         .replace(/^>\s*/, '')
         .replace(/^\s*[-*+]\s+/, '')
@@ -41,9 +53,15 @@ function extractContentTitle(value = '') {
     const tiptapDocument = getTiptapDocument(trimmedVal)
     if (tiptapDocument) {
         for (const node of tiptapDocument.content) {
-            if (node?.type === 'heading' || node?.type === 'paragraph') {
+            if (node?.type === 'heading') {
                 const candidate = normalizeTitleCandidate(tiptapNodeText(node))
-                if (candidate) return candidate
+                if (candidate && !isIgnoredTitleLine(candidate)) return candidate
+            }
+        }
+        for (const node of tiptapDocument.content) {
+            if (node?.type === 'paragraph') {
+                const candidate = normalizeTitleCandidate(tiptapNodeText(node))
+                if (candidate && !isIgnoredTitleLine(candidate)) return candidate
             }
         }
         return ''
@@ -53,9 +71,15 @@ function extractContentTitle(value = '') {
             const parsed = JSON.parse(trimmedVal)
             if (parsed && Array.isArray(parsed.blocks)) {
                 for (const b of parsed.blocks) {
-                    if (b && (b.type === 'heading' || b.type === 'paragraph') && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
+                    if (b && b.type === 'heading' && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
                         const candidate = normalizeTitleCandidate(b.props.text)
-                        if (candidate) return candidate
+                        if (candidate && !isIgnoredTitleLine(candidate)) return candidate
+                    }
+                }
+                for (const b of parsed.blocks) {
+                    if (b && b.type === 'paragraph' && b.props && typeof b.props.text === 'string' && b.props.text.trim()) {
+                        const candidate = normalizeTitleCandidate(b.props.text)
+                        if (candidate && !isIgnoredTitleLine(candidate)) return candidate
                     }
                 }
                 return ''
@@ -63,12 +87,16 @@ function extractContentTitle(value = '') {
         } catch (e) {}
     }
 
-    const candidates = []
+    const lines = String(value || '').split('\n').slice(0, 50)
     let inFence = false
     let inFrontmatter = false
     let sawContent = false
 
-    for (const line of String(value || '').split('\n').slice(0, 30)) {
+    const h1Candidates = []
+    const h2Candidates = []
+    const paragraphCandidates = []
+
+    for (const line of lines) {
         const trimmed = line.trim()
 
         if (!trimmed) continue
@@ -90,17 +118,36 @@ function extractContentTitle(value = '') {
             continue
         }
 
-        if (inFence || /^[-*_]{3,}$/.test(trimmed) || /^<!--.*-->$/.test(trimmed)) {
+        if (inFence || isIgnoredTitleLine(trimmed)) {
             sawContent = true
             continue
         }
 
-        const candidate = normalizeTitleCandidate(trimmed)
-        if (candidate) candidates.push(candidate)
+        if (/^#\s+/.test(trimmed)) {
+            const candidate = normalizeTitleCandidate(trimmed)
+            if (candidate) h1Candidates.push(candidate)
+        } else if (/^##\s+/.test(trimmed)) {
+            const candidate = normalizeTitleCandidate(trimmed)
+            if (candidate) h2Candidates.push(candidate)
+        } else {
+            const candidate = normalizeTitleCandidate(trimmed)
+            if (candidate) paragraphCandidates.push(candidate)
+        }
         sawContent = true
     }
 
-    return candidates.find(candidate => !isWeakTitleCandidate(candidate)) || candidates[0] || ''
+    if (h1Candidates.length > 0) {
+        const strongH1 = h1Candidates.find(c => !isWeakTitleCandidate(c)) || h1Candidates[0]
+        if (strongH1) return strongH1
+    }
+
+    if (h2Candidates.length > 0) {
+        const strongH2 = h2Candidates.find(c => !isWeakTitleCandidate(c)) || h2Candidates[0]
+        if (strongH2) return strongH2
+    }
+
+    const strongParagraph = paragraphCandidates.find(c => !isWeakTitleCandidate(c)) || paragraphCandidates[0]
+    return strongParagraph || ''
 }
 
 export function extractNoteTitle(value = '', metadataTitle = '', fallback = '') {
