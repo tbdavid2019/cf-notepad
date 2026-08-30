@@ -258,3 +258,17 @@ transition: slide
     assert.equal(extractNoteTitle(mdWithFrontmatter), '分散式邊緣計算指南')
 })
 
+test('audio block type renders to HTML audio player and converts to markdown', () => {
+    const doc = {
+        version: 1,
+        blocks: [
+            { id: 'a1', type: 'audio', props: { url: 'https://s3.wiki.david888.com/rec-123.webm', audioId: 'rec_123' } },
+        ],
+    }
+    const html = renderBlockToHtml(doc)
+    assert.match(html, /<div class="media-audio-wrapper" data-block-id="a1"><audio controls src="https:\/\/s3\.wiki\.david888\.com\/rec-123\.webm" data-offline-audio-id="rec_123"><\/audio><\/div>/)
+
+    const md = blockToMarkdown(doc)
+    assert.match(md, /<audio controls src="https:\/\/s3\.wiki\.david888\.com\/rec-123\.webm"><\/audio>/)
+})
+

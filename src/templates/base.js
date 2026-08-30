@@ -412,7 +412,7 @@ ${getMarkdownCss()}
                         ${(isEdit && !isBlockDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
                         ${tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
-                                ? `<div class="preview-pane"><div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
+                                ? `<div class="preview-pane">${!isBlockDocument ? '<div id="preview-welcome" class="editor-welcome preview-welcome" aria-hidden="true" hidden></div>' : ''}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
                         )}
                     </div>
@@ -2397,8 +2397,9 @@ ${getMarkdownCss()}
         // New notes pair a random Tagore poem with one focused writing tip.
         // This is an overlay rather than a textarea placeholder so each part
         // can keep its own rhythm and disappear as soon as writing begins.
-        const \$welcome = document.querySelector('#editor-welcome')
-        if (APP_STATE.isEdit && (APP_STATE.isNewEntry || hasPendingNewEntryWelcome()) && \$textarea && \$welcome) {
+        const $welcome = document.querySelector('#editor-welcome')
+        const $previewWelcome = document.querySelector('#preview-welcome')
+        if (APP_STATE.isEdit && (APP_STATE.isNewEntry || hasPendingNewEntryWelcome()) && $textarea && ($welcome || $previewWelcome)) {
             const poemPromise = fetch('https://answerbook.david888.com/StrayBirds')
                 .then(res => res.json())
                 .catch(err => {
@@ -2443,7 +2444,8 @@ ${getMarkdownCss()}
                     }, speed);
                 });
 
-                const addWelcomeSection = async (kind, label, text) => {
+                const addWelcomeSection = async (kind, label, text, targetEl) => {
+                    if (!targetEl) return;
                     const lines = String(text || '').split('\\n').map(line => line.trim()).filter(Boolean);
                     if (!lines.length) return;
 
@@ -2455,8 +2457,8 @@ ${getMarkdownCss()}
                     const copy = document.createElement('div');
                     copy.className = 'editor-welcome__copy';
                     section.append(heading, copy);
-                    $welcome.appendChild(section);
-                    $welcome.hidden = false;
+                    targetEl.appendChild(section);
+                    targetEl.hidden = false;
 
                     for (const line of lines) {
                         if ($textarea.value) {
@@ -2471,27 +2473,32 @@ ${getMarkdownCss()}
                     }
                 };
 
-                if (poem) {
-                    await addWelcomeSection(
-                        'poem',
-                        '📖 ' + (isZh ? (poem.title || '《飛鳥集》') : ('Stray Birds — No. ' + (poem.num || ''))),
-                        isZh ? poem.chinese : poem.english,
-                    );
-                }
+                const poemTask = (poem && $welcome) ? addWelcomeSection(
+                    'poem',
+                    '📖 ' + (isZh ? (poem.title || '《飛鳥集》') : ('Stray Birds — No. ' + (poem.num || ''))),
+                    isZh ? poem.chinese : poem.english,
+                    $welcome,
+                ) : Promise.resolve();
+
+                let tipTask = Promise.resolve();
                 if (randomTip) {
                     const tip = isZh ? randomTip['zh-TW'] : randomTip['en-US'];
                     const tipBody = String(tip || '').replace(/^(?:小訣竅|Tip)\s*[:：]\s*/, '');
-                    await addWelcomeSection('tip', isZh ? '💡 小訣竅' : '💡 A small tip', tipBody);
+                    const tipTarget = $previewWelcome || $welcome;
+                    tipTask = addWelcomeSection('tip', isZh ? '💡 小訣竅' : '💡 A small tip', tipBody, tipTarget);
                 }
 
+                await Promise.all([poemTask, tipTask]);
+
                 const syncWelcomeVisibility = () => {
-                    const hasContent = Boolean($textarea.value)
+                    const hasContent = Boolean($textarea.value);
                     if (hasContent) {
                         try {
-                            window.sessionStorage.removeItem(NEW_ENTRY_WELCOME_STORAGE_KEY)
+                            window.sessionStorage.removeItem(NEW_ENTRY_WELCOME_STORAGE_KEY);
                         } catch (error) {}
                     }
-                    $welcome.hidden = hasContent || !$welcome.childElementCount;
+                    if ($welcome) $welcome.hidden = hasContent || !$welcome.childElementCount;
+                    if ($previewWelcome) $previewWelcome.hidden = hasContent || !$previewWelcome.childElementCount;
                 };
                 syncWelcomeVisibility();
                 $textarea.addEventListener('input', syncWelcomeVisibility);
@@ -3133,6 +3140,7 @@ ${getMarkdownCss()}
         })
 
         const $dropdownImportDocBtn = document.querySelector('#dropdown-import-doc-btn')
+        const $dropdownRecordAudioBtn = document.querySelector('#dropdown-record-audio-btn')
         const $dropdownImportAudioBtn = document.querySelector('#dropdown-import-audio-btn')
         const $dropdownImportAudioSmartFormatBtn = document.querySelector('#dropdown-import-audio-smart-format-btn')
         const $importAudioInput = document.querySelector('#import-audio-input')
@@ -3140,6 +3148,11 @@ ${getMarkdownCss()}
         if ($dropdownImportDocBtn && $importMdInput) {
             $dropdownImportDocBtn.addEventListener('click', () => {
                 $importMdInput.click()
+            })
+        }
+        if ($dropdownRecordAudioBtn) {
+            $dropdownRecordAudioBtn.addEventListener('click', () => {
+                window.dispatchEvent(new CustomEvent('cf-notepad-start-record'))
             })
         }
         if ($dropdownImportAudioBtn && $importAudioInput) {
@@ -3908,8 +3921,13 @@ ${getMarkdownCss()}
 
         const insertLocalRecordedAudio = (audioId, blobUrl, start, end) => {
             const snippet = '<audio controls data-offline-audio-id="' + audioId + '" src="' + blobUrl + '"></audio>'
-            if (isCurrentBlockEditor() && typeof window.__insertBlockEditorMarkdown === 'function') {
-                window.__insertBlockEditorMarkdown(snippet)
+            if (isCurrentBlockEditor()) {
+                window.dispatchEvent(new CustomEvent('cf-notepad-block-insert-audio', {
+                    detail: { url: blobUrl, audioId, name: 'recording.webm' }
+                }))
+                if (typeof window.__insertBlockEditorMarkdown === 'function') {
+                    window.__insertBlockEditorMarkdown(snippet)
+                }
                 return
             }
             if (!$textarea) return
@@ -3936,7 +3954,7 @@ ${getMarkdownCss()}
                 if (notify && typeof window.showToast === 'function') {
                     window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 正在進行語音轉錄 (Whisper ASR)...' : '🎙️ Transcribing audio (Whisper ASR)...')
                 }
-                await processAudioTranscription(audioFile, { targetAudioId: audioId, insertAtCursor: false })
+                await processAudioTranscription(audioFile, { targetAudioId: audioId, insertAtCursor: isCurrentBlockEditor() })
                 if (window.offlineStore) {
                     await window.offlineStore.updateOfflineAudioStatus(audioId, 'transcribed')
                 }
@@ -3952,9 +3970,9 @@ ${getMarkdownCss()}
         uploadPendingAudiosToCloud = async () => {
             if (!$textarea || !window.offlineStore) return false
             const curVal = $textarea.value
-            if (!curVal || !curVal.includes('data-offline-audio-id')) return false
+            if (!curVal || (!curVal.includes('data-offline-audio-id') && !curVal.includes('rec_'))) return false
 
-            const matches = [...curVal.matchAll(/data-offline-audio-id="?([a-zA-Z0-9_-]+)"?/g)]
+            const matches = [...curVal.matchAll(/(?:data-offline-audio-id="?|audioId[":\s]+"?)(rec_[a-zA-Z0-9_-]+)"?/g)]
             if (!matches.length) return false
 
             let modified = false
@@ -3976,6 +3994,12 @@ ${getMarkdownCss()}
                             if (regex.test(updatedText)) {
                                 updatedText = updatedText.replace(regex, newTag)
                                 modified = true
+                            }
+                            if (updatedText.includes(audioId)) {
+                                updatedText = updatedText.replace(new RegExp('(?:blob:https?:\\\\/\\\\/[^\\\\s"]+|"url":"blob:[^"]+")', 'g'), function(m) {
+                                    return m.indexOf('"url"') === 0 ? ('"url":"' + url + '"') : url;
+                                });
+                                modified = true;
                             }
                             await window.offlineStore.updateOfflineAudioStatus(audioId, 'synced', url)
                         }

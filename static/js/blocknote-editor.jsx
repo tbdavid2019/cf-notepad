@@ -42,6 +42,7 @@ const EMBED_KINDS = {
     youtube: { title: 'YouTube', detail: '嵌入 YouTube 影片', icon: '▶' },
     pdf: { title: 'PDF', detail: '嵌入 PDF 文件', icon: 'PDF' },
     file: { title: '附件連結', detail: '插入檔案網址', icon: '↗' },
+    audio: { title: '音訊播放器', detail: '播放錄音或音訊檔案', icon: '🎙️' },
     mermaid: { title: 'Mermaid', detail: '插入流程圖', icon: '◇' },
     echarts: { title: 'ECharts', detail: '插入互動圖表', icon: '▥' },
     raw: { title: 'HTML 原始碼', detail: '以安全文字保留 HTML', icon: '</>' },
@@ -49,9 +50,9 @@ const EMBED_KINDS = {
 }
 
 const EMBED_PROP_SCHEMA = {
-    kind: { default: 'file', values: ['image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak'] },
+    kind: { default: 'file', values: ['image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak', 'audio'] },
     url: { default: '' }, title: { default: '' }, name: { default: '' }, alt: { default: '' }, src: { default: '' },
-    source: { default: '' }, optionJson: { default: '' }, content: { default: '' }, mimeType: { default: '' }, width: { default: '' },
+    source: { default: '' }, optionJson: { default: '' }, content: { default: '' }, mimeType: { default: '' }, width: { default: '' }, audioId: { default: '' },
 }
 
 const DavidEmbed = createReactBlockSpec({
@@ -65,17 +66,22 @@ const DavidEmbed = createReactBlockSpec({
         const label = EMBED_KINDS[kind]?.title || (kind === 'image' ? '圖片' : '嵌入內容')
         const preview = kind === 'image' && props.src
             ? <img src={props.src} alt={props.alt || ''} />
-            : kind === 'youtube' && props.url
-                ? <span>{props.title || props.url}</span>
-                : kind === 'pdf' && props.url
+            : (kind === 'audio' || (kind === 'file' && (props.mimeType?.startsWith('audio/') || props.url?.match(/\.(mp3|wav|ogg|m4a|webm|aac|flac)$/i))))
+                ? <div className="david-blocknote-audio-wrap">
+                    <audio controls src={props.url || props.src} style={{ width: '100%', maxWidth: '100%', marginTop: '6px' }} />
+                    {props.name && <div style={{ fontSize: '12px', color: 'var(--text-muted, #888)', marginTop: '4px' }}>🎙️ {props.name}</div>}
+                  </div>
+                : kind === 'youtube' && props.url
                     ? <span>{props.title || props.url}</span>
-                    : kind === 'mermaid'
-                        ? <pre>{props.source}</pre>
-                        : kind === 'echarts'
-                            ? <pre>{props.optionJson}</pre>
-                            : kind === 'raw'
-                                ? <pre>{props.content}</pre>
-                                : <span>{props.title || props.name || props.url || '尚未設定內容'}</span>
+                    : kind === 'pdf' && props.url
+                        ? <span>{props.title || props.url}</span>
+                        : kind === 'mermaid'
+                            ? <pre>{props.source}</pre>
+                            : kind === 'echarts'
+                                ? <pre>{props.optionJson}</pre>
+                                : kind === 'raw'
+                                    ? <pre>{props.content}</pre>
+                                    : <span>{props.title || props.name || props.url || '尚未設定內容'}</span>
         return <section className="david-blocknote-embed" data-kind={kind} contentEditable={false}>
             <header><strong>{label}</strong><button type="button" onClick={() => window.dispatchEvent(new CustomEvent('david-blocknote-edit', { detail: { block } }))}>編輯</button></header>
             <div className="david-blocknote-embed-preview">{preview}</div>
@@ -96,6 +102,9 @@ const inlineContentToText = content => {
 }
 
 const normalizeImportedBlocks = blocks => blocks.flatMap(block => {
+    if (block?.type === 'audio') {
+        return [{ type: 'davidEmbed', props: { kind: 'audio', url: block.props?.url, name: block.props?.name } }]
+    }
     if (block?.type !== 'codeBlock') return [block]
 
     const language = String(block.props?.language || '').trim().toLowerCase()
@@ -104,6 +113,13 @@ const normalizeImportedBlocks = blocks => blocks.flatMap(block => {
     const sourceText = inlineContentToText(block.content)
     if (language === 'mermaid') return [{ type: 'davidEmbed', props: { kind: 'mermaid', source: sourceText } }]
     if (language === 'echarts') return [{ type: 'davidEmbed', props: { kind: 'echarts', optionJson: sourceText } }]
+    if (language === 'html') {
+        const audioMatch = sourceText.match(/<audio[^>]*src="([^"]+)"[^>]*>/i)
+        if (audioMatch) {
+            const idMatch = sourceText.match(/data-offline-audio-id="([^"]+)"/i)
+            return [{ type: 'davidEmbed', props: { kind: 'audio', url: audioMatch[1], audioId: idMatch ? idMatch[1] : '' } }]
+        }
+    }
     return [{ type: 'davidEmbed', props: { kind: 'raw', content: sourceText } }]
 })
 
@@ -227,6 +243,45 @@ function BlockNoteEditorApp() {
     }, [])
 
     useEffect(() => {
+        window.__insertBlockEditorMarkdown = markdown => {
+            window.dispatchEvent(new CustomEvent('cf-notepad-block-import', {
+                detail: { markdown, mode: 'insert' }
+            }))
+        }
+        const handleInsertAudio = event => {
+            const detail = event.detail || {}
+            const audioUrl = detail.url || detail.audioUrl
+            if (!audioUrl) return
+            const audioBlock = {
+                type: 'davidEmbed',
+                props: {
+                    kind: 'audio',
+                    url: audioUrl,
+                    name: detail.name || 'recording.webm',
+                    audioId: detail.audioId || '',
+                }
+            }
+            try {
+                const cursorBlock = editor.getTextCursorPosition()?.block
+                const reference = cursorBlock || editor.document.at(-1)
+                if (reference) {
+                    editor.insertBlocks([audioBlock], reference.id, 'after')
+                } else {
+                    editor.insertBlocks([audioBlock], editor.document[0]?.id, 'after')
+                }
+                save()
+            } catch (err) {
+                console.error('Failed to insert audio block into BlockNote:', err)
+            }
+        }
+        window.addEventListener('cf-notepad-block-insert-audio', handleInsertAudio)
+        return () => {
+            delete window.__insertBlockEditorMarkdown
+            window.removeEventListener('cf-notepad-block-insert-audio', handleInsertAudio)
+        }
+    }, [editor])
+
+    useEffect(() => {
         const importMarkdown = event => {
             const markdown = typeof event.detail?.markdown === 'string' ? event.detail.markdown : ''
             if (!markdown.trim()) return
@@ -259,11 +314,21 @@ function BlockNoteEditorApp() {
 
     const items = useMemo(() => [
         ...getDefaultReactSlashMenuItems(editor),
+        {
+            title: '即時錄音',
+            subtext: '啟動麥克風即時錄音並自動轉錄為區塊內容',
+            aliases: ['record', 'voice', 'audio', 'mic', '錄音', '語音', '即時錄音'],
+            group: 'DAVID888 語音與嵌入',
+            icon: <span className="david-blocknote-menu-icon">🎙️</span>,
+            onItemClick: () => {
+                window.dispatchEvent(new CustomEvent('cf-notepad-start-record'))
+            },
+        },
         ...Object.entries(EMBED_KINDS).map(([kind, definition]) => ({
             title: definition.title,
             subtext: definition.detail,
             aliases: [kind, definition.title.toLowerCase()],
-            group: 'DAVID888 嵌入內容',
+            group: 'DAVID888 語音與嵌入',
             icon: <span className="david-blocknote-menu-icon">{definition.icon}</span>,
             onItemClick: () => {
                 const block = insertOrUpdateBlockForSlashMenu(editor, { type: 'davidEmbed', props: { kind } })

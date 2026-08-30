@@ -286,156 +286,8 @@ export const createUploadedAssetMarkdown = (url, filename, mimeType = '') => {
     return `[${getAssetLabel(filename)}](${safeUrl})`
 }
 
-export const initMarkdownToolbar = (root = document) => {
-    const toolbar = root.querySelector('[data-markdown-toolbar]')
-    const textarea = root.querySelector('#contents')
-    const imageInput = root.querySelector('#markdown-toolbar-image-input')
-    const assetInput = root.querySelector('#markdown-toolbar-asset-input')
-    const lineNumbers = root.querySelector('#editor-line-numbers')
-    const editorStatus = root.querySelector('#editor-status')
-    if (!toolbar || !textarea) return false
-    const lang = toolbar.dataset.language || 'zh-TW'
-    const history = createEditorHistory({
-        value: textarea.value,
-        selectionStart: textarea.selectionStart,
-        selectionEnd: textarea.selectionEnd,
-    })
-    let isRestoringHistory = false
-
-    const updateLineNumbers = () => {
-        if (!lineNumbers) return
-        const val = textarea.value
-        lineNumbers.textContent = createLineNumbers(val)
-        const lineCount = String(val || '').split('\n').length
-        const digits = Math.max(2, String(lineCount).length)
-        const shell = lineNumbers.closest('.editor-code-shell')
-        if (shell) {
-            shell.style.setProperty('--editor-gutter-digits', String(digits))
-        }
-    }
-
-    const syncLineNumbers = () => {
-        if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop
-    }
-
-    const updateEditorStatus = () => {
-        if (editorStatus) editorStatus.textContent = getEditorCursorStatus(textarea.value, textarea.selectionStart, lang)
-    }
-
-    const getEditorState = () => ({
-        value: textarea.value,
-        selectionStart: textarea.selectionStart,
-        selectionEnd: textarea.selectionEnd,
-    })
-
-    const updateHistoryButtons = () => {
-        const undoButton = toolbar.querySelector('[data-command="undo"]')
-        const redoButton = toolbar.querySelector('[data-command="redo"]')
-        if (undoButton) undoButton.disabled = !history.canUndo()
-        if (redoButton) redoButton.disabled = !history.canRedo()
-    }
-
-    const restoreHistory = command => {
-        const state = command === 'undo' ? history.undo() : history.redo()
-        if (!state) return
-        isRestoringHistory = true
-        textarea.value = state.value
-        textarea.focus()
-        textarea.setSelectionRange(state.selectionStart, state.selectionEnd)
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-        isRestoringHistory = false
-        updateHistoryButtons()
-    }
-
-    textarea.addEventListener('input', () => {
-        if (!isRestoringHistory) history.record(getEditorState())
-        updateLineNumbers()
-        updateEditorStatus()
-        updateHistoryButtons()
-    })
-    textarea.addEventListener('scroll', syncLineNumbers, { passive: true })
-    ;['click', 'focus', 'keyup', 'select'].forEach(eventName => textarea.addEventListener(eventName, updateEditorStatus))
-    updateLineNumbers()
-    updateEditorStatus()
-
-    const runCommand = command => {
-        const result = applyMarkdownCommand(textarea.value, textarea.selectionStart, textarea.selectionEnd, command, lang)
-        textarea.value = result.text
-        textarea.focus()
-        textarea.setSelectionRange(result.selectionStart, result.selectionEnd)
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-
-    const insertUploadedImage = (url, filename, start, end) => {
-        const alt = getImageAltText(filename)
-        const replacement = `![${alt}](${url})`
-        textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end)
-        textarea.focus()
-        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-
-    const uploadImage = async (file, start, end) => {
-        const formData = new FormData()
-        formData.append('image', file)
-        const response = await fetch('/upload', { method: 'POST', body: formData })
-        const payload = await response.json()
-        if (!response.ok || payload.err !== 0 || !payload.data) {
-            throw new Error(payload.msg || 'Image upload failed')
-        }
-        insertUploadedImage(payload.data, file.name, start, end)
-    }
-
-    const insertUploadedAsset = (url, file, start, end) => {
-        const replacement = createUploadedAssetMarkdown(url, file.name, file.type)
-        textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end)
-        textarea.focus()
-        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
-        textarea.dispatchEvent(new Event('input', { bubbles: true }))
-    }
-
-    const uploadAsset = async (file, start, end) => {
-        if (file.type?.startsWith('image/')) {
-            throw new Error('Images still use the R2 image uploader')
-        }
-        let lastError
-        for (const endpoint of BOX_UPLOAD_ENDPOINTS) {
-            try {
-                const formData = new FormData()
-                formData.append('file', file)
-                formData.append('title', file.name || 'attachment')
-                const response = await fetch(endpoint, { method: 'POST', body: formData })
-                const payload = await response.json()
-                const url = payload?.data?.url
-                if (response.ok && payload?.result === 'success' && url) {
-                    insertUploadedAsset(url, file, start, end)
-                    return
-                }
-                lastError = new Error(payload?.message || 'Attachment upload failed')
-            } catch (error) {
-                lastError = error
-            }
-        }
-        throw lastError || new Error('Attachment upload failed')
-    }
-
-    const toggleFullscreen = () => {
-        const pane = textarea.closest('.editor-pane')
-        if (!pane) return
-        if (document.fullscreenElement) {
-            document.exitFullscreen?.()
-        } else if (pane.requestFullscreen) {
-            pane.requestFullscreen().catch(() => pane.classList.toggle('toolbar-fullscreen'))
-        } else {
-            pane.classList.toggle('toolbar-fullscreen')
-        }
-    }
-
-    const PAUSE_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`
-    const PLAY_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
-
-    const recordButton = toolbar.querySelector('[data-command="record"]')
-    const recordPauseButton = toolbar.querySelector('[data-command="recordPause"]')
+export const initRecordingController = (root = document, { lang = 'zh-TW', toolbar = null, textarea = null } = {}) => {
+    const recordButton = toolbar?.querySelector('[data-command="record"]')
     let mediaRecorder = null
     let recordingStream = null
     let recordingChunks = []
@@ -626,6 +478,10 @@ export const initMarkdownToolbar = (root = document) => {
     }
 
     const startRecording = async () => {
+        if (mediaRecorder?.state === 'recording' || mediaRecorder?.state === 'paused') {
+            stopRecording()
+            return
+        }
         if (startingRecording) return
         startingRecording = true
         isRecordingCanceled = false
@@ -650,6 +506,7 @@ export const initMarkdownToolbar = (root = document) => {
             return
         }
         try {
+            const currentTextarea = textarea || document.querySelector('#contents')
             recordingStream = await navigator.mediaDevices.getUserMedia({ audio: true })
             const mimeType = MediaRecorder.isTypeSupported?.('audio/webm;codecs=opus')
                 ? 'audio/webm;codecs=opus'
@@ -658,8 +515,8 @@ export const initMarkdownToolbar = (root = document) => {
             recordingChunks = []
             recordingSeconds = 0
             recordingSelection = {
-                start: typeof textarea?.selectionStart === 'number' ? textarea.selectionStart : 0,
-                end: typeof textarea?.selectionEnd === 'number' ? textarea.selectionEnd : 0
+                start: typeof currentTextarea?.selectionStart === 'number' ? currentTextarea.selectionStart : 0,
+                end: typeof currentTextarea?.selectionEnd === 'number' ? currentTextarea.selectionEnd : 0
             }
 
             mediaRecorder.ondataavailable = event => {
@@ -714,6 +571,184 @@ export const initMarkdownToolbar = (root = document) => {
         }
     }
 
+    if (!window.__recordingControllerListenersAttached) {
+        window.__recordingControllerListenersAttached = true
+        window.addEventListener('cf-notepad-start-record', () => {
+            startRecording()
+        })
+        window.addEventListener('cf-notepad-stop-record', () => stopRecording())
+        window.addEventListener('cf-notepad-toggle-record', () => togglePauseRecording())
+        window.addEventListener('cf-notepad-cancel-record', () => cancelRecording())
+        window.addEventListener('keydown', event => {
+            if ((event.metaKey || event.ctrlKey) && event.shiftKey && event.key.toLowerCase() === 'r') {
+                event.preventDefault()
+                startRecording()
+            }
+        })
+    }
+
+    setRecordingUi('idle')
+
+    return {
+        startRecording,
+        stopRecording,
+        togglePauseRecording,
+        cancelRecording,
+    }
+}
+
+export const initMarkdownToolbar = (root = document) => {
+    const toolbar = root.querySelector('[data-markdown-toolbar]')
+    const textarea = root.querySelector('#contents')
+    const lang = toolbar?.dataset.language || document.documentElement.lang || 'zh-TW'
+    initRecordingController(root, { lang, toolbar, textarea })
+
+    const imageInput = root.querySelector('#markdown-toolbar-image-input')
+    const assetInput = root.querySelector('#markdown-toolbar-asset-input')
+    const lineNumbers = root.querySelector('#editor-line-numbers')
+    const editorStatus = root.querySelector('#editor-status')
+    if (!toolbar || !textarea) return false
+    const history = createEditorHistory({
+        value: textarea.value,
+        selectionStart: textarea.selectionStart,
+        selectionEnd: textarea.selectionEnd,
+    })
+    let isRestoringHistory = false
+
+    const updateLineNumbers = () => {
+        if (!lineNumbers) return
+        const val = textarea.value
+        lineNumbers.textContent = createLineNumbers(val)
+        const lineCount = String(val || '').split('\n').length
+        const digits = Math.max(2, String(lineCount).length)
+        const shell = lineNumbers.closest('.editor-code-shell')
+        if (shell) {
+            shell.style.setProperty('--editor-gutter-digits', String(digits))
+        }
+    }
+
+    const syncLineNumbers = () => {
+        if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop
+    }
+
+    const updateEditorStatus = () => {
+        if (editorStatus) editorStatus.textContent = getEditorCursorStatus(textarea.value, textarea.selectionStart, lang)
+    }
+
+    const getEditorState = () => ({
+        value: textarea.value,
+        selectionStart: textarea.selectionStart,
+        selectionEnd: textarea.selectionEnd,
+    })
+
+    const updateHistoryButtons = () => {
+        const undoButton = toolbar.querySelector('[data-command="undo"]')
+        const redoButton = toolbar.querySelector('[data-command="redo"]')
+        if (undoButton) undoButton.disabled = !history.canUndo()
+        if (redoButton) redoButton.disabled = !history.canRedo()
+    }
+
+    const restoreHistory = command => {
+        const state = command === 'undo' ? history.undo() : history.redo()
+        if (!state) return
+        isRestoringHistory = true
+        textarea.value = state.value
+        textarea.focus()
+        textarea.setSelectionRange(state.selectionStart, state.selectionEnd)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+        isRestoringHistory = false
+        updateHistoryButtons()
+    }
+
+    textarea.addEventListener('input', () => {
+        if (!isRestoringHistory) history.record(getEditorState())
+        updateLineNumbers()
+        updateEditorStatus()
+        updateHistoryButtons()
+    })
+    textarea.addEventListener('scroll', syncLineNumbers, { passive: true })
+    ;['click', 'focus', 'keyup', 'select'].forEach(eventName => textarea.addEventListener(eventName, updateEditorStatus))
+    updateLineNumbers()
+    updateEditorStatus()
+
+    const runCommand = command => {
+        const result = applyMarkdownCommand(textarea.value, textarea.selectionStart, textarea.selectionEnd, command, lang)
+        textarea.value = result.text
+        textarea.focus()
+        textarea.setSelectionRange(result.selectionStart, result.selectionEnd)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const insertUploadedImage = (url, filename, start, end) => {
+        const alt = getImageAltText(filename)
+        const replacement = `![${alt}](${url})`
+        textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end)
+        textarea.focus()
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const uploadImage = async (file, start, end) => {
+        const formData = new FormData()
+        formData.append('image', file)
+        const response = await fetch('/upload', { method: 'POST', body: formData })
+        const payload = await response.json()
+        if (!response.ok || payload.err !== 0 || !payload.data) {
+            throw new Error(payload.msg || 'Image upload failed')
+        }
+        insertUploadedImage(payload.data, file.name, start, end)
+    }
+
+    const insertUploadedAsset = (url, file, start, end) => {
+        const replacement = createUploadedAssetMarkdown(url, file.name, file.type)
+        textarea.value = textarea.value.slice(0, start) + replacement + textarea.value.slice(end)
+        textarea.focus()
+        textarea.setSelectionRange(start + replacement.length, start + replacement.length)
+        textarea.dispatchEvent(new Event('input', { bubbles: true }))
+    }
+
+    const uploadAsset = async (file, start, end) => {
+        if (file.type?.startsWith('image/')) {
+            throw new Error('Images still use the R2 image uploader')
+        }
+        let lastError
+        for (const endpoint of BOX_UPLOAD_ENDPOINTS) {
+            try {
+                const formData = new FormData()
+                formData.append('file', file)
+                formData.append('title', file.name || 'attachment')
+                const response = await fetch(endpoint, { method: 'POST', body: formData })
+                const payload = await response.json()
+                const url = payload?.data?.url
+                if (response.ok && payload?.result === 'success' && url) {
+                    insertUploadedAsset(url, file, start, end)
+                    return
+                }
+                lastError = new Error(payload?.message || 'Attachment upload failed')
+            } catch (error) {
+                lastError = error
+            }
+        }
+        throw lastError || new Error('Attachment upload failed')
+    }
+
+    const toggleFullscreen = () => {
+        const pane = textarea.closest('.editor-pane')
+        if (!pane) return
+        if (document.fullscreenElement) {
+            document.exitFullscreen?.()
+        } else if (pane.requestFullscreen) {
+            pane.requestFullscreen().catch(() => pane.classList.toggle('toolbar-fullscreen'))
+        } else {
+            pane.classList.toggle('toolbar-fullscreen')
+        }
+    }
+
+    const PAUSE_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16" rx="1"></rect><rect x="14" y="4" width="4" height="16" rx="1"></rect></svg>`
+    const PLAY_SVG = `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>`
+
+    const { startRecording, stopRecording } = initRecordingController(root, { lang, toolbar, textarea })
+
     toolbar.querySelectorAll('button[data-command]').forEach(button => {
         button.addEventListener('mousedown', event => event.preventDefault())
         button.addEventListener('click', () => {
@@ -727,8 +762,7 @@ export const initMarkdownToolbar = (root = document) => {
                 return
             }
             if (command === 'record') {
-                if (mediaRecorder?.state === 'recording' || mediaRecorder?.state === 'paused') stopRecording()
-                else startRecording()
+                startRecording()
                 return
             }
             if (command === 'image' && imageInput) {

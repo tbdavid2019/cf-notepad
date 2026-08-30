@@ -132,9 +132,9 @@
       "en-US": "Tip: Microphone recording includes a floating HUD with live timer, pause/resume, stop & insert, and cancel controls. Audio stays local in IndexedDB until published to S3."
     },
     {
-      "id": "pwa-offline-preview-toolbar",
-      "zh-TW": "小訣竅：離線工作區支援完整 Markdown 格式工具列、雙向捲動同步與「⭳ 導出 HTML」單鍵封裝獨立網頁，免連網即可享受與線上 100% 一致的排版體驗！",
-      "en-US": "Tip: The offline workspace supports a full Markdown toolbar, scroll synchronization, and one-click '⭳ Export HTML', providing a 100% consistent typography experience even without network!"
+      "id": "block-editor-voice-recording",
+      "zh-TW": "小訣竅：Block 區塊編輯器支援「即時錄音」！輸入斜線指令「/record」或在底欄「＋ 新增」選單點擊「即時錄音」，錄製完成後會自動插入音訊區塊並透過 Whisper AI 轉錄為文字區塊。",
+      "en-US": "Tip: Block Editor supports Live Voice Recording! Type slash command '/record' or select 'Live voice recording' from the '+ New' footer menu to record audio and transcribe it into block notes with Whisper AI."
     }
   ]
 }

@@ -4,7 +4,7 @@ export const BLOCK_DOCUMENT_VERSION = 1
 
 const BLOCK_TYPES = new Set([
     'paragraph', 'heading', 'bulletList', 'taskList', 'code', 'quote',
-    'divider', 'slideBreak', 'image', 'file', 'youtube', 'pdf',
+    'divider', 'slideBreak', 'image', 'file', 'youtube', 'pdf', 'audio',
     'mermaid', 'echarts', 'raw',
 ])
 
@@ -325,6 +325,14 @@ export function renderBlockToHtml(blockInput) {
                 if (url) htmlParts.push(`<div class="pdf-embed-wrapper"${dataAttr}><iframe src="${escapeHtml(url)}" width="100%" height="600" title="${escapeHtml(text(props.title) || 'PDF Document')}"></iframe></div>`)
                 break
             }
+            case 'audio': {
+                const url = safeUrl(props.url || props.src)
+                if (url) {
+                    const audioIdAttr = props.audioId ? ` data-offline-audio-id="${escapeHtml(props.audioId)}"` : ''
+                    htmlParts.push(`<div class="media-audio-wrapper"${dataAttr}><audio controls src="${escapeHtml(url)}"${audioIdAttr}></audio></div>`)
+                }
+                break
+            }
             case 'mermaid':
                 htmlParts.push(`<div class="mermaid-block-container"${dataAttr}><pre class="mermaid">${escapeHtml(text(props.source) || text(props.text))}</pre></div>`)
                 break
@@ -377,6 +385,7 @@ export function blockToMarkdown(blockInput) {
             case 'image': lines.push(`![${text(props.alt)}](${safeUrl(props.src)})`); break
             case 'youtube': lines.push(safeUrl(props.url) || `https://www.youtube.com/watch?v=${getYouTubeVideoId(props)}`); break
             case 'pdf': lines.push(`[PDF Document](${safeUrl(props.url)})`); break
+            case 'audio': lines.push(`<audio controls src="${safeUrl(props.url || props.src)}"></audio>`); break
             case 'mermaid': lines.push(`\`\`\`mermaid\n${text(props.source) || text(props.text)}\n\`\`\``); break
             case 'echarts': lines.push(`\`\`\`echarts\n${typeof props.optionJson === 'string' ? props.optionJson : JSON.stringify(props.optionJson || {}, null, 2)}\n\`\`\``); break
             case 'file': lines.push(`[${text(props.name) || 'File'}](${safeUrl(props.url)})`); break

@@ -1,5 +1,5 @@
 const EMBED_BLOCK_TYPES = new Set([
-    'image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak',
+    'image', 'file', 'youtube', 'pdf', 'audio', 'mermaid', 'echarts', 'raw', 'slideBreak',
 ])
 
 function text(value = '') {

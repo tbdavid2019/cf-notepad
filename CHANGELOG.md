@@ -1,5 +1,19 @@
 # Changelog
 
+## [2026-08-30]
+
+- **💡 小訣竅雙欄平行展示至右側預覽區 (Move Editor Tips to Right Preview Pane & Parallel Typewriter Welcome)**：
+  - **右側預覽獨立展示小訣竅 (`#preview-welcome`)**：在 Markdown 模式建立新筆記或空白筆記時，左側編輯區專注展示《飛鳥集》詩句（`#editor-welcome`），右側預覽區則獨立呈現隨機精選實用技巧（`#preview-welcome`）。
+  - **平行打字機動畫 (Parallel Typewriter Effect)**：詩句與小訣竅在各自的窗格中平行展開打字機流暢動畫，充份利用寬螢幕雙欄空間，視覺清爽平衡。
+  - **智慧同步隱藏**：作者在左側編輯區輸入任何字元時，左右兩側的歡迎區塊立即同步淡出隱藏，無縫切換至即時 Markdown 預覽。
+
+- **🎙️ Block 區塊編輯器即時錄音與語音轉逐字稿 (Live Voice Recording & Transcription for Block Editor)**：
+  - **斜線指令 (`/`) 整合**：在 Block 區塊編輯器輸入 `/record`、`/voice`、`/audio`、`/mic`、`/錄音`、`/語音` 或 `/即時錄音`，可一鍵開啟麥克風即時錄音。
+  - **底欄「＋ 新增」選單直覺操作**：在 Block 模式的底欄「＋ 新增」選單中新增「🎙️ 即時錄音」項目，點擊即可開啟錄音控制列。
+  - **靈動島懸浮錄音控制器 (Dynamic Island HUD)**：錄音時展開沉浸式懸浮控制列，提供即時計時、音波動畫、隨時暫停／繼續、完成插入與取消放棄功能，支援全域快捷鍵 `Cmd+Shift+R` / `Ctrl+Shift+R`。
+  - **自動轉錄與區塊插入 (Whisper AI Transcription & Audio Block)**：錄音完成後自動於游標處插入音訊播放卡片（`davidEmbed` kind `audio` / `<audio controls>`），並透過後端 Whisper AI 自動將語音轉錄為結構化區塊內容，追加於音訊區塊下方。
+  - **完整生命週期與渲染支援**：在 `block_document.mjs`、`blocknote_document.mjs`、`block_renderer.mjs` 與 `blocknote-editor.jsx` 中全線支援 `audio` 區塊之 Tiptap 互轉、HTML 渲染與 Markdown 導出。
+
 ## [2026-08-28]
 
 - **👑 AI Agent Skill 大標題強制規範與強健標題解析 (Mandatory `# Title` Rule & Robust Title Extraction)**：

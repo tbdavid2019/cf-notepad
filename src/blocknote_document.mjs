@@ -1,6 +1,6 @@
 import { createTiptapBlockDocument, toTiptapBlockDocument } from './block_document.mjs'
 
-const EMBED_KINDS = new Set(['image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak'])
+const EMBED_KINDS = new Set(['image', 'file', 'youtube', 'pdf', 'audio', 'mermaid', 'echarts', 'raw', 'slideBreak'])
 const TABLE_CELL_TYPES = new Set(['tableCell', 'tableHeader'])
 
 const text = value => typeof value === 'string' ? value : ''

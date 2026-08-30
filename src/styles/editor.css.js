@@ -108,6 +108,54 @@ export const getEditorCss = () => `
     }
 }
 
+.preview-welcome {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    display: grid;
+    place-content: center;
+    width: 100%;
+    height: 100%;
+    padding: clamp(28px, 8vh, 88px) clamp(32px, 8vw, 120px);
+    color: var(--preview-muted, #64748b);
+    font-family: var(--font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif);
+    pointer-events: none;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.preview-welcome .editor-welcome__section--tip {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+.preview-welcome .editor-welcome__label {
+    color: var(--text-color, #1e293b);
+}
+
+.preview-welcome .editor-welcome__copy {
+    color: var(--preview-muted, #64748b);
+}
+
+.preview-welcome .editor-welcome__copy p.is-typing::after {
+    color: var(--theme-accent, #0969da);
+}
+
+.david-blocknote-audio-wrap {
+    width: 100%;
+    max-width: 520px;
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: var(--editor-surface-muted, rgba(125, 125, 125, 0.08));
+    border: 1px solid var(--toolbar-border, #e2e8f0);
+}
+
+.david-blocknote-audio-wrap audio {
+    width: 100%;
+    display: block;
+}
+
 .block-editor-pane {
     overflow: hidden;
     background: var(--editor-surface, #fff);

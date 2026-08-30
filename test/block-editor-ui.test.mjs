@@ -88,3 +88,22 @@ test('shared block pages load dedicated Mermaid and ECharts enhancement only whe
     assert.match(source, /mermaid@11/)
     assert.match(source, /renderEchartsChart/)
 })
+
+test('BlockNote editor supports real-time voice recording and audio embed blocks', () => {
+    const source = readFileSync(new URL('../static/js/blocknote-editor.jsx', import.meta.url), 'utf8')
+    assert.match(source, /即時錄音/)
+    assert.match(source, /cf-notepad-start-record/)
+    assert.match(source, /cf-notepad-block-insert-audio/)
+    assert.match(source, /david-blocknote-audio-wrap/)
+    assert.match(source, /audio/)
+
+    const page = HTML({
+        lang: 'zh-TW',
+        title: 'Block note edit',
+        content: '{"version":1,"blocks":[]}',
+        isEdit: true,
+        ext: { editorFormat: 'block', blockHtml: '<p></p>' },
+        path: 'block-note-edit',
+    })
+    assert.match(page, /id="dropdown-record-audio-btn"/)
+})
