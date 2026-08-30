@@ -135,10 +135,12 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const isBlockDocument = ext.editorFormat === 'block'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
     const textareaContent = isBlockDocument ? escapeHtml(content) : content
-    const pageTheme = resolvePageTheme({
-        randomize: isEdit && ext.isNewEntry === true,
-        storedTheme: ext.theme,
-    })
+    const pageTheme = isBlockDocument
+        ? (ext.theme || 'ayu-light')
+        : resolvePageTheme({
+            randomize: isEdit && ext.isNewEntry === true,
+            storedTheme: ext.theme,
+        })
     const initialEditorPreviewDevice = isEdit && ext.isNewEntry === true
         ? resolveInitialPreviewDevice({ isNewEntry: true, storedDevice: ext.previewDevice })
         : ''
@@ -5554,7 +5556,7 @@ themeCss + '\\n' +
                         : '#preview-md, #preview-plain, .markdown-body');
                     if (!sourceEl) throw new Error('Content element not found');
 
-                    const currentThemeName = APP_STATE.theme || 'claude-canvas';
+                    const currentThemeName = APP_STATE.theme || (APP_STATE.editorFormat === 'block' ? 'ayu-light' : 'claude-canvas');
                     const themeCss = (typeof THEMES !== 'undefined' && THEMES[currentThemeName]) ? THEMES[currentThemeName] : '';
 
                     // Create an isolated sandbox element at document root with non-negative coordinates

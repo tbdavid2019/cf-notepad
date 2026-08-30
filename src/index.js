@@ -556,6 +556,7 @@ async function createNewNote(request, editorFormat) {
 
         await driverPutNote(path, initialContent, {
             editorFormat,
+            theme: editorFormat === 'block' ? 'ayu-light' : undefined,
             title: shareTitle || undefined,
             blockDocumentVersion: editorFormat === 'block' ? 2 : undefined
         })
@@ -1875,7 +1876,7 @@ async function handleSharePdfExport(request) {
         const title = extractNoteTitle(markdown, path)
         const size = url.searchParams.get('size') || 'a4'
         const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
-        const theme = metadata.theme || 'claude-canvas'
+        const theme = metadata.theme || (resolveEditorFormat(metadata) === 'block' ? 'ayu-light' : 'claude-canvas')
         const siteUrl = `${url.protocol}//${url.host}`
 
         const pdfBytes = await renderMarkdownToPdf(markdown, {
@@ -2648,7 +2649,7 @@ async function handleNotePdfExport(request) {
         const title = extractNoteTitle(markdown, path)
         const size = url.searchParams.get('size') || 'a4'
         const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
-        const theme = metadata.theme || 'claude-canvas'
+        const theme = metadata.theme || (resolveEditorFormat(metadata) === 'block' ? 'ayu-light' : 'claude-canvas')
         const siteUrl = `${url.protocol}//${url.host}`
 
         const pdfBytes = await renderMarkdownToPdf(markdown, {

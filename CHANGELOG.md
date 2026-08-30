@@ -2,6 +2,10 @@
 
 ## [2026-08-30]
 
+- **🎨 Block 區塊模式預設純白極簡 Ayu Light 主題 (Default Clean White 'ayu-light' Theme for Block Editor)**：
+  - **白底極簡視覺一致性**：由於 Block 區塊編輯器為單欄 WYSIWYG 結構化編輯器，將 Block 筆記預設樣式鎖定為乾淨溫暖的白色 `ayu-light`（Ayu Light）。
+  - **全鏈路預設對齊**：新建立 Block 筆記（`/new/block`）、閱讀分享頁（`/share/:id`）、PDF 向量匯出與 2x 高畫質長圖生成時，Block 格式均預設採用極簡純白 `ayu-light` 排版，免除隨機深色樣式與區塊畫布不協調的問題。
+
 - **🌐 Block 區塊編輯器繁體中文／英文雙語全面在地化 (Full Bilingual zh-TW / en-US for Block Editor)**：
   - **動態語系偵測與字典切換 (Dynamic BlockNote Dictionary)**：根據全站語言設定（`zh-TW` 或 `en-US`）自動注入完整繁體中文字典 `ZH_TW_DICTIONARY`，支援即時切換。
   - **繁體中文斜線指令選單 (Localized Slash Menu)**：斜線選單全面在地化，包括「一級標題 (Heading 1)」、「二級標題」、「三級標題」、「引用」、「摺疊清單 (Toggle List)」、「編號清單」、「項目清單 (圓點)」、「待辦清單 (Checklist)」、「段落內文」、「程式碼區塊」、「表格」、「圖片」、「影片」、「音訊」、「檔案附件」與「表情符號 (Emoji)」等，並支援中文／英文關鍵字快速搜尋與別名匹配。
