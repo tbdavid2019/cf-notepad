@@ -313,7 +313,36 @@ function BlockNoteEditorApp() {
     }, [editor])
 
     const items = useMemo(() => [
-        ...getDefaultReactSlashMenuItems(editor),
+        {
+            title: '待辦清單 (Checklist)',
+            subtext: '建立可勾選、支援 Tab 縮排與階層的待辦事項清單',
+            aliases: ['todo', 'task', 'checklist', 'check', '待辦', '待辦清單', '清單', '核取方塊', '勾選', 'tasks'],
+            group: '基本區塊',
+            icon: <span className="david-blocknote-menu-icon">☑️</span>,
+            onItemClick: () => {
+                insertOrUpdateBlockForSlashMenu(editor, { type: 'checkListItem' })
+            },
+        },
+        {
+            title: '項目清單 (Bullet List)',
+            subtext: '建立無序圓點大綱清單，支援 Tab 無限層級縮排',
+            aliases: ['bullet', 'list', 'ul', '項目清單', '圓點清單', '圓點', '大綱'],
+            group: '基本區塊',
+            icon: <span className="david-blocknote-menu-icon">•</span>,
+            onItemClick: () => {
+                insertOrUpdateBlockForSlashMenu(editor, { type: 'bulletListItem' })
+            },
+        },
+        {
+            title: '編號清單 (Numbered List)',
+            subtext: '建立自動編號的順序清單',
+            aliases: ['number', 'numbered', 'ol', '數字清單', '有序清單', '編號'],
+            group: '基本區塊',
+            icon: <span className="david-blocknote-menu-icon">1.</span>,
+            onItemClick: () => {
+                insertOrUpdateBlockForSlashMenu(editor, { type: 'numberedListItem' })
+            },
+        },
         {
             title: '即時錄音',
             subtext: '啟動麥克風即時錄音並自動轉錄為區塊內容',
@@ -324,6 +353,7 @@ function BlockNoteEditorApp() {
                 window.dispatchEvent(new CustomEvent('cf-notepad-start-record'))
             },
         },
+        ...getDefaultReactSlashMenuItems(editor),
         ...Object.entries(EMBED_KINDS).map(([kind, definition]) => ({
             title: definition.title,
             subtext: definition.detail,

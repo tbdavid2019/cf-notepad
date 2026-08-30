@@ -3925,9 +3925,6 @@ ${getMarkdownCss()}
                 window.dispatchEvent(new CustomEvent('cf-notepad-block-insert-audio', {
                     detail: { url: blobUrl, audioId, name: 'recording.webm' }
                 }))
-                if (typeof window.__insertBlockEditorMarkdown === 'function') {
-                    window.__insertBlockEditorMarkdown(snippet)
-                }
                 return
             }
             if (!$textarea) return

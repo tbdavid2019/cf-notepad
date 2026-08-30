@@ -2,6 +2,13 @@
 
 ## [2026-08-30]
 
+- **☑️ Block 區塊編輯器待辦清單與大綱模式強化 (Enhanced Checklist & Outliner for Block Editor)**：
+  - **中英雙語斜線指令 (Bilingual Slash Commands)**：在 Block 編輯器中輸入 `/todo`、`/task`、`/checklist`、`/check`、`/待辦`、`/清單`、`/核取方塊` 或 `/勾選`，可秒速插入或轉換為待辦清單區塊；亦同步強化 `/bullet`、`/大綱`、`/項目清單` 與 `/number`、`/編號清單`。
+  - **精緻互動樣式 (Interactive Checklist Aesthetics)**：勾選完成時提供平滑刪除線、文字淡化（`opacity: 0.55`）與主題強調色方塊，支援 `Tab` / `Shift+Tab` 無限層級縮排，完美呈現 Workflowy / Notion 風格大綱待辦體驗。
+
+- **🐛 修復 Block 編輯器錄音完成插入雙重音訊播放器問題 (Fix Duplicate Audio Player Insertion in Block Editor)**：
+  - 移除 `insertLocalRecordedAudio` 中重複調用的 `__insertBlockEditorMarkdown`，確保 Block 模式錄音完成後精準插入單一音訊播放卡片，並依序追加 Whisper 轉錄段落區塊。
+
 - **💡 小訣竅雙欄平行展示至右側預覽區 (Move Editor Tips to Right Preview Pane & Parallel Typewriter Welcome)**：
   - **右側預覽獨立展示小訣竅 (`#preview-welcome`)**：在 Markdown 模式建立新筆記或空白筆記時，左側編輯區專注展示《飛鳥集》詩句（`#editor-welcome`），右側預覽區則獨立呈現隨機精選實用技巧（`#preview-welcome`）。
   - **平行打字機動畫 (Parallel Typewriter Effect)**：詩句與小訣竅在各自的窗格中平行展開打字機流暢動畫，充份利用寬螢幕雙欄空間，視覺清爽平衡。

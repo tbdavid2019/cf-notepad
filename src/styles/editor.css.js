@@ -279,7 +279,12 @@ export const getEditorCss = () => `
 .david-blocknote-embed header button:hover, .david-blocknote-embed header button:focus-visible { background: var(--toolbar-bg-hover, #f0f2f4); outline: none; }
 .david-blocknote-embed-preview { display: grid; min-height: 54px; place-items: start; padding: 12px; color: var(--toolbar-muted, #57606a); font-size: 13px; }
 .david-blocknote-embed-preview img { display: block; max-width: 100%; max-height: 360px; border-radius: 5px; }
-.david-blocknote-embed-preview pre { width: 100%; margin: 0; overflow-x: auto; white-space: pre-wrap; font: 12px/1.5 var(--editor-font-family); }
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"] { display: flex; align-items: baseline; gap: 8px; }
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"][data-check-list-item-checked="true"] .bn-inline-content,
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"][data-checked="true"] .bn-inline-content,
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"]:has(input:checked) .bn-inline-content { text-decoration: line-through; opacity: 0.55; color: var(--toolbar-muted, #6e7781); transition: all 0.2s ease; }
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"] input[type="checkbox"] { cursor: pointer; border-radius: 4px; accent-color: var(--toolbar-accent, #0969da); transition: transform 0.12s ease; }
+.david-blocknote-view .bn-block-content[data-content-type="checkListItem"] input[type="checkbox"]:hover { transform: scale(1.1); }
 .david-blocknote-menu-icon { display: inline-grid; width: 20px; place-items: center; color: var(--toolbar-accent, #c8654b); font-size: 12px; }
 .david-blocknote-dialog { position: fixed; inset: 0; z-index: 1300; display: grid; place-items: center; padding: 16px; }
 .david-blocknote-dialog-backdrop { position: absolute; inset: 0; background: rgba(15, 23, 42, .48); backdrop-filter: blur(3px); }
