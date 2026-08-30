@@ -2,6 +2,11 @@
 
 ## [2026-08-30]
 
+- **🌐 Block 區塊編輯器繁體中文／英文雙語全面在地化 (Full Bilingual zh-TW / en-US for Block Editor)**：
+  - **動態語系偵測與字典切換 (Dynamic BlockNote Dictionary)**：根據全站語言設定（`zh-TW` 或 `en-US`）自動注入完整繁體中文字典 `ZH_TW_DICTIONARY`，支援即時切換。
+  - **繁體中文斜線指令選單 (Localized Slash Menu)**：斜線選單全面在地化，包括「一級標題 (Heading 1)」、「二級標題」、「三級標題」、「引用」、「摺疊清單 (Toggle List)」、「編號清單」、「項目清單 (圓點)」、「待辦清單 (Checklist)」、「段落內文」、「程式碼區塊」、「表格」、「圖片」、「影片」、「音訊」、「檔案附件」與「表情符號 (Emoji)」等，並支援中文／英文關鍵字快速搜尋與別名匹配。
+  - **嵌入設定視窗與工具列在地化 (Localized Embed Dialog & Formatting Toolbars)**：YouTube、PDF 文件、附件連結、Mermaid 流程圖、ECharts 圖表、HTML 原始碼之設定視窗與格式化工具列提示文字全面支援繁體中文與英文雙語切換。
+
 - **☑️ Block 區塊編輯器待辦清單與大綱模式強化 (Enhanced Checklist & Outliner for Block Editor)**：
   - **中英雙語斜線指令 (Bilingual Slash Commands)**：在 Block 編輯器中輸入 `/todo`、`/task`、`/checklist`、`/check`、`/待辦`、`/清單`、`/核取方塊` 或 `/勾選`，可秒速插入或轉換為待辦清單區塊；亦同步強化 `/bullet`、`/大綱`、`/項目清單` 與 `/number`、`/編號清單`。
   - **精緻互動樣式 (Interactive Checklist Aesthetics)**：勾選完成時提供平滑刪除線、文字淡化（`opacity: 0.55`）與主題強調色方塊，支援 `Tab` / `Shift+Tab` 無限層級縮排，完美呈現 Workflowy / Notion 風格大綱待辦體驗。

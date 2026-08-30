@@ -38,16 +38,263 @@ function useBlockNoteTheme() {
     return theme
 }
 
-const EMBED_KINDS = {
-    youtube: { title: 'YouTube', detail: '嵌入 YouTube 影片', icon: '▶' },
-    pdf: { title: 'PDF', detail: '嵌入 PDF 文件', icon: 'PDF' },
-    file: { title: '附件連結', detail: '插入檔案網址', icon: '↗' },
-    audio: { title: '音訊播放器', detail: '播放錄音或音訊檔案', icon: '🎙️' },
-    mermaid: { title: 'Mermaid', detail: '插入流程圖', icon: '◇' },
-    echarts: { title: 'ECharts', detail: '插入互動圖表', icon: '▥' },
-    raw: { title: 'HTML 原始碼', detail: '以安全文字保留 HTML', icon: '</>' },
-    slideBreak: { title: '簡報換頁', detail: '開始下一張投影片', icon: '—' },
+const resolveBlockNoteLang = () => {
+    const htmlLang = document.documentElement.getAttribute('lang')
+    if (htmlLang && htmlLang.startsWith('zh')) return 'zh-TW'
+    if (typeof window !== 'undefined' && window.APP_STATE?.lang) {
+        return window.APP_STATE.lang
+    }
+    return 'en-US'
 }
+
+function useBlockNoteLang() {
+    const [lang, setLang] = useState(resolveBlockNoteLang)
+
+    useEffect(() => {
+        const syncLang = () => setLang(resolveBlockNoteLang())
+        const observer = new MutationObserver(syncLang)
+        observer.observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
+        window.addEventListener('cf-notepad-lang-change', syncLang)
+        return () => {
+            observer.disconnect()
+            window.removeEventListener('cf-notepad-lang-change', syncLang)
+        }
+    }, [])
+
+    return lang
+}
+
+const ZH_TW_DICTIONARY = {
+    slash_menu: {
+        heading: {
+            title: '一級標題 (Heading 1)',
+            subtext: '主要大標題',
+            aliases: ['h1', 'heading1', '標題1', '一級標題', '大標題', 'h'],
+            group: '標題',
+        },
+        heading_2: {
+            title: '二級標題 (Heading 2)',
+            subtext: '章節段落標題',
+            aliases: ['h2', 'heading2', '標題2', '二級標題', '中標題'],
+            group: '標題',
+        },
+        heading_3: {
+            title: '三級標題 (Heading 3)',
+            subtext: '次分組子標題',
+            aliases: ['h3', 'heading3', '標題3', '三級標題', '小標題'],
+            group: '標題',
+        },
+        heading_4: {
+            title: '四級標題 (Heading 4)',
+            subtext: '四級子標題',
+            aliases: ['h4', 'heading4', '標題4'],
+            group: '次標題',
+        },
+        heading_5: {
+            title: '五級標題 (Heading 5)',
+            subtext: '五級子標題',
+            aliases: ['h5', 'heading5', '標題5'],
+            group: '次標題',
+        },
+        heading_6: {
+            title: '六級標題 (Heading 6)',
+            subtext: '六級小標題',
+            aliases: ['h6', 'heading6', '標題6'],
+            group: '次標題',
+        },
+        toggle_heading: {
+            title: '摺疊一級標題',
+            subtext: '可收合子內容的一級大標題',
+            aliases: ['h1', 'toggleheading', '摺疊標題'],
+            group: '次標題',
+        },
+        toggle_heading_2: {
+            title: '摺疊二級標題',
+            subtext: '可收合子內容的二級中標題',
+            aliases: ['h2', 'toggleheading2', '摺疊標題2'],
+            group: '次標題',
+        },
+        toggle_heading_3: {
+            title: '摺疊三級標題',
+            subtext: '可收合子內容的三級小標題',
+            aliases: ['h3', 'toggleheading3', '摺疊標題3'],
+            group: '次標題',
+        },
+        quote: {
+            title: '引用 (Quote)',
+            subtext: '重點引文或金句摘錄',
+            aliases: ['quote', 'blockquote', 'bq', '引用', '摘錄', '金句'],
+            group: '基本區塊',
+        },
+        toggle_list: {
+            title: '摺疊清單 (Toggle List)',
+            subtext: '可展開或隱藏子項目的清單',
+            aliases: ['toggle', 'togglelist', '摺疊', '折疊', '收合', '展開', '清單'],
+            group: '基本區塊',
+        },
+        numbered_list: {
+            title: '編號清單 (Numbered List)',
+            subtext: '自動編號的順序清單',
+            aliases: ['number', 'numbered', 'ol', '數字清單', '有序清單', '編號'],
+            group: '基本區塊',
+        },
+        bullet_list: {
+            title: '項目清單 (Bullet List)',
+            subtext: '無序圓點大綱清單，支援 Tab 縮排',
+            aliases: ['bullet', 'list', 'ul', '項目清單', '圓點清單', '圓點', '大綱'],
+            group: '基本區塊',
+        },
+        check_list: {
+            title: '待辦清單 (Checklist)',
+            subtext: '可勾選、支援 Tab 縮排與階層的待辦事項',
+            aliases: ['todo', 'task', 'checklist', 'check', '待辦', '待辦清單', '清單', '核取方塊', '勾選', 'tasks'],
+            group: '基本區塊',
+        },
+        paragraph: {
+            title: '段落內文 (Paragraph)',
+            subtext: '一般文章文字段落',
+            aliases: ['p', 'paragraph', 'text', '段落', '內文', '文字'],
+            group: '基本區塊',
+        },
+        code_block: {
+            title: '程式碼區塊 (Code Block)',
+            subtext: '帶語法高亮的程式碼區塊',
+            aliases: ['code', 'codeblock', 'pre', '程式碼', '代碼', '區塊代碼'],
+            group: '基本區塊',
+        },
+        divider: {
+            title: '分隔線 (Divider)',
+            subtext: '水平視覺分隔線條',
+            aliases: ['divider', 'hr', 'line', '分隔線', '水平線'],
+            group: '基本區塊',
+        },
+        table: {
+            title: '表格 (Table)',
+            subtext: '結構化多欄多列表格',
+            aliases: ['table', 'grid', '表格', '表單'],
+            group: '進階區塊',
+        },
+        image: {
+            title: '圖片 (Image)',
+            subtext: '可縮放圖片與圖說',
+            aliases: ['image', 'img', 'picture', '圖片', '照片', '上傳圖片'],
+            group: '多媒體',
+        },
+        video: {
+            title: '影片 (Video)',
+            subtext: '嵌入或上傳影片',
+            aliases: ['video', 'mp4', '影片', '視頻'],
+            group: '多媒體',
+        },
+        audio: {
+            title: '音訊 (Audio)',
+            subtext: '嵌入或上傳音訊檔案',
+            aliases: ['audio', 'sound', 'mp3', '音訊', '音樂'],
+            group: '多媒體',
+        },
+        file: {
+            title: '檔案附件 (File)',
+            subtext: '嵌入可下載檔案連結',
+            aliases: ['file', 'attachment', '檔案', '附件'],
+            group: '多媒體',
+        },
+        emoji: {
+            title: '表情符號 (Emoji)',
+            subtext: '搜尋並插入 Emoji 表情',
+            aliases: ['emoji', '表情', '符號'],
+            group: '其他',
+        },
+    },
+    placeholders: {
+        default: "輸入文字，或輸入 '/' 呼叫指令...",
+        heading: '標題',
+        toggleListItem: '摺疊項目',
+        bulletListItem: '清單項目',
+        numberedListItem: '清單項目',
+        checkListItem: '待辦事項',
+        new_comment: '撰寫留言...',
+        edit_comment: '編輯留言...',
+        comment_reply: '回覆留言...',
+    },
+    side_menu: {
+        add_block_label: '新增區塊',
+        drag_handle_label: '開啟區塊選單 / 拖曳排序',
+    },
+    drag_handle: {
+        delete_menuitem: '刪除區塊',
+        colors_menuitem: '色彩設定',
+        header_row_menuitem: '設定為標頭列',
+        header_column_menuitem: '設定為標頭欄',
+    },
+    table_handle: {
+        delete_column_menuitem: '刪除此欄',
+        delete_row_menuitem: '刪除此列',
+        add_left_menuitem: '向左插入欄',
+        add_right_menuitem: '向右插入欄',
+        add_above_menuitem: '向上插入列',
+        add_below_menuitem: '向下插入列',
+        split_cell_menuitem: '分割儲存格',
+        merge_cells_menuitem: '合併儲存格',
+        background_color_menuitem: '背景顏色',
+    },
+    suggestion_menu: {
+        no_items_title: '找不到相符項目',
+    },
+    color_picker: {
+        text_title: '文字顏色',
+        background_title: '背景顏色',
+        colors: {
+            default: '預設',
+            gray: '灰色',
+            brown: '棕色',
+            red: '紅色',
+            orange: '橘色',
+            yellow: '黃色',
+            green: '綠色',
+            blue: '藍色',
+            purple: '紫色',
+            pink: '粉紅',
+        },
+    },
+    formatting_toolbar: {
+        bold: { tooltip: '粗體', secondary_tooltip: 'Mod+B' },
+        italic: { tooltip: '斜體', secondary_tooltip: 'Mod+I' },
+        underline: { tooltip: '底線', secondary_tooltip: 'Mod+U' },
+        strike: { tooltip: '刪除線', secondary_tooltip: 'Mod+Shift+S' },
+        code: { tooltip: '行內程式碼' },
+        colors: { tooltip: '文字與背景顏色' },
+        link: { tooltip: '插入超連結', secondary_tooltip: 'Mod+K' },
+        nest: { tooltip: '向內縮排 (降級)', secondary_tooltip: 'Tab' },
+        unnest: { tooltip: '向外縮排 (升級)', secondary_tooltip: 'Shift+Tab' },
+        align_left: { tooltip: '靠左對齊' },
+        align_center: { tooltip: '置中對齊' },
+        align_right: { tooltip: '靠右對齊' },
+        align_justify: { tooltip: '左右對齊' },
+        table_cell_merge: { tooltip: '合併儲存格' },
+        comment: { tooltip: '新增註解' },
+    },
+    link_toolbar: {
+        delete: { tooltip: '移除連結' },
+        edit: { text: '編輯連結', tooltip: '編輯' },
+        open: { tooltip: '在新分頁開啟' },
+        form: { title_placeholder: '編輯標題', url_placeholder: '編輯網址' },
+    },
+    file_panel: {
+        upload: { title: '上傳', upload_error: '錯誤：上傳失敗' },
+        embed: { title: '嵌入網址', url_placeholder: '輸入網址...' },
+    },
+}
+
+const getEmbedKinds = isZh => ({
+    youtube: { title: 'YouTube', detail: isZh ? '嵌入 YouTube 影片' : 'Embed YouTube video', icon: '▶' },
+    pdf: { title: isZh ? 'PDF 文件' : 'PDF', detail: isZh ? '嵌入 PDF 文件閱覽器' : 'Embed PDF document viewer', icon: 'PDF' },
+    file: { title: isZh ? '附件連結' : 'File Attachment', detail: isZh ? '插入檔案或多媒體網址' : 'Insert downloadable file URL', icon: '↗' },
+    audio: { title: isZh ? '音訊播放器' : 'Audio Player', detail: isZh ? '播放錄音或音訊檔案' : 'Play audio or voice recording', icon: '🎙️' },
+    mermaid: { title: isZh ? 'Mermaid 流程圖' : 'Mermaid Diagram', detail: isZh ? '繪製架構圖與流程圖' : 'Render flowcharts and diagrams', icon: '◇' },
+    echarts: { title: isZh ? 'ECharts 互動圖表' : 'ECharts Chart', detail: isZh ? '插入 JSON 互動圖表' : 'Render interactive JSON chart', icon: '▥' },
+    raw: { title: isZh ? 'HTML 原始碼' : 'Raw HTML', detail: isZh ? '以安全文字保留 HTML' : 'Preserve raw HTML safely', icon: '</>' },
+    slideBreak: { title: isZh ? '簡報換頁' : 'Slide Break', detail: isZh ? '開始下一張投影片 (---)' : 'Start next presentation slide (---)', icon: '—' },
+})
 
 const EMBED_PROP_SCHEMA = {
     kind: { default: 'file', values: ['image', 'file', 'youtube', 'pdf', 'mermaid', 'echarts', 'raw', 'slideBreak', 'audio'] },
@@ -63,7 +310,9 @@ const DavidEmbed = createReactBlockSpec({
     render: ({ block }) => {
         const props = block.props
         const kind = props.kind || 'file'
-        const label = EMBED_KINDS[kind]?.title || (kind === 'image' ? '圖片' : '嵌入內容')
+        const isZh = resolveBlockNoteLang() === 'zh-TW'
+        const embedKinds = getEmbedKinds(isZh)
+        const label = embedKinds[kind]?.title || (kind === 'image' ? (isZh ? '圖片' : 'Image') : (isZh ? '嵌入內容' : 'Embedded content'))
         const preview = kind === 'image' && props.src
             ? <img src={props.src} alt={props.alt || ''} />
             : (kind === 'audio' || (kind === 'file' && (props.mimeType?.startsWith('audio/') || props.url?.match(/\.(mp3|wav|ogg|m4a|webm|aac|flac)$/i))))
@@ -81,9 +330,9 @@ const DavidEmbed = createReactBlockSpec({
                                 ? <pre>{props.optionJson}</pre>
                                 : kind === 'raw'
                                     ? <pre>{props.content}</pre>
-                                    : <span>{props.title || props.name || props.url || '尚未設定內容'}</span>
+                                    : <span>{props.title || props.name || props.url || (isZh ? '尚未設定內容' : 'No content configured')}</span>
         return <section className="david-blocknote-embed" data-kind={kind} contentEditable={false}>
-            <header><strong>{label}</strong><button type="button" onClick={() => window.dispatchEvent(new CustomEvent('david-blocknote-edit', { detail: { block } }))}>編輯</button></header>
+            <header><strong>{label}</strong><button type="button" onClick={() => window.dispatchEvent(new CustomEvent('david-blocknote-edit', { detail: { block } }))}>{isZh ? '編輯' : 'Edit'}</button></header>
             <div className="david-blocknote-embed-preview">{preview}</div>
         </section>
     },
@@ -133,12 +382,13 @@ const safeHttpUrl = value => {
 }
 
 async function uploadFile(file) {
+    const isZh = resolveBlockNoteLang() === 'zh-TW'
     if (file.type.startsWith('image/')) {
         const form = new FormData()
         form.append('image', file)
         const response = await fetch('/upload', { method: 'POST', body: form })
         const payload = await response.json()
-        if (!response.ok || payload?.err !== 0 || !payload?.data) throw new Error(payload?.msg || '圖片上傳失敗')
+        if (!response.ok || payload?.err !== 0 || !payload?.data) throw new Error(payload?.msg || (isZh ? '圖片上傳失敗' : 'Image upload failed'))
         return payload.data
     }
     let lastError
@@ -149,21 +399,22 @@ async function uploadFile(file) {
             const response = await fetch(endpoint, { method: 'POST', body: form })
             const payload = await response.json()
             const url = payload?.url || payload?.data?.url
-            if (!response.ok || payload?.result !== 'success' || !url) throw new Error(payload?.message || '附件上傳失敗')
+            if (!response.ok || payload?.result !== 'success' || !url) throw new Error(payload?.message || (isZh ? '附件上傳失敗' : 'Attachment upload failed'))
             return url
         } catch (error) {
             lastError = error
         }
     }
-    throw lastError || new Error('附件上傳失敗')
+    throw lastError || new Error(isZh ? '附件上傳失敗' : 'Attachment upload failed')
 }
 
-function EmbedDialog({ state, editor, onClose }) {
+function EmbedDialog({ state, editor, onClose, isZh = true }) {
     const [error, setError] = useState('')
     const [draft, setDraft] = useState(() => ({ ...state.block?.props, kind: state.kind }))
     const cardRef = useRef(null)
     const kind = state.kind
-    const label = EMBED_KINDS[kind]?.title || kind
+    const embedKinds = getEmbedKinds(isZh)
+    const label = embedKinds[kind]?.title || kind
     const isCode = ['mermaid', 'echarts', 'raw'].includes(kind)
 
     useEffect(() => {
@@ -190,14 +441,14 @@ function EmbedDialog({ state, editor, onClose }) {
     const submit = event => {
         event.preventDefault()
         const value = isCode ? String(draft.source || draft.optionJson || draft.content || '').trim() : String(draft.url || '').trim()
-        if (!isCode && kind !== 'slideBreak' && !safeHttpUrl(value)) return setError('請輸入有效的 http 或 https 網址。')
-        if (kind === 'mermaid' && !String(draft.source || '').trim()) return setError('Mermaid 語法不可空白。')
-        if (kind === 'raw' && !String(draft.content || '').trim()) return setError('HTML 原始碼不可空白。')
+        if (!isCode && kind !== 'slideBreak' && !safeHttpUrl(value)) return setError(isZh ? '請輸入有效的 http 或 https 網址。' : 'Please enter a valid http or https URL.')
+        if (kind === 'mermaid' && !String(draft.source || '').trim()) return setError(isZh ? 'Mermaid 語法不可空白。' : 'Mermaid source code cannot be empty.')
+        if (kind === 'raw' && !String(draft.content || '').trim()) return setError(isZh ? 'HTML 原始碼不可空白。' : 'Raw HTML content cannot be empty.')
         if (kind === 'echarts') {
             try {
                 const option = JSON.parse(draft.optionJson || '')
                 if (!option || Array.isArray(option) || typeof option !== 'object') throw new Error('invalid')
-            } catch { return setError('請輸入有效的 ECharts option JSON 物件。') }
+            } catch { return setError(isZh ? '請輸入有效的 ECharts option JSON 物件。' : 'Please enter a valid ECharts option JSON object.') }
         }
         editor.updateBlock(state.block, { props: { ...state.block.props, ...draft, kind } })
         onClose()
@@ -206,16 +457,16 @@ function EmbedDialog({ state, editor, onClose }) {
     return <div className="david-blocknote-dialog" role="dialog" aria-modal="true" aria-labelledby="david-blocknote-dialog-title">
         <div className="david-blocknote-dialog-backdrop" onClick={onClose} />
         <form ref={cardRef} className="david-blocknote-dialog-card" onSubmit={submit}>
-            <header><h2 id="david-blocknote-dialog-title">設定 {label}</h2><button type="button" onClick={onClose} aria-label="關閉">×</button></header>
+            <header><h2 id="david-blocknote-dialog-title">{isZh ? ('設定 ' + label) : ('Configure ' + label)}</h2><button type="button" onClick={onClose} aria-label={isZh ? '關閉' : 'Close'}>×</button></header>
             {isCode ? <label>
-                <span>{kind === 'mermaid' ? 'Mermaid 語法' : kind === 'echarts' ? 'ECharts option JSON' : 'HTML 原始碼'}</span>
+                <span>{kind === 'mermaid' ? (isZh ? 'Mermaid 語法' : 'Mermaid Syntax') : kind === 'echarts' ? (isZh ? 'ECharts option JSON' : 'ECharts option JSON') : (isZh ? 'HTML 原始碼' : 'Raw HTML')}</span>
                 <textarea value={kind === 'mermaid' ? draft.source : kind === 'echarts' ? draft.optionJson : draft.content} onChange={event => setDraft(current => ({ ...current, [kind === 'mermaid' ? 'source' : kind === 'echarts' ? 'optionJson' : 'content']: event.target.value }))} rows="10" />
             </label> : <>
-                {kind !== 'slideBreak' && <label><span>網址</span><input type="url" inputMode="url" value={draft.url || ''} onChange={event => setDraft(current => ({ ...current, url: event.target.value }))} placeholder="https://" /></label>}
-                {kind !== 'slideBreak' && <label><span>標題（可留空）</span><input value={draft.title || ''} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} /></label>}
+                {kind !== 'slideBreak' && <label><span>{isZh ? '網址' : 'URL'}</span><input type="url" inputMode="url" value={draft.url || ''} onChange={event => setDraft(current => ({ ...current, url: event.target.value }))} placeholder="https://" /></label>}
+                {kind !== 'slideBreak' && <label><span>{isZh ? '標題（可留空）' : 'Title (optional)'}</span><input value={draft.title || ''} onChange={event => setDraft(current => ({ ...current, title: event.target.value }))} /></label>}
             </>}
             <p className="david-blocknote-dialog-error" aria-live="polite">{error}</p>
-            <footer><button type="button" onClick={onClose}>取消</button><button type="submit">儲存</button></footer>
+            <footer><button type="button" onClick={onClose}>{isZh ? '取消' : 'Cancel'}</button><button type="submit">{isZh ? '儲存' : 'Save'}</button></footer>
         </form>
     </div>
 }
@@ -226,10 +477,14 @@ function BlockNoteEditorApp() {
     }, [])
     const [dialog, setDialog] = useState(null)
     const blockNoteTheme = useBlockNoteTheme()
+    const blockNoteLang = useBlockNoteLang()
+    const isZh = blockNoteLang === 'zh-TW'
+    const dictionary = useMemo(() => isZh ? ZH_TW_DICTIONARY : undefined, [isZh])
     const editor = useCreateBlockNote({
         schema,
         initialContent,
         uploadFile,
+        dictionary,
         tables: { headers: true, splitCells: true, cellBackgroundColor: true, cellTextColor: true },
     })
 
@@ -312,61 +567,34 @@ function BlockNoteEditorApp() {
         return () => window.removeEventListener('cf-notepad-block-import', importMarkdown)
     }, [editor])
 
-    const items = useMemo(() => [
-        {
-            title: '待辦清單 (Checklist)',
-            subtext: '建立可勾選、支援 Tab 縮排與階層的待辦事項清單',
-            aliases: ['todo', 'task', 'checklist', 'check', '待辦', '待辦清單', '清單', '核取方塊', '勾選', 'tasks'],
-            group: '基本區塊',
-            icon: <span className="david-blocknote-menu-icon">☑️</span>,
-            onItemClick: () => {
-                insertOrUpdateBlockForSlashMenu(editor, { type: 'checkListItem' })
+    const items = useMemo(() => {
+        const embedKinds = getEmbedKinds(isZh)
+        return [
+            {
+                title: isZh ? '即時錄音' : 'Live Voice Recording',
+                subtext: isZh ? '啟動麥克風即時錄音並由 Whisper AI 自動轉錄為區塊內容' : 'Record voice with microphone and transcribe to blocks with Whisper AI',
+                aliases: isZh ? ['record', 'voice', 'audio', 'mic', '錄音', '語音', '即時錄音'] : ['record', 'voice', 'audio', 'mic'],
+                group: isZh ? 'DAVID888 語音與嵌入' : 'DAVID888 Voice & Embeds',
+                icon: <span className="david-blocknote-menu-icon">🎙️</span>,
+                onItemClick: () => {
+                    window.dispatchEvent(new CustomEvent('cf-notepad-start-record'))
+                },
             },
-        },
-        {
-            title: '項目清單 (Bullet List)',
-            subtext: '建立無序圓點大綱清單，支援 Tab 無限層級縮排',
-            aliases: ['bullet', 'list', 'ul', '項目清單', '圓點清單', '圓點', '大綱'],
-            group: '基本區塊',
-            icon: <span className="david-blocknote-menu-icon">•</span>,
-            onItemClick: () => {
-                insertOrUpdateBlockForSlashMenu(editor, { type: 'bulletListItem' })
-            },
-        },
-        {
-            title: '編號清單 (Numbered List)',
-            subtext: '建立自動編號的順序清單',
-            aliases: ['number', 'numbered', 'ol', '數字清單', '有序清單', '編號'],
-            group: '基本區塊',
-            icon: <span className="david-blocknote-menu-icon">1.</span>,
-            onItemClick: () => {
-                insertOrUpdateBlockForSlashMenu(editor, { type: 'numberedListItem' })
-            },
-        },
-        {
-            title: '即時錄音',
-            subtext: '啟動麥克風即時錄音並自動轉錄為區塊內容',
-            aliases: ['record', 'voice', 'audio', 'mic', '錄音', '語音', '即時錄音'],
-            group: 'DAVID888 語音與嵌入',
-            icon: <span className="david-blocknote-menu-icon">🎙️</span>,
-            onItemClick: () => {
-                window.dispatchEvent(new CustomEvent('cf-notepad-start-record'))
-            },
-        },
-        ...getDefaultReactSlashMenuItems(editor),
-        ...Object.entries(EMBED_KINDS).map(([kind, definition]) => ({
-            title: definition.title,
-            subtext: definition.detail,
-            aliases: [kind, definition.title.toLowerCase()],
-            group: 'DAVID888 語音與嵌入',
-            icon: <span className="david-blocknote-menu-icon">{definition.icon}</span>,
-            onItemClick: () => {
-                const block = insertOrUpdateBlockForSlashMenu(editor, { type: 'davidEmbed', props: { kind } })
-                if (kind === 'slideBreak') return
-                setDialog({ kind, block })
-            },
-        })),
-    ], [editor])
+            ...getDefaultReactSlashMenuItems(editor),
+            ...Object.entries(embedKinds).map(([kind, definition]) => ({
+                title: definition.title,
+                subtext: definition.detail,
+                aliases: [kind, definition.title.toLowerCase()],
+                group: isZh ? 'DAVID888 語音與嵌入' : 'DAVID888 Voice & Embeds',
+                icon: <span className="david-blocknote-menu-icon">{definition.icon}</span>,
+                onItemClick: () => {
+                    const block = insertOrUpdateBlockForSlashMenu(editor, { type: 'davidEmbed', props: { kind } })
+                    if (kind === 'slideBreak') return
+                    setDialog({ kind, block })
+                },
+            })),
+        ]
+    }, [editor, isZh])
 
     const save = () => {
         source.value = JSON.stringify(blockNoteToTiptapDocument(editor.document))
@@ -377,7 +605,7 @@ function BlockNoteEditorApp() {
         <BlockNoteView editor={editor} theme={blockNoteTheme} slashMenu={false} onChange={save} className="david-blocknote-view">
             <SuggestionMenuController triggerCharacter="/" getItems={async query => filterSuggestionItems(items, query)} />
         </BlockNoteView>
-        {dialog && <EmbedDialog state={dialog} editor={editor} onClose={() => setDialog(null)} />}
+        {dialog && <EmbedDialog state={dialog} editor={editor} onClose={() => setDialog(null)} isZh={isZh} />}
     </div>
 }
 
