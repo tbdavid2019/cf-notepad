@@ -194,3 +194,10 @@ test('theme and width selectors use document event delegation for floating porta
     assert.match(baseTemplateSource, /document\.addEventListener\('click',\s*\(e\)\s*=>\s*\{[\s\S]*closest\('\.theme-item'\)/)
     assert.match(baseTemplateSource, /document\.addEventListener\('click',\s*\(e\)\s*=>\s*\{[\s\S]*closest\('\.width-item'\)/)
 })
+
+test('rich dropdown items use breathable spacing and complete hover/focus surfaces', () => {
+    assert.match(baseCssSource, /\.dropdown-item-rich \{[\s\S]*?padding: 8px 10px;/)
+    assert.match(baseCssSource, /\.dropdown-item-rich \.dropdown-item-copy \{[\s\S]*?gap: 3px;/)
+    assert.match(baseCssSource, /\.dropdown-menu > \.dropdown-item-rich \{[\s\S]*?width: calc\(100% \+ 8px\);[\s\S]*?margin-inline: -4px;[\s\S]*?padding-inline: 14px;/)
+    assert.match(baseCssSource, /\.dropdown-item:hover,\s*\.dropdown-item:focus-visible \{[\s\S]*?background: var\(--toolbar-bg-hover/)
+})

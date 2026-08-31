@@ -1021,7 +1021,8 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 }
 .dropdown-item-rich {
     align-items: flex-start;
-    padding: 7px 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
 }
 .dropdown-item-rich svg {
     color: var(--modal-accent, #0969da);
@@ -1030,7 +1031,7 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 .dropdown-item-rich .dropdown-item-copy {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     min-width: 0;
     flex: 1;
     text-align: left;
@@ -1044,17 +1045,27 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 .dropdown-item-copy strong {
     font-size: 13px;
     font-weight: 600;
-    line-height: 1.35;
+    line-height: 1.3;
     color: var(--modal-text, #24292f);
 }
 .dropdown-item-copy small {
     color: var(--toolbar-muted, #64748b);
     font-size: 11px;
     font-weight: 400;
-    line-height: 1.3;
+    line-height: 1.35;
 }
-.dropdown-item:hover {
+.dropdown-menu > .dropdown-item-rich {
+    width: calc(100% + 8px);
+    margin-inline: -4px;
+    padding-inline: 14px;
+}
+.dropdown-item:hover,
+.dropdown-item:focus-visible {
     background: var(--toolbar-bg-hover, #ebe6df);
+}
+.dropdown-item:focus-visible {
+    outline: 2px solid var(--modal-accent, #0969da);
+    outline-offset: -2px;
 }
 .dropdown-item:hover:not(.dropdown-danger-item) {
     color: var(--modal-accent, #0969da);
