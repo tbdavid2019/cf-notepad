@@ -58,6 +58,31 @@ test('COPY_DROPDOWN_MENU renders complete clipboard copy matrix', () => {
     assert.match(docEn.querySelector('#copy-all-jira-btn').textContent, /Jira/)
 })
 
+test('published share copy actions keep titles and avoid repeating the copy verb in subtitles', () => {
+    const html = FOOTER({
+        lang: 'zh-TW',
+        isEdit: true,
+        share: true,
+        shareId: 'abc123',
+    })
+    const doc = new JSDOM(html).window.document
+
+    assert.equal(doc.querySelector('#copy-share-btn strong').textContent, '複製分享連結')
+    assert.equal(doc.querySelector('#copy-share-btn small').textContent, '閱讀頁面網址')
+    assert.equal(doc.querySelector('#copy-present-share-btn strong').textContent, '複製簡報連結')
+    assert.equal(doc.querySelector('#copy-present-share-btn small').textContent, '簡報播放網址')
+    assert.equal(doc.querySelector('#copy-book-share-btn strong').textContent, '複製書本連結')
+    assert.equal(doc.querySelector('#copy-book-share-btn small').textContent, '書本閱讀網址')
+
+    const englishDoc = new JSDOM(FOOTER({
+        lang: 'en-US',
+        isEdit: true,
+        share: true,
+        shareId: 'abc123',
+    })).window.document
+    assert.equal(englishDoc.querySelector('#copy-share-btn small').textContent, 'Copy share URL')
+})
+
 test('MATH_FORMAT_MODAL renders all 7 formula copy formats', () => {
     const htmlZh = MATH_FORMAT_MODAL('zh-TW')
     const domZh = new JSDOM(htmlZh)

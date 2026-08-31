@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-08-31]
+
+- **🐛 清理分享選單副標贅詞 (Remove Redundant Share Menu Subtitles)**：保留「複製分享連結」、「複製簡報連結」與「複製書本連結」標題，將副標改為單純說明「閱讀頁面網址」、「簡報播放網址」與「書本閱讀網址」，避免同一個「複製」動作在兩行重複出現；英文文案與操作行為維持不變。
+
 ## [2026-08-30]
 
 - **🎨 Block 區塊模式預設純白極簡 Ayu Light 主題 (Default Clean White 'ayu-light' Theme for Block Editor)**：

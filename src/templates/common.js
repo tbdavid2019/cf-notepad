@@ -537,21 +537,21 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 ${SVG_ICONS.copy}
                                                 <span class="dropdown-item-copy">
                                                     <strong>${copyShareTitle}</strong>
-                                                    <small>${lang === 'zh-TW' ? '複製閱讀頁面網址' : 'Copy share URL'}</small>
+                                                    <small>${lang === 'zh-TW' ? '閱讀頁面網址' : 'Copy share URL'}</small>
                                                 </span>
                                             </button>
                                             <button type="button" id="copy-present-share-btn" class="dropdown-item dropdown-item-rich" title="${copyPresentTitle}">
                                                 ${SVG_ICONS.play}
                                                 <span class="dropdown-item-copy">
                                                     <strong>${copyPresentTitle}</strong>
-                                                    <small>${lang === 'zh-TW' ? '複製簡報播放網址' : 'Copy presentation URL'}</small>
+                                                    <small>${lang === 'zh-TW' ? '簡報播放網址' : 'Copy presentation URL'}</small>
                                                 </span>
                                             </button>
                                             <button type="button" id="copy-book-share-btn" class="dropdown-item dropdown-item-rich" title="${lang === 'zh-TW' ? '複製書本連結' : 'Copy Book URL'}">
                                                 ${SVG_ICONS.book}
                                                 <span class="dropdown-item-copy">
                                                     <strong>${lang === 'zh-TW' ? '複製書本連結' : 'Copy Book URL'}</strong>
-                                                    <small>${lang === 'zh-TW' ? '複製書本閱讀網址' : 'Copy book mode URL'}</small>
+                                                    <small>${lang === 'zh-TW' ? '書本閱讀網址' : 'Copy book mode URL'}</small>
                                                 </span>
                                             </button>
                                         </div>
