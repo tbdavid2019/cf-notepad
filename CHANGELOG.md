@@ -3,6 +3,7 @@
 ## [2026-08-31]
 
 - **🎨 下拉選單間距與互動表面視覺精修 (Dropdown Rhythm & Full-Row Interaction Polish)**：重新調整雙行選單項目的上下節奏與標題／副標間距，並讓 hover 與鍵盤 focus 高亮完整覆蓋整列，修復匯出選單上下擁擠及背景留白不一致的問題；維持現有主題變數、操作結構與無障礙焦點狀態。
+- **🧭 全面盤點 Edit / Share / Block Edit 下拉選單 (Dropdown Surface Audit)**：修正 Web Awesome 原生按鈕固定高度與 flex shrink 把雙行 rich item 壓扁、裁切副標的根因；統一 New、Share、Export、Copy、Theme、Width 的 spacing、group card 邊界、hover/focus 表面與長選單 viewport 滾動行為。
 - **🐛 清理分享選單副標贅詞 (Remove Redundant Share Menu Subtitles)**：保留「複製分享連結」、「複製簡報連結」與「複製書本連結」標題，將副標改為單純說明「閱讀頁面網址」、「簡報播放網址」與「書本閱讀網址」，避免同一個「複製」動作在兩行重複出現；英文文案與操作行為維持不變。
 
 ## [2026-08-30]

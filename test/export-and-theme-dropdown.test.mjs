@@ -195,9 +195,15 @@ test('theme and width selectors use document event delegation for floating porta
     assert.match(baseTemplateSource, /document\.addEventListener\('click',\s*\(e\)\s*=>\s*\{[\s\S]*closest\('\.width-item'\)/)
 })
 
-test('rich dropdown items use breathable spacing and complete hover/focus surfaces', () => {
-    assert.match(baseCssSource, /\.dropdown-item-rich \{[\s\S]*?padding: 8px 10px;/)
-    assert.match(baseCssSource, /\.dropdown-item-rich \.dropdown-item-copy \{[\s\S]*?gap: 3px;/)
-    assert.match(baseCssSource, /\.dropdown-menu > \.dropdown-item-rich \{[\s\S]*?width: calc\(100% \+ 8px\);[\s\S]*?margin-inline: -4px;[\s\S]*?padding-inline: 14px;/)
+test('all dropdown surfaces share breathable spacing and aligned hover/focus states', () => {
+    assert.match(baseCssSource, /\.dropdown-menu \{[\s\S]*?padding: 10px 8px;/)
+    assert.match(baseCssSource, /\.dropdown-menu > \*,\s*\.dropdown-group-card > \* \{[\s\S]*?flex: 0 0 auto;/)
+    assert.match(baseCssSource, /\.dropdown-group-card \{[\s\S]*?padding: 0;[\s\S]*?gap: 0;[\s\S]*?overflow: hidden;/)
+    assert.match(baseCssSource, /\.dropdown-item-rich \{[\s\S]*?padding: 9px 10px;/)
+    assert.match(baseCssSource, /\.dropdown-item \{[^}]*height: auto;/)
+    assert.match(baseCssSource, /\.dropdown-item-rich \.dropdown-item-copy \{[\s\S]*?gap: 4px;/)
+    assert.match(baseCssSource, /\.dropdown-menu > \.dropdown-item-rich,\s*\.dropdown-group-card > \.dropdown-item-rich \{[\s\S]*?width: 100%;[\s\S]*?margin: 0;/)
+    assert.doesNotMatch(baseCssSource, /width: calc\(100% \+ 8px\)/)
     assert.match(baseCssSource, /\.dropdown-item:hover,\s*\.dropdown-item:focus-visible \{[\s\S]*?background: var\(--toolbar-bg-hover/)
+    assert.match(baseCssSource, /\.theme-item:hover,\s*\.theme-item:focus-visible,\s*\.width-item:hover,\s*\.width-item:focus-visible \{[\s\S]*?background: var\(--toolbar-bg-hover/)
 })
