@@ -40,6 +40,6 @@
 - [x] **Step 1: Run full tests** — `npm test`，預期 0 failures、0 errors。
 - [x] **Step 2: Run UI detector and diff checks** — 執行 impeccable layout detector 與 `git diff --check`，只接受已解釋的既有 detector findings。
 - [x] **Step 3: Verify representative browser states** — 用 Chrome DevTools 檢查 Edit 的 Export/Share、Share 的 group card、Block Edit 的 Export，確認 rich subtitle 不裁切且 hover 對齊。
-- [ ] **Step 4: Commit and push** — 使用 Conventional Commit，push 至 `origin/main`。
-- [ ] **Step 5: Deploy Worker** — `npm run deploy`，記錄 `Current Version ID`。
-- [ ] **Step 6: Verify production** — `curl -fsSIL https://wiki.david888.com/new/markdown` 並以 Chrome DevTools 重載線上頁面確認 CSS 生效。
+- [x] **Step 4: Commit and push** — 使用 Conventional Commit，push 至 `origin/main`。
+- [x] **Step 5: Deploy Worker** — `npm run deploy`，記錄 `Current Version ID`。
+- [x] **Step 6: Verify production** — `curl -fsSIL https://wiki.david888.com/new/markdown` 並以 Chrome DevTools 重載線上頁面確認 CSS 生效。
