@@ -373,7 +373,7 @@ export async function storeFidoChallenge(kv, challenge, type = 'login', ttlSecon
 }
 
 export async function verifyAndConsumeFidoChallenge(kv, challenge, type = 'login') {
-    if (!kv) return true
+    if (!kv || !challenge) return false
     const key = `${FIDO_CHALLENGE_PREFIX}${type}:${challenge}`
     const stored = await kv.get(key)
     if (!stored) return false

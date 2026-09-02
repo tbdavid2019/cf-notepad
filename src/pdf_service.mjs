@@ -60,7 +60,8 @@ export function getPdfBaseStyles() {
  */
 export function buildPdfDocumentHtml(rawHtml, meta = {}) {
     const { title = '' } = meta
-    const titleHeader = title ? `<h1 style="font-size: 24px; font-weight: 700; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px; margin-top: 0;">${title}</h1>` : ''
+    const safeTitle = title ? String(title).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : ''
+    const titleHeader = safeTitle ? `<h1 style="font-size: 24px; font-weight: 700; color: #111827; border-bottom: 2px solid #e5e7eb; padding-bottom: 10px; margin-bottom: 20px; margin-top: 0;">${safeTitle}</h1>` : ''
 
     return `
         <div style="${getPdfBaseStyles()}">
@@ -346,9 +347,10 @@ export async function renderHtmlToPdf(rawHtml = '', options = {}) {
             <span style="color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 60%;">${safeTitle}</span>
         </div>
     `
+    const safeSiteUrl = String(siteUrl || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     const footerHtml = `
         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 8.5px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 5px; font-family: 'Noto Sans TC', 'Inter', sans-serif;">
-            <span style="color: #9ca3af;">${siteUrl}</span>
+            <span style="color: #9ca3af;">${safeSiteUrl}</span>
             <span>Page <span class="pageNumber"></span> of <span class="totalPages"></span></span>
         </div>
     `
@@ -398,7 +400,7 @@ export async function renderMarkdownToPdf(markdown = '', options = {}) {
  */
 export function createPdfResponse(pdfBytes, filename = 'document.pdf') {
     const safeFilename = filename.endsWith('.pdf') ? filename : `${filename}.pdf`
-    const asciiFilename = safeFilename.replace(/[^\x20-\x7E]/g, '_') || 'document.pdf'
+    const asciiFilename = safeFilename.replace(/["\r\n;\\]/g, '_').replace(/[^\x20-\x7E]/g, '_') || 'document.pdf'
     const encodedFilename = encodeURIComponent(safeFilename)
 
     return new Response(pdfBytes, {

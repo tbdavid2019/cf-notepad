@@ -164,6 +164,10 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
         }
     }
 
+    function escapeHtml(str) {
+        return String(str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
     async function refreshFidoDevicesList() {
         try {
             const res = await fetch(ADMIN_PATH + '/fido/credentials');
@@ -180,12 +184,15 @@ export const getAdminScript = (adminPath = '/admin', isLoggedIn = true) => `
                     } else {
                         listEl.innerHTML = data.credentials.map(c => {
                             const dateStr = c.createdAt ? new Date(c.createdAt).toLocaleString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '—';
-                            return '<div class="fido-device-item" data-id="' + c.id + '">' +
+                            const safeName = escapeHtml(c.name || 'Touch ID 裝置');
+                            const safeId = escapeHtml(c.id || '');
+                            return '<div class="fido-device-item" data-id="' + safeId + '">' +
                                 '<div class="fido-device-info">' +
-                                    '<strong>' + (c.name || 'Touch ID 裝置') + '</strong>' +
+                                    '<strong>' + safeName + '</strong>' +
                                     '<span>綁定時間：' + dateStr + '</span>' +
+                                    '<span class="fido-device-id" style="font-family:monospace;font-size:11px;color:#9ca3af;display:block;">ID: ' + safeId.slice(0, 16) + '...</span>' +
                                 '</div>' +
-                                '<button type="button" class="btn btn-danger btn-sm fido-delete-btn" data-id="' + c.id + '">移除</button>' +
+                                '<button type="button" class="btn btn-danger btn-sm fido-delete-btn" data-id="' + safeId + '">移除</button>' +
                             '</div>';
                         }).join('');
                     }

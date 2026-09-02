@@ -134,7 +134,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const isSharePage = Boolean(shareId && !isEdit)
     const isBlockDocument = ext.editorFormat === 'block'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
-    const textareaContent = isBlockDocument ? escapeHtml(content) : content
+    const textareaContent = escapeHtml(content)
     const pageTheme = isBlockDocument
         ? (ext.theme || 'ayu-light')
         : resolvePageTheme({
@@ -355,7 +355,7 @@ ${getMarkdownCss()}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
-                         <article style="display:none;" id="bot-accessible-content">${isBlockDocument ? blockHtml : content}</article>
+                         <article style="display:none;" id="bot-accessible-content">${isBlockDocument ? blockHtml : escapeHtml(content)}</article>
                         ${isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
                             <div id="block-editor" class="block-editor" aria-label="Block editor"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
@@ -407,7 +407,7 @@ ${getMarkdownCss()}
                                 </div>
                                 <div id="editor-line-mirror" class="editor-line-mirror" aria-hidden="true"></div>
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
-                                <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
+                                <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${escapeHtml(content)}</textarea>
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
@@ -985,7 +985,7 @@ ${getMarkdownCss()}
                  }
                  mermaid.initialize({
                      startOnLoad: false,
-                     securityLevel: 'loose',
+                     securityLevel: 'strict',
                      fontFamily: mermaidFontFamily,
                      themeVariables: {
                          fontFamily: mermaidFontFamily
@@ -1003,12 +1003,13 @@ ${getMarkdownCss()}
                               const code = container.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
                               const id = \`mermaid-svg-\${Date.now()}-\${i}\`;
                               const { svg } = await mermaid.render(id, code);
-                              renderNode.innerHTML = svg;
+                              renderNode.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } }) : svg;
                               renderNode.setAttribute('data-processed', 'true');
                               attachDiagramActions(renderNode, code, 'mermaid');
                          } catch (e) {
                               console.error('Mermaid render error', e);
-                              renderNode.innerHTML = \`<pre style="color:red; background:#fee; padding:10px; border:1px solid red;">Mermaid Render Error: \${e.message}</pre>\`;
+                              const errMsg = String(e?.message || e || 'Unknown error').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                              renderNode.innerHTML = \`<pre style="color:red; background:#fee; padding:10px; border:1px solid red;">Mermaid Render Error: \${errMsg}</pre>\`;
                          }
                      }
                  }
@@ -1054,7 +1055,8 @@ ${getMarkdownCss()}
                      document.querySelectorAll('.diagram-graphviz-render').forEach(el => {
                          if (el.hasAttribute('data-processed')) return;
                          const code = el.previousElementSibling.textContent.replace(/&lt;/g, '<').replace(/&gt;/g, '>');
-                         el.innerHTML = graphviz.layout(code, "svg", "dot");
+                         const graphvizSvg = graphviz.layout(code, "svg", "dot");
+                         el.innerHTML = typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(graphvizSvg, { USE_PROFILES: { svg: true, svgFilters: true } }) : graphvizSvg;
                          el.setAttribute('data-processed', 'true');
                          attachDiagramActions(el, code, 'graphviz');
                      });
@@ -1194,7 +1196,7 @@ ${getMarkdownCss()}
         lang,
         title: title || '',
         i18n: getLangText(lang),
-    })}
+    }).replace(/</g, '\\u003c')}
 
     const syncRealtimeDocumentTitle = (text) => {
         if (typeof text !== 'string') return

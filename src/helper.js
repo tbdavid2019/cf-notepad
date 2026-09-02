@@ -4,15 +4,24 @@ import * as TEMPL from './template.js'
 import { SUPPORTED_LANG, getGaMeasurementId, getSalt, getSecret } from './constant.js'
 import { resolvePasswordRole } from './password_policy.mjs'
 import { getNoteHistoryConfig, deleteNoteHistoryVersions } from './note_history.mjs'
-import { driverQueryNote } from './storage_driver.mjs'
+import { driverQueryNote, driverDeleteNote } from './storage_driver.mjs'
 
 const getNotesNamespace = () => globalThis.NOTES
 const getShareNamespace = () => globalThis.SHARE
 
-// generate random string
-export const genRandomStr = n => {
+// generate random string using CSPRNG when available
+export const genRandomStr = (n = 4) => {
     // remove char that confuse user
     const charset = '2345679abcdefghjkmnpqrstwxyz'
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+        const randomBytes = new Uint8Array(n)
+        crypto.getRandomValues(randomBytes)
+        let res = ''
+        for (let i = 0; i < n; i++) {
+            res += charset.charAt(randomBytes[i] % charset.length)
+        }
+        return res
+    }
     return Array(n)
         .join()
         .split(',')
@@ -75,6 +84,12 @@ export async function MD5(str) {
         const hashArray = Array.from(new Uint8Array(hashBuffer))
         return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
     } catch (e) {
+        try {
+            const nodeCrypto = await import('node:crypto')
+            if (nodeCrypto?.createHash) {
+                return nodeCrypto.createHash('md5').update(str).digest('hex')
+            }
+        } catch (_) {}
         console.error('MD5 Error:', e)
         throw new Error(`MD5 Hashing failed: ${e.message}`)
     }
@@ -90,13 +105,23 @@ async function legacySaltPw(password) {
     return await MD5(`${hashPw}+undefined`)
 }
 
+function constantTimeStringCompare(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string') return false
+    if (a.length !== b.length) return false
+    let diff = 0
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    }
+    return diff === 0
+}
+
 export async function passwordMatches(password, storedHash) {
-    if (!storedHash) return false
+    if (!storedHash || typeof password !== 'string') return false
     const currentHash = await saltPw(password)
-    if (storedHash === currentHash) return true
+    if (constantTimeStringCompare(storedHash, currentHash)) return true
 
     const legacyHash = await legacySaltPw(password)
-    return storedHash === legacyHash
+    return constantTimeStringCompare(storedHash, legacyHash)
 }
 
 // Keep password policy identical for direct notes and share links.
@@ -163,34 +188,46 @@ export function getI18n(request) {
 }
 
 /**
- * Delete all empty pages (content length <= 10 characters)
+ * Delete all truly empty pages (content length === 0 and no passwords attached)
  * @returns {Promise<{deleted: number, errors: string[]}>}
  */
 export async function deleteEmptyPages() {
     const deleted = []
     const errors = []
+    const kv = getNotesNamespace()
+    if (!kv) return { deleted: 0, errors: ['Notes KV namespace is not configured'] }
 
     try {
-        const list = await getNotesNamespace().list()
+        let cursor = undefined
+        let listComplete = false
 
-        for (const note of list.keys) {
-            try {
-                const value = await getNotesNamespace().get(note.name)
+        while (!listComplete) {
+            const list = await kv.list({ cursor, limit: 1000 })
+            cursor = list.cursor
+            listComplete = list.list_complete
 
-                // Check if page is empty (no content or very short content)
-                if (!value || value.trim().length <= 10) {
-                    await getNotesNamespace().delete(note.name)
+            for (const note of list.keys) {
+                try {
+                    const { value, metadata } = await driverQueryNote(note.name)
 
-                    // Also delete share link if exists
-                    const md5 = await MD5(note.name)
-                    await getShareNamespace().delete(md5)
-                    await deleteNoteHistoryForPath(note.name)
+                    // Only delete truly empty pages (length 0) with no passwords attached
+                    const isContentEmpty = !value || String(value).trim().length === 0
+                    const hasPassword = Boolean(metadata?.pw || metadata?.vpw)
 
-                    deleted.push(note.name)
+                    if (isContentEmpty && !hasPassword) {
+                        await driverDeleteNote(note.name)
+                        const md5 = await MD5(note.name)
+                        const shareKv = getShareNamespace()
+                        if (shareKv) await shareKv.delete(md5)
+                        await deleteNoteHistoryForPath(note.name)
+                        deleted.push(note.name)
+                    }
+                } catch (e) {
+                    errors.push(`Failed to process ${note.name}: ${e.message}`)
                 }
-            } catch (e) {
-                errors.push(`Failed to process ${note.name}: ${e.message}`)
             }
+
+            if (!cursor) break
         }
     } catch (e) {
         errors.push(`Failed to list notes: ${e.message}`)

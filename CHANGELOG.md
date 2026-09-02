@@ -2,6 +2,28 @@
 
 ## [2026-09-02]
 
+- **🛡️ 系統全方位安全弱點修補與全面架構強化 (Comprehensive Full-Repo Security Hardening & Vulnerability Remediation)**：
+  - **Stored & DOM XSS 徹底防堵 (VULN-01 & VULN-02)**：
+    - 伺服端範本全面轉義：在 `src/templates/base.js` 中對 `<article id="bot-accessible-content">`、`<textarea id="contents">` 以及 `APP_STATE` 內嵌 JSON 實施全域 HTML/Unicode 轉義（包含 `<` 轉為 `\u003c`），杜絕 Textarea 與 Script 標籤逃逸。
+    - 客戶端圖表嚴格模式與 DOMPurify 淨化：將 Mermaid 圖表初始化 `securityLevel` 鎖定為 `'strict'`，並對 Mermaid 與 Graphviz (`@hpcc-js/wasm`) 渲染後輸出的所有動態 SVG 元素套用 `DOMPurify.sanitize(svg, { USE_PROFILES: { svg: true, svgFilters: true } })`，徹底消除圖表層級之 DOM XSS。
+  - **密碼授權與存取控制修復 (VULN-03)**：
+    - 修正 `src/password_policy.mjs` 中的 `resolvePasswordRole` 提權漏洞，確保在僅設置閱讀鎖（`vpw`）時驗證通過一律授予唯讀 `'view'` 角色，不再錯誤提升為編輯者（`'edit'`）。
+  - **MCP 本地工具安全防護 (VULN-04 & VULN-14)**：
+    - `mcp/server.py` 限制 `upload_image` 僅允許標準圖片副檔名（`.png`, `.jpg`, `.jpeg`, `.gif`, `.webp`, `.svg`, `.bmp`, `.avif`）並強制 10MB 檔案大小上限，防止本機敏感檔案任意讀取外洩。
+    - `src/mcp_server.mjs` 加入 JSON-RPC 2.0 Batch 請求數量限制（最多 20 筆），防範 Worker 記憶體與 CPU 耗盡 DoS。
+  - **後台管理者 Session 與 Token 密碼學強化 (VULN-06, VULN-09 & VULN-10)**：
+    - 廢止 `admin_session` 明文密碼 Cookie，全面改用密碼學簽署之 Admin JWT，並配置 `HttpOnly`、`Secure` 與 `SameSite=Strict` 標籤。
+    - 筆記存取 JWT 權杖全面加入標準 `exp` 過期宣告（預設 7 天），防止權杖無限期重放。
+    - 密碼驗證實作常數時間字串比對 (`constantTimeStringCompare`)，杜絕時序側信道攻擊。
+  - **D1 SQLite 自我修復與排程 Cron 資料一致性 (VULN-07 & VULN-08)**：
+    - 修復 `src/storage_driver.mjs` 中 `driverQueryShare` 欄位名稱錯誤（`notes.name` 修正為 `notes.path`），恢復 D1 分享記錄自動修復能力。
+    - 重構 `deleteEmptyPages()` 清理邏輯：改調用 `driverDeleteNote()` 同步刪除 D1 與 KV 資料，並加入密碼保護檢查，僅刪除字元數為 0 且無密碼保護之空白頁，杜絕正當簡短筆記遭誤刪。
+  - **R2 上傳與 PDF 匯出深度防禦 (VULN-11, VULN-12, VULN-13 & VULN-15)**：
+    - `/upload` 與 `/api/upload` 新增 MIME 白名單與 10MB 上限校驗；隨機字串生成升級為 CSPRNG (`crypto.getRandomValues`)。
+    - `src/pdf_service.mjs` 轉義 PDF 標題與網站 URL，並過濾 `Content-Disposition` 標頭換行與引號注入。
+    - 支援透過 API 明確傳送 `share: false` 進行文章下架，並修復後台儲存未發布文章時暫存內容保留邏輯。
+    - 全新增加 `test/security-fixes.test.mjs` 涵蓋全部 15 項安全回歸測試，全套 402 項自動化測試通過率 100%。
+
 - **🔢 Markdown 編輯器行號支援超長段落自動折行高度精準同步 (Dynamic Line Numbers Alignment for Soft-Wrapped Lines in Markdown Editor)**：
   - **自動折行高度鏡像計算 (DOM Mirror Line Height Measurement)**：徹底解決長文字或中英文段落因寬度不足而在 `<textarea>` 中自動折行時，行號欄（Line Numbers Gutter）僅按邏輯行單行固定高度排列導致行號與內容錯位、以及超出邏輯行數後下方行號空白的問題。
   - **鏡像元素動態排版 (Offscreen Typography Mirror)**：透過同步字型（`--editor-font-family`、`font-size`、`line-height`、`word-break`、`overflow-wrap`）與可用寬度（`clientWidth - padding`）的鏡像元素，即時精準量測每個段落折行後的實際像素高度，為每一邏輯行號設置自適應高度區塊，使行號永遠與段落第一行精準水平對齊。

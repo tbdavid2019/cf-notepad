@@ -170,43 +170,43 @@ export async function driverQueryShare(shareId) {
             const row = await db.prepare('SELECT path FROM shares WHERE share_id = ?').bind(shareId).first()
             if (row && row.path) return row.path
 
-            // Fallback for D1: check if share_id matches shareSlug, shareId, or note name with share=1
+            // Fallback for D1: check if share_id matches shareSlug, shareId, or note path with share=1
             const noteRow = await db.prepare(`
-                SELECT name FROM notes 
+                SELECT path FROM notes 
                 WHERE (
                     json_extract(metadata, '$.shareSlug') = ? 
                     OR json_extract(metadata, '$.shareId') = ?
-                    OR name = ?
+                    OR path = ?
                 )
                 AND (json_extract(metadata, '$.share') = 1 OR json_extract(metadata, '$.share') = true)
                 LIMIT 1
             `).bind(shareId, shareId, shareId).first()
-            if (noteRow && noteRow.name) {
+            if (noteRow && noteRow.path) {
                 // Self-heal the share mapping in shares table
                 db.prepare(`
                     INSERT INTO shares (share_id, path)
                     VALUES (?, ?)
                     ON CONFLICT(share_id) DO UPDATE SET path = excluded.path
-                `).bind(shareId, noteRow.name).run().catch(() => {})
-                return noteRow.name
+                `).bind(shareId, noteRow.path).run().catch(() => {})
+                return noteRow.path
             }
 
-            // Fallback for D1: if shareId is a 32-char hex string, check if it matches MD5(name)
+            // Fallback for D1: if shareId is a 32-char hex string, check if it matches MD5(path)
             if (/^[a-f0-9]{32}$/i.test(shareId)) {
                 const candidates = await db.prepare(`
-                    SELECT name FROM notes 
+                    SELECT path FROM notes 
                     WHERE (json_extract(metadata, '$.share') = 1 OR json_extract(metadata, '$.share') = true)
                 `).all()
                 if (candidates && candidates.results) {
                     for (const candidate of candidates.results) {
-                        const hash = await md5Hex(candidate.name)
+                        const hash = await md5Hex(candidate.path)
                         if (hash.toLowerCase() === shareId.toLowerCase()) {
                             db.prepare(`
                                 INSERT INTO shares (share_id, path)
                                 VALUES (?, ?)
                                 ON CONFLICT(share_id) DO UPDATE SET path = excluded.path
-                            `).bind(shareId, candidate.name).run().catch(() => {})
-                            return candidate.name
+                            `).bind(shareId, candidate.path).run().catch(() => {})
+                            return candidate.path
                         }
                     }
                 }

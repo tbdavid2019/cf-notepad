@@ -158,10 +158,20 @@ export async function createAnnotationDeleteToken(messageId, secret) {
     return Array.from(new Uint8Array(signature), byte => byte.toString(16).padStart(2, '0')).join('')
 }
 
+function constantTimeTokenCompare(a, b) {
+    if (typeof a !== 'string' || typeof b !== 'string') return false
+    if (a.length !== b.length) return false
+    let diff = 0
+    for (let i = 0; i < a.length; i++) {
+        diff |= a.charCodeAt(i) ^ b.charCodeAt(i)
+    }
+    return diff === 0
+}
+
 export async function verifyAnnotationDeleteToken(messageId, token, secret) {
     if (typeof messageId !== 'string' || !messageId || typeof token !== 'string' || !token) return false
     const expected = await createAnnotationDeleteToken(messageId, secret)
-    return expected === token
+    return constantTimeTokenCompare(expected, token)
 }
 
 export async function createAnnotationThread(db, path, draft, {

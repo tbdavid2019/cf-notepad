@@ -399,6 +399,25 @@ npm run deploy
 
 ---
 
+## 🛡️ 全方位安全架構與防禦標準 (Full-Stack Security & Hardening Standards)
+
+本專案遵循 Cloudflare 官方開源安全標準（`cloudflare/security-audit-skill`）進行全面防護與持續回歸測試：
+
+1. **XSS 深度防禦與 DOM 淨化 (Zero-XSS Policy)**：
+   - 伺服端模板全量字串轉義：包含 Textarea 內容、Bot 索引標籤與 `APP_STATE` 內嵌 Script JSON，徹底杜絕標籤逃逸。
+   - 客戶端 Mermaid 與 Graphviz 圖表強制採用嚴格模式 (`securityLevel: 'strict'`)，所有生成之動態 SVG 均通過 `DOMPurify.sanitize()` 過濾惡意腳本。
+2. **存取控制與密碼學權杖安全 (RBAC & Cryptographic Tokens)**：
+   - 明確區隔「閱讀鎖 (`vpw`)」與「編輯鎖 (`pw`)」，閱讀鎖通過後僅核發唯讀權限 (`role: 'view'`)。
+   - 所有 JWT 認證權杖均包含 `exp` 有效期宣告，Cookie 配置 `HttpOnly`、`Secure` 與 `SameSite`。
+   - 管理員後台廢止明文 Session Cookie，全面改用密碼學簽名之 Admin JWT 與 WebAuthn / FIDO2 Passkey 雙重認證。
+   - 密碼驗證採用常數時間比對 (`constantTimeStringCompare`)，杜絕時序側信道攻擊。
+3. **儲存一致性與資源防護 (Storage Consistency & Rate Protection)**：
+   - D1 SQLite 查詢使用欄位參數化綁定，完全免疫 SQL Injection。
+   - 排程 Cron 清理作業整合 Storage Driver 同步清理 D1 與 KV，且僅刪除真正為空（長度 0）且無密碼保護之筆記。
+   - R2 檔案上傳嚴格校驗 MIME 格式副檔名白名單與 10MB 大小上限；MCP 伺服器限制 JSON-RPC 2.0 Batch 請求上限（最多 20 筆）。
+
+---
+
 ## 🔍 系統發現端點 (Discovery Endpoints)
 
 部署完成後，站點提供以下自動化檢視端點：
@@ -726,6 +745,25 @@ Set secrets via `wrangler secret put <VAR>`:
 npm install
 npm run deploy
 ```
+
+---
+
+## 🛡️ Full-Stack Security & Hardening Standards
+
+The project follows Cloudflare's open-source security benchmark (`cloudflare/security-audit-skill`) with continuous regression testing:
+
+1. **XSS Defense-in-Depth & DOM Sanitization**:
+   - Server-side template escaping for all user content (Textarea, Bot index markup, and embedded `APP_STATE` JSON scripts with `\u003c` protection).
+   - Client-side Mermaid strict mode (`securityLevel: 'strict'`) and dynamic SVG sanitization via `DOMPurify.sanitize()` across Mermaid and Graphviz (`@hpcc-js/wasm`).
+2. **Access Control & Cryptographic Token Security**:
+   - Explicit separation of View Locks (`vpw`) and Edit Locks (`pw`), ensuring readers never receive unauthorized edit capabilities.
+   - JWT tokens include standard `exp` expiration claims with `HttpOnly`, `Secure`, and `SameSite` cookies.
+   - Master admin dashboard authenticated via cryptographically signed JWTs and WebAuthn / FIDO2 Passkey assertions.
+   - Constant-time password comparisons (`constantTimeStringCompare`) to prevent timing side-channel attacks.
+3. **Storage Consistency & Resource Protection**:
+   - Parameterized SQL statement bindings on D1 SQLite queries (0 SQLi).
+   - Scheduled cron cleanups synchronize D1 SQLite and KV deletions, preserving memos with valid content or active password protection.
+   - Strict MIME format allowlists and 10MB file size limits on R2 uploads; JSON-RPC 2.0 batch request limits on Worker MCP (max 20).
 
 ---
 

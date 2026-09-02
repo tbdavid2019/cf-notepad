@@ -156,10 +156,14 @@ async def append_wiki(path: str, text: str, password: Optional[str] = None) -> s
             return f"Network Error: {exc}"
 
 
+ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"}
+MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
 @mcp.tool()
 async def upload_image(filepath: str) -> str:
     """
-    Upload a local image to the wiki's cloud storage.
+    Upload a local image file (.png, .jpg, .jpeg, .gif, .webp, .svg, .bmp, .avif) to the wiki's cloud storage.
     
     WORKFLOW:
     1. Call this for any local image file you want to include in a wiki post.
@@ -172,12 +176,21 @@ async def upload_image(filepath: str) -> str:
     """
     url = f"{BASE_URL}/api/upload"
     
-    if not os.path.exists(filepath):
-        return f"File Error: Path does not exist: {filepath}"
+    norm_path = os.path.abspath(os.path.expanduser(filepath))
+    if not os.path.exists(norm_path) or not os.path.isfile(norm_path):
+        return f"File Error: Path does not exist or is not a regular file: {filepath}"
+    
+    ext = os.path.splitext(norm_path)[1].lower()
+    if ext not in ALLOWED_IMAGE_EXTENSIONS:
+        return f"File Error: Unsupported image format '{ext}'. Allowed extensions: {', '.join(sorted(ALLOWED_IMAGE_EXTENSIONS))}"
+
+    file_size = os.path.getsize(norm_path)
+    if file_size > MAX_IMAGE_SIZE_BYTES:
+        return f"File Error: File size ({file_size} bytes) exceeds maximum limit of 10MB."
         
     try:
-        with open(filepath, "rb") as f:
-            files = {"image": (os.path.basename(filepath), f, "application/octet-stream")}
+        with open(norm_path, "rb") as f:
+            files = {"image": (os.path.basename(norm_path), f, "application/octet-stream")}
             
             async with httpx.AsyncClient() as client:
                 response = await client.post(url, files=files, timeout=30.0)

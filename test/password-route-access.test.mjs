@@ -24,7 +24,7 @@ test('password role policy distinguishes edit and view credentials', async () =>
     assert.equal(await resolvePasswordRole('edit-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), 'edit')
     assert.equal(await resolvePasswordRole('view-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), 'view')
     assert.equal(await resolvePasswordRole('edit-secret', { pw: 'edit-secret' }, matches), 'edit')
-    assert.equal(await resolvePasswordRole('view-secret', { vpw: 'view-secret' }, matches), 'edit')
+    assert.equal(await resolvePasswordRole('view-secret', { vpw: 'view-secret' }, matches), 'view')
     assert.equal(await resolvePasswordRole('wrong-secret', { pw: 'edit-secret', vpw: 'view-secret' }, matches), null)
 })
 

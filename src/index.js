@@ -647,6 +647,33 @@ router.get('/app.webmanifest', () => {
     })
 })
 
+async function verifyAdminSession(cookie, adminPassword) {
+    if (!cookie || !cookie.admin_session || !adminPassword) return false
+    if (cookie.admin_session === adminPassword) return true
+    try {
+        const secret = getSecret() || adminPassword
+        const valid = await jwt.verify(cookie.admin_session, secret)
+        if (valid) {
+            const payload = jwt.decode(cookie.admin_session)
+            return payload?.role === 'admin'
+        }
+    } catch (_) {}
+    return false
+}
+
+async function createAdminSessionCookie(adminPath, adminPassword) {
+    const secret = getSecret() || adminPassword
+    const exp = Math.floor(Date.now() / 1000) + 86400
+    const token = await jwt.sign({ role: 'admin', exp }, secret)
+    return Cookies.serialize('admin_session', token, {
+        path: adminPath,
+        expires: dayjs().add(1, 'day').toDate(),
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Strict',
+    })
+}
+
 const handleAdminGet = async (request) => {
     const lang = getI18n(request)
     const cookie = Cookies.parse(request.headers.get('Cookie') || '')
@@ -656,7 +683,7 @@ const handleAdminGet = async (request) => {
     const fidoCredentials = await getFidoCredentials(kv)
 
     // Check if logged in
-    if (cookie.admin_session === adminPassword && adminPassword) {
+    if (await verifyAdminSession(cookie, adminPassword)) {
         // Logged in, list notes
         try {
             const adminData = await buildAdminData(request)
@@ -783,7 +810,7 @@ const handleAdminPost = async (request) => {
         // Check if it's JSON request (batch delete)
             const contentType = request.headers.get('Content-Type') || '';
             if (contentType.includes('application/json')) {
-                if (cookie.admin_session === adminPassword && adminPassword) {
+                if (await verifyAdminSession(cookie, adminPassword)) {
                     const body = await request.json();
                     const { action, paths } = body;
 
@@ -848,19 +875,14 @@ const handleAdminPost = async (request) => {
                 status: 302,
                 headers: {
                     'Location': adminPath,
-                    'Set-Cookie': Cookies.serialize('admin_session', adminPassword, {
-                        path: adminPath,
-                        expires: dayjs().add(1, 'day').toDate(),
-                        httpOnly: true,
-                        sameSite: 'Strict'
-                    })
+                    'Set-Cookie': await createAdminSessionCookie(adminPath, adminPassword)
                 }
             })
         }
 
         // Action Logic (Delete)
         // Check session for actions
-        if (cookie.admin_session === adminPassword && adminPassword) {
+        if (await verifyAdminSession(cookie, adminPassword)) {
             if (action === 'delete') {
                 const path = formData.get('path')
                 if (isValidAdminNotePath(path)) {
@@ -887,8 +909,7 @@ const handleAdminPost = async (request) => {
         return returnPage('Admin', { lang, error: `Exception: ${e.message}` })
     }
 
-    const debugInfo = `Auth Failed. Cookie: ${cookie.admin_session ? 'Present' : 'Missing'}, Match: ${cookie.admin_session === adminPassword}, Action: ${action || 'None'}`
-    return returnPage('Admin', { lang, error: `Operation Failed: ${debugInfo}` })
+    return returnPage('Admin', { lang, error: 'Authentication Failed. Please check your credentials.' })
 }
 
 const handleAdminFido = async (request, adminPath) => {
@@ -897,7 +918,7 @@ const handleAdminFido = async (request, adminPath) => {
         const subPath = url.pathname.slice(adminPath.length)
         const adminPassword = getAdminPassword()
         const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const isAuthed = cookie.admin_session === adminPassword && Boolean(adminPassword)
+        const isAuthed = await verifyAdminSession(cookie, adminPassword)
         const kv = getNotesNamespace()
 
         if (subPath === '/fido/login-challenge' && request.method === 'POST') {
@@ -952,12 +973,7 @@ const handleAdminFido = async (request, adminPath) => {
                 return new Response(JSON.stringify({ success: true, redirect: adminPath }), {
                     headers: {
                         'Content-Type': 'application/json',
-                        'Set-Cookie': Cookies.serialize('admin_session', adminPassword, {
-                            path: adminPath,
-                            expires: dayjs().add(1, 'day').toDate(),
-                            httpOnly: true,
-                            sameSite: 'Strict'
-                        })
+                        'Set-Cookie': await createAdminSessionCookie(adminPath, adminPassword)
                     }
                 })
             } catch (err) {
@@ -1044,6 +1060,16 @@ const handleAdminFido = async (request, adminPath) => {
     }
 }
 
+const ALLOWED_IMAGE_MIME_MAP = {
+    'image/jpeg': 'jpg',
+    'image/jpg': 'jpg',
+    'image/png': 'png',
+    'image/gif': 'gif',
+    'image/webp': 'webp',
+    'image/svg+xml': 'svg',
+    'image/avif': 'avif',
+}
+
 router.post('/upload', async (request) => {
     if (!getEnableR2()) return returnJSON(403, 'R2 Upload Disabled')
     try {
@@ -1051,10 +1077,21 @@ router.post('/upload', async (request) => {
         const image = formData.get('image')
         if (!image) return returnJSON(400, 'No image found')
 
-        const type = image.type.split('/')[1] || 'png'
-        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
+        const rawType = String(image.type || '').split(';')[0].trim().toLowerCase()
+        const ext = ALLOWED_IMAGE_MIME_MAP[rawType]
+        if (!ext) {
+            return returnJSON(400, 'Invalid or unsupported image MIME type')
+        }
 
-        await getImagesBucket().put(filename, image)
+        if (image.size && image.size > 10 * 1024 * 1024) {
+            return returnJSON(413, 'File size exceeds 10MB limit')
+        }
+
+        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${ext}`
+
+        await getImagesBucket().put(filename, image, {
+            httpMetadata: { contentType: rawType }
+        })
         const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
 
         return returnJSON(0, url)
@@ -1080,7 +1117,7 @@ async function processUrlToMarkdown(targetUrl) {
     }
 
     const services = [
-        { name: '2md.aiurl.tw', url: `http://2md.aiurl.tw/${cleanUrl}` },
+        { name: '2md.aiurl.tw', url: `https://2md.aiurl.tw/${cleanUrl}` },
         { name: '2md.glsoft.ai', url: `https://2md.glsoft.ai/${cleanUrl}` },
         { name: 'create360.ai', url: `https://create360.ai/${cleanUrl}` }
     ]
@@ -1660,7 +1697,8 @@ router.post('/share/:shareId/auth', async request => {
 
             const role = await getPasswordRole(passwd, metadata)
             if (role) {
-                const token = await jwt.sign({ path, role }, getSecret())
+                const exp = Math.floor(Date.now() / 1000) + 7 * 86400
+                const token = await jwt.sign({ path, role, exp }, getSecret())
                 return returnJSON(0, {
                     refresh: true,
                     role,
@@ -1669,6 +1707,8 @@ router.post('/share/:shareId/auth', async request => {
                         path: role === 'edit' ? `/${path}` : `/share/${shareId}`,
                         expires: dayjs().add(7, 'day').toDate(),
                         httpOnly: true,
+                        secure: true,
+                        sameSite: 'Lax',
                     })
                 })
             }
@@ -2678,10 +2718,21 @@ router.post('/api/upload', async (request) => {
         const image = formData.get('image') || formData.get('file')
         if (!image) return returnJSON(400, 'No image/file found in form data')
 
-        const type = image.type.split('/')[1] || 'png'
-        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${type}`
+        const rawType = String(image.type || '').split(';')[0].trim().toLowerCase()
+        const ext = ALLOWED_IMAGE_MIME_MAP[rawType]
+        if (!ext) {
+            return returnJSON(400, 'Invalid or unsupported image MIME type')
+        }
 
-        await getImagesBucket().put(filename, image)
+        if (image.size && image.size > 10 * 1024 * 1024) {
+            return returnJSON(413, 'File size exceeds 10MB limit')
+        }
+
+        const filename = `${dayjs().format('YYYY/MM')}/${genRandomStr(16)}.${ext}`
+
+        await getImagesBucket().put(filename, image, {
+            httpMetadata: { contentType: rawType }
+        })
         const url = getR2Domain() ? `${getR2Domain()}/${filename}` : `/img/${filename}`
 
         return returnJSON(0, url)
@@ -2844,6 +2895,16 @@ router.post('/api/:path', async (request) => {
     updateMetadata = await ensureShareMetadata(path, updateMetadata)
 
     if (!canPersistNoteContent(updateMetadata)) {
+        if (reqBody.share === false || reqBody.public === false) {
+            await driverPutNote(path, newContent, updateMetadata)
+            await syncShareMappings(path, updateMetadata, metadata)
+            const fullUrl = new URL(request.url)
+            return returnJSON(0, {
+                msg: 'Unpublished successfully',
+                url: `${fullUrl.protocol}//${fullUrl.host}/${path}`,
+                shareUrl: null,
+            })
+        }
         return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
     }
 
@@ -3107,7 +3168,8 @@ router.post('/:path/auth', async request => {
 
         const role = await getPasswordRole(passwd, metadata)
         if (role) {
-            const token = await jwt.sign({ path, role }, getSecret())
+            const exp = Math.floor(Date.now() / 1000) + 7 * 86400
+            const token = await jwt.sign({ path, role, exp }, getSecret())
             return returnJSON(0, {
                 refresh: true,
                 role,
@@ -3116,6 +3178,8 @@ router.post('/:path/auth', async request => {
                     path: `/${path}`,
                     expires: dayjs().add(7, 'day').toDate(),
                     httpOnly: true,
+                    secure: true,
+                    sameSite: 'Lax',
                 })
             })
         }
@@ -3212,20 +3276,21 @@ router.post('/:path/setting', async request => {
                     if (nextMetadata.share !== true) {
                         nextMetadata.autosave = false
                     }
-                    if (typeof content === 'string' && share === true) {
+                    if (typeof content === 'string') {
                         nextMetadata.updateAt = dayjs().unix()
                     }
                     nextMetadata = await ensureShareMetadata(path, nextMetadata)
 
-                    if (typeof content === 'string' && share === true) {
+                    const textToSave = typeof content === 'string' ? content : value
+                    if (share === true) {
                         await persistNoteContent({
                             path,
-                            content,
+                            content: textToSave,
                             metadata: nextMetadata,
                             previousContent: value,
                         })
                     } else {
-                        await driverPutNote(path, value, nextMetadata)
+                        await driverPutNote(path, textToSave, nextMetadata)
                     }
 
                     if (share) {

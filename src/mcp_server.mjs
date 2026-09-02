@@ -648,6 +648,16 @@ export async function handleMcpRequest(request) {
     }
 
     const isBatch = Array.isArray(rpc)
+    if (isBatch && rpc.length > 20) {
+        return jsonResponse({
+            jsonrpc: '2.0',
+            id: null,
+            error: {
+                code: -32600,
+                message: 'Invalid Request: Batch size exceeds limit of 20.',
+            },
+        }, 400)
+    }
     const requests = isBatch ? rpc : [rpc]
 
     const responses = await Promise.all(requests.map(async (req) => {
