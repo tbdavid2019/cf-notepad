@@ -112,6 +112,15 @@ export const createLineNumbers = text => String(text || '').split('\n')
     .map((_, index) => String(index + 1))
     .join('\n')
 
+export const createLineNumbersHtml = (text, lineHeights = []) => {
+    const lines = String(text || '').split('\n')
+    return lines.map((_, index) => {
+        const height = lineHeights[index]
+        const heightStyle = Number.isFinite(height) && height > 0 ? ` style="height:${height}px"` : ''
+        return `<div class="editor-line-number"${heightStyle}>${index + 1}</div>`
+    }).join('')
+}
+
 export const getEditorCursorStatus = (text, selectionStart = 0, lang = 'zh-TW') => {
     const source = String(text || '')
     const cursor = Math.max(0, Math.min(Number(selectionStart) || 0, source.length))
@@ -615,20 +624,113 @@ export const initMarkdownToolbar = (root = document) => {
     })
     let isRestoringHistory = false
 
-    const updateLineNumbers = () => {
-        if (!lineNumbers) return
+    let mirrorElement = null
+    const getMirror = () => {
+        if (mirrorElement && mirrorElement.isConnected) return mirrorElement
+        const shell = lineNumbers?.closest('.editor-code-shell')
+        mirrorElement = root.querySelector('#editor-line-mirror')
+        if (!mirrorElement) {
+            mirrorElement = (root.ownerDocument || document).createElement('div')
+            mirrorElement.id = 'editor-line-mirror'
+            mirrorElement.className = 'editor-line-mirror'
+            mirrorElement.setAttribute('aria-hidden', 'true')
+            if (shell) {
+                shell.appendChild(mirrorElement)
+            } else if (textarea.parentElement) {
+                textarea.parentElement.appendChild(mirrorElement)
+            } else {
+                (root.ownerDocument || document).body?.appendChild(mirrorElement)
+            }
+        }
+        return mirrorElement
+    }
+
+    const escapeForMirror = (str) => {
+        if (!str) return '&#8203;'
+        return str
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;')
+    }
+
+    const syncLineNumbers = () => {
+        if (lineNumbers && textarea) lineNumbers.scrollTop = textarea.scrollTop
+    }
+
+    let lineNumbersRaf = null
+    const renderLineNumbers = () => {
+        if (!lineNumbers || !textarea) return
         const val = textarea.value
-        lineNumbers.textContent = createLineNumbers(val)
-        const lineCount = String(val || '').split('\n').length
+        const lines = String(val || '').split('\n')
+        const lineCount = lines.length
         const digits = Math.max(2, String(lineCount).length)
         const shell = lineNumbers.closest('.editor-code-shell')
         if (shell) {
             shell.style.setProperty('--editor-gutter-digits', String(digits))
         }
+
+        const computed = (typeof window !== 'undefined' && typeof window.getComputedStyle === 'function')
+            ? window.getComputedStyle(textarea)
+            : null
+
+        const paddingLeft = computed ? (parseFloat(computed.paddingLeft) || 0) : 0
+        const paddingRight = computed ? (parseFloat(computed.paddingRight) || 0) : 0
+        const contentWidth = textarea.clientWidth ? (textarea.clientWidth - paddingLeft - paddingRight) : 0
+
+        if (!computed || contentWidth <= 0) {
+            lineNumbers.innerHTML = createLineNumbersHtml(val)
+            syncLineNumbers()
+            return
+        }
+
+        const mirror = getMirror()
+        if (!mirror) {
+            lineNumbers.innerHTML = createLineNumbersHtml(val)
+            syncLineNumbers()
+            return
+        }
+
+        mirror.style.width = `${contentWidth}px`
+        mirror.style.fontFamily = computed.fontFamily
+        mirror.style.fontSize = computed.fontSize
+        mirror.style.fontWeight = computed.fontWeight
+        mirror.style.fontStyle = computed.fontStyle
+        mirror.style.letterSpacing = computed.letterSpacing
+        mirror.style.wordSpacing = computed.wordSpacing
+        mirror.style.lineHeight = computed.lineHeight
+        mirror.style.tabSize = computed.tabSize
+        mirror.style.wordBreak = computed.wordBreak || 'normal'
+        mirror.style.overflowWrap = computed.overflowWrap || 'break-word'
+
+        let mirrorHtml = ''
+        for (let i = 0; i < lineCount; i++) {
+            mirrorHtml += `<div class="editor-line-mirror-row">${escapeForMirror(lines[i])}</div>`
+        }
+        mirror.innerHTML = mirrorHtml
+
+        const children = mirror.children
+        const lineHeights = new Array(lineCount)
+        for (let i = 0; i < lineCount; i++) {
+            lineHeights[i] = children[i] ? children[i].getBoundingClientRect().height : 0
+        }
+
+        lineNumbers.innerHTML = createLineNumbersHtml(val, lineHeights)
+        syncLineNumbers()
     }
 
-    const syncLineNumbers = () => {
-        if (lineNumbers) lineNumbers.scrollTop = textarea.scrollTop
+    const updateLineNumbers = (immediate = false) => {
+        if (!lineNumbers || !textarea) return
+        if (!immediate && typeof requestAnimationFrame === 'function') {
+            if (lineNumbersRaf) cancelAnimationFrame(lineNumbersRaf)
+            lineNumbersRaf = requestAnimationFrame(() => {
+                lineNumbersRaf = null
+                renderLineNumbers()
+            })
+        } else {
+            renderLineNumbers()
+        }
     }
 
     const updateEditorStatus = () => {
@@ -668,7 +770,20 @@ export const initMarkdownToolbar = (root = document) => {
     })
     textarea.addEventListener('scroll', syncLineNumbers, { passive: true })
     ;['click', 'focus', 'keyup', 'select'].forEach(eventName => textarea.addEventListener(eventName, updateEditorStatus))
-    updateLineNumbers()
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('resize', () => updateLineNumbers(), { passive: true })
+        window.updateEditorLineNumbers = () => updateLineNumbers(true)
+        if (typeof ResizeObserver !== 'undefined') {
+            const resizeObserver = new ResizeObserver(() => updateLineNumbers())
+            resizeObserver.observe(textarea)
+        }
+        if (document?.fonts?.ready) {
+            document.fonts.ready.then(() => updateLineNumbers(true))
+        }
+    }
+
+    updateLineNumbers(true)
     updateEditorStatus()
 
     const runCommand = command => {

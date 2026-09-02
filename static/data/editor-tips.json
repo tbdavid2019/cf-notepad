@@ -135,6 +135,11 @@
       "id": "block-editor-voice-recording",
       "zh-TW": "小訣竅：Block 區塊編輯器支援「即時錄音」！輸入斜線指令「/record」或在底欄「＋ 新增」選單點擊「即時錄音」，錄製完成後會自動插入音訊區塊並透過 Whisper AI 轉錄為文字區塊。",
       "en-US": "Tip: Block Editor supports Live Voice Recording! Type slash command '/record' or select 'Live voice recording' from the '+ New' footer menu to record audio and transcribe it into block notes with Whisper AI."
+    },
+    {
+      "id": "editor-line-numbers-alignment",
+      "zh-TW": "小訣竅：Markdown 編輯器行號支援自動折行高度同步！超長段落自動對齊行首，縮放視窗或調整分割欄時即時動態重算，精準對應每一行內容與狀態欄行數。",
+      "en-US": "Tip: Markdown editor line numbers support automatic wrap height synchronization! Long wrapped lines stay perfectly aligned with line numbers and cursor status."
     }
   ]
 }

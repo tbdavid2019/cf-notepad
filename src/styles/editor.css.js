@@ -452,10 +452,48 @@ export const getEditorCss = () => `
     font-size: 13px;
     line-height: var(--editor-row-height, 25.6px);
     text-align: right;
-    white-space: pre;
     user-select: none;
     pointer-events: none;
     transition: width 0.12s ease, min-width 0.12s ease, flex-basis 0.12s ease;
+}
+
+.editor-line-number {
+    display: block;
+    box-sizing: border-box;
+    min-height: var(--editor-row-height, 25.6px);
+    line-height: var(--editor-row-height, 25.6px);
+    text-align: right;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.editor-line-mirror {
+    position: absolute;
+    top: 0;
+    left: 0;
+    visibility: hidden;
+    pointer-events: none;
+    z-index: -9999;
+    white-space: pre-wrap;
+    word-break: normal;
+    overflow-wrap: break-word;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+
+.editor-line-mirror-row {
+    display: block;
+    box-sizing: border-box;
+    padding: 0;
+    margin: 0;
+    border: none;
+    min-height: var(--editor-row-height, 25.6px);
+    line-height: var(--editor-line-height, 1.6);
+    word-break: normal;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
 }
 
 .markdown-editor-toolbar-wrap {
@@ -877,7 +915,7 @@ textarea#contents {
         flex-basis: var(--editor-gutter-width, 22px);
         min-width: var(--editor-gutter-width, 22px);
         width: var(--editor-gutter-width, 22px);
-        padding: 16px 4px 16px 2px;
+        padding: 20px 4px 20px 2px;
         font-size: 12px;
         line-height: var(--editor-row-height, 25.6px);
     }

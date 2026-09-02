@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-09-02]
+
+- **🔢 Markdown 編輯器行號支援超長段落自動折行高度精準同步 (Dynamic Line Numbers Alignment for Soft-Wrapped Lines in Markdown Editor)**：
+  - **自動折行高度鏡像計算 (DOM Mirror Line Height Measurement)**：徹底解決長文字或中英文段落因寬度不足而在 `<textarea>` 中自動折行時，行號欄（Line Numbers Gutter）僅按邏輯行單行固定高度排列導致行號與內容錯位、以及超出邏輯行數後下方行號空白的問題。
+  - **鏡像元素動態排版 (Offscreen Typography Mirror)**：透過同步字型（`--editor-font-family`、`font-size`、`line-height`、`word-break`、`overflow-wrap`）與可用寬度（`clientWidth - padding`）的鏡像元素，即時精準量測每個段落折行後的實際像素高度，為每一邏輯行號設置自適應高度區塊，使行號永遠與段落第一行精準水平對齊。
+  - **全場景響應式同步與滾動對齊 (Responsive Resize & Scroll Sync)**：整合 `ResizeObserver`、視窗縮放 (`resize`)、字型載入 (`document.fonts.ready`)、主題切換及雙欄拖曳分割線事件，在任何寬度變化時瞬間重算行高；垂直滾動時保持 1:1 像素級精準同步，完美契合底欄游標行號指示。
+
 ## [2026-08-31]
 
 - **🎨 下拉選單間距與互動表面視覺精修 (Dropdown Rhythm & Full-Row Interaction Polish)**：重新調整雙行選單項目的上下節奏與標題／副標間距，並讓 hover 與鍵盤 focus 高亮完整覆蓋整列，修復匯出選單上下擁擠及背景留白不一致的問題；維持現有主題變數、操作結構與無障礙焦點狀態。

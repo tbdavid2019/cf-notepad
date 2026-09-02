@@ -405,6 +405,7 @@ ${getMarkdownCss()}
                                         <span class="alert-badge caution">🛑 CAUTION</span> <span class="alert-desc">${lang === 'zh-TW' ? '危險與潛在風險' : 'Negative consequences'}</span>
                                     </div>
                                 </div>
+                                <div id="editor-line-mirror" class="editor-line-mirror" aria-hidden="true"></div>
                                 <div id="editor-line-numbers" class="editor-line-numbers" aria-hidden="true"></div>
                                 <textarea id="contents" class="contents" spellcheck="false" placeholder="${SUPPORTED_LANG[lang].emptyPH}">${content}</textarea>
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
@@ -5912,6 +5913,9 @@ themeCss + '\\n' +
                     root.setAttribute('data-ui-theme', 'auto');
                 }
                 updateIcon(theme);
+                if (typeof window.updateEditorLineNumbers === 'function') {
+                    window.updateEditorLineNumbers();
+                }
             }
 
             function updateIcon(theme) {

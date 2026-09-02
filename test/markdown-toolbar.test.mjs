@@ -6,6 +6,7 @@ import {
     applyMarkdownCommand,
     getEditorCursorStatus,
     createLineNumbers,
+    createLineNumbersHtml,
     createEditorHistory,
     createUploadedAssetMarkdown,
     getImageAltText,
@@ -239,4 +240,29 @@ test('line number gutter uses dynamic adaptive width based on digit count and co
     assert.match(editorCss, /\.editor-line-numbers\s*\{[\s\S]*font-size:\s*13px/)
     assert.match(editorCss, /\.editor-welcome\s*\{[\s\S]*inset:\s*0\s*0\s*0\s*var\(--editor-gutter-width/)
 })
+
+test('creates HTML line number elements with custom heights for wrapped lines', () => {
+    const html = createLineNumbersHtml('line 1\nline 2\nline 3', [25.6, 102.4, 25.6])
+    assert.equal(
+        html,
+        '<div class="editor-line-number" style="height:25.6px">1</div>' +
+        '<div class="editor-line-number" style="height:102.4px">2</div>' +
+        '<div class="editor-line-number" style="height:25.6px">3</div>'
+    )
+    const fallbackHtml = createLineNumbersHtml('a\nb')
+    assert.equal(
+        fallbackHtml,
+        '<div class="editor-line-number">1</div><div class="editor-line-number">2</div>'
+    )
+})
+
+test('base template and editor css include mirror DOM and wrapped line number styles', () => {
+    assert.match(baseTemplate, /id="editor-line-mirror"/)
+    assert.match(editorCss, /\.editor-line-mirror\s*\{/)
+    assert.match(editorCss, /\.editor-line-mirror-row\s*\{/)
+    assert.match(editorCss, /\.editor-line-number\s*\{/)
+    assert.match(toolbarSource, /ResizeObserver/)
+    assert.match(toolbarSource, /window\.updateEditorLineNumbers/)
+})
+
 
