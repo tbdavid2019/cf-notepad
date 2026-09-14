@@ -1159,12 +1159,13 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         <div class="app-dialog-icon image-ocr-icon" aria-hidden="true">${SVG_ICONS.image}</div>
         <div class="app-dialog-copy">
             <h2 id="image-ocr-title">${lang === 'zh-TW' ? '處理圖片' : 'Process Image'}</h2>
-            <p id="image-ocr-message">${lang === 'zh-TW' ? '請選擇要上傳圖片，或只在本機進行 OCR。' : 'Choose whether to upload the image or run OCR locally.'}</p>
-            <p class="image-ocr-privacy-note">${lang === 'zh-TW' ? '本機 OCR 不會上傳圖片。' : 'Local OCR does not upload the image.'}</p>
+            <p id="image-ocr-message">${lang === 'zh-TW' ? '請選擇要上傳圖片、在本機辨識文字，或使用後端重構表格。' : 'Choose image upload, local text OCR, or server table reconstruction.'}</p>
+            <p class="image-ocr-privacy-note">${lang === 'zh-TW' ? '本機 OCR 不會上傳圖片；後端表格 OCR 會將圖片送至表格辨識服務。' : 'Local OCR does not upload the image; server table OCR sends the image to the table service.'}</p>
         </div>
         <div class="image-ocr-actions">
             <button type="button" class="btn image-ocr-action-upload" id="image-ocr-action-upload">${lang === 'zh-TW' ? '上傳圖片' : 'Upload image'}</button>
             <button type="button" class="btn image-ocr-action-ocr" id="image-ocr-action-ocr">${lang === 'zh-TW' ? 'OCR 轉文字' : 'Run local OCR'}</button>
+            <button type="button" class="btn image-ocr-action-table" id="image-ocr-action-table">${lang === 'zh-TW' ? '辨識表格（後端）' : 'Recognize table (server)'}</button>
             <button type="button" class="btn image-ocr-action-cancel" id="image-ocr-action-cancel">${lang === 'zh-TW' ? '取消' : 'Cancel'}</button>
         </div>
     </div>

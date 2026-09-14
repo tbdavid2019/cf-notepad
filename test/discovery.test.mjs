@@ -52,7 +52,7 @@ test('llms.txt is a concise canonical index of public agent resources following 
     assert.match(llms, /https:\/\/wiki\.david888\.com\/openapi\.json/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/api-catalog/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/llms-full\.txt/)
-    assert.match(llms, /Local Image OCR/)
+    assert.match(llms, /Image OCR & Table Reconstruction/)
     assert.match(llms, /PP-OCRv6/)
     assert.doesNotMatch(llms, /admin333|SCN_ADMIN|password=/i)
 })

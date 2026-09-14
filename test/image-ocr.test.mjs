@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
 import { normalizeOcrItems, ocrItemsToText, insertTextAtSelection } from '../static/js/ocr-utils.mjs'
-import { toUserFacingOcrError } from '../static/js/ocr-client.mjs'
+import { extractTableMarkdown, toUserFacingOcrError } from '../static/js/ocr-client.mjs'
 import { MODAL } from '../src/templates/common.js'
 import { HTML } from '../src/templates/base.js'
 
@@ -29,6 +29,18 @@ test('maps OCR runtime failures to actionable localized-safe messages', () => {
     assert.match(toUserFacingOcrError(new Error('Failed to download model: HTTP 503')), /模型下載/)
 })
 
+test('prefers tableMarkdown and extracts only a contiguous GFM table', () => {
+    const payload = {
+        data: {
+            markdown: '# title\n\n| noisy | fallback |\n| --- | --- |\n| no | no |\n\nFooter',
+            tableMarkdown: '| A | B |\n| :--- | ---: |\n| 甲 | 乙 |\n\n![image](https://example.com/image.png)',
+        },
+    }
+    assert.equal(extractTableMarkdown(payload), '| A | B |\n| :--- | ---: |\n| 甲 | 乙 |')
+    assert.equal(extractTableMarkdown({ data: { markdown: '| A | B |\n| --- | --- |\n| 甲 | 乙 |\n\nFooter' } }), '| A | B |\n| --- | --- |\n| 甲 | 乙 |')
+    assert.equal(extractTableMarkdown({ data: { tableMarkdown: '| A | B |\n| --- | --- |\n| <script>alert(1)</script> | safe |' } }), '| A | B |\n| --- | --- |\n| &lt;script&gt;alert(1)&lt;/script&gt; | safe |')
+})
+
 test('inserts OCR text at the current selection with document-safe separation', () => {
     assert.deepEqual(insertTextAtSelection('前文', '辨識內容', 2, 2), {
         text: '前文\n\n辨識內容',
@@ -49,6 +61,8 @@ test('renders bilingual image processing choices', () => {
     assert.match(zh, /上傳圖片/)
     assert.match(zh, /OCR 轉文字/)
     assert.match(zh, /本機 OCR 不會上傳圖片/)
+    assert.match(zh, /後端表格 OCR 會將圖片送至/)
+    assert.match(zh, /辨識表格/)
     assert.match(zh, /id="ocr-status"/)
     assert.match(en, /Process Image/)
     assert.match(en, /Upload image/)
@@ -71,6 +85,9 @@ test('edit pages load the local OCR client and expose both image actions', () =>
     assert.match(ocrClientSource, /ocrVersion: 'PP-OCRv6'/)
     assert.match(ocrClientSource, /backend: 'auto'/)
     assert.match(ocrClientSource, /getStatus/)
+    assert.match(ocrClientSource, /recognizeTableImage/)
+    assert.match(ocrClientSource, /mode=table/)
+    assert.match(ocrClientSource, /tableMarkdown/)
     assert.match(readFileSync(new URL('../scripts/build-ocr-client.mjs', import.meta.url), 'utf8'), /worker-entry/)
     const workerAssetName = readdirSync(new URL('../static/js/assets', import.meta.url)).find(name => /^worker-entry-[^/]+\.js$/.test(name))
     assert.ok(workerAssetName)

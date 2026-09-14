@@ -143,8 +143,8 @@
     },
     {
       "id": "image-local-ocr",
-      "zh-TW": "小訣竅：貼上或拖曳圖片後，可選擇「OCR 轉文字」在本機辨識；首次使用會顯示模型下載狀態，PP-OCRv6 會優先使用 WebGPU，圖片不會因 OCR 選項而上傳。",
-      "en-US": "Tip: After pasting or dropping an image, choose 'Run local OCR' to recognize it on this device. The first run shows model download status; PP-OCRv6 prefers WebGPU, and the image is not uploaded for OCR."
+      "zh-TW": "小訣竅：貼上或拖曳圖片後，可選擇「OCR 轉文字」在本機辨識，或選「辨識表格（後端）」重構成 GFM 表格；首次本機 OCR 會顯示模型下載狀態，後端表格模式會明確上傳圖片。",
+      "en-US": "Tip: After pasting or dropping an image, choose 'Run local OCR' for on-device text, or 'Recognize table (server)' to reconstruct a GFM table. The first local OCR run shows model download status; server table mode explicitly uploads the image."
     }
   ]
 }

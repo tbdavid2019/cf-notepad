@@ -4198,11 +4198,12 @@ ${getMarkdownCss()}
             const messageEl = modal.querySelector('#image-ocr-message');
             const uploadBtn = modal.querySelector('#image-ocr-action-upload');
             const ocrBtn = modal.querySelector('#image-ocr-action-ocr');
+            const tableBtn = modal.querySelector('#image-ocr-action-table');
             const cancelBtn = modal.querySelector('#image-ocr-action-cancel');
             const mask = modal.querySelector('.modal-mask');
             const fileName = file?.name || (APP_STATE.lang === 'zh-TW' ? '貼上的圖片' : 'Pasted image');
             const zh = APP_STATE.lang === 'zh-TW';
-            if (!titleEl || !messageEl || !uploadBtn || !ocrBtn || !cancelBtn || !mask) {
+            if (!titleEl || !messageEl || !uploadBtn || !ocrBtn || !tableBtn || !cancelBtn || !mask) {
                 resolve(window.ENABLE_R2 ? 'upload' : 'cancel');
                 return;
             }
@@ -4220,6 +4221,7 @@ ${getMarkdownCss()}
                 closeModal(modal);
                 uploadBtn.removeEventListener('click', onUpload);
                 ocrBtn.removeEventListener('click', onOcr);
+                tableBtn.removeEventListener('click', onTable);
                 cancelBtn.removeEventListener('click', onCancel);
                 mask.removeEventListener('click', onCancel);
                 modal.removeEventListener('keydown', onKeyDown);
@@ -4227,6 +4229,7 @@ ${getMarkdownCss()}
             };
             const onUpload = () => cleanup('upload');
             const onOcr = () => cleanup('ocr');
+            const onTable = () => cleanup('table');
             const onCancel = () => cleanup('cancel');
             const onKeyDown = event => {
                 if (event.key === 'Escape') {
@@ -4238,6 +4241,7 @@ ${getMarkdownCss()}
             openModal(modal, { initialFocus: ocrBtn });
             uploadBtn.addEventListener('click', onUpload);
             ocrBtn.addEventListener('click', onOcr);
+            tableBtn.addEventListener('click', onTable);
             cancelBtn.addEventListener('click', onCancel);
             mask.addEventListener('click', onCancel);
             modal.addEventListener('keydown', onKeyDown);
@@ -4294,6 +4298,23 @@ ${getMarkdownCss()}
                         insertOcrText(result.text, start, end);
                     }
                     window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'OCR 完成，文字已插入。' : 'OCR complete. Text inserted.');
+                } finally {
+                    setOcrStatus('');
+                }
+                return;
+            }
+            if (choice === 'table') {
+                if (!window.cfNotepadOcr?.recognizeTableImage) throw new Error(APP_STATE.lang === 'zh-TW' ? '表格 OCR 模組尚未載入，請重新整理後再試。' : 'The table OCR module is not loaded. Refresh and try again.');
+                setOcrStatus(APP_STATE.lang === 'zh-TW' ? '正在上傳圖片並進行後端表格 OCR…' : 'Uploading image for server table OCR…');
+                try {
+                    const result = await window.cfNotepadOcr.recognizeTableImage(file);
+                    if (block) {
+                        if (typeof window.__insertBlockEditorMarkdown !== 'function') throw new Error(APP_STATE.lang === 'zh-TW' ? 'Block 編輯器尚未準備完成。' : 'The block editor is not ready.');
+                        window.__insertBlockEditorMarkdown(result.markdown);
+                    } else {
+                        insertOcrText(result.markdown, start, end);
+                    }
+                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? '表格 OCR 完成，表格已插入。' : 'Table OCR complete. Table inserted.');
                 } finally {
                     setOcrStatus('');
                 }

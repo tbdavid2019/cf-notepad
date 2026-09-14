@@ -939,6 +939,14 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     border-color: var(--toolbar-accent, #cc785c) !important;
 }
 .image-ocr-action-ocr:hover { filter: brightness(1.08); }
+.image-ocr-action-table {
+    grid-column: 1 / -1;
+    color: var(--modal-accent, #0969da) !important;
+    border-color: var(--modal-accent, #0969da) !important;
+}
+.image-ocr-action-table:hover {
+    background: color-mix(in srgb, var(--modal-accent, #0969da) 10%, var(--modal-surface, #f6f8fa));
+}
 .image-ocr-action-cancel {
     grid-column: 1 / -1;
     border-color: transparent !important;
