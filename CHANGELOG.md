@@ -2,6 +2,7 @@
 
 ## [2026-09-14]
 
+- **🛡️ OCR 客戶端動態載入防護與錯誤提示修正 (Dynamic OCR Import Fallback & Error Dialog Fix)**：在編輯器執行圖片文字辨識或表格辨識時，加入 `ensureOcrClient` 動態載入防護，若 `<script type="module">` 尚未執行完畢，自動即時補齊載入 `/js/ocr-client.mjs`，根除「OCR 模組尚未載入」的時序競爭錯誤；同時修正錯誤對話框，非上傳之辨識錯誤正確顯示「辨識失敗」而非「上傳失敗」。
 - **📐 純前端二維幾何表格重構演算法與後端平滑容錯 (Local-First 2D Geometric Table Reconstruction with Server Fallback)**：
   - **純前端本地優先**：移植 2D 幾何拓撲重構演算法（`reconstructTableFromOcrBoxes`），利用 PP-OCRv6 檢測出的邊界框座標，於瀏覽器端本地透過垂直行分群（Row Clustering）、行內字塊微距融合（Inline Merging）與欄邊界中心線投影聚類（Column Clustering），直接計算二維矩陣並即時輸出標準 GFM Markdown Table。
   - **零伺服器成本與隱私保障**：桌面端或支援 WebGPU 的瀏覽器辨識表格時，100% 於本機 Web Worker 幾毫秒內運算完成，無需上傳圖片至任何外部伺服器。

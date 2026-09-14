@@ -4280,11 +4280,29 @@ ${getMarkdownCss()}
             return response.data;
         };
 
+        const ensureOcrClient = async () => {
+            if (window.cfNotepadOcr?.recognizeImage && window.cfNotepadOcr?.recognizeTableImage) {
+                return window.cfNotepadOcr;
+            }
+            try {
+                const mod = await import('/js/ocr-client.mjs');
+                if (window.cfNotepadOcr?.recognizeImage) return window.cfNotepadOcr;
+                if (mod && (mod.recognizeImage || mod.recognizeTableImage)) {
+                    window.cfNotepadOcr = Object.assign(window.cfNotepadOcr || {}, mod);
+                    return window.cfNotepadOcr;
+                }
+            } catch (err) {
+                console.warn('[OCR] Dynamic import of /js/ocr-client.mjs failed:', err);
+            }
+            return window.cfNotepadOcr;
+        };
+
         const processImageInput = async (file, { start, end, block = false } = {}) => {
             const choice = await showImageActionDialog(file);
             if (choice === 'cancel') return;
             if (choice === 'ocr') {
-                if (!window.cfNotepadOcr?.recognizeImage) throw new Error(APP_STATE.lang === 'zh-TW' ? 'OCR 模組尚未載入，請重新整理後再試。' : 'The OCR module is not loaded. Refresh and try again.');
+                await ensureOcrClient();
+                if (!window.cfNotepadOcr?.recognizeImage) throw new Error(APP_STATE.lang === 'zh-TW' ? 'OCR 模組載入失敗，請確認網路連線或重新整理頁面後再試。' : 'The OCR module failed to load. Check your network or refresh.');
                 const isReady = window.cfNotepadOcr.getStatus?.().ready === true;
                 setOcrStatus(isReady
                     ? (APP_STATE.lang === 'zh-TW' ? '正在本機辨識圖片…' : 'Recognizing image locally…')
@@ -4304,7 +4322,8 @@ ${getMarkdownCss()}
                 return;
             }
             if (choice === 'table') {
-                if (!window.cfNotepadOcr?.recognizeTableImage) throw new Error(APP_STATE.lang === 'zh-TW' ? '表格 OCR 模組尚未載入，請重新整理後再試。' : 'The table OCR module is not loaded. Refresh and try again.');
+                await ensureOcrClient();
+                if (!window.cfNotepadOcr?.recognizeTableImage) throw new Error(APP_STATE.lang === 'zh-TW' ? '表格 OCR 模組載入失敗，請確認網路連線或重新整理頁面後再試。' : 'The table OCR module failed to load. Check your network or refresh.');
                 const isReady = window.cfNotepadOcr.getStatus?.().ready === true;
                 setOcrStatus(isReady
                     ? (APP_STATE.lang === 'zh-TW' ? '正在辨識表格（本地優先，必要時後端容錯）…' : 'Recognizing table (local-first with fallback)…')
@@ -4357,7 +4376,9 @@ ${getMarkdownCss()}
                 try {
                     await processImageInput(file, { start, end });
                 } catch (err) {
-                    window.showAppDialog({ title: getI18n('uploadFailed'), message: err?.message || getI18n('uploadFailed'), kind: 'error' });
+                    const isOcr = err?.message && (err.message.includes('OCR') || err.message.includes('辨識'));
+                    const title = isOcr ? (APP_STATE.lang === 'zh-TW' ? '辨識失敗' : 'Recognition Failed') : getI18n('uploadFailed');
+                    window.showAppDialog({ title, message: err?.message || title, kind: 'error' });
                 }
                 return;
             }
