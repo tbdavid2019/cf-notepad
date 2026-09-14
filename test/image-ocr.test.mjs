@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
-import { normalizeOcrItems, ocrItemsToText, insertTextAtSelection } from '../static/js/ocr-utils.mjs'
+import { normalizeOcrItems, ocrItemsToText, insertTextAtSelection, reconstructTableFromOcrBoxes } from '../static/js/ocr-utils.mjs'
 import { extractTableMarkdown, toUserFacingOcrError } from '../static/js/ocr-client.mjs'
 import { MODAL } from '../src/templates/common.js'
 import { HTML } from '../src/templates/base.js'
@@ -86,6 +86,8 @@ test('edit pages load the local OCR client and expose both image actions', () =>
     assert.match(ocrClientSource, /backend: 'auto'/)
     assert.match(ocrClientSource, /getStatus/)
     assert.match(ocrClientSource, /recognizeTableImage/)
+    assert.match(ocrClientSource, /recognizeRemoteTableImage/)
+    assert.match(ocrClientSource, /reconstructTableFromOcrBoxes/)
     assert.match(ocrClientSource, /mode=table/)
     assert.match(ocrClientSource, /tableMarkdown/)
     assert.match(readFileSync(new URL('../scripts/build-ocr-client.mjs', import.meta.url), 'utf8'), /worker-entry/)
@@ -95,6 +97,48 @@ test('edit pages load the local OCR client and expose both image actions', () =>
     assert.doesNotMatch(readFileSync(new URL('../static/js/assets/' + workerAssetName, import.meta.url), 'utf8'), /sourceMappingURL/)
     assert.match(blockEditorSource, /window\.__insertBlockEditorImage/)
     assert.match(blockEditorSource, /handleImagePaste/)
+})
+
+test('reconstructTableFromOcrBoxes accurately builds 2D GFM Markdown table from OCR bounding boxes', () => {
+    const items = [
+        { text: '項目', box: { x: 10, y: 10, width: 40, height: 20 } },
+        { text: '數量', box: { x: 80, y: 10, width: 40, height: 20 } },
+        { text: '金額|元', box: { x: 150, y: 10, width: 50, height: 20 } },
+        { text: '蘋果', box: { x: 10, y: 40, width: 40, height: 20 } },
+        { text: '5', box: { x: 80, y: 40, width: 20, height: 20 } },
+        { text: '100', box: { x: 150, y: 40, width: 30, height: 20 } },
+        { text: '香蕉', box: { x: 10, y: 70, width: 40, height: 20 } },
+        { text: '2', box: { x: 80, y: 70, width: 20, height: 20 } },
+        { text: '60', box: { x: 150, y: 70, width: 30, height: 20 } },
+    ]
+
+    const result = reconstructTableFromOcrBoxes(items)
+    assert.equal(result.isTable, true)
+    assert.equal(result.rowCount, 3)
+    assert.equal(result.colCount, 3)
+    assert.equal(
+        result.markdown,
+        '| 項目 | 數量 | 金額\\|元 |\n| --- | --- | --- |\n| 蘋果 | 5 | 100 |\n| 香蕉 | 2 | 60 |'
+    )
+})
+
+test('reconstructTableFromOcrBoxes works with poly coordinates and merges close horizontal tokens', () => {
+    const items = [
+        { text: '產品', poly: [[10, 10], [40, 10], [40, 30], [10, 30]] },
+        { text: '價格', poly: [[80, 10], [120, 10], [120, 30], [80, 30]] },
+        { text: '雲端', poly: [[10, 40], [30, 40], [30, 60], [10, 60]] },
+        { text: '主機', poly: [[32, 40], [50, 40], [50, 60], [32, 60]] },
+        { text: '$99', poly: [[80, 40], [110, 40], [110, 60], [80, 60]] },
+    ]
+
+    const result = reconstructTableFromOcrBoxes(items)
+    assert.equal(result.isTable, true)
+    assert.equal(result.rowCount, 2)
+    assert.equal(result.colCount, 2)
+    assert.equal(
+        result.markdown,
+        '| 產品 | 價格 |\n| --- | --- |\n| 雲端 主機 | $99 |'
+    )
 })
 
 test('table paste uses the text after the selection instead of an undeclared variable', () => {

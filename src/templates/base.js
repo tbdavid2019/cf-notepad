@@ -4305,7 +4305,10 @@ ${getMarkdownCss()}
             }
             if (choice === 'table') {
                 if (!window.cfNotepadOcr?.recognizeTableImage) throw new Error(APP_STATE.lang === 'zh-TW' ? '表格 OCR 模組尚未載入，請重新整理後再試。' : 'The table OCR module is not loaded. Refresh and try again.');
-                setOcrStatus(APP_STATE.lang === 'zh-TW' ? '正在上傳圖片並進行後端表格 OCR…' : 'Uploading image for server table OCR…');
+                const isReady = window.cfNotepadOcr.getStatus?.().ready === true;
+                setOcrStatus(isReady
+                    ? (APP_STATE.lang === 'zh-TW' ? '正在辨識表格（本地優先，必要時後端容錯）…' : 'Recognizing table (local-first with fallback)…')
+                    : (APP_STATE.lang === 'zh-TW' ? '正在準備表格 OCR 引擎（本地優先，必要時後端容錯）…' : 'Preparing table OCR engine (local-first with fallback)…'));
                 try {
                     const result = await window.cfNotepadOcr.recognizeTableImage(file);
                     if (block) {
@@ -4314,7 +4317,10 @@ ${getMarkdownCss()}
                     } else {
                         insertOcrText(result.markdown, start, end);
                     }
-                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? '表格 OCR 完成，表格已插入。' : 'Table OCR complete. Table inserted.');
+                    const toastMsg = result?.isLocal
+                        ? (APP_STATE.lang === 'zh-TW' ? '表格 OCR 完成（本地二維幾何重構），表格已插入。' : 'Table OCR complete (local 2D reconstruction). Table inserted.')
+                        : (APP_STATE.lang === 'zh-TW' ? '表格 OCR 完成，表格已插入。' : 'Table OCR complete. Table inserted.');
+                    window.showToast?.(toastMsg);
                 } finally {
                     setOcrStatus('');
                 }

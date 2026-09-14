@@ -2,6 +2,10 @@
 
 ## [2026-09-14]
 
+- **📐 純前端二維幾何表格重構演算法與後端平滑容錯 (Local-First 2D Geometric Table Reconstruction with Server Fallback)**：
+  - **純前端本地優先**：移植 2D 幾何拓撲重構演算法（`reconstructTableFromOcrBoxes`），利用 PP-OCRv6 檢測出的邊界框座標，於瀏覽器端本地透過垂直行分群（Row Clustering）、行內字塊微距融合（Inline Merging）與欄邊界中心線投影聚類（Column Clustering），直接計算二維矩陣並即時輸出標準 GFM Markdown Table。
+  - **零伺服器成本與隱私保障**：桌面端或支援 WebGPU 的瀏覽器辨識表格時，100% 於本機 Web Worker 幾毫秒內運算完成，無需上傳圖片至任何外部伺服器。
+  - **後端安全 Fallback**：若處於手機端、瀏覽器 WebGPU/WASM 記憶體限制、模型載入失敗或未偵測出二維網格結構，自動平滑降級至後端表格 OCR 端點（`TABLE_OCR_ENDPOINTS`），兼顧極致效能與跨設備穩定兜底。
 - **⏳ OCR 模型下載狀態提示 (OCR Model Loading Status)**：首次選擇本機 OCR 時，畫面會顯示「正在下載 OCR 模型與執行元件（首次使用）」的持續狀態提示；模型已初始化後則改顯示本機辨識中，避免使用者誤以為貼圖流程沒有反應。
 - **🐛 修正 OCR Worker 執行檔遺漏導致辨識失敗 (Fix Missing OCR Worker Asset)**：部署 bundle 時同步發佈官方 PaddleOCR.js 的版本化 `worker-entry-*.js` runtime，修復選擇「OCR 轉文字」後顯示泛化錯誤的問題；另外將 Worker、WebGPU 與模型下載失敗分類為可操作的錯誤提示。
 - **📊 圖片後端表格 OCR 與 BlockNote 表格插入 (Server Table OCR & BlockNote Table Import)**：圖片處理選單新增「辨識表格（後端）」；前端以 `?mode=table` 呼叫三層 OCR fallback，優先採用 `data.tableMarkdown`，只保留連續 GFM table 後插入 Markdown 或 BlockNote，避免圖片網址與編輯器 Footer 雜訊進入文章。此選項會將圖片送至後端表格辨識服務，與不上傳圖片的本機 OCR 明確區分。

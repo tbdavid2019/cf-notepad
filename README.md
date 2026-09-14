@@ -74,7 +74,7 @@
 
 ### 🎨 2. 極致寫作、媒體與排版體驗
 
-- **剪貼簿直貼、R2 圖片上傳、圖片 OCR 與表格重構**：貼上或拖曳圖片時可選擇「上傳圖片」、「OCR 轉文字」、「辨識表格（後端）」或「取消」。本機 OCR 使用 PP-OCRv6，優先 WebGPU、回退 WASM，圖片不會上傳；表格模式呼叫後端 `?mode=table`，優先使用 `data.tableMarkdown`，只將乾淨 GFM table 插入 Markdown 或 BlockNote。首次本機 OCR 會顯示模型下載狀態，若 Worker、WebGPU、模型或表格服務失敗也會顯示處理建議。
+- **剪貼簿直貼、R2 圖片上傳、圖片 OCR 與本地優先表格幾何重構**：貼上或拖曳圖片時可選擇「上傳圖片」、「OCR 轉文字」、「辨識表格」或「取消」。本機 OCR 使用 PP-OCRv6，優先 WebGPU、回退 WASM，圖片完全留在瀏覽器本地；表格模式採用**純前端二維幾何拓撲重構演算法優先**，利用文字座標即時還原欄列並輸出標準 GFM Markdown Table，若處於手機端、記憶體限制或模型載入失敗時，平滑 fallback 至後端三層表格辨識服務。首次本機 OCR 會顯示模型下載狀態，若 Worker、WebGPU、模型或表格服務失敗也會顯示處理建議。
 - **888box 多媒體附件上傳**：工具列支援將影片、音訊、文件、壓縮檔等大檔上傳至 `box.david888.com`（具自動 fallback 機制），自動插入 `<video>`、`<audio>` 或下載連結。
 - **📊 Mermaid 與圖表懸浮工具列與一鍵複製 PNG/代碼**：所有渲染後的 Mermaid 流程圖、架構圖、循序圖與 Flowchart/Sequence/Graphviz/ABC/ECharts 圖表右上角均自動掛載毛玻璃懸浮操作列，提供「🖼️ 複製 PNG（2x 高解析透明點陣圖，可直接貼入 Slack、Notion、PPT、Word）」、「📋 複製代碼」、「📐 複製 SVG」與「💾 下載 PNG」，具備即時動畫回饋與雙語 Toast 提示。
 - **ECharts 動態圖表渲染**：支援在 Markdown 中撰寫 `echarts { JSON }`  程式碼區塊，即時渲染互動式餅圖、折線圖、柱狀圖等 ECharts 圖表。
@@ -481,7 +481,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 ### 🎨 2. Rich Editing, Media &amp; Layout
 
-- **Direct Clipboard Paste, R2 Uploads, Image OCR &amp; Table Reconstruction**: Pasting or dropping an image opens Upload image, Run local OCR, Recognize table (server), and Cancel choices. Local PP-OCRv6 runs in the browser with WebGPU first and WASM fallback; the image stays local during OCR. Server table mode calls `/api/ocr?mode=table`, prefers `data.tableMarkdown`, filters to a clean GFM table, and inserts it into Markdown or BlockNote. The first local OCR run shows model/runtime download status, with actionable guidance for Worker, WebGPU, model, or table-service failures.
+- **Direct Clipboard Paste, R2 Uploads, Image OCR &amp; Local-First Table Reconstruction**: Pasting or dropping an image opens Upload image, Run local OCR, Recognize table, and Cancel choices. Local PP-OCRv6 runs in the browser with WebGPU first and WASM fallback; the image stays local during OCR. Table recognition prioritizes **pure client-side 2D geometric table reconstruction** (`reconstructTableFromOcrBoxes`) using detected bounding boxes to instantly restore rows/columns and output standard GFM Markdown tables; for mobile browsers, memory-constrained devices, or model load failures, it gracefully falls back to the three-tier remote server table OCR endpoints. The first local OCR run shows model/runtime download status, with actionable guidance for Worker, WebGPU, model, or table-service failures.
 - **888box Multimedia Attachments**: Upload videos, audio, documents, and archives directly to `box.david888.com` (with fallback nodes), inserting `<video>`, `<audio>`, or download links.
 - **📊 Mermaid &amp; Diagram Floating Toolbar (Copy PNG / Code / SVG / Download)**: All rendered Mermaid flowcharts, sequence diagrams, architecture graphs, and Flowchart/Sequence/Graphviz/ABC/ECharts charts automatically mount a glassmorphic floating action toolbar in the top-right corner, offering one-click "🖼️ Copy PNG" (2x high-resolution transparent image for Slack, Notion, PPT, Word), "📋 Copy Code", "📐 Copy SVG", and "💾 Download PNG" with animated feedback and bilingual toast notifications.
 - **ECharts Interactive Charts**: Render interactive ECharts graphs directly from `echarts { JSON }`  code blocks in Markdown.

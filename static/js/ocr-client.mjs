@@ -1,4 +1,4 @@
-import { ocrItemsToText } from './ocr-utils.mjs'
+import { ocrItemsToText, reconstructTableFromOcrBoxes } from './ocr-utils.mjs'
 
 // Official browser SDK: https://github.com/PaddlePaddle/PaddleOCR/tree/main/paddleocr-js
 // WebGPU provider fallback: https://onnxruntime.ai/docs/tutorials/web/ep-webgpu.html
@@ -115,7 +115,7 @@ export const recognizeImage = async file => {
     }
 }
 
-export const recognizeTableImage = async file => {
+export const recognizeRemoteTableImage = async file => {
     validateImage(file)
     let lastError = null
     for (const endpoint of TABLE_OCR_ENDPOINTS) {
@@ -146,6 +146,7 @@ export const recognizeTableImage = async file => {
             if (!markdown) throw new Error('No table was detected in the image.')
             return {
                 markdown,
+                isLocal: false,
                 lines: Array.isArray(payload?.data?.lines) ? payload.data.lines : [],
                 tables: Array.isArray(payload?.data?.tables) ? payload.data.tables : [],
                 durationMs: payload?.data?.durationMs ?? null,
@@ -155,6 +156,36 @@ export const recognizeTableImage = async file => {
         }
     }
     throw new Error(lastError?.message || 'Table OCR service is unavailable. Try again later.')
+}
+
+export const recognizeTableImage = async (file, options = {}) => {
+    validateImage(file)
+
+    // 1. 純前端本地優先 (WebGPU PP-OCRv6 + 二維幾何重構演算法)
+    try {
+        const ocr = await getOcrInstance()
+        const [result] = await ocr.predict(file)
+        const table = reconstructTableFromOcrBoxes(result?.items || [], options)
+        if (table.isTable && table.markdown) {
+            return {
+                markdown: table.markdown,
+                isLocal: true,
+                rowCount: table.rowCount,
+                colCount: table.colCount,
+                grid: table.grid,
+                items: result?.items || [],
+                metrics: result?.metrics || null,
+                runtime: result?.runtime || null,
+            }
+        }
+    } catch (localError) {
+        if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[Table OCR] Local geometric table reconstruction unavailable or failed, falling back to remote endpoints:', localError)
+        }
+    }
+
+    // 2. 後端 Fallback 遠端表格 OCR 端點（手機或弱設備兜底）
+    return recognizeRemoteTableImage(file)
 }
 
 export const disposeOcr = async () => {
@@ -167,5 +198,12 @@ export const disposeOcr = async () => {
 export const getStatus = () => ({ ready: ocrReady })
 
 if (typeof window !== 'undefined') {
-    window.cfNotepadOcr = { recognizeImage, recognizeTableImage, disposeOcr, getStatus }
+    window.cfNotepadOcr = {
+        recognizeImage,
+        recognizeTableImage,
+        recognizeRemoteTableImage,
+        reconstructTableFromOcrBoxes,
+        disposeOcr,
+        getStatus,
+    }
 }
