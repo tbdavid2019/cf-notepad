@@ -503,6 +503,46 @@ function BlockNoteEditorApp() {
                 detail: { markdown, mode: 'insert' }
             }))
         }
+        window.__insertBlockEditorImage = image => {
+            const src = String(image?.url || '').trim()
+            if (!src) return
+            const imageBlock = {
+                type: 'davidEmbed',
+                props: {
+                    kind: 'image',
+                    src,
+                    alt: String(image?.name || ''),
+                },
+            }
+            try {
+                const reference = editor.getTextCursorPosition()?.block || editor.document.at(-1)
+                if (reference) editor.insertBlocks([imageBlock], reference.id, 'after')
+                save()
+            } catch (error) {
+                window.showAppDialog?.({
+                    title: resolveBlockNoteLang() === 'zh-TW' ? '圖片插入失敗' : 'Image insertion failed',
+                    message: resolveBlockNoteLang() === 'zh-TW' ? '無法將圖片插入目前區塊。' : 'The image could not be inserted into the current block.',
+                    kind: 'error',
+                })
+            }
+        }
+        const blockRoot = document.querySelector('#block-editor')
+        const handleImagePaste = event => {
+            const imageItem = [...(event.clipboardData?.items || [])].find(item => item.kind === 'file' && item.type.startsWith('image/'))
+            if (!imageItem || typeof window.__handleImageInput !== 'function') return
+            const file = imageItem.getAsFile()
+            if (!file) return
+            event.preventDefault()
+            event.stopPropagation()
+            window.__handleImageInput(file, { block: true }).catch(error => {
+                window.showAppDialog?.({
+                    title: resolveBlockNoteLang() === 'zh-TW' ? '圖片處理失敗' : 'Image processing failed',
+                    message: error?.message || (resolveBlockNoteLang() === 'zh-TW' ? '無法處理圖片。' : 'The image could not be processed.'),
+                    kind: 'error',
+                })
+            })
+        }
+        blockRoot?.addEventListener('paste', handleImagePaste, true)
         const handleInsertAudio = event => {
             const detail = event.detail || {}
             const audioUrl = detail.url || detail.audioUrl
@@ -532,6 +572,8 @@ function BlockNoteEditorApp() {
         window.addEventListener('cf-notepad-block-insert-audio', handleInsertAudio)
         return () => {
             delete window.__insertBlockEditorMarkdown
+            delete window.__insertBlockEditorImage
+            blockRoot?.removeEventListener('paste', handleImagePaste, true)
             window.removeEventListener('cf-notepad-block-insert-audio', handleInsertAudio)
         }
     }, [editor])

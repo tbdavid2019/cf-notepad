@@ -4188,6 +4188,115 @@ ${getMarkdownCss()}
             modal?.addEventListener('keydown', onKeyDown);
         });
 
+        const showImageActionDialog = (file) => new Promise(resolve => {
+            const modal = document.querySelector('.image-ocr-modal');
+            if (!modal) {
+                resolve(window.ENABLE_R2 ? 'upload' : 'cancel');
+                return;
+            }
+            const titleEl = modal.querySelector('#image-ocr-title');
+            const messageEl = modal.querySelector('#image-ocr-message');
+            const uploadBtn = modal.querySelector('#image-ocr-action-upload');
+            const ocrBtn = modal.querySelector('#image-ocr-action-ocr');
+            const cancelBtn = modal.querySelector('#image-ocr-action-cancel');
+            const mask = modal.querySelector('.modal-mask');
+            const fileName = file?.name || (APP_STATE.lang === 'zh-TW' ? '貼上的圖片' : 'Pasted image');
+            const zh = APP_STATE.lang === 'zh-TW';
+            if (!titleEl || !messageEl || !uploadBtn || !ocrBtn || !cancelBtn || !mask) {
+                resolve(window.ENABLE_R2 ? 'upload' : 'cancel');
+                return;
+            }
+
+            titleEl.textContent = zh ? '處理圖片：「' + fileName + '」' : 'Process Image: "' + fileName + '"';
+            messageEl.textContent = zh ? '選擇上傳圖片，或只在本機辨識文字。' : 'Choose image upload or local text recognition.';
+            uploadBtn.disabled = !window.ENABLE_R2;
+            uploadBtn.title = window.ENABLE_R2 ? '' : (zh ? '尚未啟用 R2 圖片上傳' : 'R2 image upload is disabled');
+            uploadBtn.setAttribute('aria-disabled', window.ENABLE_R2 ? 'false' : 'true');
+
+            let settled = false;
+            const cleanup = choice => {
+                if (settled) return;
+                settled = true;
+                closeModal(modal);
+                uploadBtn.removeEventListener('click', onUpload);
+                ocrBtn.removeEventListener('click', onOcr);
+                cancelBtn.removeEventListener('click', onCancel);
+                mask.removeEventListener('click', onCancel);
+                modal.removeEventListener('keydown', onKeyDown);
+                resolve(choice);
+            };
+            const onUpload = () => cleanup('upload');
+            const onOcr = () => cleanup('ocr');
+            const onCancel = () => cleanup('cancel');
+            const onKeyDown = event => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    onCancel();
+                }
+            };
+
+            openModal(modal, { initialFocus: ocrBtn });
+            uploadBtn.addEventListener('click', onUpload);
+            ocrBtn.addEventListener('click', onOcr);
+            cancelBtn.addEventListener('click', onCancel);
+            mask.addEventListener('click', onCancel);
+            modal.addEventListener('keydown', onKeyDown);
+        });
+
+        const insertOcrText = (text, start, end) => {
+            const value = String($textarea?.value || '');
+            const safeStart = Math.max(0, Math.min(value.length, Number.isFinite(Number(start)) ? Number(start) : value.length));
+            const safeEnd = Math.max(safeStart, Math.min(value.length, Number.isFinite(Number(end)) ? Number(end) : safeStart));
+            const before = value.substring(0, safeStart);
+            const after = value.substring(safeEnd);
+            const prefix = before && !before.endsWith('\\n\\n') ? (before.endsWith('\\n') ? '\\n' : '\\n\\n') : '';
+            const suffix = after && !after.startsWith('\\n\\n') ? (after.startsWith('\\n') ? '\\n' : '\\n\\n') : '';
+            const insertion = prefix + text + suffix;
+            $textarea.value = before + insertion + after;
+            $textarea.selectionStart = $textarea.selectionEnd = before.length + insertion.length;
+            triggerRender($previewMd, $textarea.value);
+            $textarea.dispatchEvent(new Event('input', { bubbles: true }));
+        };
+
+        const uploadImageToR2 = async file => {
+            if (!window.ENABLE_R2) throw new Error(APP_STATE.lang === 'zh-TW' ? '圖片上傳目前未啟用。' : 'Image upload is currently disabled.');
+            const formData = new FormData();
+            formData.append('image', file);
+            const response = await fetchJson('/upload', { method: 'POST', body: formData });
+            if (response?.err !== 0 || !response?.data) throw new Error(response?.msg || (APP_STATE.lang === 'zh-TW' ? '圖片上傳失敗。' : 'Image upload failed.'));
+            return response.data;
+        };
+
+        const processImageInput = async (file, { start, end, block = false } = {}) => {
+            const choice = await showImageActionDialog(file);
+            if (choice === 'cancel') return;
+            if (choice === 'ocr') {
+                if (!window.cfNotepadOcr?.recognizeImage) throw new Error(APP_STATE.lang === 'zh-TW' ? 'OCR 模組尚未載入，請重新整理後再試。' : 'The OCR module is not loaded. Refresh and try again.');
+                window.showToast?.(APP_STATE.lang === 'zh-TW' ? '正在本機載入 OCR 模型，首次使用可能需要一點時間…' : 'Loading the local OCR model. The first run may take a moment…');
+                const result = await window.cfNotepadOcr.recognizeImage(file);
+                if (block) {
+                    if (typeof window.__insertBlockEditorMarkdown !== 'function') throw new Error(APP_STATE.lang === 'zh-TW' ? 'Block 編輯器尚未準備完成。' : 'The block editor is not ready.');
+                    window.__insertBlockEditorMarkdown(result.text);
+                } else {
+                    insertOcrText(result.text, start, end);
+                }
+                window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'OCR 完成，文字已插入。' : 'OCR complete. Text inserted.');
+                return;
+            }
+            const url = await uploadImageToR2(file);
+            const fileName = file?.name || (APP_STATE.lang === 'zh-TW' ? '圖片' : 'image');
+            if (block) {
+                if (typeof window.__insertBlockEditorImage !== 'function') throw new Error(APP_STATE.lang === 'zh-TW' ? 'Block 編輯器尚未準備完成。' : 'The block editor is not ready.');
+                window.__insertBlockEditorImage({ url, name: fileName });
+            } else {
+                const alt = fileName.replace(/\\.[^.]+$/, '').replace(/[\\[\\](){}<>]/g, ' ').trim() || 'image';
+                insertOcrText('![' + alt + '](' + url + ')', start, end);
+            }
+            window.showToast?.(APP_STATE.lang === 'zh-TW' ? '圖片已上傳並插入。' : 'Image uploaded and inserted.');
+        };
+
+        window.__handleImageInput = processImageInput;
+
         const handleDroppedFile = async (file) => {
             if (!file) return;
             const fileName = file.name || '';
@@ -4198,31 +4307,14 @@ ${getMarkdownCss()}
             const isPlainMd = ['md', 'markdown', 'txt'].includes(ext) || file.type === 'text/markdown' || file.type === 'text/plain';
             const isDoc = ['docx', 'pptx', 'xlsx', 'epub', 'csv', 'html'].includes(ext);
 
-            // 1. Image -> direct upload to R2
+            // 1. Image -> choose local OCR or direct upload to R2
             if (isImage) {
-                if (window.ENABLE_R2) {
-                    const start = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
-                    const end = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
-                    const loadingText = '![' + getI18n('uploading') + ']()';
-                    $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring(end);
-                    $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length;
-                    const formData = new FormData();
-                    formData.append('image', file);
-                    try {
-                        const res = await fetchJson('/upload', { method: 'POST', body: formData });
-                        if (res.err === 0) {
-                            const alt = fileName.replace(/\\.[^.]+$/, '').replace(/[\\[\\](){}<>]/g, ' ').trim() || 'image';
-                            $textarea.value = $textarea.value.replace(loadingText, '![' + alt + '](' + res.data + ')');
-                            triggerRender($previewMd, $textarea.value);
-                            $textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                        } else {
-                            $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']');
-                            window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' });
-                        }
-                    } catch (err) {
-                        $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']');
-                        window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' });
-                    }
+                const start = typeof $textarea.selectionStart === 'number' ? $textarea.selectionStart : $textarea.value.length;
+                const end = typeof $textarea.selectionEnd === 'number' ? $textarea.selectionEnd : $textarea.value.length;
+                try {
+                    await processImageInput(file, { start, end });
+                } catch (err) {
+                    window.showAppDialog({ title: getI18n('uploadFailed'), message: err?.message || getI18n('uploadFailed'), kind: 'error' });
                 }
                 return;
             }
@@ -4452,34 +4544,18 @@ ${getMarkdownCss()}
                 const clip = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData);
                 if (!clip) return;
 
-                // 1. Check Image files
-                if (window.ENABLE_R2 && clip.items) {
+                // 1. Check Image files and offer local OCR or upload
+                if (clip.items) {
                     for (let index in clip.items) {
                         const item = clip.items[index];
                         if (item.kind === 'file' && item.type.startsWith('image/')) {
                             e.preventDefault();
                             const blob = item.getAsFile();
                             const start = $textarea.selectionStart;
-                            const loadingText = '![' + getI18n('uploading') + ']()';
-                            $textarea.value = $textarea.value.substring(0, start) + loadingText + $textarea.value.substring($textarea.selectionEnd);
-                            $textarea.selectionStart = $textarea.selectionEnd = start + loadingText.length;
-                            const formData = new FormData();
-                            formData.append('image', blob);
-                            fetchJson('/upload', { method: 'POST', body: formData })
-                                .then(res => {
-                                    if (res.err === 0) {
-                                        $textarea.value = $textarea.value.replace(loadingText, '![image](' + res.data + ')');
-                                        triggerRender($previewMd, $textarea.value);
-                                        $textarea.dispatchEvent(new Event('input', { bubbles: true }));
-                                    } else {
-                                        $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ': ' + res.msg + ']');
-                                        window.showAppDialog({ title: getI18n('uploadFailed'), message: res.msg || getI18n('uploadFailed'), kind: 'error' });
-                                    }
-                                })
-                                .catch(err => {
-                                    $textarea.value = $textarea.value.replace(loadingText, '[' + getI18n('uploadFailed') + ']');
-                                    window.showAppDialog({ title: getI18n('uploadFailed'), message: getI18n('uploadError') + err, kind: 'error' });
-                                });
+                            const end = $textarea.selectionEnd;
+                            processImageInput(blob, { start, end }).catch(error => {
+                                window.showAppDialog({ title: getI18n('uploadFailed'), message: error?.message || getI18n('uploadFailed'), kind: 'error' });
+                            });
                             return;
                         }
                     }
@@ -4496,6 +4572,7 @@ ${getMarkdownCss()}
                         var startPos = $textarea.selectionStart;
                         var endPos = $textarea.selectionEnd;
                         var before = $textarea.value.substring(0, startPos);
+                        var after = $textarea.value.substring(endPos);
                         var prefixNewline = (before.length > 0 && !before.endsWith('\\n\\n')) ? (before.endsWith('\\n') ? '\\n' : '\\n\\n') : '';
                         var suffixNewline = (after.length > 0 && !after.startsWith('\\n\\n')) ? (after.startsWith('\\n') ? '\\n' : '\\n\\n') : '';
                         var insertion = prefixNewline + convertedTable + suffixNewline;
@@ -5104,6 +5181,7 @@ ${getMarkdownCss()}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     <script type="module" src="/js/offline-store.mjs"></script>
     ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit ? '<script type="module" src="/js/ocr-client.mjs"></script>' : ''}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>

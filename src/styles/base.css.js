@@ -831,7 +831,7 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 }
 .app-dialog-cancel { background: var(--modal-surface, #f6f8fa); color: var(--modal-text, #24292f); border: 1px solid var(--modal-border, #d0d7de); }
 .app-dialog-cancel:hover { background: var(--modal-surface-hover, #eef1f4); }
-.app-dialog-modal .modal-mask, .import-options-modal .modal-mask, .file-drop-modal .modal-mask { z-index: 1000; }
+.app-dialog-modal .modal-mask, .import-options-modal .modal-mask, .file-drop-modal .modal-mask, .image-ocr-modal .modal-mask { z-index: 1000; }
 .import-action-cancel, .import-action-insert { background: var(--modal-surface, #f6f8fa); color: var(--modal-text, #24292f); border: 1px solid var(--modal-border, #d0d7de); }
 .import-action-cancel:hover, .import-action-insert:hover { background: var(--modal-surface-hover, #eef1f4); }
 
@@ -888,6 +888,67 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 }
 .file-drop-action-cancel:hover {
     color: var(--modal-text, #24292f);
+}
+.image-ocr-dialog-content {
+    width: min(500px, calc(100vw - 32px));
+}
+.image-ocr-icon .svg-icon {
+    width: 18px;
+    height: 18px;
+    margin: 0;
+}
+.image-ocr-privacy-note {
+    margin-top: 8px !important;
+    color: var(--modal-accent, #0969da) !important;
+    font-size: 12px !important;
+}
+.image-ocr-actions {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+    margin-top: 8px;
+}
+.image-ocr-actions .btn {
+    min-height: 42px;
+    padding: 10px 14px;
+    border: 1px solid var(--modal-border, #d0d7de);
+    border-radius: 8px;
+    color: var(--modal-text, #24292f);
+    background: var(--modal-surface, #f6f8fa);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 650;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+}
+.image-ocr-actions .btn:hover {
+    background: var(--modal-surface-hover, #eef1f4);
+}
+.image-ocr-actions .btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+.image-ocr-actions .btn:focus-visible {
+    outline: 2px solid var(--modal-accent, #0969da);
+    outline-offset: 2px;
+}
+.image-ocr-action-ocr {
+    color: #fff !important;
+    background: var(--toolbar-accent, #cc785c) !important;
+    border-color: var(--toolbar-accent, #cc785c) !important;
+}
+.image-ocr-action-ocr:hover { filter: brightness(1.08); }
+.image-ocr-action-cancel {
+    grid-column: 1 / -1;
+    border-color: transparent !important;
+    background: transparent !important;
+    color: var(--modal-muted, #6e7781) !important;
+}
+.image-ocr-action-cancel:hover { color: var(--modal-text, #24292f) !important; }
+@media (max-width: 520px) {
+    .image-ocr-actions { grid-template-columns: 1fr; }
+    .image-ocr-action-cancel { grid-column: auto; }
 }
 
 /* SVG Icon Utility */

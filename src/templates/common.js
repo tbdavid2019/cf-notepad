@@ -1149,6 +1149,22 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
     </div>
 </div>
+<div class="modal image-ocr-modal" role="dialog" aria-modal="true" aria-labelledby="image-ocr-title" aria-describedby="image-ocr-message" aria-hidden="true">
+    <div class="modal-mask" data-modal-close></div>
+    <div class="app-dialog-content image-ocr-dialog-content" data-dialog-kind="confirm">
+        <div class="app-dialog-icon image-ocr-icon" aria-hidden="true">${SVG_ICONS.image}</div>
+        <div class="app-dialog-copy">
+            <h2 id="image-ocr-title">${lang === 'zh-TW' ? '處理圖片' : 'Process Image'}</h2>
+            <p id="image-ocr-message">${lang === 'zh-TW' ? '請選擇要上傳圖片，或只在本機進行 OCR。' : 'Choose whether to upload the image or run OCR locally.'}</p>
+            <p class="image-ocr-privacy-note">${lang === 'zh-TW' ? '本機 OCR 不會上傳圖片。' : 'Local OCR does not upload the image.'}</p>
+        </div>
+        <div class="image-ocr-actions">
+            <button type="button" class="btn image-ocr-action-upload" id="image-ocr-action-upload">${lang === 'zh-TW' ? '上傳圖片' : 'Upload image'}</button>
+            <button type="button" class="btn image-ocr-action-ocr" id="image-ocr-action-ocr">${lang === 'zh-TW' ? 'OCR 轉文字' : 'Run local OCR'}</button>
+            <button type="button" class="btn image-ocr-action-cancel" id="image-ocr-action-cancel">${lang === 'zh-TW' ? '取消' : 'Cancel'}</button>
+        </div>
+    </div>
+</div>
 ${showNoteHistory ? `
 <div class="modal note-history-modal" role="dialog" aria-modal="true" aria-labelledby="note-history-title" aria-hidden="true">
     <div class="modal-mask" data-modal-close></div>

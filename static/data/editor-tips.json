@@ -140,6 +140,11 @@
       "id": "editor-line-numbers-alignment",
       "zh-TW": "小訣竅：Markdown 編輯器行號支援自動折行高度同步！超長段落自動對齊行首，縮放視窗或調整分割欄時即時動態重算，精準對應每一行內容與狀態欄行數。",
       "en-US": "Tip: Markdown editor line numbers support automatic wrap height synchronization! Long wrapped lines stay perfectly aligned with line numbers and cursor status."
+    },
+    {
+      "id": "image-local-ocr",
+      "zh-TW": "小訣竅：貼上或拖曳圖片後，可選擇「OCR 轉文字」在本機辨識；PP-OCRv6 會優先使用 WebGPU，圖片不會因 OCR 選項而上傳。",
+      "en-US": "Tip: After pasting or dropping an image, choose 'Run local OCR' to recognize it on this device. PP-OCRv6 prefers WebGPU, and the image is not uploaded for OCR."
     }
   ]
 }

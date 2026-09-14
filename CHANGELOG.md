@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-09-14]
+
+- **🖼️ 貼圖後 Upload / 本地 OCR 選擇與 PP-OCRv6 WebGPU 加速 (Paste Image Actions & Local OCR)**：Markdown 與 Block 編輯器貼上圖片或拖曳圖片時，新增雙語處理視窗，可選擇上傳至 R2、使用瀏覽器本地 OCR 或取消；本地 OCR 使用官方 `@paddleocr/paddleocr-js` 的 PP-OCRv6 中文模型，透過 ONNX Runtime Web 自動優先 WebGPU，無法使用時回退 WASM，辨識結果依圖片幾何座標排序後插入文字區塊，圖片不會因選擇 OCR 而上傳。
+  - OCR runtime 採延遲載入，模型只在第一次選擇「OCR 轉文字」時載入；圖片輸入沿用 10MB 限制，Upload 與 OCR 均不信任副檔名並保留既有 MIME 驗證。
+  - Block 編輯器支援將 OCR 文字插入目前游標區塊，或將上傳後圖片插入 `davidEmbed` 圖片區塊；所有選項支援繁體中文／英文、Escape、Tab focus trap、深色／淺色主題與行動版排版。
+- **🐛 修復剪貼簿表格貼上 ReferenceError (Fix Clipboard Table Paste ReferenceError)**：補上選取範圍後半段 `after` 文字的計算，Excel、Google Sheets 與網頁表格貼上流程不再因未宣告變數而中斷。
+
 ## [2026-09-02]
 
 - **🛡️ 系統全方位安全弱點修補與全面架構強化 (Comprehensive Full-Repo Security Hardening & Vulnerability Remediation)**：

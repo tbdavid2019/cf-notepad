@@ -10,16 +10,17 @@
   "private": true,
   "scripts": {
     "build:block-editor": "node scripts/build-block-editor.mjs",
+    "build:ocr": "node scripts/build-ocr-client.mjs",
     "prepare:skill-doc": "node scripts/generate-agent-skill.mjs",
     "prestart": "npm run prepare:skill-doc",
     "start": "wrangler dev",
     "predev": "npm run prepare:skill-doc",
     "dev": "wrangler dev",
-    "predeploy": "npm run prepare:skill-doc && npm run build:block-editor",
+    "predeploy": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:ocr",
     "deploy": "wrangler deploy",
     "prepublish": "npm run prepare:skill-doc",
     "publish": "wrangler deploy",
-    "pretest": "npm run prepare:skill-doc && npm run build:block-editor",
+    "pretest": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:ocr",
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
@@ -30,6 +31,7 @@
     "@mantine/core": "^9.5.1",
     "@mantine/hooks": "^9.5.1",
     "@mantine/utils": "^6.0.22",
+    "@paddleocr/paddleocr-js": "^0.4.2",
     "@takumi-rs/helpers": "^2.12.0",
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",
     "cookie": "^0.5.0",

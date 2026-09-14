@@ -74,7 +74,7 @@
 
 ### 🎨 2. 極致寫作、媒體與排版體驗
 
-- **剪貼簿直貼與 R2 圖片上傳**：支援剪貼簿直接貼圖 (Paste)、檔案拖曳 (Drag &amp; Drop) 或工具列點選上傳至 Cloudflare R2，自動插入 Markdown 圖片語法。
+- **剪貼簿直貼、R2 圖片上傳與本地 OCR**：貼上或拖曳圖片時可選擇「上傳圖片」、「OCR 轉文字」或「取消」。OCR 使用官方 PP-OCRv6 瀏覽器模型，優先以 WebGPU 加速、無法使用時回退 WASM；本地 OCR 不會上傳圖片，結果會依圖片文字幾何位置排序後插入編輯器。
 - **888box 多媒體附件上傳**：工具列支援將影片、音訊、文件、壓縮檔等大檔上傳至 `box.david888.com`（具自動 fallback 機制），自動插入 `<video>`、`<audio>` 或下載連結。
 - **📊 Mermaid 與圖表懸浮工具列與一鍵複製 PNG/代碼**：所有渲染後的 Mermaid 流程圖、架構圖、循序圖與 Flowchart/Sequence/Graphviz/ABC/ECharts 圖表右上角均自動掛載毛玻璃懸浮操作列，提供「🖼️ 複製 PNG（2x 高解析透明點陣圖，可直接貼入 Slack、Notion、PPT、Word）」、「📋 複製代碼」、「📐 複製 SVG」與「💾 下載 PNG」，具備即時動畫回饋與雙語 Toast 提示。
 - **ECharts 動態圖表渲染**：支援在 Markdown 中撰寫 `echarts { JSON }`  程式碼區塊，即時渲染互動式餅圖、折線圖、柱狀圖等 ECharts 圖表。
@@ -97,7 +97,7 @@
 - **💬 GitHub Alert 提示區塊自動補完與工具列**：行首輸入 `> [!` 即時彈出 NOTE、TIP、IMPORTANT、WARNING、CAUTION 快速選單，支援鍵盤導覽與 Enter 插入；工具列同步提供「⚠️ GitHub 提示區塊」按鈕。
 - **📖 書本模式 (Book Mode - `/share/:id/book`)**：在任何包含章節清單連結的筆記進入書本模式，自動解析左側樹狀目錄欄（支援章節搜尋過濾、層級收折、當前章節高亮），支援**滑鼠與觸控拖拉調整側邊欄寬度（Splitter Resizer）**，自動保存寬度偏好並支援雙擊重設（290px）；右側採用高規格原生嵌入渲染（`?embed=1`），零秒極速切換章節，頂部提供導覽列與快捷鍵（`[` 上一章、`]` 下一章），**支援 PWA 一鍵離線預抓快取整本書**與**三合一多格式匯出（合併 Markdown、單一離線 HTML 電子書、列印 PDF）**，行動版也能安全匯出離線 HTML。
 - **📽️ 簡報模式 2D 矩陣升級 (Vertical Sub-Slides `--` & YAML)**：橫向投影片使用 `---`，縱向深入子投影片使用 `--`；支援方向鍵四向導覽（`↑` `↓` `←` `→`）與大綱總覽（`O`）2D 矩陣縮圖，文首支援 YAML 宣告自訂轉場效果（`fade`, `slide`, `zoom` 等）。
-- **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`）。
+- **📊 Excel / Google Sheets 複製貼上自動轉 Markdown 表格**：在編輯器直接貼上來自 Excel、Google Sheets、Numbers 或網頁選取的表格，自動秒轉為標準對齊的 Markdown 表格（`| ... |`），並修復選取範圍後半段造成的貼上錯誤。
 - **📝 論文級雙向註腳與毛玻璃預覽 (`[^1]` / `^[...]`)**：支援標準註腳 `[^1]` 與 Pandoc/HackMD 行內註腳 `^[說明]`，自動進行數字編號與文末清單聚合；游標懸浮註腳編號立即彈出毛玻璃卡片（Hover Popover）預覽註釋內容，點擊平滑雙向跳轉（`↩` 一鍵返回內文定位點），修復深層錨點與文章目錄 (`[TOC]`) 乾淨排版；工具列提供「插入註腳 ([^1])」快捷按鈕。
 - **📂 多格式拖曳匯入與智慧分流 (Drag & Drop File Handling)**：直接將檔案拖曳進 Markdown 編輯器：
   - **PDF 文件**：彈窗智慧分流「📑 AnyDocs 本地轉檔為 Markdown」或「☁️ 上傳至 888box 作為附件連結」。
@@ -481,7 +481,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 ### 🎨 2. Rich Editing, Media &amp; Layout
 
-- **Direct Clipboard Paste &amp; R2 Uploads**: Paste images directly from clipboard, drag-and-drop, or click the toolbar to upload to Cloudflare R2 with automatic Markdown image links.
+- **Direct Clipboard Paste, R2 Uploads &amp; Local OCR**: Pasting or dropping an image opens Upload image, Run local OCR, and Cancel choices. Local PP-OCRv6 runs in the browser with WebGPU first and WASM fallback; the image stays local during OCR and recognized lines are inserted in geometric reading order.
 - **888box Multimedia Attachments**: Upload videos, audio, documents, and archives directly to `box.david888.com` (with fallback nodes), inserting `<video>`, `<audio>`, or download links.
 - **📊 Mermaid &amp; Diagram Floating Toolbar (Copy PNG / Code / SVG / Download)**: All rendered Mermaid flowcharts, sequence diagrams, architecture graphs, and Flowchart/Sequence/Graphviz/ABC/ECharts charts automatically mount a glassmorphic floating action toolbar in the top-right corner, offering one-click "🖼️ Copy PNG" (2x high-resolution transparent image for Slack, Notion, PPT, Word), "📋 Copy Code", "📐 Copy SVG", and "💾 Download PNG" with animated feedback and bilingual toast notifications.
 - **ECharts Interactive Charts**: Render interactive ECharts graphs directly from `echarts { JSON }`  code blocks in Markdown.
@@ -509,7 +509,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **💬 GitHub Alert Autocomplete &amp; Toolbar Button**: Typing `> [!` on a new line immediately summons a popup menu to choose `NOTE`, `TIP`, `IMPORTANT`, `WARNING`, or `CAUTION` with keyboard navigation and Enter insertion; also available via toolbar button (`⚠️`).
 - **📖 Book Mode (`/share/:id/book`)**: Dual-pane reading shell with collapsible sidebar TOC, real-time chapter search filtering, active progress indicator, smooth native embed chapter loading (`?embed=1`), draggable sidebar resizer with local storage persistence and double-click reset, next/prev chapter flip cards, keyboard navigation (`[` and `]`), **PWA one-click offline pre-caching for the entire book**, and **3-in-1 multi-format export (Combined Markdown, Standalone Offline HTML eBook, and Print PDF)**, including safe standalone HTML export on mobile.
 - **📽️ 2D Vertical Sub-Slides (`--`) &amp; YAML Frontmatter**: Use `---` for horizontal slides and `--` for deep-dive vertical sub-slides with 2D arrow navigation (`↑` `↓` `←` `→`) and overview matrix (`O`); customize transitions (`fade`, `slide`, `zoom`) via top YAML frontmatter.
-- **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`).
+- **📊 Excel &amp; Google Sheets Paste Auto-Conversion**: Pasting rich tabular data (`Cmd+V` / `Ctrl+V`) from Excel, Google Sheets, or web tables into the editor automatically converts them to clean Markdown tables (`| ... |`), with the selection-tail insertion bug fixed.
 - **📂 Multi-Format Drag & Drop Import & Smart Choice Modal**: Drag files directly into the Markdown editor:
   - **PDF Documents**: Modal provides choices between "📑 AnyDocs Local Markdown Conversion" and "☁️ Upload to 888box as Attachment Link".
   - **Audio Files**: Modal provides a 3-way choice matching the menu, defaulting to "🎙️ Import audio (Transcript)", with options for "✨ Import audio (Smart format)" or "☁️ Upload to 888box Embedded `<audio controls>` Player".
