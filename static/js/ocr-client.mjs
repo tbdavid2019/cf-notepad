@@ -29,6 +29,20 @@ const validateImage = file => {
     }
 }
 
+export const toUserFacingOcrError = error => {
+    const message = String(error?.message || '').toLowerCase()
+    if (message.includes('worker') || message.includes('offscreen')) {
+        return 'OCR Worker 載入失敗，請重新整理頁面後再試。'
+    }
+    if (message.includes('webgpu') || message.includes('adapter') || message.includes('execution provider')) {
+        return '此瀏覽器的 WebGPU 不可用，請改用最新版 Chrome 或 Edge。'
+    }
+    if (message.includes('download') || message.includes('http') || message.includes('fetch') || message.includes('model asset')) {
+        return 'OCR 模型下載失敗，請確認網路連線後再試。'
+    }
+    return 'OCR 無法處理這張圖片，請換一張較清晰的圖片或重新整理頁面。'
+}
+
 const getOcrInstance = async () => {
     if (!ocrInstancePromise) {
         ocrInstancePromise = loadPaddleOcrRuntime().then(({ PaddleOCR }) => PaddleOCR.create({
@@ -65,7 +79,7 @@ export const recognizeImage = async file => {
         }
     } catch (error) {
         if (error?.message === 'No readable text was found in the image.') throw error
-        throw new Error('OCR could not process this image. Try a clearer image or another browser.')
+        throw new Error(toUserFacingOcrError(error))
     }
 }
 

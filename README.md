@@ -74,7 +74,7 @@
 
 ### 🎨 2. 極致寫作、媒體與排版體驗
 
-- **剪貼簿直貼、R2 圖片上傳與本地 OCR**：貼上或拖曳圖片時可選擇「上傳圖片」、「OCR 轉文字」或「取消」。首次 OCR 會顯示正在下載模型與執行元件的狀態，避免誤以為流程卡住。OCR 使用官方 PP-OCRv6 瀏覽器模型，優先以 WebGPU 加速、無法使用時回退 WASM；本地 OCR 不會上傳圖片，結果會依圖片文字幾何位置排序後插入編輯器。
+- **剪貼簿直貼、R2 圖片上傳與本地 OCR**：貼上或拖曳圖片時可選擇「上傳圖片」、「OCR 轉文字」或「取消」。首次 OCR 會顯示正在下載模型與執行元件的狀態，若 Worker、WebGPU 或模型下載失敗也會顯示對應處理建議。OCR 使用官方 PP-OCRv6 瀏覽器模型，優先以 WebGPU 加速、無法使用時回退 WASM；本地 OCR 不會上傳圖片，結果會依圖片文字幾何位置排序後插入編輯器。
 - **888box 多媒體附件上傳**：工具列支援將影片、音訊、文件、壓縮檔等大檔上傳至 `box.david888.com`（具自動 fallback 機制），自動插入 `<video>`、`<audio>` 或下載連結。
 - **📊 Mermaid 與圖表懸浮工具列與一鍵複製 PNG/代碼**：所有渲染後的 Mermaid 流程圖、架構圖、循序圖與 Flowchart/Sequence/Graphviz/ABC/ECharts 圖表右上角均自動掛載毛玻璃懸浮操作列，提供「🖼️ 複製 PNG（2x 高解析透明點陣圖，可直接貼入 Slack、Notion、PPT、Word）」、「📋 複製代碼」、「📐 複製 SVG」與「💾 下載 PNG」，具備即時動畫回饋與雙語 Toast 提示。
 - **ECharts 動態圖表渲染**：支援在 Markdown 中撰寫 `echarts { JSON }`  程式碼區塊，即時渲染互動式餅圖、折線圖、柱狀圖等 ECharts 圖表。
@@ -481,7 +481,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 
 ### 🎨 2. Rich Editing, Media &amp; Layout
 
-- **Direct Clipboard Paste, R2 Uploads &amp; Local OCR**: Pasting or dropping an image opens Upload image, Run local OCR, and Cancel choices. The first OCR run shows a persistent model/runtime download status so the operation is clear. Local PP-OCRv6 runs in the browser with WebGPU first and WASM fallback; the image stays local during OCR and recognized lines are inserted in geometric reading order.
+- **Direct Clipboard Paste, R2 Uploads &amp; Local OCR**: Pasting or dropping an image opens Upload image, Run local OCR, and Cancel choices. The first OCR run shows a persistent model/runtime download status, and Worker, WebGPU, or model-download failures provide actionable guidance. Local PP-OCRv6 runs in the browser with WebGPU first and WASM fallback; the image stays local during OCR and recognized lines are inserted in geometric reading order.
 - **888box Multimedia Attachments**: Upload videos, audio, documents, and archives directly to `box.david888.com` (with fallback nodes), inserting `<video>`, `<audio>`, or download links.
 - **📊 Mermaid &amp; Diagram Floating Toolbar (Copy PNG / Code / SVG / Download)**: All rendered Mermaid flowcharts, sequence diagrams, architecture graphs, and Flowchart/Sequence/Graphviz/ABC/ECharts charts automatically mount a glassmorphic floating action toolbar in the top-right corner, offering one-click "🖼️ Copy PNG" (2x high-resolution transparent image for Slack, Notion, PPT, Word), "📋 Copy Code", "📐 Copy SVG", and "💾 Download PNG" with animated feedback and bilingual toast notifications.
 - **ECharts Interactive Charts**: Render interactive ECharts graphs directly from `echarts { JSON }`  code blocks in Markdown.

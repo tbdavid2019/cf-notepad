@@ -1,8 +1,9 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 
 import { normalizeOcrItems, ocrItemsToText, insertTextAtSelection } from '../static/js/ocr-utils.mjs'
+import { toUserFacingOcrError } from '../static/js/ocr-client.mjs'
 import { MODAL } from '../src/templates/common.js'
 import { HTML } from '../src/templates/base.js'
 
@@ -20,6 +21,12 @@ test('normalizes OCR items in geometric reading order and skips empty results', 
 
     assert.deepEqual(items.map(item => item.text), ['左側', '右側', '第二行'])
     assert.equal(ocrItemsToText(items), '左側\n右側\n第二行')
+})
+
+test('maps OCR runtime failures to actionable localized-safe messages', () => {
+    assert.match(toUserFacingOcrError(new Error('Failed to construct Worker')), /Worker/)
+    assert.match(toUserFacingOcrError(new Error('WebGPU adapter unavailable')), /WebGPU/)
+    assert.match(toUserFacingOcrError(new Error('Failed to download model: HTTP 503')), /模型下載/)
 })
 
 test('inserts OCR text at the current selection with document-safe separation', () => {
@@ -64,6 +71,11 @@ test('edit pages load the local OCR client and expose both image actions', () =>
     assert.match(ocrClientSource, /ocrVersion: 'PP-OCRv6'/)
     assert.match(ocrClientSource, /backend: 'auto'/)
     assert.match(ocrClientSource, /getStatus/)
+    assert.match(readFileSync(new URL('../scripts/build-ocr-client.mjs', import.meta.url), 'utf8'), /worker-entry/)
+    const workerAssetName = readdirSync(new URL('../static/js/assets', import.meta.url)).find(name => /^worker-entry-[^/]+\.js$/.test(name))
+    assert.ok(workerAssetName)
+    assert.equal(existsSync(new URL('../static/js/assets/' + workerAssetName, import.meta.url)), true)
+    assert.doesNotMatch(readFileSync(new URL('../static/js/assets/' + workerAssetName, import.meta.url), 'utf8'), /sourceMappingURL/)
     assert.match(blockEditorSource, /window\.__insertBlockEditorImage/)
     assert.match(blockEditorSource, /handleImagePaste/)
 })
