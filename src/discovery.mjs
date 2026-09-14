@@ -61,6 +61,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 - [Home / Editor](${siteOrigin}/): Main note workspace and editor with custom themes and real-time autosave.
 - [Block Note Editor](${siteOrigin}/new/block): Instantiate a new rich BlockNote document.
 - [Markdown Note Editor](${siteOrigin}/new/markdown): Instantiate a new standard Markdown document.
+- [Local Image OCR](${siteOrigin}/new/markdown): Paste or drop an image in the editor to choose R2 upload or local PP-OCRv6 text recognition; WebGPU is preferred with WASM fallback, and OCR keeps the image on the device.
 
 ## AI Agent & API Discovery
 
@@ -100,6 +101,7 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
 - **Platform**: Cloudflare Workers + KV + R2 + D1 (SQLite)
 - **Primary Domain**: \`${siteOrigin}\`
 - **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (for BlockNote editor), Mermaid.js, ECharts, MathJax
+- **Browser OCR**: Official PaddleOCR.js PP-OCRv6 Chinese text detection and recognition, ONNX Runtime WebGPU-first with WASM fallback; OCR runtime is lazy-loaded on image action.
 - **Backend Stack**: \`itty-router\` on Cloudflare Worker runtime
 - **Data Persistence**:
   - \`NOTES\` KV Namespace: Note content & metadata storage

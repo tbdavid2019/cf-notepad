@@ -9,6 +9,7 @@
 - **Platform**: Cloudflare Workers + KV + R2 + D1 (SQLite)
 - **Primary Domain**: `https://wiki.david888.com`
 - **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (for BlockNote editor), Mermaid.js, ECharts, MathJax
+- **Browser OCR**: Official PaddleOCR.js PP-OCRv6 Chinese text detection and recognition, ONNX Runtime WebGPU-first with WASM fallback; OCR runtime is lazy-loaded on image action.
 - **Backend Stack**: `itty-router` on Cloudflare Worker runtime
 - **Data Persistence**:
   - `NOTES` KV Namespace: Note content & metadata storage

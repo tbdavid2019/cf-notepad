@@ -52,6 +52,8 @@ test('llms.txt is a concise canonical index of public agent resources following 
     assert.match(llms, /https:\/\/wiki\.david888\.com\/openapi\.json/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/\.well-known\/api-catalog/)
     assert.match(llms, /https:\/\/wiki\.david888\.com\/llms-full\.txt/)
+    assert.match(llms, /Local Image OCR/)
+    assert.match(llms, /PP-OCRv6/)
     assert.doesNotMatch(llms, /admin333|SCN_ADMIN|password=/i)
 })
 
@@ -65,6 +67,8 @@ test('llms-full.txt provides extended system documentation, API schemas, and arc
     assert.match(llmsFull, /## 4\. Security & Access Control Model/)
     assert.match(llmsFull, /## 5\. Development & Maintenance Team Credits/)
     assert.match(llmsFull, /https:\/\/wiki\.david888\.com\/api\/{path}/)
+    assert.match(llmsFull, /Browser OCR/)
+    assert.match(llmsFull, /WebGPU-first with WASM fallback/)
 })
 
 test('sitemap xml includes canonical share URLs and optional lastmod dates', () => {

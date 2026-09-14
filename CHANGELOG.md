@@ -3,6 +3,7 @@
 ## [2026-09-14]
 
 - **⏳ OCR 模型下載狀態提示 (OCR Model Loading Status)**：首次選擇本機 OCR 時，畫面會顯示「正在下載 OCR 模型與執行元件（首次使用）」的持續狀態提示；模型已初始化後則改顯示本機辨識中，避免使用者誤以為貼圖流程沒有反應。
+- **🤖 LLM Discovery 同步 OCR 能力 (LLM Discovery OCR Documentation)**：`/llms.txt`、`/llms-full.txt` 與靜態 fallback 文件同步列出圖片貼上後的本機 PP-OCRv6、WebGPU 優先／WASM fallback 與圖片留在裝置上的隱私行為。
 - **🖼️ 貼圖後 Upload / 本地 OCR 選擇與 PP-OCRv6 WebGPU 加速 (Paste Image Actions & Local OCR)**：Markdown 與 Block 編輯器貼上圖片或拖曳圖片時，新增雙語處理視窗，可選擇上傳至 R2、使用瀏覽器本地 OCR 或取消；本地 OCR 使用官方 `@paddleocr/paddleocr-js` 的 PP-OCRv6 中文模型，透過 ONNX Runtime Web 自動優先 WebGPU，無法使用時回退 WASM，辨識結果依圖片幾何座標排序後插入文字區塊，圖片不會因選擇 OCR 而上傳。
   - OCR runtime 採延遲載入，模型只在第一次選擇「OCR 轉文字」時載入；圖片輸入沿用 10MB 限制，Upload 與 OCR 均不信任副檔名並保留既有 MIME 驗證。
   - Block 編輯器支援將 OCR 文字插入目前游標區塊，或將上傳後圖片插入 `davidEmbed` 圖片區塊；所有選項支援繁體中文／英文、Escape、Tab focus trap、深色／淺色主題與行動版排版。
