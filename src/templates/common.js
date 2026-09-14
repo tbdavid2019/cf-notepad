@@ -1149,6 +1149,10 @@ export const MODAL = (lang, { noteHistoryEnabled = false } = {}) => {
         </div>
     </div>
 </div>
+<div id="ocr-status" class="ocr-status" role="status" aria-live="polite" aria-atomic="true" hidden>
+    <span class="ocr-status-indicator" aria-hidden="true"></span>
+    <span id="ocr-status-text"></span>
+</div>
 <div class="modal image-ocr-modal" role="dialog" aria-modal="true" aria-labelledby="image-ocr-title" aria-describedby="image-ocr-message" aria-hidden="true">
     <div class="modal-mask" data-modal-close></div>
     <div class="app-dialog-content image-ocr-dialog-content" data-dialog-kind="confirm">

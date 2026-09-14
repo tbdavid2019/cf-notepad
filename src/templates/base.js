@@ -4258,6 +4258,15 @@ ${getMarkdownCss()}
             $textarea.dispatchEvent(new Event('input', { bubbles: true }));
         };
 
+        const setOcrStatus = message => {
+            const status = document.querySelector('#ocr-status');
+            const text = document.querySelector('#ocr-status-text');
+            if (!status || !text) return;
+            const value = String(message || '');
+            text.textContent = value;
+            status.hidden = !value;
+        };
+
         const uploadImageToR2 = async file => {
             if (!window.ENABLE_R2) throw new Error(APP_STATE.lang === 'zh-TW' ? '圖片上傳目前未啟用。' : 'Image upload is currently disabled.');
             const formData = new FormData();
@@ -4272,15 +4281,22 @@ ${getMarkdownCss()}
             if (choice === 'cancel') return;
             if (choice === 'ocr') {
                 if (!window.cfNotepadOcr?.recognizeImage) throw new Error(APP_STATE.lang === 'zh-TW' ? 'OCR 模組尚未載入，請重新整理後再試。' : 'The OCR module is not loaded. Refresh and try again.');
-                window.showToast?.(APP_STATE.lang === 'zh-TW' ? '正在本機載入 OCR 模型，首次使用可能需要一點時間…' : 'Loading the local OCR model. The first run may take a moment…');
-                const result = await window.cfNotepadOcr.recognizeImage(file);
-                if (block) {
-                    if (typeof window.__insertBlockEditorMarkdown !== 'function') throw new Error(APP_STATE.lang === 'zh-TW' ? 'Block 編輯器尚未準備完成。' : 'The block editor is not ready.');
-                    window.__insertBlockEditorMarkdown(result.text);
-                } else {
-                    insertOcrText(result.text, start, end);
+                const isReady = window.cfNotepadOcr.getStatus?.().ready === true;
+                setOcrStatus(isReady
+                    ? (APP_STATE.lang === 'zh-TW' ? '正在本機辨識圖片…' : 'Recognizing image locally…')
+                    : (APP_STATE.lang === 'zh-TW' ? '正在下載 OCR 模型與執行元件（首次使用）…' : 'Downloading the OCR model and runtime (first use)…'));
+                try {
+                    const result = await window.cfNotepadOcr.recognizeImage(file);
+                    if (block) {
+                        if (typeof window.__insertBlockEditorMarkdown !== 'function') throw new Error(APP_STATE.lang === 'zh-TW' ? 'Block 編輯器尚未準備完成。' : 'The block editor is not ready.');
+                        window.__insertBlockEditorMarkdown(result.text);
+                    } else {
+                        insertOcrText(result.text, start, end);
+                    }
+                    window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'OCR 完成，文字已插入。' : 'OCR complete. Text inserted.');
+                } finally {
+                    setOcrStatus('');
                 }
-                window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'OCR 完成，文字已插入。' : 'OCR complete. Text inserted.');
                 return;
             }
             const url = await uploadImageToR2(file);

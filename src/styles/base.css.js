@@ -950,6 +950,41 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     .image-ocr-actions { grid-template-columns: 1fr; }
     .image-ocr-action-cancel { grid-column: auto; }
 }
+.ocr-status {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 20030;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    max-width: min(420px, calc(100vw - 36px));
+    padding: 10px 13px;
+    border: 1px solid var(--modal-border, #d0d7de);
+    border-radius: 10px;
+    background: var(--modal-bg, #fff);
+    color: var(--modal-text, #24292f);
+    box-shadow: 0 14px 32px rgba(15, 23, 42, 0.16);
+    font-size: 13px;
+    line-height: 1.4;
+}
+.ocr-status[hidden] { display: none; }
+.ocr-status-indicator {
+    width: 9px;
+    height: 9px;
+    flex: 0 0 auto;
+    border-radius: 50%;
+    background: var(--toolbar-accent, #cc785c);
+    box-shadow: 0 0 0 4px color-mix(in srgb, var(--toolbar-accent, #cc785c) 18%, transparent);
+    animation: ocrStatusPulse 1.2s ease-in-out infinite;
+}
+@keyframes ocrStatusPulse {
+    0%, 100% { opacity: 0.45; transform: scale(0.9); }
+    50% { opacity: 1; transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ocr-status-indicator { animation: none; }
+}
 
 /* SVG Icon Utility */
 .svg-icon {

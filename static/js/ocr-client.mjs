@@ -5,6 +5,7 @@ import { ocrItemsToText } from './ocr-utils.mjs'
 const MAX_OCR_IMAGE_BYTES = 10 * 1024 * 1024
 let ocrInstancePromise = null
 let paddleOcrRuntimePromise = null
+let ocrReady = false
 
 const loadPaddleOcrRuntime = async () => {
     if (!paddleOcrRuntimePromise) {
@@ -38,7 +39,10 @@ const getOcrInstance = async () => {
                 backend: 'auto',
                 disableWasmProxy: true,
             },
-        })).catch(error => {
+        })).then(instance => {
+            ocrReady = true
+            return instance
+        }).catch(error => {
             ocrInstancePromise = null
             throw error
         })
@@ -69,8 +73,11 @@ export const disposeOcr = async () => {
     const instance = await ocrInstancePromise?.catch(() => null)
     if (instance?.dispose) await instance.dispose()
     ocrInstancePromise = null
+    ocrReady = false
 }
 
+export const getStatus = () => ({ ready: ocrReady })
+
 if (typeof window !== 'undefined') {
-    window.cfNotepadOcr = { recognizeImage, disposeOcr }
+    window.cfNotepadOcr = { recognizeImage, disposeOcr, getStatus }
 }
