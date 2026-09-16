@@ -251,8 +251,61 @@ export function expandCustomColors(markdown = '') {
     }).join('\n')
 }
 
+const CURRENCY_DOLLAR_REGEX = /(^|[^\$\\])\$([0-9]+(?:,[0-9]{3})*(?:\.[0-9]+)?(?:[kKmMbBtT]|万|億)?(?:\/[a-zA-Z\u4e00-\u9fa5]+)?)(?!\$)(?=[^a-zA-Z0-9.]|(?:\.(?!\d))|$)/g
+
+const protectCurrencyOnLine = line => line.replace(
+    CURRENCY_DOLLAR_REGEX,
+    (match, prefix, amount, offset, fullStr) => {
+        const rest = fullStr.slice(offset + match.length)
+        const mathEndMatch = rest.match(/^([^$\n]*?)\$/)
+        if (mathEndMatch) {
+            const formulaBody = mathEndMatch[1]
+            const hasCjk = /[\u4e00-\u9fa5\u3040-\u30ff\uac00-\ud7af]/.test(formulaBody)
+            const hasMarkdown = /\*\*|__|\*|_|~~|\[/.test(formulaBody)
+            const closingPrecededBySpace = /\s$/.test(formulaBody)
+            const afterClosing = rest.slice(mathEndMatch[0].length)
+            const closingFollowedByDigit = /^\d/.test(afterClosing)
+            if (hasCjk || hasMarkdown || closingPrecededBySpace || closingFollowedByDigit) {
+                return prefix + '\\$' + amount
+            }
+            if (/^\s*[\+\-\*\/\=<>^_~\\a-zA-Z]/.test(formulaBody)) {
+                return match
+            }
+        }
+        return prefix + '\\$' + amount
+    },
+)
+
+const protectCurrencyOutsideInlineCode = line => {
+    const codeSpan = /(`+)(.*?)\1/g
+    let cursor = 0
+    let output = ''
+    let match
+
+    while ((match = codeSpan.exec(line)) !== null) {
+        output += protectCurrencyOnLine(line.slice(cursor, match.index))
+        output += match[0]
+        cursor = match.index + match[0].length
+    }
+    return output + protectCurrencyOnLine(line.slice(cursor))
+}
+
+export function protectCurrencyDollarSigns(markdown = '') {
+    let fence = ''
+    return String(markdown).split('\n').map(line => {
+        const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/)
+        if (fenceMatch) {
+            const marker = fenceMatch[1][0]
+            if (!fence) fence = marker
+            else if (fence === marker) fence = ''
+            return line
+        }
+        return fence ? line : protectCurrencyOutsideInlineCode(line)
+    }).join('\n')
+}
+
 export function expandMarkdownExtensions(markdown = '') {
-    return expandInlineFootnotes(expandCustomColors(expandTextHighlights(expandPandocCitations(expandHackmdImageSizes(markdown)))))
+    return expandInlineFootnotes(expandCustomColors(expandTextHighlights(expandPandocCitations(expandHackmdImageSizes(protectCurrencyDollarSigns(markdown))))))
 }
 
 export function decorateCodeBlocks(rootNode) {

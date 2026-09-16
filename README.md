@@ -226,9 +226,10 @@
 - **📖 維基百科式腳註懸停預覽 (Footnote Popover) 與 Pandoc 引用語法 (`[@key]`)**：
   - **懸停預覽**：滑鼠懸停於正文腳註 `[^1]`、`[^key]` 或引用標籤 `[@key]`，就地彈出毛玻璃卡片即時閱讀文獻內容，無須跳頁滾動。
   - **Pandoc 語法**：支援 `[@smith04]`、`[@doe2023, p. 42]`、`[@key1; @key2]` 與 `@smith04 [p. 10]`，自動對應腳註、BibTeX 或文獻清單。
-- **KaTeX 數學公式點擊複製 (7 種格式)**：
+- **KaTeX 數學公式點擊複製 (7 種格式) 與智慧貨幣金額保護**：
   - 點擊分享頁或預覽中的任一 KaTeX 數學公式即刻複製到剪貼簿。
   - 提供專屬設定選單（`fx` 按鈕），支援 7 種格式：自動判斷 (Auto)、LaTeX (含 $)、LaTeX 純文字 (無 $，適合 Desmos/WolframAlpha)、Notion (雙 $)、MathML (貼入 Word 轉為原生方程式)、PNG 圖片、SVG 向量。
+  - **💵 智慧貨幣保護 (Smart Currency Protection)**：自動辨識筆記與帳單中的貨幣金額（如 `$10.00`、`$0.32`、`$3.87`、`NT$100`、`US$50`、`$10-$20`），嚴格遵照 Pandoc 規範防範單 `$` 貪婪匹配，徹底解決金額之間的文字被誤判為公式、吞噬 `**` 粗體標籤的渲染問題；同時 100% 完美保留真實 LaTeX 數學公式（如 `$E = mc^2$`、`$10$`、`$1 + 1 = 2$`、`$10 < x < 20$`）。
 - **Share 模式「編輯 / 新增」分割膠囊鈕與外觀深淺模式直覺分組**：
   - **分割複合膠囊鈕 (Split Action Capsule in Share Mode)**：在 Share 閱讀頁面底欄左側，將「返回編輯」與「＋ 新增」整合成現代化分割膠囊。左側為「`✏️ 編輯`」主動作，右側為「`＋ ▾`」延伸選單（含「編輯目前這篇筆記」、新增 Markdown、新增 Block 與多格式匯入），大幅節省水平排版空間。
   - **最近分享紀錄 (Recent Shares in Share Mode)**：在 Share 閱讀頁面底欄提供「`最近分享紀錄`」按鈕，訪客與作者皆可在閱讀時隨時開啟彈窗，自由在「我分享的」與「我看過的」分頁切換並快速複製網址。
@@ -622,6 +623,10 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 - **Interactive Language Switcher in Editor Preference Modal**:
   - Embedded `En / 中` toggle pill buttons in the top-right of the "Choose your editor" dialog (`EDITOR_PREFERENCE_MODAL`). International visitors can switch to English with zero page reloads, instantly updating card descriptions, badges, and action buttons.
 - **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
+- **KaTeX Math Formula Copy (7 Formats) & Smart Currency Protection**:
+  - Click any KaTeX math equation in preview or share mode to copy it directly to the clipboard.
+  - Dedicated copy format menu (`fx` button) supports 7 formats: Auto Detect, LaTeX (with $), Plain LaTeX (without $, for Desmos/WolframAlpha), Notion (double $$), MathML (pastes into Microsoft Word as native formulas), PNG Image, and SVG Vector.
+  - **💵 Smart Currency Protection**: Automatically protects monetary dollar amounts (e.g. `$10.00`, `$0.32`, `$3.87`, `NT$100`, `US$50`, `$10-$20`) from being misidentified by `remark-math` as LaTeX math delimiters, preserving bold tags `**` and surrounding formatting, while flawlessly preserving genuine LaTeX equations (such as `$E = mc^2$`, `$10$`, `$1 + 1 = 2$`, and `$10 < x < 20$`).
 - **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`). Features consecutive annotation creation across multiple text passages without reloading, smooth composer auto-scrolling, hover preview cards, touch action sheets, and device HMAC delete tokens.
 - **Stateless Markdown Processing Utilities**:
   - `POST /api/markdown/render`: Markdown to HTML with 20 CSS theme choices.

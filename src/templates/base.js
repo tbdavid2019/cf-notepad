@@ -466,7 +466,7 @@ ${getMarkdownCss()}
         import rehypeKatex from 'https://esm.sh/rehype-katex@7.0.0?bundle';
         import rehypeStringify from 'https://esm.sh/rehype-stringify@10.0.0?bundle';
         import remarkBreaks from 'https://esm.sh/remark-breaks@4.0.0?bundle';
-        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks, parseBookToc, htmlOrTsvToMarkdownTable, expandInlineFootnotes } from '/js/markdown-extensions.mjs';
+        import { decorateColumnLayouts, expandHackmdImageSizes, expandPandocCitations, expandTextHighlights, expandCustomColors, expandMarkdownExtensions, decorateFootnoteAndCitationPopovers, decorateCodeBlocks, parseBookToc, htmlOrTsvToMarkdownTable, expandInlineFootnotes, protectCurrencyDollarSigns } from '/js/markdown-extensions.mjs';
         import { visit } from 'https://esm.sh/unist-util-visit@5.0.0?bundle';
         import { decorateMediaPreviews } from '/js/media-preview.mjs';
 
@@ -1151,6 +1151,7 @@ ${getMarkdownCss()}
         window.htmlOrTsvToMarkdownTable = htmlOrTsvToMarkdownTable;
         window.expandInlineFootnotes = expandInlineFootnotes;
         window.expandMarkdownExtensions = expandMarkdownExtensions;
+        window.protectCurrencyDollarSigns = protectCurrencyDollarSigns;
         window.addEventListener('hashchange', scheduleHashScroll);
         window.dispatchEvent(new Event('markdown-ready'));
 
@@ -6807,7 +6808,7 @@ themeCss + '\\n' +
             var slidesDiv = container.querySelector('.slides');
 
             function processSlideChunk(c, chunkIndex, isVertical) {
-                var processed = c.trim();
+                var processed = typeof window.expandMarkdownExtensions === 'function' ? window.expandMarkdownExtensions(c.trim()) : c.trim();
                 var isCover = false;
                 var slideBg = '';
 

@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-09-16]
+
+- **💵 智慧貨幣金額符號保護與 KaTeX 數學公式衝突防護 (Smart Currency Dollar Protection & KaTeX Math Collision Prevention)**：
+  - **根除金額誤判為公式問題**：解決在筆記或帳單中出現多個美元／貨幣符號（如 `- **8 月帳單 ($10.00)** ：為 8 月份滿 31 天的用量結算 (每日 $0.32 × 31天)。`）時，因 `remark-math` / KaTeX 單字元 `$` 匹配導致兩個金額符號之間的文字被誤判為 LaTeX 數學公式、進而吞掉 `**` 粗體閉合標記並彈出「已複製公式（自動判斷）」的長期痛點。
+  - **智慧貨幣偵測演算法 (`protectCurrencyDollarSigns`)**：
+    - 自動辨識以單 `$` 開頭之金額、千分位、小數、單位（如 `$10.00`、`$3.87`、`$0.32`、`$1,000`、`$50/mo`、`$10 - $20`、`NT$100`、`US$50`、`約 $500 萬`）。
+    - 依據 Pandoc / CommonMark 規範嚴格校驗：若閉合 `$` 後緊跟數字（如 `$0.32`），或公式內容包含 CJK 中文字元、Markdown 語法（`**`、`__`）與行末空白，一律精準辨識為貨幣文字而非數學公式。
+    - 在 Markdown 渲染前自動施加標準轉義（`\$`），由 CommonMark 乾淨輸出原生文字與完整保留粗體 `<strong>`。
+  - **嚴格保留真實 LaTeX 數學公式與程式碼區塊**：
+    - 真實行內公式（如 `$E = mc^2$`、`$10$`、`$1 + 1 = 2$`、`$10 < x < 20$`、`$10 \le x$`）與區塊公式（`$$...$$`）100% 完整保留。
+    - 行內程式碼（`` `$10.00` ``）與 Fenced Code Blocks 內部一律不予更動。
+  - **全鏈路同步支援**：
+    - 前端預覽與分享頁（`markdown-extensions.mjs` -> `window.renderMarkdown`）
+    - 簡報模式（`base.js` Slidev 簡報引擎）
+    - 離線工作台（`offline_page.js` PWA 模式）
+    - 邊緣端無狀態處理器與 PDF 導出服務（`markdown-processor.mjs` -> `renderMarkdownToHtml`）
+
 ## [2026-09-14]
 
 - **🛡️ OCR 客戶端動態載入防護與錯誤提示修正 (Dynamic OCR Import Fallback & Error Dialog Fix)**：在編輯器執行圖片文字辨識或表格辨識時，加入 `ensureOcrClient` 動態載入防護，若 `<script type="module">` 尚未執行完畢，自動即時補齊載入 `/js/ocr-client.mjs`，根除「OCR 模組尚未載入」的時序競爭錯誤；同時修正錯誤對話框，非上傳之辨識錯誤正確顯示「辨識失敗」而非「上傳失敗」。

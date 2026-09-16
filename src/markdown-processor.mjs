@@ -4,6 +4,7 @@
  */
 
 import { THEMES } from './theme_data.js'
+import { protectCurrencyDollarSigns } from '../static/js/markdown-extensions.mjs'
 
 /**
  * Escapes HTML characters
@@ -26,6 +27,7 @@ function escapeHtml(str) {
  */
 export function renderMarkdownToHtml(markdown = '', options = {}) {
     if (typeof markdown !== 'string') markdown = String(markdown || '')
+    markdown = protectCurrencyDollarSigns(markdown)
     const { theme = 'claude-canvas', fullHtml = false, title = 'Document' } = options
 
     const lines = markdown.split(/\r?\n/)
@@ -96,7 +98,7 @@ export function renderMarkdownToHtml(markdown = '', options = {}) {
         res = res.replace(/~~([^~]+)~~/g, '<del>$1</del>')
 
         // Math inline: $...$
-        res = res.replace(/\$([^$\n]+)\$/g, '<span class="math-inline">$1</span>')
+        res = res.replace(/(?<!\\)\$([^$\n]+?)(?<!\\)\$/g, '<span class="math-inline">$1</span>')
 
         // Highlight: ==text==
         res = res.replace(/==([^=\n]+)==/g, '<mark class="markdown-highlight">$1</mark>')
@@ -123,6 +125,9 @@ export function renderMarkdownToHtml(markdown = '', options = {}) {
 
         // Links: [text](url)
         res = res.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>')
+
+        // Unescape literal dollar signs that were escaped for currency protection
+        res = res.replace(/\\(\$)/g, '$1')
 
         return res
     }

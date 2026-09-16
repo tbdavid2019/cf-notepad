@@ -15,6 +15,7 @@ import {
     expandInlineFootnotes,
     htmlOrTsvToMarkdownTable,
     parseBookToc,
+    protectCurrencyDollarSigns,
 } from '../static/js/markdown-extensions.mjs'
 
 const baseTemplate = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -281,5 +282,61 @@ test('decorates footnotes section with id and resolves footnote targets safely',
     assert.equal(section.id, 'footnotes')
     assert.match(markdownCss, /\.footnotes,\s*\[data-footnotes\]/)
     assert.match(baseTemplate, /heading\.classList\.contains\('sr-only'\)/)
+})
+
+test('protectCurrencyDollarSigns escapes standalone and billing currency amounts while preserving LaTeX math', () => {
+    // Exact user scenario with billing notes
+    const billingNote = '- **8 月帳單 ($10.00)** ：為 8 月份滿 31 天的用量結算 (每日 $0.32 × 31天)。'
+    const protectedBilling = protectCurrencyDollarSigns(billingNote)
+    assert.equal(
+        protectedBilling,
+        '- **8 月帳單 (\\$10.00)** ：為 8 月份滿 31 天的用量結算 (每日 \\$0.32 × 31天)。',
+    )
+
+    const singleBilling = '- **7 月帳單 ($3.87)**：為 7 月期間的部分用量結算。'
+    assert.equal(
+        protectCurrencyDollarSigns(singleBilling),
+        '- **7 月帳單 (\\$3.87)**：為 7 月期間的部分用量結算。',
+    )
+
+    // Various currency expressions
+    assert.equal(
+        protectCurrencyDollarSigns('Price: $10 - $20, or $100 ~ $200. Total $1,234.50.'),
+        'Price: \\$10 - \\$20, or \\$100 ~ \\$200. Total \\$1,234.50.',
+    )
+    assert.equal(
+        protectCurrencyDollarSigns('Plans: Basic ($5/mo), Pro ($15/mo), Enterprise ($50/mo).'),
+        'Plans: Basic (\\$5/mo), Pro (\\$15/mo), Enterprise (\\$50/mo).',
+    )
+    assert.equal(
+        protectCurrencyDollarSigns('Amounts: NT$100, US$50, $0, $0.000336.'),
+        'Amounts: NT\\$100, US\\$50, \\$0, \\$0.000336.',
+    )
+
+    // Genuine LaTeX math must NOT be escaped
+    assert.equal(protectCurrencyDollarSigns('$E = mc^2$'), '$E = mc^2$')
+    assert.equal(protectCurrencyDollarSigns('$10$'), '$10$')
+    assert.equal(protectCurrencyDollarSigns('$10.5$'), '$10.5$')
+    assert.equal(protectCurrencyDollarSigns('$1 + 1 = 2$'), '$1 + 1 = 2$')
+    assert.equal(protectCurrencyDollarSigns('$10 < x < 20$'), '$10 < x < 20$')
+    assert.equal(protectCurrencyDollarSigns('$10 \\le x$'), '$10 \\le x$')
+    assert.equal(protectCurrencyDollarSigns('$$\nx = 10\n$$'), '$$\nx = 10\n$$')
+
+    // Code block and inline code must be preserved
+    assert.equal(protectCurrencyDollarSigns('`$10.00` and `$0.32`'), '`$10.00` and `$0.32`')
+    const codeBlock = '```\n$10.00\n$0.32\n```'
+    assert.equal(protectCurrencyDollarSigns(codeBlock), codeBlock)
+
+    // Already escaped dollar signs are not double-escaped
+    assert.equal(protectCurrencyDollarSigns('\\$100'), '\\$100')
+})
+
+test('expandMarkdownExtensions integrates protectCurrencyDollarSigns into the extension pipeline', () => {
+    const input = '- **8 月帳單 ($10.00)** ：為 8 月份滿 31 天的用量結算 (每日 $0.32 × 31天)。'
+    const expanded = expandMarkdownExtensions(input)
+    assert.equal(
+        expanded,
+        '- **8 月帳單 (\\$10.00)** ：為 8 月份滿 31 天的用量結算 (每日 \\$0.32 × 31天)。',
+    )
 })
 

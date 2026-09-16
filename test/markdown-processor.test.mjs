@@ -62,3 +62,20 @@ test('lintMarkdownText catches unclosed code fence and missing heading space', (
     assert.match(result.fixedMarkdown, /# HeadingWithoutSpace/)
     assert.match(result.fixedMarkdown, /```$/)
 })
+
+test('renderMarkdownToHtml protects currency amounts and correctly bolds billing notes', () => {
+    const md = `- **7 月帳單 ($3.87)**：為 7 月期間的部分用量結算。\n- **8 月帳單 ($10.00)** ：為 8 月份滿 31 天的用量結算 (每日 $0.32 × 31天)。`
+    const html = renderMarkdownToHtml(md)
+    assert.match(html, /<strong>7 月帳單 \(\$3\.87\)<\/strong>/)
+    assert.match(html, /<strong>8 月帳單 \(\$10\.00\)<\/strong>/)
+    assert.match(html, /每日 \$0\.32 × 31天/)
+    assert.doesNotMatch(html, /class="math-inline"/)
+})
+
+test('renderMarkdownToHtml still renders real inline LaTeX math', () => {
+    const md = `Formula: $E = mc^2$ and $1 + 1 = 2$`
+    const html = renderMarkdownToHtml(md)
+    assert.match(html, /<span class="math-inline">E = mc\^2<\/span>/)
+    assert.match(html, /<span class="math-inline">1 \+ 1 = 2<\/span>/)
+})
+
