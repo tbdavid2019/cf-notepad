@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef } from 'react'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     ReactFlow,
     Background,
@@ -38,9 +38,29 @@ export function Diagram({ store }) {
     const rawNodes = store(selectNodes)
     const rawEdges = store(selectEdges)
     const isEdit = store(selectIsEdit)
+    const [isNarrowViewport, setIsNarrowViewport] = useState(() => (
+        typeof window !== 'undefined' && window.matchMedia?.('(max-width: 640px)').matches === true
+    ))
 
     const reactFlowInstance = useReactFlow()
     setReactFlowInstance(reactFlowInstance)
+
+    useEffect(() => {
+        if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return undefined
+        const media = window.matchMedia('(max-width: 640px)')
+        const handleViewportModeChange = () => setIsNarrowViewport(media.matches)
+        handleViewportModeChange()
+        media.addEventListener?.('change', handleViewportModeChange)
+        return () => media.removeEventListener?.('change', handleViewportModeChange)
+    }, [])
+
+    useEffect(() => {
+        reactFlowInstance.fitView({
+            minZoom: isNarrowViewport ? 0.85 : 0.1,
+            maxZoom: 1,
+            padding: isNarrowViewport ? 0.08 : 0.2,
+        })
+    }, [isNarrowViewport, reactFlowInstance])
 
     const dragSnapshotRef = useRef(null)
     const resizeSnapshotRef = useRef(null)
@@ -203,7 +223,11 @@ export function Diagram({ store }) {
                 elementsSelectable={true}
                 elevateEdgesOnSelect={true}
                 fitView
-                fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
+                fitViewOptions={{
+                    minZoom: isNarrowViewport ? 0.85 : 0.1,
+                    maxZoom: 1,
+                    padding: isNarrowViewport ? 0.08 : 0.2,
+                }}
                 minZoom={0.1}
                 maxZoom={2.5}
                 deleteKeyCode={['Backspace', 'Delete']}
