@@ -1,11 +1,16 @@
 /**
  * Infinite Canvas Editor entry point
- * Defaults to Canvas v2 (Ameliorate architecture), with runtime switch to legacy
- * via ?v=legacy, ?canvas_version=legacy, or window/localStorage CANVAS_EDITOR_VERSION=legacy.
+ * Canvas v2 (Ameliorate architecture) with JSON Canvas 1.0 standard.
  */
 
-import { mountCanvasEditor as mountV2 } from './canvas-v2/index.jsx'
-import { mountCanvasEditor as mountLegacy } from './canvas-legacy/index.jsx'
+import { mountCanvasEditor } from './canvas-v2/index.jsx'
+
+// Clean up any stale legacy flag to guarantee zero legacy regression
+if (typeof localStorage !== 'undefined') {
+    try {
+        localStorage.removeItem('CANVAS_EDITOR_VERSION')
+    } catch {}
+}
 
 const root = document.querySelector('#canvas-editor')
 const source = document.querySelector('#contents')
@@ -13,11 +18,5 @@ if (!root || !source) throw new Error('Canvas editor requires #canvas-editor and
 
 const isEditableMode = root.getAttribute('data-editable') === 'true' || window.APP_STATE?.isEdit === true
 
-const searchParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '')
-const versionOverride = searchParams.get('canvas_version') || searchParams.get('v') || (typeof window !== 'undefined' ? window.CANVAS_EDITOR_VERSION : null) || (typeof localStorage !== 'undefined' ? localStorage.getItem('CANVAS_EDITOR_VERSION') : null)
+mountCanvasEditor(root, source, { isEdit: isEditableMode })
 
-if (versionOverride === 'legacy' || versionOverride === 'v1') {
-    mountLegacy(root, source, { isEdit: isEditableMode })
-} else {
-    mountV2(root, source, { isEdit: isEditableMode })
-}

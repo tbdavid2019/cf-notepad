@@ -2,6 +2,12 @@
 
 ## [2026-09-17]
 
+- **🔥 徹底拔除舊版 Canvas 遺留代碼與本機降級開關（Total Elimination of Legacy Canvas Fallback & State Serialization Hardening）**：
+  - 徹底刪除 `static/js/canvas-legacy/` 全部目錄與代碼，不再保留任何降級分支或舊架構包袱。
+  - 在 `static/js/canvas-editor.jsx` 移除 `mountLegacy`，自動清除瀏覽器殘留之 `CANVAS_EDITOR_VERSION` 本機 localStorage 標記，強制所有存取一律直接進入 Canvas v2，杜絕用戶瀏覽器因舊快取跳回舊架構。
+  - 在 `jsonCanvasAdapter.mjs` 修復思考節點類型（`nodeType`）在 JSON Canvas 序列化／反序列化中的遺漏問題，確保 `Detriment`、`Problem`、`Solution` 等思考節點在存檔與重新載入後 100% 維持對應的角標淺底深字高對比樣式，不再誤退回預設或自訂混色。
+  - 靜態資產快取穿透版本號全面遞增至 `v=2.3`（`/js/canvas-editor.bundle.mjs?v=2.3` 與 `bundle.css?v=2.3`），確保客戶端即刻載入最新編譯檔案。
+
 - **🐛 修復建立新筆記路由報錯 `Worker Error: initialContent is not defined`（Fixed createNewNote ReferenceError）**：
   - 修復 `src/index.js` 中 `createNewNote(request, editorFormat)` 存取 `/new/canvas`、`/new/block`、`/new/markdown` 時，因未事先宣告 `let initialContent = ''` 導致嚴格模式拋出 uncaught `ReferenceError: initialContent is not defined` 造成 Worker 500 錯誤之重大問題。
   - 為 `/new/canvas`、`/new/block`、`/new/markdown` 與帶有 share 參數的建立流程補齊完整的自動化單元測試（`test/new-note-entry.test.mjs`），確保新建重定向與預設筆記儲存 100% 穩定無誤。

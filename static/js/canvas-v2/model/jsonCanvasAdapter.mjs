@@ -9,6 +9,7 @@ import {
     DEFAULT_EDGE_COLOR,
     DEFAULT_EDGE_WIDTH,
     DEFAULT_EDGE_STYLE,
+    getNodeTypeConfig,
 } from './canvasTypes.mjs'
 
 export function resolveColorHex(color) {
@@ -69,6 +70,8 @@ export function jsonCanvasToStoreState(doc) {
         if (isSticky) {
             nodeDavid888.cardType = 'sticky'
         }
+        const effectiveNodeType = nodeDavid888.nodeType || (isSticky ? 'sticky' : undefined) || getNodeTypeConfig(null, color)?.id || 'note'
+        nodeDavid888.nodeType = effectiveNodeType
 
         return {
             id: String(id),
@@ -83,6 +86,7 @@ export function jsonCanvasToStoreState(doc) {
             },
             data: {
                 text: text ?? '',
+                nodeType: effectiveNodeType,
                 file: file ?? '',
                 subpath: subpath ?? '',
                 url: url ?? '',
@@ -244,6 +248,9 @@ export function storeStateToJsonCanvas(state) {
             ...base,
             type: 'text',
             text: node.data?.text ?? '',
+        }
+        if (node.data?.nodeType) {
+            david888.nodeType = node.data.nodeType
         }
         if (Object.keys(david888).length > 0) {
             out.david888 = david888

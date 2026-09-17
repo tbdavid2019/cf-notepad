@@ -213,3 +213,42 @@ test('preserves 100% round-trip fidelity for unknown root, node, and edge extens
     assert.equal(exportedEdge.david888.glowEffect, true)
 })
 
+test('jsonCanvasAdapter preserves Ameliorate nodeType across deserialization and serialization', () => {
+    const doc = {
+        nodes: [
+            {
+                id: 'n-detriment',
+                type: 'text',
+                x: 10,
+                y: 10,
+                width: 200,
+                height: 80,
+                text: 'High Risk',
+                color: '#e11d48',
+                david888: { nodeType: 'detriment' },
+            },
+            {
+                id: 'n-solution',
+                type: 'text',
+                x: 240,
+                y: 10,
+                width: 200,
+                height: 80,
+                text: 'Mitigation',
+                color: '#2563eb',
+                david888: { nodeType: 'solution' },
+            },
+        ],
+        edges: [],
+    }
+
+    const state = jsonCanvasToStoreState(doc)
+    assert.equal(state.nodes[0].data.nodeType, 'detriment')
+    assert.equal(state.nodes[1].data.nodeType, 'solution')
+
+    const reExported = storeStateToJsonCanvas(state)
+    assert.equal(reExported.nodes[0].david888.nodeType, 'detriment')
+    assert.equal(reExported.nodes[1].david888.nodeType, 'solution')
+})
+
+
