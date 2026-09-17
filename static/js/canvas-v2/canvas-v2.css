@@ -702,6 +702,36 @@
 
 /* Narrow Viewport */
 @media (max-width: 640px) {
+    .canvas-node-top {
+        height: 30px;
+        min-height: 30px;
+    }
+
+    .canvas-node-type-badge {
+        height: 28px;
+        min-height: 28px;
+        padding: 0 9px 0 8px;
+        gap: 5px;
+        font-size: 16px !important;
+    }
+
+    .canvas-node-type-icon {
+        font-size: 15px;
+    }
+
+    .canvas-node-type-text {
+        font-size: 16px !important;
+        line-height: 1;
+    }
+
+    .ameliorate-node-text {
+        font-size: 16px !important;
+    }
+
+    .canvas-node-markdown {
+        font-size: 15px !important;
+    }
+
     .canvas-main-toolbar {
         bottom: 12px;
         max-width: calc(100vw - 24px);

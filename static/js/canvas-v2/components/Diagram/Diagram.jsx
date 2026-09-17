@@ -56,7 +56,7 @@ export function Diagram({ store }) {
 
     useEffect(() => {
         reactFlowInstance.fitView({
-            minZoom: isNarrowViewport ? 0.85 : 0.1,
+            minZoom: isNarrowViewport ? 1 : 0.1,
             maxZoom: 1,
             padding: isNarrowViewport ? 0.08 : 0.2,
         })
@@ -224,7 +224,7 @@ export function Diagram({ store }) {
                 elevateEdgesOnSelect={true}
                 fitView
                 fitViewOptions={{
-                    minZoom: isNarrowViewport ? 0.85 : 0.1,
+                    minZoom: isNarrowViewport ? 1 : 0.1,
                     maxZoom: 1,
                     padding: isNarrowViewport ? 0.08 : 0.2,
                 }}
