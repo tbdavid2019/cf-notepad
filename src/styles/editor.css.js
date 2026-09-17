@@ -1207,185 +1207,307 @@ textarea#contents {
 }
 
 .david-canvas-app .react-flow__handle {
-    width: 12px;
-    height: 12px;
-    min-width: 12px;
-    min-height: 12px;
+    width: 9px;
+    height: 9px;
+    min-width: 9px;
+    min-height: 9px;
     border: 2px solid #ffffff;
-    background: #2563a6;
-    box-shadow: 0 1px 4px rgba(15, 45, 80, 0.35);
+    background: #3b82f6;
+    border-radius: 50%;
+    opacity: 0;
+    transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
+.david-canvas-app .canvas-node-card:hover .react-flow__handle,
+.david-canvas-app .canvas-node-card.is-selected .react-flow__handle,
+.david-canvas-app .canvas-group-node:hover .react-flow__handle,
+.david-canvas-app .canvas-group-node.is-selected .react-flow__handle {
+    opacity: 0.85;
+}
+
+.david-canvas-app .react-flow__handle:hover,
 .david-canvas-app .react-flow__handle.connectionindicator:hover,
 .david-canvas-app .react-flow__handle.connecting,
 .david-canvas-app .react-flow__handle.valid {
-    background: #f59e0b;
+    opacity: 1 !important;
+    background: #2563eb;
     border-color: #ffffff;
-    transform: translate(-50%, -50%) scale(1.25);
+    transform: translate(-50%, -50%) scale(1.3);
 }
 
+.david-canvas-app .react-flow__handle-right:hover,
 .david-canvas-app .react-flow__handle-right.connectionindicator:hover,
 .david-canvas-app .react-flow__handle-right.connecting,
 .david-canvas-app .react-flow__handle-right.valid {
-    transform: translate(50%, -50%) scale(1.25);
+    transform: translate(50%, -50%) scale(1.3);
 }
 
+.david-canvas-app .react-flow__handle-bottom:hover,
 .david-canvas-app .react-flow__handle-bottom.connectionindicator:hover,
 .david-canvas-app .react-flow__handle-bottom.connecting,
 .david-canvas-app .react-flow__handle-bottom.valid {
-    transform: translate(-50%, 50%) scale(1.25);
+    transform: translate(-50%, 50%) scale(1.3);
+}
+
+.canvas-node-card {
+    position: relative;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 4px 12px rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
 .canvas-node-card.is-light {
     background: #ffffff;
-    border: 1px solid #d0d7de;
-    color: #24292f;
+    border: 1px solid rgba(0, 0, 0, 0.09);
+    color: #1e293b;
 }
 
 .canvas-node-card.is-dark {
     background: #1e1e24;
-    border: 1px solid #3d444d;
-    color: #e6edf3;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #f1f5f9;
 }
 
 .david-canvas-app.theme-dark .canvas-node-card.is-light,
 .david-canvas-app.theme-dark .canvas-group-node.is-light {
     background: #1e1e24;
-    border-color: #3d444d;
-    color: #e6edf3;
+    border-color: rgba(255, 255, 255, 0.12);
+    color: #f1f5f9;
 }
 
 .david-canvas-app.theme-dark .canvas-node-card.is-dark,
 .david-canvas-app.theme-dark .canvas-group-node.is-dark {
-    color: #e6edf3;
+    color: #f1f5f9;
 }
 
-.canvas-card-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 12px;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.2);
-    user-select: none;
-    cursor: grab;
+.canvas-node-card.is-selected {
+    box-shadow: 0 0 0 2px #3b82f6, 0 8px 24px rgba(59, 130, 246, 0.16) !important;
 }
 
-.canvas-card-header-title {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: var(--canvas-font-label);
-    font-weight: 650;
-    line-height: 1.25;
-    opacity: 0.8;
-}
-
-.canvas-card-header-actions {
+/* Hover Actions Button (top-right, zero document flow impact) */
+.canvas-card-hover-actions {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    z-index: 5;
     display: flex;
     align-items: center;
     gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+    pointer-events: none;
+}
+
+.canvas-node-card:hover .canvas-card-hover-actions,
+.canvas-node-card.is-selected .canvas-card-hover-actions {
+    opacity: 0.85;
+    pointer-events: auto;
+}
+
+.canvas-card-hover-actions:hover {
+    opacity: 1 !important;
 }
 
 .canvas-btn-icon {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     padding: 0;
-    border-radius: 4px;
-    border: none;
-    background: transparent;
+    border-radius: 6px;
+    border: 1px solid rgba(128, 128, 128, 0.2);
+    background: rgba(255, 255, 255, 0.88);
     cursor: pointer;
-    font-size: 13px;
-    color: inherit;
-    opacity: 0.7;
-    transition: opacity 0.15s, background-color 0.15s;
+    font-size: 11px;
+    color: #334155;
+    transition: all 0.12s ease;
+    backdrop-filter: blur(8px);
+}
+
+.david-canvas-app.theme-dark .canvas-btn-icon {
+    background: rgba(30, 30, 36, 0.88);
+    color: #e2e8f0;
+    border-color: rgba(255, 255, 255, 0.15);
 }
 
 .canvas-btn-icon:hover {
-    opacity: 1;
-    background: rgba(128, 128, 128, 0.15);
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .canvas-btn-delete:hover {
-    color: #cf222e;
-    background: rgba(207, 34, 46, 0.15);
+    color: #ef4444 !important;
+    border-color: rgba(239, 68, 68, 0.3) !important;
+    background: rgba(254, 242, 242, 0.9) !important;
 }
 
+/* Card Body & Scrollbar */
 .canvas-card-body {
     flex: 1;
-    padding: 10px 14px;
+    padding: 12px 14px;
     overflow-y: auto;
-    font-size: var(--canvas-font-body);
-    line-height: var(--canvas-line-body);
+    font-size: 13.5px;
+    line-height: 1.45;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(128, 128, 128, 0.25) transparent;
 }
 
+.canvas-card-body::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+}
+
+.canvas-card-body::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.canvas-card-body::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.25);
+    border-radius: 4px;
+}
+
+.canvas-card-body::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.45);
+}
+
+/* Card Textarea in edit mode */
 .canvas-card-textarea {
     width: 100%;
     height: 100%;
-    min-height: 80px;
+    min-height: 60px;
     border: none;
     outline: none;
     background: transparent;
     color: inherit;
-    font-family: var(--editor-font-family, monospace);
-    font-size: 13px;
-    line-height: 1.5;
+    font-family: inherit;
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
     resize: none;
     padding: 0;
     margin: 0;
+    box-sizing: border-box;
 }
 
-.canvas-card-markdown-preview {
+/* Strictly scoped Markdown Preview inside Canvas Cards */
+.david-canvas-app .canvas-card-markdown-preview.markdown-body {
     font-family: inherit;
-    font-size: var(--canvas-font-body);
-    line-height: var(--canvas-line-body);
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+    color: inherit !important;
+    background: transparent !important;
 }
 
-.canvas-card-title-text,
-.canvas-wiki-title,
-.canvas-group-label {
-    font-family: inherit;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body > :first-child {
+    margin-top: 0 !important;
 }
 
-.canvas-wiki-title {
-    font-size: var(--canvas-font-body);
-    line-height: 1.4;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body > :last-child {
+    margin-bottom: 0 !important;
 }
 
-.canvas-group-label {
-    font-size: var(--canvas-font-label);
-    line-height: 1.35;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body :is(h1, h2, h3, h4, h5, h6) {
+    margin-top: 2px !important;
+    margin-bottom: 6px !important;
+    padding-bottom: 0 !important;
+    border-bottom: none !important;
+    line-height: 1.35 !important;
+    color: inherit !important;
 }
 
-.canvas-card-markdown-preview h1,
-.canvas-card-markdown-preview h2,
-.canvas-card-markdown-preview h3 {
-    margin-top: 4px;
-    margin-bottom: 8px;
-    font-size: 1.1em;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body h1 {
+    font-size: 15.5px !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
 }
 
-.canvas-card-markdown-preview p {
-    margin-top: 0;
-    margin-bottom: 6px;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body h2 {
+    font-size: 14.5px !important;
+    font-weight: 700 !important;
 }
 
-.david-canvas-app.theme-dark .canvas-card-markdown-preview h1,
-.david-canvas-app.theme-dark .canvas-card-markdown-preview h2 {
-    border-color: rgba(230, 237, 243, 0.2);
+.david-canvas-app .canvas-card-markdown-preview.markdown-body h3 {
+    font-size: 14px !important;
+    font-weight: 650 !important;
 }
 
-.david-canvas-app.theme-dark .canvas-card-markdown-preview blockquote {
-    color: #aab7c4;
-    border-color: #526171;
+.david-canvas-app .canvas-card-markdown-preview.markdown-body :is(h4, h5, h6) {
+    font-size: 13.5px !important;
+    font-weight: 600 !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body p {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+    color: inherit !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body :is(ul, ol) {
+    margin-top: 0 !important;
+    margin-bottom: 6px !important;
+    padding-left: 18px !important;
+    font-size: 13.5px !important;
+    line-height: 1.45 !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body li {
+    margin-top: 0 !important;
+    margin-bottom: 2px !important;
+    line-height: 1.45 !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body li p {
+    margin: 0 !important;
+    display: inline !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body blockquote {
+    margin: 6px 0 !important;
+    padding: 2px 8px !important;
+    border-left: 3px solid rgba(128, 128, 128, 0.4) !important;
+    color: inherit !important;
+    opacity: 0.88;
+    background: transparent !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body hr {
+    margin: 8px 0 !important;
+    height: 1px !important;
+    padding: 0 !important;
+    border: none !important;
+    background: rgba(128, 128, 128, 0.2) !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body pre {
+    margin: 6px 0 !important;
+    padding: 6px 8px !important;
+    font-size: 12px !important;
+    border-radius: 6px !important;
+    line-height: 1.4 !important;
+}
+
+.david-canvas-app .canvas-card-markdown-preview.markdown-body code {
+    font-size: 0.9em !important;
+    padding: 1px 4px !important;
 }
 
 /* Sticky Note Node */
 .canvas-card-sticky {
     border: 1px solid rgba(0, 0, 0, 0.08);
-    color: #212529 !important;
+}
+
+.canvas-sticky-body {
+    padding: 12px 14px;
+}
+
+.canvas-sticky-textarea {
+    color: inherit !important;
 }
 
 .canvas-group-node {
@@ -1425,19 +1547,12 @@ textarea#contents {
     white-space: nowrap;
 }
 
-.canvas-sticky-header {
-    border-bottom: 1px dashed rgba(0, 0, 0, 0.12);
-}
-
-.canvas-sticky-textarea {
-    color: #212529 !important;
-}
-
-/* Wiki Note Card */
+/* Wiki Note Card & Link Nodes */
 .canvas-wiki-body {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 10px 14px;
 }
 
 .canvas-wiki-content {
@@ -1445,39 +1560,65 @@ textarea#contents {
     flex-direction: column;
     align-items: center;
     gap: 8px;
-    text-align: center;
+    width: 100%;
 }
 
 .canvas-wiki-title {
-    font-weight: 600;
-    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 650;
+    font-size: 13.5px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .canvas-wiki-link {
-    display: inline-block;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
     border-radius: 6px;
     background: var(--toolbar-accent, #0969da);
     color: #fff !important;
     text-decoration: none;
     font-size: 12px;
-    font-weight: 500;
+    font-weight: 550;
+    transition: opacity 0.15s;
+}
+
+.canvas-wiki-link:hover {
+    opacity: 0.9;
 }
 
 .canvas-wiki-edit-form {
     display: flex;
+    align-items: center;
     gap: 6px;
     width: 100%;
 }
 
-.canvas-wiki-input {
+.canvas-wiki-input-wrap {
     flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 4px 8px;
     border: 1px solid var(--toolbar-border, #d0d7de);
     border-radius: 6px;
+    background: rgba(128, 128, 128, 0.08);
+}
+
+.canvas-wiki-input {
+    flex: 1;
+    border: none;
+    outline: none;
     font-size: 12px;
     background: transparent;
     color: inherit;
+    min-width: 0;
 }
 
 .canvas-btn-primary {

@@ -70,7 +70,7 @@ function normalizeNode(node) {
     }
 }
 
-function normalizeCanvasDocument(value) {
+export function normalizeCanvasDocument(value) {
     if (!isPlainObject(value)) throw new TypeError('Canvas document must be an object')
     return {
         ...value,

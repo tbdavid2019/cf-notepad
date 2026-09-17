@@ -293,3 +293,15 @@ test('validateCanvasDocument rejects unsupported edge presentation extensions', 
 
     assert.throws(() => validateCanvasDocument(doc), /lineStyle is invalid/)
 })
+
+test('canvas editor eliminates fake window header bars and uses solid card color blocks and scoped typography', () => {
+    assert.match(canvasEditorSource, /resolveCardBlockColors/)
+    assert.match(canvasEditorSource, /canvas-card-hover-actions/)
+    assert.doesNotMatch(canvasEditorSource, /canvas-card-header-title/)
+    assert.doesNotMatch(canvasEditorSource, /筆記卡片.*Note Card/)
+    assert.match(editorCssSource, /\.canvas-card-hover-actions/)
+    assert.match(editorCssSource, /\.canvas-card-markdown-preview\.markdown-body :is\(h1, h2, h3, h4, h5, h6\)/)
+    assert.match(editorCssSource, /border-bottom: none !important/)
+    assert.match(canvasEditorSource, /normalizeCanvasDocument\(parsed\)/)
+})
+

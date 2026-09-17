@@ -2,6 +2,13 @@
 
 ## [2026-09-17]
 
+- **🎨 Canvas 畫布視覺架構全面現代化與發布同步修復 (Canvas Card Modernization, Zero-Chrome Polish & Robust Publish Sync)**：
+  - **徹底移除卡片擬窗頂欄 (Zero Header Blank Space)**：消除卡片頂部「📄 筆記卡片」與「📌」視窗標題列及分割線，釋放 100% 空間給筆記正文；操作統一集中於選取時的浮動工具列（NodeToolbar）與卡片右上角懸停無佔位按鈕（`canvas-card-hover-actions`），零留白浪費，全面對齊 React Flow、Obsidian Canvas、Miro 與 FigJam 的簡約現代風格。
+  - **真正實心色塊填滿 (Solid Card Color Blocks)**：解決點擊色彩只改框線的痛點，調色盤現在會直接為卡片鋪設舒適飽滿的實心色塊（紅、橙、黃、綠、藍、紫及自訂色彩），並自動計算深淺色主題對應的高對比文字與邊框色。
+  - **統一遍歷卡片字體與縮距 (Harmonized Scoped Typography)**：卡片內 `.markdown-body` 標題重構為精緻的 15.5px / 14.5px / 14px，徹底移除厚重的底部分割線與大邊距，將段落與清單外距緊縮至 6px，編輯框與預覽模式具備完全相同的 13.5px 與 1.45 行距，根除文字忽大忽小與卡片非必要捲軸。
+  - **四邊連線錨點智能淡入 (Subtle Connection Handles)**：靜態時四邊錨點維持隱形或極致低調，滑鼠靠近卡片或選取時平滑淡入並放大，大幅降低畫布視覺雜訊。
+  - **修復發布分享頁內容遺失 Bug (Publish Desynchronization Fix)**：放寬 Wiki 筆記與外部連結節點在尚未填寫時的空白校驗，前端載入時加入安全降級恢復機制（Relaxed Recovery），徹底解決因單一節點暫無內容導致分享頁 (`/share/...`) 拋錯並回退為 2 張預設歡迎卡片的問題。
+
 - **🧭 Canvas 儲存、發布、復原與視覺一致性修正 (Canvas Persistence, Publish, Undo & Visual Consistency)**：修正本機草稿重新整理後回到預設模板，以及發布頁沒有使用目前畫布內容的問題；Canvas 現在會恢復 `draft`／`pending` 本機 JSON、發布前驗證完整 JSON Canvas，並在設定路由再次驗證 Canvas 文件。新增 Undo／Redo 歷史控制，補齊暗色節點與工具列樣式，統一卡片字級與間距、提高自訂色彩底色可見度，並讓英文入口使用英文預設模板。
 
 - **🛠️ Canvas 編輯控制補全與複製卡片修正 (Complete Canvas Editing Controls & Duplicate Fix)**：EdgeToolbar 改為獨立的箭頭方向、線條樣式、線寬、色彩與文字控制；NodeToolbar 擴充至連結／群組節點並加入原生自訂色彩選擇器；複製卡片改用可保留 callback 的資料複製方式，修正 `structuredClone` 造成的 `DataCloneError`。
