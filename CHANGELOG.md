@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **🧭 Canvas 對齊 React Flow Showcase 互動基準 (Showcase-Aligned Canvas Surface)**：採用官方 Feature Overview 的水平 Controls、25px dotted Background、MiniMap 圓角、snap-to-grid、fitView padding、無限 zoom 與右上 attribution 設定；Canvas toolbar、工作區、暗色配色、focus state 與 EdgeToolbar 改成低干擾的官方範例風格。
+
 - **🧱 Canvas 改用 React Flow UI anatomy 與可見連線點 (React Flow UI Anatomy & Visible Handles)**：Canvas 節點改採共用 `BaseNode`、`BaseNodeHeader`、`BaseNodeHeaderTitle`、`BaseNodeContent`、`BaseNodeFooter` 與 `BaseHandle` 結構；關係線工具列接入 React Flow 原生 `EdgeToolbar`。四邊連接點恢復為可見 12px handles，保留 Loose connection 與 JSON Canvas `fromSide`／`toSide` 資料格式；未引入 Tailwind／shadcn 全域依賴，避免影響既有編輯器。
 
 - **🎨 Canvas 畫布視覺架構全面現代化與發布同步修復 (Canvas Card Modernization, Zero-Chrome Polish & Robust Publish Sync)**：

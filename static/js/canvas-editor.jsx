@@ -30,6 +30,8 @@ if (!root || !source) throw new Error('Canvas editor requires #canvas-editor and
 const isEditableMode = root.getAttribute('data-editable') === 'true' || window.APP_STATE?.isEdit === true
 const DEFAULT_EDGE_COLOR = '#2563a6'
 const EDGE_STYLE = { stroke: DEFAULT_EDGE_COLOR, strokeWidth: 2.5 }
+const CANVAS_SNAP_GRID = [25, 25]
+const CANVAS_CONNECTION_LINE_STYLE = { stroke: '#cbd5e1', strokeWidth: 2 }
 
 // Obsidian Canvas preset color map (presets 1-6) and custom hex colors
 export const CANVAS_COLOR_PRESETS = [
@@ -444,6 +446,8 @@ export function CanvasCustomEdge({
                             edgeId={id}
                             x={labelX}
                             y={labelY}
+                            alignX="center"
+                            alignY="bottom"
                             isVisible={isEdit && (selected || isHovered || isEditingLabel)}
                             className="canvas-edge-toolbar nodrag nopan"
                             onMouseEnter={enterEdge}
@@ -1554,18 +1558,22 @@ function CanvasEditorApp() {
                 nodesConnectable={isEdit}
                 connectionMode={ConnectionMode.Loose}
                 defaultEdgeOptions={{ type: 'canvasEdge', markerEnd: { type: MarkerType.ArrowClosed, color: DEFAULT_EDGE_COLOR }, className: 'canvas-edge-style', style: EDGE_STYLE }}
+                connectionLineStyle={CANVAS_CONNECTION_LINE_STYLE}
+                snapToGrid
+                snapGrid={CANVAS_SNAP_GRID}
                 elementsSelectable={true}
                 colorMode={isDark ? 'dark' : 'light'}
                 fitView
+                fitViewOptions={{ padding: 0.1 }}
                 minZoom={0.1}
-                maxZoom={3}
+                maxZoom={Infinity}
+                attributionPosition="top-right"
             >
-                <Background variant="dots" gap={20} size={1} color={isDark ? '#444' : '#ccc'} />
-                <Controls showInteractive={false} />
+                <Background variant="dots" gap={25} size={1} color={isDark ? '#475569' : '#cbd5e1'} />
+                <Controls orientation="horizontal" showInteractive={false} />
                 <MiniMap
                     nodeStrokeWidth={3}
-                    zoomable
-                    pannable
+                    nodeBorderRadius={2}
                     nodeColor={n => (n.type === 'sticky' ? (n.data?.color || '#ffeb3b') : (isDark ? '#333' : '#fff'))}
                 />
 

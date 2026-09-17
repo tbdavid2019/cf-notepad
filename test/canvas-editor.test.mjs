@@ -215,6 +215,7 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(canvasEditorSource, /function BaseNodeFooter\(/)
     assert.match(canvasEditorSource, /function BaseHandle\(/)
     assert.match(canvasEditorSource, /<EdgeToolbar/)
+    assert.match(canvasEditorSource, /alignY="bottom"/)
     assert.match(canvasEditorSource, /NodeToolbar/)
     assert.match(canvasEditorSource, /EdgeLabelRenderer/)
     assert.match(canvasEditorSource, /BaseEdge/)
