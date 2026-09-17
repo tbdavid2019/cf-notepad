@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **📱 修復手機 Canvas 右上角三個浮動按鈕 (Mobile Canvas Floating Actions)**：修正全局 SVG cascade 將 Lucide 圖示縮成 `3px` 的問題；手機按鈕採 `44px` 觸控區、圖示 `20px`，並加入 safe-area 間距與 `v=3.0` 快取版本。
+
 - **🐛 修復 Canvas 關係線、草稿恢復與底部空白區 (Canvas Connection, Draft Recovery & Layout Fixes)**：
   - 恢復 `.canvas-handle` 的 pointer events，四邊 source／target handle 現在可以實際拖曳建立關係線，`onConnect` 會正常寫入 JSON Canvas edge；`CanvasEdge` 會保留 React Flow 解析後的 marker URL，避免 SVG 收到 `[object Object]`。
   - 恢復 `persistence.mjs` 的 `restoreLocalDraft`，重新整理後會從 IndexedDB 載回 `draft`／`pending` Canvas 內容並重新適應視口；若畫面載入後已有新編輯，保留目前編輯狀態。

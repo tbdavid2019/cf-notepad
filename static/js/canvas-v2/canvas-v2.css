@@ -553,6 +553,15 @@
     transition: background 0.15s ease, color 0.15s ease;
 }
 
+.canvas-top-floating-btn > svg {
+    width: 14px !important;
+    height: 14px !important;
+    min-width: 14px;
+    min-height: 14px;
+    flex: 0 0 14px;
+    display: block;
+}
+
 .canvas-top-floating-btn:hover {
     background-color: rgba(0, 0, 0, 0.06);
     color: #0f172a;
@@ -702,6 +711,28 @@
 
 /* Narrow Viewport */
 @media (max-width: 640px) {
+    .canvas-top-floating-bar {
+        top: max(12px, env(safe-area-inset-top));
+        right: max(12px, env(safe-area-inset-right));
+        gap: 4px;
+        padding: 4px;
+    }
+
+    .canvas-top-floating-btn {
+        width: 44px;
+        height: 44px;
+        min-width: 44px;
+        min-height: 44px;
+    }
+
+    .canvas-top-floating-btn > svg {
+        width: 20px !important;
+        height: 20px !important;
+        min-width: 20px;
+        min-height: 20px;
+        flex-basis: 20px;
+    }
+
     .canvas-node-top {
         height: 30px;
         min-height: 30px;
