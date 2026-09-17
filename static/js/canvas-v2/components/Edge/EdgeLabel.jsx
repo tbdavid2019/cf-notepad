@@ -57,7 +57,7 @@ export function EdgeLabel({
     }
 
     const display = label || (selected ? (zh ? '+ 標籤' : '+ Label') : '')
-    if (!display && !hasArrow && !selected) return null
+    if (!display && !selected) return null
 
     return (
         <div
@@ -70,11 +70,6 @@ export function EdgeLabel({
             title={isEdit ? (zh ? '點擊編輯標籤' : 'Click to edit label') : ''}
         >
             {display && <span className="ameliorate-edge-text">{display}</span>}
-            {hasArrow && (
-                <svg className="ameliorate-edge-arrow" width="10" height="10" viewBox="0 0 10 10">
-                    <polygon points="1,1 9,5 1,9" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
-                </svg>
-            )}
         </div>
     )
 }

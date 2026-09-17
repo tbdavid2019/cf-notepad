@@ -118,6 +118,20 @@ export function jsonCanvasToStoreState(doc) {
         const color = rawColor || ''
         const edgeDavid888 = david888 && typeof david888 === 'object' ? { ...david888 } : {}
 
+        const resolvedColor = color || DEFAULT_EDGE_COLOR
+        const markerEnd = toEnd !== 'none' ? {
+            type: 'arrowclosed',
+            color: resolvedColor,
+            width: 14,
+            height: 14,
+        } : undefined
+        const markerStart = fromEnd !== 'none' ? {
+            type: 'arrowclosed',
+            color: resolvedColor,
+            width: 14,
+            height: 14,
+        } : undefined
+
         return {
             id: String(id),
             source: String(fromNode),
@@ -126,6 +140,8 @@ export function jsonCanvasToStoreState(doc) {
             targetHandle: toSide || 'left',
             type: 'canvasEdge',
             label: rawLabel || '',
+            markerEnd,
+            markerStart,
             data: {
                 fromEnd,
                 toEnd,

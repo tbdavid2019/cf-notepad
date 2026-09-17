@@ -1372,32 +1372,7 @@ function CanvasEditorApp() {
         setHistoryVersion(version => version + 1)
     }, [restoreHistorySnapshot])
 
-    useEffect(() => {
-        if (!isEdit || !window.offlineStore || !window.APP_STATE?.path) return
-        let cancelled = false
-        const restoreLocalCanvasDraft = async () => {
-            const local = await window.offlineStore.getNote(window.APP_STATE.path)
-            if (cancelled || !local || local.format !== 'canvas' || !['draft', 'pending'].includes(local.syncStatus)) return
-            if (!local.content || local.content === source.value) return
-            try {
-                const parsed = validateCanvasDocument(parseCanvasDocument(local.content, { allowFallback: false }))
-                const converted = jsonCanvasToReactFlow(parsed, handlers, edgeHandlers)
-                if (cancelled) return
-                source.value = local.content
-                setNodes(converted.nodes)
-                setEdges(converted.edges)
-                source.dispatchEvent(new Event('input', { bubbles: true }))
-                window.showToast?.(resolveCanvasLang() === 'zh-TW' ? '已恢復本機 Canvas 草稿' : 'Restored local Canvas draft')
-            } catch {
-                // Ignore stale or malformed local data and keep the server document.
-            }
-        }
-        const timer = window.setTimeout(restoreLocalCanvasDraft, 0)
-        return () => {
-            cancelled = true
-            window.clearTimeout(timer)
-        }
-    }, [edgeHandlers, handlers, isEdit, setEdges, setNodes])
+
 
     // Save changes when dragging/connecting
     const handleNodesChange = useCallback(changes => {

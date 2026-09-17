@@ -260,21 +260,28 @@ export function connectNodes(state, connection) {
 
     const edgeId = generateId('edge')
     const edgeLabel = connection.label !== undefined ? connection.label : DEFAULT_EDGE_LABEL
+    const edgeColor = connection.color || DEFAULT_EDGE_COLOR
     const newEdge = {
         id: edgeId,
         source: String(source),
         target: String(target),
-        sourceHandle: sourceHandle || 'bottom',
-        targetHandle: targetHandle || 'top',
+        sourceHandle: sourceHandle || 'right',
+        targetHandle: targetHandle || 'left',
         type: 'canvasEdge',
         label: edgeLabel,
         selected: true,
+        markerEnd: {
+            type: 'arrowclosed',
+            color: edgeColor,
+            width: 14,
+            height: 14,
+        },
         data: {
             fromEnd: 'none',
             toEnd: 'arrow',
             lineStyle: DEFAULT_EDGE_STYLE,
             strokeWidth: DEFAULT_EDGE_WIDTH,
-            color: DEFAULT_EDGE_COLOR,
+            color: edgeColor,
             label: edgeLabel,
         },
     }

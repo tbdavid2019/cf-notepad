@@ -314,16 +314,15 @@
     user-select: none;
 }
 
-/* Node Contextual Toolbar */
 .canvas-node-toolbar {
     position: absolute;
     top: -42px;
     left: 50%;
     transform: translateX(-50%);
-    background-color: var(--canvas-paper);
-    border: 1px solid var(--canvas-border);
+    background-color: #ffffff;
+    border: 1px solid #e2e8f0;
     border-radius: 8px;
-    box-shadow: var(--canvas-shadow-md);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.08);
     padding: 4px;
     display: flex;
     align-items: center;
@@ -351,22 +350,73 @@
 .canvas-toolbar-divider {
     width: 1px;
     height: 16px;
-    background-color: var(--canvas-border);
+    background-color: #e2e8f0;
     margin: 0 2px;
 }
 
+.canvas-btn-icon {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent !important;
+    border: none !important;
+    border-radius: 5px;
+    color: #64748b !important;
+    cursor: pointer;
+    padding: 0;
+    margin: 0;
+    outline: none;
+    box-shadow: none !important;
+    transition: all 0.15s ease;
+}
+
+.canvas-btn-icon:hover {
+    background: #f1f5f9 !important;
+    color: #0f172a !important;
+}
+
+.canvas-btn-icon.is-danger {
+    color: #ef4444 !important;
+}
+
+.canvas-btn-icon.is-danger:hover {
+    background: #fee2e2 !important;
+    color: #dc2626 !important;
+}
+
 /* Edge Styling */
+.react-flow {
+    --xy-edge-stroke: #475569;
+    --xy-edge-stroke-default: #475569;
+    --xy-edge-stroke-width: 2;
+    --xy-edge-stroke-selected: #2563eb;
+    --xy-connectionline-stroke: #475569;
+    --xy-connectionline-stroke-width: 2;
+}
+
+.react-flow__edge-path,
 .canvas-edge-path {
-    fill: none;
-    stroke: #94a3b8;
-    stroke-width: 1.75;
+    fill: none !important;
+    stroke: #475569;
+    stroke-width: 2px;
+    stroke-opacity: 1 !important;
+    visibility: visible !important;
     transition: stroke 0.15s ease, stroke-width 0.15s ease;
 }
 
+.react-flow__edge:hover .react-flow__edge-path,
 .react-flow__edge:hover .canvas-edge-path,
+.react-flow__edge.selected .react-flow__edge-path,
 .react-flow__edge.selected .canvas-edge-path {
-    stroke: var(--canvas-selection, #2563eb) !important;
-    stroke-width: 2.25 !important;
+    stroke: #2563eb !important;
+    stroke-width: 2.5px !important;
+}
+
+.react-flow__arrowhead polyline,
+.react-flow__arrowhead path {
+    stroke-width: 1px;
 }
 
 .canvas-edge-interactive {

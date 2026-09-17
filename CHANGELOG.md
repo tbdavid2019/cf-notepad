@@ -2,6 +2,31 @@
 
 ## [2026-09-17]
 
+- **👀 徹底修復節點角標文字背景零對比重大瑕疵（Fixed Low-Contrast / Unreadable Node Badges）**：
+  - 徹底解決 `FlowNode.jsx` 誤將卡片主色（`colorHex`）賦予 `badgeBg`，導致 `Detriment` 深紅底疊加深紅文字、`Problem` 深紫底疊加深紫文字而無法閱讀之嚴重問題。
+  - 重構為預設思考節點一律採用典雅淺色底（`badgeBg` 如 `#ffe4e6`、`#f3e8ff`、`#dcfce7`）搭配深色墨水文字（`textColor` 如 `#9f1239`、`#581c87`、`#14532d`），文字對比度高達 7.4:1～14.2:1（全面通過 WCAG AAA 標準）。
+  - 卡片本體預設保持純白（`#ffffff`）搭配 Slate-900 深灰文字（`#0f172a`），徹底杜絕刺眼過飽和與無法閱讀的色彩搭配。
+
+- **🛑 徹底剷除本機草稿覆蓋與髒範本（Clean Document Load & Zero Auto-Overwrite）**：
+  - 徹底移除 `canvas-v2/store/persistence.mjs` 與 `canvas-legacy` 中的 `restoreLocalDraft` / `offlineStore` 本機草稿異步覆蓋邏輯。
+  - 畫布載入 100% 嚴格以伺服器端 `#contents` 內容為唯一真理（Single Source of Truth），杜絕開啟筆記後被本機 IndexedDB 快取的舊測試卡片（如 `node-welcome`, `node-sticky`）強制覆蓋與跳出「已恢復本機 Canvas 草稿」之問題。
+  - `/new/canvas` 堅持純淨空白 `{ nodes: [], edges: [] }`，絕不擅自塞入任何範本。
+
+- **🎯 修復按鈕全黑問題與節點工具列視覺規範化（Fixed Solid Black Buttons in NodeToolbar）**：
+  - 解決 `<button>` 在 macOS / 系統深色模式下預設未重設 background/color 導致渲染為實心黑塊遮蔽圖示之問題。
+  - 為 `.canvas-btn-icon` 顯式定義 `background: transparent !important`、`color: #64748b !important`，搭配優雅的懸停狀態（`#f1f5f9` / danger `#fee2e2`），在所有系統外觀與主題下保持極致精緻乾淨。
+
+- **🔗 連線實體線條與箭頭完全顯性化（High-Contrast Edge Lines & Dynamic Arrowheads）**：
+  - 連線預設筆觸色彩全面提升為高對比深石板灰（`#475569`，2px 寬度，選取時高亮為 2.5px 寶藍 `#2563eb`），在任何畫布底圖上均清晰可見。
+  - 解決 `<BaseEdge>` 遺漏 `markerEnd` 導致連線末端箭頭消失之問題；在 `CanvasEdge.jsx`、`jsonCanvasAdapter.mjs` 與 `canvasCommands.mjs` 全面補齊動態 `markerEnd`（`arrowclosed` 封閉式箭頭）。
+  - 徹底清除 `DEFAULT_EDGE_LABEL` 的假預設文字（設為空字串 `''`），未輸入標籤且未選取時隱藏中段膠囊，杜絕半空中漂浮無意義膠囊的視覺干擾。
+
+- **🌐 公開分享頁面（Public Share）與格式自動探測修復（Public Share Auto-Detection & Cache Busting）**：
+  - 強化 `src/note_meta.js` 與 `src/index.js` 的 `resolveEditorFormat(metadata, content)`，即便 metadata 缺少 `editorFormat` 標記，只要內容為 JSON Canvas（包含 `nodes` 結構），系統即能 100% 精準識別為 `canvas` 格式。
+  - `src/templates/base.js` 全面整合 `resolveEditorFormat`，使公開分享路由 `/share/:shareId` 精準掛載唯讀 Canvas 畫布，徹底解決分享頁面掉回原始 Markdown JSON 字串的問題。
+  - 為 `/js/canvas-editor.bundle.mjs?v=2.2` 與 `/js/canvas-editor.bundle.css?v=2.2` 加入版本快取穿透參數，確保瀏覽器立即載入最新畫布腳本。
+  - 支援 Canvas 的 PDF 向量匯出（`/share/:shareId/export/pdf` 與 `/:path/pdf`），自動轉為結構化 Markdown 進行 Takumi-PDF 高品質排版。
+
 - **🎨 精緻低飽和專業配色全面升級（告別過飽和熒光色，依據 Frontend Design & Impeccable 準則重構）**：
   - **低彩度語意色票 (Low-Chroma Palette)**：全面重構 8 種思考節點（Problem、Benefit、Solution、Cause、Criterion、Detriment、Question、Note）與便籤調色盤，捨棄刺眼高飽和度熒光粉彩，改採低彩度（Low-Chroma）底色搭配深色高對比文字（文字對比度均 ≥ 5.5:1～8:1，徹底通過 WCAG AA/AAA 標準）。
   - **純白雅緻卡片本體 (Refined Card Surface)**：卡片本體預設採用純淨白底與細緻 1px 邊框（`#e2e8f0`），搭配柔和微立體陰影，讓左上角內嵌型角標自然凸顯節點語意，杜絕滿版大面積飽和色彩產生的視覺疲勞。

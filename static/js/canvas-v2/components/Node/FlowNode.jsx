@@ -43,13 +43,14 @@ export function FlowNode({
 
     const customStyle = useMemo(() => {
         if (type === 'sticky') {
-            const bg = colorHex || '#fff9c4'
+            const bg = colorHex || '#fef9c3'
+            const isLight = contrast?.isLightBg !== false
             return {
                 '--node-bg': bg,
-                '--node-border': contrast?.borderColor || '#facc15',
-                '--node-badge-bg': '#facc15',
+                '--node-border': contrast?.borderColor || '#fef08a',
+                '--node-badge-bg': '#fef08a',
                 '--node-badge-text': '#713f12',
-                '--node-text': contrast?.color || '#1e293b',
+                '--node-text': isLight ? '#0f172a' : '#ffffff',
             }
         }
         if (type === 'group') {
@@ -62,17 +63,29 @@ export function FlowNode({
             }
         }
 
-        const border = colorHex || typeConfig.borderLight
-        const badgeBg = colorHex || typeConfig.badgeBg
-        const bg = typeConfig.bgLight
-        const badgeText = typeConfig.textColor || contrast?.color || '#1e293b'
+        const isCustomColor = Boolean(
+            colorHex &&
+            colorHex.toLowerCase() !== (typeConfig.color || '').toLowerCase() &&
+            colorHex.toLowerCase() !== (typeConfig.badgeBg || '').toLowerCase()
+        )
+
+        let badgeBg = typeConfig.badgeBg
+        let badgeText = typeConfig.textColor
+        let border = typeConfig.borderLight
+        const bg = '#ffffff'
+
+        if (isCustomColor) {
+            badgeBg = colorHex
+            badgeText = contrast?.isLightBg ? '#0f172a' : '#ffffff'
+            border = colorHex
+        }
 
         return {
             '--node-bg': bg,
             '--node-border': border,
             '--node-badge-bg': badgeBg,
             '--node-badge-text': badgeText,
-            '--node-text': '#1e293b',
+            '--node-text': '#0f172a',
         }
     }, [colorHex, type, typeConfig, contrast])
 

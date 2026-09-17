@@ -93,41 +93,9 @@ export function createPersistenceBridge(store, contentsElement, options = {}) {
         document.addEventListener('visibilitychange', handleVisibilityChange)
     }
 
-    // Local draft restoration from offlineStore
-    const restoreLocalDraft = async () => {
-        if (!store.getState().isEdit || typeof window === 'undefined' || !window.offlineStore || !window.APP_STATE?.path) {
-            return
-        }
-        try {
-            const note = await window.offlineStore.getNote(window.APP_STATE.path)
-            if (!note || note.format !== 'canvas' || !['draft', 'pending'].includes(note.syncStatus)) {
-                return
-            }
-            if (!note.content || note.content === contentsElement.value) {
-                return
-            }
-
-            const parsed = parseCanvasDocument(note.content, { allowFallback: false })
-            const validated = validateCanvasDocument(parsed)
-            store.getState().loadDocument(validated)
-            contentsElement.value = note.content
-            contentsElement.dispatchEvent(new Event('input', { bubbles: true }))
-
-            window.showToast?.(
-                isZh() ? '已恢復本機 Canvas 草稿' : 'Restored local Canvas draft'
-            )
-        } catch (err) {
-            console.warn('[canvas-v2] draft restoration skipped or invalid:', err)
-        }
-    }
-
-    // Schedule draft restoration asynchronously after initial mount
-    const draftTimer = setTimeout(restoreLocalDraft, 0)
-
     const cleanup = () => {
         unsubscribe()
         if (saveTimer) clearTimeout(saveTimer)
-        clearTimeout(draftTimer)
         if (typeof window !== 'undefined') {
             window.removeEventListener('pagehide', handleFlush)
             window.removeEventListener('beforeunload', handleFlush)

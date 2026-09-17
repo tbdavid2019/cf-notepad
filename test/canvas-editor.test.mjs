@@ -186,8 +186,8 @@ test('base template renders canvas editor container and loads bundle when editor
 
     assert.match(html, /id="canvas-editor"/)
     assert.match(html, /class="editor-pane canvas-editor-pane"/)
-    assert.match(html, /href="\/js\/canvas-editor\.bundle\.css"/)
-    assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs"/)
+    assert.match(html, /href="\/js\/canvas-editor\.bundle\.css(?:\?[^"]*)?"/)
+    assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs(?:\?[^"]*)?"/)
     assert.match(html, /data-editable="true"/)
     assert.match(html, /window\.APP_STATE = APP_STATE/)
     assert.match(baseTemplateSource, /isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\)/)
@@ -206,7 +206,7 @@ test('base template renders read-only canvas editor container when not in edit m
 
     assert.match(html, /id="canvas-editor"/)
     assert.match(html, /data-editable="false"/)
-    assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs"/)
+    assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs(?:\?[^"]*)?"/)
 })
 
 test('canvas editor uses clear, loose, four-sided handles and records JSON Canvas extensions', () => {
@@ -238,7 +238,7 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(canvasV2FlowNodeSource, /onDuplicate/)
     assert.match(canvasV2NodeToolbarSource, /type="color"/)
     assert.match(canvasV2EdgeToolbarSource, /canvas-edge-toolbar/)
-    assert.match(canvasV2PersistenceSource, /Restored local Canvas draft/)
+    assert.match(canvasV2PersistenceSource, /createPersistenceBridge/)
     assert.match(canvasV2MainToolbarSource, /Undo2|↶/)
     assert.match(canvasV2MainToolbarSource, /Redo2|↷/)
     assert.match(canvasV2CssSource, /\.canvas-node-toolbar/)
@@ -248,7 +248,7 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
 })
 
 test('canvas publishing validates JSON Canvas content at the setting boundary', () => {
-    assert.match(indexSource, /resolveEditorFormat\(metadata\) === 'canvas'/)
+    assert.match(indexSource, /resolvedFormat === 'canvas'/)
     assert.match(indexSource, /validateCanvasDocument\(parseCanvasDocument\(content, \{ allowFallback: false \}\)\)/)
 })
 

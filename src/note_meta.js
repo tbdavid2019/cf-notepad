@@ -252,9 +252,30 @@ export function formatNewNoteTitle(lang = 'zh-TW', random = Math.random) {
     return openingPrompts[index]
 }
 
-export function resolveEditorFormat(metadata = {}) {
+export function isCanvasContent(content) {
+    if (!content) return false
+    if (typeof content === 'object') {
+        return Array.isArray(content.nodes)
+    }
+    if (typeof content === 'string') {
+        const trimmed = content.trim()
+        if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+            try {
+                const parsed = JSON.parse(trimmed)
+                return Boolean(parsed && typeof parsed === 'object' && Array.isArray(parsed.nodes))
+            } catch (_) {
+                return false
+            }
+        }
+    }
+    return false
+}
+
+export function resolveEditorFormat(metadata = {}, content = '') {
     if (metadata && metadata.editorFormat === 'canvas') return 'canvas'
-    return metadata && metadata.editorFormat === 'block' ? 'block' : 'markdown'
+    if (metadata && metadata.editorFormat === 'block') return 'block'
+    if (isCanvasContent(content)) return 'canvas'
+    return 'markdown'
 }
 
 export function resolveLockedEditorFormat(metadata = {}, requestedFormat = undefined) {

@@ -35,7 +35,7 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     <label
                         className="canvas-btn-icon"
                         title={zh ? '自訂顏色' : 'Custom color'}
-                        style={{ cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                        style={{ cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, background: 'transparent', border: 'none', color: '#475569', borderRadius: 4, padding: 0 }}
                     >
                         <Palette size={13} />
                         <input
@@ -55,7 +55,7 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     title={zh ? '複製卡片' : 'Duplicate card'}
                     aria-label={zh ? '複製卡片' : 'Duplicate card'}
                     onClick={() => onDuplicate?.(id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, background: 'transparent', border: 'none', color: '#475569', borderRadius: 4, padding: 0, cursor: 'pointer' }}
                 >
                     <Copy size={13} />
                 </button>
@@ -66,7 +66,7 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     title={zh ? '刪除卡片' : 'Delete card'}
                     aria-label={zh ? '刪除卡片' : 'Delete card'}
                     onClick={() => onDelete?.(id)}
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 24, height: 24, background: 'transparent', border: 'none', color: '#dc2626', borderRadius: 4, padding: 0, cursor: 'pointer' }}
                 >
                     <Trash2 size={13} />
                 </button>

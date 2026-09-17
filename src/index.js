@@ -461,7 +461,7 @@ async function persistNoteContent({
 }
 
 function getBlockPageExt(value, metadata = {}) {
-    const editorFormat = resolveEditorFormat(metadata)
+    const editorFormat = resolveEditorFormat(metadata, value)
     if (editorFormat === 'block') {
         return { editorFormat, blockHtml: renderBlockToHtml(value), blockMarkdown: blockToMarkdown(value) }
     }
@@ -472,7 +472,7 @@ function getBlockPageExt(value, metadata = {}) {
 }
 
 function getMarkdownExportContent(value, metadata = {}) {
-    const format = resolveEditorFormat(metadata)
+    const format = resolveEditorFormat(metadata, value)
     if (format === 'block') return blockToMarkdown(value)
     if (format === 'canvas') return canvasToMarkdown(parseCanvasDocument(value))
     return value
@@ -1943,15 +1943,18 @@ async function handleSharePdfExport(request) {
         }
 
         let markdown = value || ''
-        if (resolveEditorFormat(metadata) === 'block') {
+        const format = resolveEditorFormat(metadata, value)
+        if (format === 'block') {
             const doc = parseBlockDocument(value)
             markdown = blockToMarkdown(doc)
+        } else if (format === 'canvas') {
+            markdown = canvasToMarkdown(parseCanvasDocument(value))
         }
 
         const title = extractNoteTitle(markdown, path)
         const size = url.searchParams.get('size') || 'a4'
         const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
-        const theme = metadata.theme || (resolveEditorFormat(metadata) === 'block' ? 'ayu-light' : 'claude-canvas')
+        const theme = metadata.theme || (format === 'block' ? 'ayu-light' : 'claude-canvas')
         const siteUrl = `${url.protocol}//${url.host}`
 
         const pdfBytes = await renderMarkdownToPdf(markdown, {
@@ -2680,7 +2683,7 @@ router.get('/api/:path', async (request) => {
 
     return new Response(value || '', {
         headers: {
-            'Content-Type': resolveEditorFormat(metadata) === 'block'
+            'Content-Type': ['block', 'canvas'].includes(resolveEditorFormat(metadata, value))
                 ? 'application/json;charset=UTF-8'
                 : 'text/markdown;charset=UTF-8',
             'Access-Control-Allow-Origin': '*'
@@ -2716,15 +2719,18 @@ async function handleNotePdfExport(request) {
         }
 
         let markdown = value || ''
-        if (resolveEditorFormat(metadata) === 'block') {
+        const format = resolveEditorFormat(metadata, value)
+        if (format === 'block') {
             const doc = parseBlockDocument(value)
             markdown = blockToMarkdown(doc)
+        } else if (format === 'canvas') {
+            markdown = canvasToMarkdown(parseCanvasDocument(value))
         }
 
         const title = extractNoteTitle(markdown, path)
         const size = url.searchParams.get('size') || 'a4'
         const landscape = url.searchParams.get('landscape') === 'true' || url.searchParams.get('landscape') === '1'
-        const theme = metadata.theme || (resolveEditorFormat(metadata) === 'block' ? 'ayu-light' : 'claude-canvas')
+        const theme = metadata.theme || (format === 'block' ? 'ayu-light' : 'claude-canvas')
         const siteUrl = `${url.protocol}//${url.host}`
 
         const pdfBytes = await renderMarkdownToPdf(markdown, {
@@ -3283,14 +3289,15 @@ router.post('/:path/setting', async request => {
 
             if ((!metadata.pw && !metadata.vpw) || (valid && role === 'edit')) {
                 try {
-                    if (typeof content === 'string' && resolveEditorFormat(metadata) === 'block') {
+                    const resolvedFormat = resolveEditorFormat(metadata, content)
+                    if (typeof content === 'string' && resolvedFormat === 'block') {
                         try {
                             validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
                         } catch (error) {
                             return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
                         }
                     }
-                    if (typeof content === 'string' && resolveEditorFormat(metadata) === 'canvas') {
+                    if (typeof content === 'string' && resolvedFormat === 'canvas') {
                         try {
                             validateCanvasDocument(parseCanvasDocument(content, { allowFallback: false }))
                         } catch (error) {
@@ -3504,7 +3511,7 @@ router.post('/:path', async request => {
     const formData = await request.formData();
     const content = formData.get('t')
 
-    const editorFormat = resolveEditorFormat(metadata)
+    const editorFormat = resolveEditorFormat(metadata, content)
     if (editorFormat === 'block') {
         try {
             validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
@@ -3522,6 +3529,7 @@ router.post('/:path', async request => {
     try {
         const nextMeta = {
             ...metadata,
+            ...(editorFormat !== 'markdown' && !metadata.editorFormat ? { editorFormat } : {}),
             updateAt: dayjs().unix(),
         }
         await persistNoteContent({

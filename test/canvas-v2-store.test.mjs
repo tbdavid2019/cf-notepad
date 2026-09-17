@@ -310,9 +310,11 @@ test('Ameliorate node types and causes relation connect correctly', () => {
     state = store.getState()
     assert.equal(state.edges.length, 1)
     const edge = state.edges[0]
-    assert.equal(edge.label, 'causes')
+    assert.equal(edge.label, '')
     assert.equal(edge.sourceHandle, 'bottom')
     assert.equal(edge.targetHandle, 'top')
+    store.getState().updateEdgeLabel(edge.id, 'causes')
+    assert.equal(store.getState().edges[0].label, 'causes')
 
     // 4. Export to JSON Canvas 1.0
     const json = state.toJsonCanvas()

@@ -28,6 +28,8 @@ export function CanvasEdge(props) {
         label,
         data = {},
         style = {},
+        markerEnd,
+        markerStart,
     } = props
 
     const [isEditingLabel, setIsEditingLabel] = useState(false)
@@ -60,10 +62,46 @@ export function CanvasEdge(props) {
 
     const hasArrow = (data.toEnd === 'arrow' || (data.toEnd === undefined && !data.fromEnd))
 
+    const effectiveMarkerEnd = useMemo(() => {
+        if (markerEnd && typeof markerEnd === 'object') {
+            return {
+                ...markerEnd,
+                color: selected ? '#2563eb' : (markerEnd.color || color),
+            }
+        }
+        if (hasArrow) {
+            return {
+                type: 'arrowclosed',
+                color: selected ? '#2563eb' : color,
+                width: 14,
+                height: 14,
+            }
+        }
+        return undefined
+    }, [markerEnd, hasArrow, selected, color])
+
+    const effectiveMarkerStart = useMemo(() => {
+        if (markerStart && typeof markerStart === 'object') {
+            return {
+                ...markerStart,
+                color: selected ? '#2563eb' : (markerStart.color || color),
+            }
+        }
+        if (data.fromEnd === 'arrow') {
+            return {
+                type: 'arrowclosed',
+                color: selected ? '#2563eb' : color,
+                width: 14,
+                height: 14,
+            }
+        }
+        return undefined
+    }, [markerStart, data.fromEnd, selected, color])
+
     const edgeStyle = {
         ...style,
-        stroke: color,
-        strokeWidth,
+        stroke: selected ? '#2563eb' : color,
+        strokeWidth: selected ? 2.5 : strokeWidth,
         strokeDasharray,
     }
 
@@ -76,6 +114,8 @@ export function CanvasEdge(props) {
                 path={edgePath}
                 style={edgeStyle}
                 interactionWidth={20}
+                markerEnd={effectiveMarkerEnd}
+                markerStart={effectiveMarkerStart}
                 className="canvas-edge-path"
             />
 

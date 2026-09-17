@@ -24,7 +24,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#1e1035',
         borderLight: '#e9d5ff',
         borderDark: '#581c87',
-        textColor: '#6b21a8',
+        textColor: '#581c87',
     },
     benefit: {
         id: 'benefit',
@@ -38,7 +38,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#052e16',
         borderLight: '#bbf7d0',
         borderDark: '#166534',
-        textColor: '#15803d',
+        textColor: '#14532d',
     },
     solution: {
         id: 'solution',
@@ -52,7 +52,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#0c2340',
         borderLight: '#bfdbfe',
         borderDark: '#1e40af',
-        textColor: '#1d4ed8',
+        textColor: '#1e3a8a',
     },
     cause: {
         id: 'cause',
@@ -66,7 +66,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#2e1505',
         borderLight: '#fed7aa',
         borderDark: '#9a3412',
-        textColor: '#c2410c',
+        textColor: '#7c2d12',
     },
     criterion: {
         id: 'criterion',
@@ -80,7 +80,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#2a1e05',
         borderLight: '#fef08a',
         borderDark: '#854d0e',
-        textColor: '#854d0e',
+        textColor: '#713f12',
     },
     detriment: {
         id: 'detriment',
@@ -94,7 +94,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#2f0814',
         borderLight: '#fecdd3',
         borderDark: '#9f1239',
-        textColor: '#be123c',
+        textColor: '#9f1239',
     },
     question: {
         id: 'question',
@@ -108,7 +108,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#042727',
         borderLight: '#99f6e4',
         borderDark: '#115e59',
-        textColor: '#0f766e',
+        textColor: '#134e4a',
     },
     note: {
         id: 'note',
@@ -122,7 +122,7 @@ export const AMELIORATE_NODE_TYPES = {
         bgDark: '#0f172a',
         borderLight: '#e2e8f0',
         borderDark: '#334155',
-        textColor: '#334155',
+        textColor: '#0f172a',
     },
 }
 
@@ -189,8 +189,8 @@ export const EDGE_WIDTH_OPTIONS = [
     { value: '4', label: '粗 / Thick (4px)' },
 ]
 
-export const DEFAULT_EDGE_COLOR = '#94a3b8'
-export const DEFAULT_EDGE_WIDTH = 1.5
+export const DEFAULT_EDGE_COLOR = '#475569'
+export const DEFAULT_EDGE_WIDTH = 2
 export const DEFAULT_EDGE_STYLE = 'solid'
-export const DEFAULT_EDGE_LABEL = 'causes'
+export const DEFAULT_EDGE_LABEL = ''
 
