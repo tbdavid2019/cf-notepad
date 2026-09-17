@@ -135,6 +135,11 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const isBlockDocument = ext.editorFormat === 'block'
     const isCanvasDocument = ext.editorFormat === 'canvas'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
+    const accessibleContent = isBlockDocument
+        ? blockHtml
+        : isCanvasDocument
+            ? escapeHtml(ext.canvasMarkdown || '')
+            : escapeHtml(content)
     const textareaContent = escapeHtml(content)
     const pageTheme = (isBlockDocument || isCanvasDocument)
         ? (ext.theme || 'ayu-light')
@@ -353,13 +358,13 @@ ${getMarkdownCss()}
         <div class="stack">
             <div class="layer_1">
                 <div class="layer_2">
-                    ${isEdit && !isBlockDocument ? EDITOR_TOOLBAR(lang) : ''}
+                    ${isEdit && !isBlockDocument && !isCanvasDocument ? EDITOR_TOOLBAR(lang) : ''}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
-                         <article style="display:none;" id="bot-accessible-content">${isBlockDocument ? blockHtml : escapeHtml(content)}</article>
+                         <article style="display:none;" id="bot-accessible-content">${accessibleContent}</article>
                         ${isCanvasDocument ? `<div class="editor-pane canvas-editor-pane">
-                            <div id="canvas-editor" class="canvas-editor" aria-label="Infinite Canvas" data-editable="${isEdit}"></div>
+                            <div id="canvas-editor" class="canvas-editor" aria-label="Canvas" data-editable="${isEdit}"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : (isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
                             <div id="block-editor" class="block-editor" aria-label="Block editor"></div>
@@ -2299,7 +2304,7 @@ ${getMarkdownCss()}
                             title,
                             content,
                             theme: APP_STATE.theme,
-                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            format: APP_STATE.editorFormat,
                             syncStatus: 'synced'
                         })
                     }
@@ -2313,7 +2318,7 @@ ${getMarkdownCss()}
                             title,
                             content,
                             theme: APP_STATE.theme,
-                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            format: APP_STATE.editorFormat,
                             syncStatus: 'pending'
                         })
                     }
@@ -2344,7 +2349,7 @@ ${getMarkdownCss()}
                     title: draftTitle,
                     content: draftContent,
                     theme: APP_STATE.theme,
-                    format: APP_STATE.isBlock ? 'block' : 'markdown',
+                    format: APP_STATE.editorFormat,
                     syncStatus: hasUnsavedChanges() ? (APP_STATE.isPublished ? 'pending' : 'draft') : 'synced'
                 })
                 if (hasUnsavedChanges()) {
@@ -5164,6 +5169,10 @@ ${getMarkdownCss()}
 
         // --- PWA File Handling & Local File Opener ---
         window.__openLocalFileContent = async function({ name, text }) {
+            if (APP_STATE.editorFormat === 'canvas') {
+                window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'Canvas 畫布請使用工具列的 .canvas 匯入。' : 'Use the Canvas toolbar to import a .canvas file.')
+                return
+            }
             if ($textarea) {
                 $textarea.value = text;
                 if (APP_STATE.isBlock && typeof window.__setBlockEditorMarkdown === 'function') {
@@ -5207,7 +5216,7 @@ ${getMarkdownCss()}
                             title,
                             content,
                             theme: APP_STATE.theme,
-                            format: APP_STATE.isBlock ? 'block' : 'markdown',
+                            format: APP_STATE.editorFormat,
                             syncStatus: APP_STATE.isPublished ? 'synced' : 'draft'
                         });
                     }
@@ -5227,7 +5236,7 @@ ${getMarkdownCss()}
                         window.showToast?.(APP_STATE.lang === 'zh-TW' ? '📄 已匯出 Markdown 檔案' : '📄 Exported Markdown file');
                     }
                 }
-            } else if (key === 'o' && APP_STATE.isEdit) {
+            } else if (key === 'o' && APP_STATE.isEdit && APP_STATE.editorFormat === 'markdown') {
                 e.preventDefault();
                 if (window.openLocalMarkdownFile) {
                     const file = await window.openLocalMarkdownFile();
@@ -5251,7 +5260,7 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     <script type="module" src="/js/offline-store.mjs"></script>
-    ${isEdit ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit && !isBlockDocument && !isCanvasDocument ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
     ${isEdit ? '<script type="module" src="/js/ocr-client.mjs"></script>' : ''}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}

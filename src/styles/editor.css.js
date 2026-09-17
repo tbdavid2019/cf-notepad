@@ -1167,6 +1167,66 @@ textarea#contents {
     box-shadow: 0 0 0 2px var(--toolbar-accent, #0969da), 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
+.david-canvas-app .canvas-edge-style .react-flow__edge-path,
+.david-canvas-app .react-flow__connection-path {
+    stroke: #2563a6;
+    stroke-width: 2.5px;
+}
+
+/* React Flow edge SVGs are absolutely positioned; give their layer a viewport
+   so SVG paths remain visible inside this flex-based editor shell. */
+.david-canvas-app .react-flow__edges,
+.david-canvas-app .react-flow__edges > svg {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.david-canvas-app .canvas-edge-style .react-flow__edge-text {
+    fill: #173e67;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.david-canvas-app.theme-dark .canvas-edge-style .react-flow__edge-path,
+.david-canvas-app.theme-dark .react-flow__connection-path {
+    stroke: #79c7ff;
+}
+
+.david-canvas-app.theme-dark .canvas-edge-style .react-flow__edge-text {
+    fill: #d8efff;
+}
+
+.david-canvas-app .react-flow__handle {
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
+    border: 2px solid #ffffff;
+    background: #2563a6;
+    box-shadow: 0 1px 4px rgba(15, 45, 80, 0.35);
+}
+
+.david-canvas-app .react-flow__handle.connectionindicator:hover,
+.david-canvas-app .react-flow__handle.connecting,
+.david-canvas-app .react-flow__handle.valid {
+    background: #f59e0b;
+    border-color: #ffffff;
+    transform: translate(-50%, -50%) scale(1.25);
+}
+
+.david-canvas-app .react-flow__handle-right.connectionindicator:hover,
+.david-canvas-app .react-flow__handle-right.connecting,
+.david-canvas-app .react-flow__handle-right.valid {
+    transform: translate(50%, -50%) scale(1.25);
+}
+
+.david-canvas-app .react-flow__handle-bottom.connectionindicator:hover,
+.david-canvas-app .react-flow__handle-bottom.connecting,
+.david-canvas-app .react-flow__handle-bottom.valid {
+    transform: translate(-50%, 50%) scale(1.25);
+}
+
 .canvas-node-card.is-light {
     background: #ffffff;
     border: 1px solid #d0d7de;
@@ -1279,6 +1339,31 @@ textarea#contents {
     color: #212529 !important;
 }
 
+.canvas-group-node {
+    border: 2px dashed color-mix(in srgb, var(--toolbar-accent, #2563a6) 58%, transparent);
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--toolbar-accent, #2563a6) 8%, transparent);
+    color: var(--toolbar-text, #24292f);
+}
+
+.canvas-group-node.is-selected {
+    border-style: solid;
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--toolbar-accent, #2563a6) 35%, transparent);
+}
+
+.canvas-group-label {
+    position: absolute;
+    top: 8px;
+    left: 12px;
+    max-width: calc(100% - 24px);
+    overflow: hidden;
+    color: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .canvas-sticky-header {
     border-bottom: 1px dashed rgba(0, 0, 0, 0.12);
 }
@@ -1359,4 +1444,3 @@ textarea#contents {
     text-decoration: underline;
 }
 `
-

@@ -105,7 +105,19 @@ curl -X POST "https://wiki.david888.com/api/<path>" \
 
 Use form fields `append`, `public`, `share`, `publicIndex`, `theme`, `width`, `pw`, and `vpw` when needed. Supported widths are `100%`, `960px`, `1200px`, and `1440px`; if omitted, a note without a stored width defaults to `1200px`.
 
-### 2.3 Available Themes
+### 2.3 Canvas Documents (`editorFormat: "canvas"`)
+Canvas is a separate JSON Canvas 1.0 document format, not Markdown. A Canvas write must send the complete JSON document, set `editorFormat` to `"canvas"`, and must never use `append`.
+
+The interoperable core accepts `text`, `file`, `link`, `group`, and `edge` records. DAVID888 sticky-note appearance is stored in an optional `david888` extension object, which other JSON Canvas tools can safely ignore. Use `/new/canvas` in the browser to create one; use its Canvas toolbar to import or export `.canvas` files. Do not use Markdown, audio, URL, or Office-document import actions on an existing Canvas.
+
+```json
+{
+  "text": "{\"nodes\":[{\"id\":\"card-1\",\"type\":\"text\",\"x\":0,\"y\":0,\"width\":320,\"height\":180,\"text\":\"# Card\"}],\"edges\":[]}",
+  "editorFormat": "canvas"
+}
+```
+
+### 2.4 Available Themes
 Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
 > [!IMPORTANT]
 > **CRITICAL: READ THE RESPONSE CAREFULLY!**
@@ -119,7 +131,7 @@ Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin
 > Example: `https://wiki.david888.com/share/abc123/present#/2`
 > Use the Reveal hash suffix to point to a specific slide when useful.
 
-### 2.4 Note Settings Route (Browser/Edit Session)
+### 2.5 Note Settings Route (Browser/Edit Session)
 There is also a note settings route for the normal editor:
 
 ```bash

@@ -1,6 +1,6 @@
 # DAVID888 WIKI (Serverless Cloud Notepad) - Comprehensive Specification & System Guide
 
-> DAVID888 WIKI is a high-performance, private-first serverless wiki and notepad built for Cloudflare Workers. It supports bi-directional Markdown and BlockNote WYSIWYG editing, real-time autosave, ECharts/Mermaid/Graphviz diagram rendering, WebMCP local context tools, and machine-first REST APIs for AI Agents.
+> DAVID888 WIKI is a high-performance, private-first serverless wiki and notepad built for Cloudflare Workers. It supports Markdown, BlockNote WYSIWYG, and Canvas editing; real-time autosave; ECharts/Mermaid/Graphviz diagram rendering; WebMCP local context tools; and machine-first REST APIs for AI Agents.
 
 ---
 
@@ -8,7 +8,7 @@
 
 - **Platform**: Cloudflare Workers + KV + R2 + D1 (SQLite)
 - **Primary Domain**: `https://wiki.david888.com`
-- **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (for BlockNote editor), Mermaid.js, ECharts, MathJax
+- **Frontend Stack**: Vanilla JS + CSS, React 19 + Mantine (BlockNote editor), React Flow (Canvas), Mermaid.js, ECharts, MathJax
 - **Browser OCR**: Official PaddleOCR.js PP-OCRv6 Chinese text detection and recognition, ONNX Runtime WebGPU-first with WASM fallback; OCR runtime is lazy-loaded on image action.
 - **Server Table OCR**: Image table reconstruction is available through the external `/api/ocr?mode=table` service, with `data.tableMarkdown` and `data.tables` outputs for Markdown or BlockNote insertion.
 - **Backend Stack**: `itty-router` on Cloudflare Worker runtime
@@ -28,6 +28,8 @@
   Allocates a random short slug (4 chars) and initializes a BlockNote rich document.
 - **New Markdown Note**: `https://wiki.david888.com/new/markdown`
   Allocates a random short slug and initializes a raw Markdown document.
+- **New Canvas**: `https://wiki.david888.com/new/canvas`
+  Allocates a Canvas document whose persisted core follows JSON Canvas 1.0: text, file, link, group, and edge records. DAVID888 sticky notes use an ignorable `david888` extension. Import/export `.canvas` files from the Canvas toolbar only; Markdown, audio, and Office imports do not apply to Canvas.
 - **Read & Edit Note**: `https://wiki.david888.com/{slug}`
   View or edit a note at `/{slug}`. Supports passcodes for view-locking (`vpw`) and edit-locking (`pw`).
 - **Public Share View**: `https://wiki.david888.com/share/{shareSlug}`

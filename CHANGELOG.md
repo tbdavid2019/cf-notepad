@@ -2,16 +2,24 @@
 
 ## [2026-09-17]
 
+- **🐛 Canvas 畫布資料安全、互通性與連線修正 (Canvas Data Safety, Interoperability & Connection Fixes)**：
+  - 將建立選單名稱統一為「Canvas 畫布」／`Canvas`；Canvas 只在自己的工具列處理 `.canvas` 匯入與匯出，底欄不再顯示 Markdown、音訊、網址或 Office 文件匯入，避免文件文字損壞畫布 JSON。
+  - 修正空畫布保存後重新開啟會回填歡迎卡片的資料遺失問題；顯式 `{ "nodes": [], "edges": [] }` 現在會完整保留。
+  - 改用 JSON Canvas 1.0 的標準 text、file、link、group 與 edge 核心；便籤使用可忽略的 `david888.cardType` extension，舊版 `sticky` 節點會自動遷移。匯入時驗證節點／edge ID、座標、尺寸、關聯、URL 與數量上限，拒絕無效或危險資料。
+  - React Flow 改為四邊皆可起訖的 Loose handles，強化關係線與連接中的顏色、粗細與可點擊範圍；重複關係線會顯示提示。外部連結與群組節點可安全顯示並 round-trip 保存。
+  - Canvas 的一般瀏覽器儲存路徑、API 路徑與離線快取均正確驗證／標記 `canvas` 格式；Canvas 頁不再載入 Markdown toolbar，修正 `setRecordingUi is not defined` console error；bot-accessible content 改提供 Markdown 文字投影而非原始 JSON。
+  - 同步更新 README 雙語、編輯器提示、`llms.txt`、`llms-full.txt` 與 Agent Skill，並新增 Canvas 回歸測試。
+
 - **🎨 全新無限畫布編輯模式 (Infinite Canvas Editor Mode with JSON Canvas & React Flow)**：
-  - **第三種原生筆記模式 (`editorFormat: 'canvas'`)**：與現有的 Markdown 模式、Block 筆記模式並列，專為 2D 空間思維、卡片盒筆記（Zettelkasten）與視覺化知識庫設計。在底欄「＋ 新增」選單點擊「無限畫布 (Canvas)」或存取 `/new/canvas` 即可立刻建立。
-  - **開源 JSON Canvas 規範 (`jsoncanvas.org`) 原生相容**：
-    - 底層儲存直接採用開放標準 JSON Canvas 結構，原生相容 Obsidian Canvas（`.canvas` 檔案）。
+  - **第三種原生筆記模式 (`editorFormat: 'canvas'`)**：與現有的 Markdown 模式、Block 筆記模式並列，專為 2D 空間思維、卡片盒筆記（Zettelkasten）與視覺化知識庫設計。在底欄「＋ 新增」選單點擊「Canvas 畫布」或存取 `/new/canvas` 即可立刻建立。
+  - **開源 JSON Canvas 規範 (`jsoncanvas.org`) 核心相容**：
+    - 底層儲存採用開放標準 JSON Canvas 核心結構；DAVID888 視覺語意以可忽略的 extension 保存。
     - 支援一鍵匯出 `.canvas` 檔案供 Obsidian 或其它相容畫布工具開啟，亦支援由瀏覽器本機直接匯入 `.canvas` 檔案並自動轉換為畫布節點。
   - **輕量高效的 React Flow 畫布內核**：
     - 基於 `@xyflow/react`，以純 HTML/DOM 與 SVG 渲染，獨立代碼分割打包為 `canvas-editor.bundle.mjs` (僅 ~380 KB)，零干擾既有 Markdown / BlockNote 載入效能。
     - **Markdown 卡片節點 (Note Card)**：雙擊原地切換為 Markdown 編輯框，失焦或按 `Cmd+Enter` 立即渲染為美觀排版，支援調整卡片寬高、刪除與四邊錨點連線。
     - **彩色靈感便籤節點 (Sticky Note)**：提供黃、綠、藍、粉、紫五種經典配色，支援縮放與隨手雙擊記事。
-    - **Wiki 筆記引用節點 (Wiki Note Link)**：可快速連結本站現有筆記路徑（如 `/note/...`），提供卡片預覽與一鍵跳轉。
+    - **Wiki 筆記引用節點 (Wiki Note Link)**：可快速連結本站現有筆記路徑（如 `/note/...`）並一鍵跳轉。
     - **平滑連線與箭頭 (Smoothstep Edges with Markers)**：拖曳卡片四邊圓點即可拉出帶有箭頭的關係線，卡片移動時連線自動即時重算路徑。
   - **編輯模式與唯讀瀏覽模式分離 (`isEdit`)**：
     - 編輯模式 (`/edit/:note`) 提供浮動工具列（新增卡片、靈感便籤、Wiki 引用、匯出/匯入），節點位置拖曳與邊緣連線即時自動儲存 (Autosave) 至 Cloudflare D1/KV。

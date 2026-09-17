@@ -550,7 +550,7 @@ async function createNewNote(request, editorFormat) {
 
     let initialContent = ''
     if (editorFormat === 'canvas') {
-        const welcomeTitle = shareTitle || (originUrl.searchParams.get('lang') === 'en-US' ? 'Welcome to Infinite Canvas' : '歡迎使用無限畫布')
+        const welcomeTitle = shareTitle || (originUrl.searchParams.get('lang') === 'en-US' ? 'Welcome to Canvas' : '歡迎使用 Canvas 畫布')
         initialContent = JSON.stringify({
             nodes: [
                 {
@@ -564,13 +564,14 @@ async function createNewNote(request, editorFormat) {
                 },
                 {
                     id: 'node-sticky',
-                    type: 'sticky',
+                    type: 'text',
                     x: 520,
                     y: 80,
                     width: 240,
                     height: 180,
                     color: '#fff9c4',
                     text: '💡 **靈感便籤**\n\n隨手記錄微小想法，相容 Obsidian Canvas！',
+                    david888: { cardType: 'sticky' },
                 },
             ],
             edges: [
@@ -2896,7 +2897,7 @@ router.post('/api/:path', async (request) => {
     } else if (editorFormat === 'canvas') {
         if (append) return returnJSON(400, 'Canvas documents do not support append', { status: 400 })
         try {
-            validateCanvasDocument(parseCanvasDocument(text))
+            validateCanvasDocument(parseCanvasDocument(text, { allowFallback: false }))
         } catch (error) {
             return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
         }
@@ -3507,11 +3508,18 @@ router.post('/:path', async request => {
     const formData = await request.formData();
     const content = formData.get('t')
 
-    if (resolveEditorFormat(metadata) === 'block') {
+    const editorFormat = resolveEditorFormat(metadata)
+    if (editorFormat === 'block') {
         try {
             validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
         } catch (error) {
             return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+        }
+    } else if (editorFormat === 'canvas') {
+        try {
+            validateCanvasDocument(parseCanvasDocument(content, { allowFallback: false }))
+        } catch (error) {
+            return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
         }
     }
 

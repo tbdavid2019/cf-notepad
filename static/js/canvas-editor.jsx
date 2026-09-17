@@ -13,15 +13,32 @@ import {
     Position,
     NodeResizer,
     MarkerType,
+    ConnectionMode,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { parseCanvasDocument } from '../../src/canvas_document.mjs'
+import { parseCanvasDocument, validateCanvasDocument } from '../../src/canvas_document.mjs'
 
 const root = document.querySelector('#canvas-editor')
 const source = document.querySelector('#contents')
 if (!root || !source) throw new Error('Canvas editor requires #canvas-editor and #contents')
 
 const isEditableMode = root.getAttribute('data-editable') === 'true' || window.APP_STATE?.isEdit === true
+const EDGE_STYLE = { stroke: '#2563a6', strokeWidth: 2.5 }
+
+function safeExternalUrl(value) {
+    try {
+        const url = new URL(value)
+        return ['http:', 'https:'].includes(url.protocol) ? url.href : ''
+    } catch {
+        return ''
+    }
+}
+
+function safeWikiNotePath(value) {
+    const path = String(value || '').trim()
+    if (!path || path.startsWith('//') || path.includes('://') || path.startsWith('javascript:')) return ''
+    return '/' + path.replace(/^\/+/, '')
+}
 
 const resolveCanvasTheme = () => {
     const selectedTheme = document.documentElement.getAttribute('data-ui-theme')
@@ -74,6 +91,15 @@ function MarkdownPreview({ text, isDark }) {
     return <div ref={containerRef} className="canvas-card-markdown-preview markdown-body" />
 }
 
+function CardHandles({ isEdit }) {
+    return <>
+        <Handle type="source" position={Position.Top} id="top" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+        <Handle type="source" position={Position.Right} id="right" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+        <Handle type="source" position={Position.Bottom} id="bottom" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+        <Handle type="source" position={Position.Left} id="left" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+    </>
+}
+
 // Custom Markdown Card Node
 function TextCardNode({ id, data, selected }) {
     const isEdit = isEditableMode
@@ -104,10 +130,7 @@ function TextCardNode({ id, data, selected }) {
         >
             <NodeResizer minWidth={200} minHeight={120} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
-            <Handle type="target" position={Position.Top} id="top" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Right} id="right" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Bottom} id="bottom" isConnectable={isEdit} />
-            <Handle type="target" position={Position.Left} id="left" isConnectable={isEdit} />
+            <CardHandles isEdit={isEdit} />
 
             <div className="canvas-card-header">
                 <div className="canvas-card-header-title">
@@ -191,10 +214,7 @@ function StickyCardNode({ id, data, selected }) {
         >
             <NodeResizer minWidth={160} minHeight={120} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
-            <Handle type="target" position={Position.Top} id="top" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Right} id="right" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Bottom} id="bottom" isConnectable={isEdit} />
-            <Handle type="target" position={Position.Left} id="left" isConnectable={isEdit} />
+            <CardHandles isEdit={isEdit} />
 
             <div className="canvas-card-header canvas-sticky-header">
                 <span className="canvas-card-icon">📌</span>
@@ -262,7 +282,7 @@ function WikiLinkNode({ id, data, selected }) {
         }
     }
 
-    const noteHref = file.startsWith('/') ? file : `/${file}`
+    const noteHref = safeWikiNotePath(file)
 
     return (
         <div
@@ -271,10 +291,7 @@ function WikiLinkNode({ id, data, selected }) {
         >
             <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
-            <Handle type="target" position={Position.Top} id="top" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Right} id="right" isConnectable={isEdit} />
-            <Handle type="source" position={Position.Bottom} id="bottom" isConnectable={isEdit} />
-            <Handle type="target" position={Position.Left} id="left" isConnectable={isEdit} />
+            <CardHandles isEdit={isEdit} />
 
             <div className="canvas-card-header">
                 <div className="canvas-card-header-title">
@@ -313,9 +330,9 @@ function WikiLinkNode({ id, data, selected }) {
                     <div className="canvas-wiki-content">
                         <div className="canvas-wiki-title">📖 {file || '未設定筆記路徑'}</div>
                         <div className="canvas-wiki-actions nodrag">
-                            <a href={noteHref} target="_blank" rel="noopener noreferrer" className="canvas-wiki-link">
+                            {noteHref && <a href={noteHref} target="_blank" rel="noopener noreferrer" className="canvas-wiki-link">
                                 {isZh ? '開啟筆記 ↗' : 'Open Note ↗'}
-                            </a>
+                            </a>}
                             {isEdit && (
                                 <button type="button" className="canvas-btn-subtle" onClick={() => setIsEditing(true)}>
                                     {isZh ? '修改路徑' : 'Edit'}
@@ -329,16 +346,57 @@ function WikiLinkNode({ id, data, selected }) {
     )
 }
 
+function ExternalLinkNode({ id, data, selected }) {
+    const isEdit = isEditableMode
+    const isZh = resolveCanvasLang() === 'zh-TW'
+    const [url, setUrl] = useState(data.url || '')
+    const [isEditing, setIsEditing] = useState(!data.url && isEdit)
+
+    const save = () => {
+        setIsEditing(false)
+        if (data.onChangeUrl && url !== data.url) data.onChangeUrl(id, url)
+    }
+
+    const safeUrl = safeExternalUrl(url)
+    return <div className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%' }}>
+        <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
+        <CardHandles isEdit={isEdit} />
+        <div className="canvas-card-header"><span className="canvas-card-icon">🔗</span><span className="canvas-card-title-text">{isZh ? '外部連結' : 'Web Link'}</span></div>
+        <div className="canvas-card-body canvas-wiki-body">
+            {isEditing ? <div className="canvas-wiki-edit-form nodrag">
+                <input type="url" className="canvas-wiki-input" value={url} onChange={event => setUrl(event.target.value)} placeholder="https://" />
+                <button type="button" className="canvas-btn-primary" onClick={save}>{isZh ? '儲存' : 'Save'}</button>
+            </div> : <div className="canvas-wiki-content">
+                <div className="canvas-wiki-title">{url || (isZh ? '未設定網址' : 'No URL set')}</div>
+                {(safeUrl || isEdit) && <div className="canvas-wiki-actions nodrag">{safeUrl && <a href={safeUrl} target="_blank" rel="noopener noreferrer" className="canvas-wiki-link">{isZh ? '開啟連結 ↗' : 'Open Link ↗'}</a>}{isEdit && <button type="button" className="canvas-btn-subtle" onClick={() => setIsEditing(true)}>{isZh ? '修改' : 'Edit'}</button>}</div>}
+            </div>}
+        </div>
+    </div>
+}
+
+function GroupNode({ data, selected }) {
+    const isEdit = isEditableMode
+    return <div className={`canvas-group-node ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%' }}>
+        <NodeResizer minWidth={120} minHeight={80} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
+        <CardHandles isEdit={isEdit} />
+        {data.label && <span className="canvas-group-label">{data.label}</span>}
+    </div>
+}
+
 const nodeTypes = {
     text: TextCardNode,
     sticky: StickyCardNode,
     file: WikiLinkNode,
+    link: ExternalLinkNode,
+    group: GroupNode,
 }
 
 // Convert JSON Canvas to React Flow elements
 function jsonCanvasToReactFlow(canvasData, handlers) {
     const nodes = (canvasData.nodes || []).map(node => {
-        const type = node.type === 'sticky' ? 'sticky' : node.type === 'file' ? 'file' : 'text'
+        const type = node.type === 'sticky' || node.david888?.cardType === 'sticky'
+            ? 'sticky'
+            : ['file', 'link', 'group'].includes(node.type) ? node.type : 'text'
         return {
             id: String(node.id),
             type,
@@ -351,6 +409,10 @@ function jsonCanvasToReactFlow(canvasData, handlers) {
                 text: node.text || '',
                 file: node.file || '',
                 label: node.label || '',
+                url: node.url || '',
+                subpath: node.subpath || '',
+                background: node.background || '',
+                backgroundStyle: node.backgroundStyle || '',
                 color: node.color || (type === 'sticky' ? '#fff9c4' : ''),
                 onChangeText: handlers.onChangeText,
                 onChangeFile: handlers.onChangeFile,
@@ -368,6 +430,8 @@ function jsonCanvasToReactFlow(canvasData, handlers) {
         label: edge.label || '',
         type: 'smoothstep',
         markerEnd: { type: MarkerType.ArrowClosed },
+        className: 'canvas-edge-style',
+        style: edge.color ? { ...EDGE_STYLE, stroke: edge.color } : EDGE_STYLE,
     }))
 
     return { nodes, edges }
@@ -376,18 +440,27 @@ function jsonCanvasToReactFlow(canvasData, handlers) {
 // Convert React Flow elements to JSON Canvas specification
 function reactFlowToJsonCanvas(nodes, edges) {
     return {
-        nodes: nodes.map(n => ({
-            id: n.id,
-            type: n.type || 'text',
-            x: Math.round(n.position.x),
-            y: Math.round(n.position.y),
-            width: Math.round(n.measured?.width || n.style?.width || (n.type === 'sticky' ? 240 : 320)),
-            height: Math.round(n.measured?.height || n.style?.height || (n.type === 'sticky' ? 180 : 200)),
-            ...(n.data?.color ? { color: n.data.color } : {}),
-            ...(n.data?.text ? { text: n.data.text } : {}),
-            ...(n.data?.file ? { file: n.data.file } : {}),
-            ...(n.data?.label ? { label: n.data.label } : {}),
-        })),
+        nodes: nodes.map(n => {
+            const base = {
+                id: n.id,
+                x: Math.round(n.position.x),
+                y: Math.round(n.position.y),
+                width: Math.round(n.measured?.width || n.style?.width || (n.type === 'sticky' ? 240 : 320)),
+                height: Math.round(n.measured?.height || n.style?.height || (n.type === 'sticky' ? 180 : 200)),
+                ...(n.data?.color ? { color: n.data.color } : {}),
+            }
+            if (n.type === 'sticky') return { ...base, type: 'text', text: n.data?.text || '', david888: { cardType: 'sticky' } }
+            if (n.type === 'file') return { ...base, type: 'file', file: n.data?.file || '', ...(n.data?.subpath ? { subpath: n.data.subpath } : {}) }
+            if (n.type === 'link') return { ...base, type: 'link', url: n.data?.url || '' }
+            if (n.type === 'group') return {
+                ...base,
+                type: 'group',
+                ...(n.data?.label ? { label: n.data.label } : {}),
+                ...(n.data?.background ? { background: n.data.background } : {}),
+                ...(n.data?.backgroundStyle ? { backgroundStyle: n.data.backgroundStyle } : {}),
+            }
+            return { ...base, type: 'text', text: n.data?.text || '' }
+        }),
         edges: edges.map(e => ({
             id: e.id,
             fromNode: e.source,
@@ -396,6 +469,7 @@ function reactFlowToJsonCanvas(nodes, edges) {
             ...(e.targetHandle ? { toSide: e.targetHandle } : {}),
             ...(e.label ? { label: e.label } : {}),
             toEnd: 'arrow',
+            ...(e.style?.stroke ? { color: e.style.stroke } : {}),
         })),
     }
 }
@@ -432,6 +506,14 @@ function CanvasEditorApp() {
         })
     }, [triggerSave])
 
+    const onChangeUrl = useCallback((nodeId, newUrl) => {
+        setNodes(nds => {
+            const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, url: newUrl } } : n))
+            triggerSave(next, edgesRef.current)
+            return next
+        })
+    }, [triggerSave])
+
     const onDeleteNode = useCallback((nodeId) => {
         setNodes(nds => {
             const nextNodes = nds.filter(n => n.id !== nodeId)
@@ -447,11 +529,19 @@ function CanvasEditorApp() {
     const handlers = useMemo(() => ({
         onChangeText,
         onChangeFile,
+        onChangeUrl,
         onDeleteNode,
-    }), [onChangeText, onChangeFile, onDeleteNode])
+    }), [onChangeText, onChangeFile, onChangeUrl, onDeleteNode])
 
     // Parse initial content from #contents
-    const initialCanvasDoc = useMemo(() => parseCanvasDocument(source.value), [])
+    const initialCanvasDoc = useMemo(() => {
+        try {
+            const doc = parseCanvasDocument(source.value, { allowFallback: false })
+            return validateCanvasDocument(doc)
+        } catch {
+            return parseCanvasDocument('')
+        }
+    }, [])
     const initialElements = useMemo(() => jsonCanvasToReactFlow(initialCanvasDoc, handlers), [initialCanvasDoc, handlers])
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes)
@@ -486,11 +576,16 @@ function CanvasEditorApp() {
                 ...params,
                 type: 'smoothstep',
                 markerEnd: { type: MarkerType.ArrowClosed },
+                className: 'canvas-edge-style',
+                style: EDGE_STYLE,
             }, eds)
+            if (next.length === eds.length) {
+                window.showToast?.(isZh ? '這兩個連接點已有關係線。' : 'These connection points are already linked.')
+            }
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [setEdges, triggerSave])
+    }, [setEdges, triggerSave, isZh])
 
     // Toolbar actions
     const addCard = useCallback(() => {
@@ -570,7 +665,7 @@ function CanvasEditorApp() {
         const reader = new FileReader()
         reader.onload = e => {
             try {
-                const parsed = JSON.parse(e.target.result)
+                const parsed = validateCanvasDocument(parseCanvasDocument(e.target.result, { allowFallback: false }))
                 const converted = jsonCanvasToReactFlow(parsed, handlers)
                 setNodes(converted.nodes)
                 setEdges(converted.edges)
@@ -594,6 +689,8 @@ function CanvasEditorApp() {
                 onConnect={isEdit ? onConnect : undefined}
                 nodesDraggable={isEdit}
                 nodesConnectable={isEdit}
+                connectionMode={ConnectionMode.Loose}
+                defaultEdgeOptions={{ type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed }, className: 'canvas-edge-style', style: EDGE_STYLE }}
                 elementsSelectable={true}
                 colorMode={isDark ? 'dark' : 'light'}
                 fitView

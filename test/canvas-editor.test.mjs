@@ -19,6 +19,8 @@ import { FOOTER, SVG_ICONS } from '../src/templates/common.js'
 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
+const canvasEditorSource = readFileSync(new URL('../static/js/canvas-editor.jsx', import.meta.url), 'utf8')
+const editorCssSource = readFileSync(new URL('../src/styles/editor.css.js', import.meta.url), 'utf8')
 
 test('parseCanvasDocument returns default template when input is empty or invalid', () => {
     const emptyDoc = parseCanvasDocument('')
@@ -27,6 +29,12 @@ test('parseCanvasDocument returns default template when input is empty or invali
 
     const invalidDoc = parseCanvasDocument('not a json')
     assert.equal(invalidDoc.nodes.length, DEFAULT_CANVAS_NODES.length)
+})
+
+test('parseCanvasDocument preserves an explicitly empty canvas instead of restoring welcome cards', () => {
+    const emptyCanvas = parseCanvasDocument(JSON.stringify({ nodes: [], edges: [] }))
+
+    assert.deepEqual(emptyCanvas, { nodes: [], edges: [] })
 })
 
 test('parseCanvasDocument and validateCanvasDocument handle valid JSON Canvas documents', () => {
@@ -50,6 +58,37 @@ test('parseCanvasDocument and validateCanvasDocument handle valid JSON Canvas do
     assert.throws(() => validateCanvasDocument(null), /Canvas document must be an object/)
     assert.throws(() => validateCanvasDocument({ nodes: 'invalid', edges: [] }), /nodes must be an array/)
     assert.throws(() => validateCanvasDocument({ nodes: [], edges: 'invalid' }), /edges must be an array/)
+})
+
+test('canvas documents preserve standard JSON Canvas link and group nodes and migrate legacy sticky cards', () => {
+    const doc = parseCanvasDocument(JSON.stringify({
+        nodes: [
+            { id: 'link-1', type: 'link', x: 10, y: 20, width: 200, height: 100, url: 'https://example.com' },
+            { id: 'group-1', type: 'group', x: 240, y: 20, width: 300, height: 200, label: 'Research' },
+            { id: 'sticky-legacy', type: 'sticky', x: 10, y: 140, width: 200, height: 100, text: 'Legacy note' },
+        ],
+        edges: [],
+    }))
+
+    assert.equal(doc.nodes[0].type, 'link')
+    assert.equal(doc.nodes[0].url, 'https://example.com')
+    assert.equal(doc.nodes[1].type, 'group')
+    assert.equal(doc.nodes[1].label, 'Research')
+    assert.equal(doc.nodes[2].type, 'text')
+    assert.equal(doc.nodes[2].david888.cardType, 'sticky')
+    assert.doesNotThrow(() => validateCanvasDocument(doc))
+})
+
+test('validateCanvasDocument rejects malformed nodes and dangling edges', () => {
+    assert.throws(() => validateCanvasDocument({
+        nodes: [{ id: 'text-1', type: 'text', x: 0, y: 0, width: 100, height: 100 }],
+        edges: [],
+    }), /text node text must be a string/)
+
+    assert.throws(() => validateCanvasDocument({
+        nodes: [{ id: 'text-1', type: 'text', x: 0, y: 0, width: 100, height: 100, text: 'Valid' }],
+        edges: [{ id: 'edge-1', fromNode: 'text-1', toNode: 'missing' }],
+    }), /references an unknown node/)
 })
 
 test('canvasToMarkdown extracts readable markdown representation from canvas nodes', () => {
@@ -97,8 +136,16 @@ test('FOOTER renders new canvas note link and canvas SVG icon', () => {
     const footerHtml = FOOTER({ lang: 'zh-TW', isEdit: true, editorFormat: 'canvas' })
     assert.match(footerHtml, /id="new-canvas-note-link"/)
     assert.match(footerHtml, /href="\/new\/canvas"/)
-    assert.match(footerHtml, /無限畫布/)
+    assert.match(footerHtml, /Canvas 畫布/)
     assert.ok(SVG_ICONS.canvas)
+})
+
+test('canvas footer keeps document imports out of the Canvas menu', () => {
+    const footerHtml = FOOTER({ lang: 'zh-TW', isEdit: true, editorFormat: 'canvas' })
+
+    assert.doesNotMatch(footerHtml, /dropdown-import-doc-btn/)
+    assert.doesNotMatch(footerHtml, /dropdown-import-audio-btn/)
+    assert.doesNotMatch(footerHtml, /匯入內容（Markdown）/)
 })
 
 test('index.js registers /new/canvas route and canvas page ext', () => {
@@ -110,8 +157,8 @@ test('base template renders canvas editor container and loads bundle when editor
     const html = HTML({
         lang: 'zh-TW',
         title: 'Canvas Test',
-        content: JSON.stringify({ nodes: [], edges: [] }),
-        ext: { editorFormat: 'canvas' },
+        content: JSON.stringify({ nodes: [{ id: 'card-1', type: 'text', x: 0, y: 0, width: 200, height: 100, text: '# Canvas Test' }], edges: [] }),
+        ext: { editorFormat: 'canvas', canvasMarkdown: '# Canvas Test' },
         isEdit: true,
         path: 'test-canvas-note',
     })
@@ -121,6 +168,8 @@ test('base template renders canvas editor container and loads bundle when editor
     assert.match(html, /href="\/js\/canvas-editor\.bundle\.css"/)
     assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs"/)
     assert.match(html, /data-editable="true"/)
+    assert.match(baseTemplateSource, /isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\)/)
+    assert.match(html, /id="bot-accessible-content">\s*# Canvas Test/)
 })
 
 test('base template renders read-only canvas editor container when not in edit mode', () => {
@@ -136,4 +185,13 @@ test('base template renders read-only canvas editor container when not in edit m
     assert.match(html, /id="canvas-editor"/)
     assert.match(html, /data-editable="false"/)
     assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs"/)
+})
+
+test('canvas editor uses clear, loose, four-sided handles and records JSON Canvas extensions', () => {
+    assert.match(canvasEditorSource, /ConnectionMode/)
+    assert.match(canvasEditorSource, /connectionMode=\{ConnectionMode\.Loose\}/)
+    assert.match(canvasEditorSource, /david888/)
+    assert.match(canvasEditorSource, /canvas-edge-style/)
+    assert.match(canvasEditorSource, /safeWikiNotePath/)
+    assert.match(editorCssSource, /react-flow__edges > svg/)
 })

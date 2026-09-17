@@ -12,7 +12,8 @@ const fidoSource = readFileSync(new URL('../src/fido_auth.mjs', import.meta.url)
 const mcpPySource = readFileSync(new URL('../mcp/server.py', import.meta.url), 'utf8')
 
 test('VULN-01: base.js escapes content in bot-accessible-content and textarea', () => {
-    assert.match(baseSource, /id="bot-accessible-content">\$\{isBlockDocument \? blockHtml : escapeHtml\(content\)\}<\/article>/)
+    assert.match(baseSource, /const accessibleContent = isBlockDocument[\s\S]*?\? escapeHtml\(ext\.canvasMarkdown \|\| ''\)[\s\S]*?: escapeHtml\(content\)/)
+    assert.match(baseSource, /id="bot-accessible-content">\$\{accessibleContent\}<\/article>/)
     assert.match(baseSource, /const textareaContent = escapeHtml\(content\)/)
     assert.match(baseSource, /placeholder="\$\{SUPPORTED_LANG\[lang\]\.emptyPH\}">\$\{escapeHtml\(content\)\}<\/textarea>/)
     assert.match(baseSource, /APP_STATE = \$\{JSON\.stringify\([\s\S]*?\)\.replace\(\/<\//)

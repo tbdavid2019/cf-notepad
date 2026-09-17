@@ -131,8 +131,8 @@ test('reports the cursor line, column, and total editor length', () => {
     assert.equal(getEditorCursorStatus('one\ntwo', 6, 'en-US'), 'Line 2, Column 3, Length 7')
 })
 
-test('renders the toolbar for editable pages', () => {
-    assert.match(baseTemplate, /<div class="layer_2">\s*\$\{isEdit && !isBlockDocument \? EDITOR_TOOLBAR\(lang\) : ''\}/)
+test('renders the toolbar for editable Markdown pages', () => {
+    assert.match(baseTemplate, /<div class="layer_2">\s*\$\{isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\) : ''\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
     assert.match(
         commonTemplate,
@@ -183,8 +183,8 @@ test('top AI edit control reuses the document AI editing workflow', () => {
     assert.match(baseTemplate, /\$editorAiEditBtn\.addEventListener\('click', \(\) => runAiAssistant\('edit'\)\)/)
 })
 
-test('keeps the Markdown toolbar when preview mode is turned off', () => {
-    assert.match(baseTemplate, /\$\{isEdit \? '<script type="module" src="\/js\/markdown-toolbar\.mjs"><\/script>' : ''\}/)
+test('loads the Markdown toolbar only for Markdown edit pages', () => {
+    assert.match(baseTemplate, /\$\{isEdit && !isBlockDocument && !isCanvasDocument \? '<script type="module" src="\/js\/markdown-toolbar\.mjs"><\/script>' : ''\}/)
     assert.match(baseTemplate, /divide-line/)
 })
 
@@ -264,5 +264,3 @@ test('base template and editor css include mirror DOM and wrapped line number st
     assert.match(toolbarSource, /ResizeObserver/)
     assert.match(toolbarSource, /window\.updateEditorLineNumbers/)
 })
-
-
