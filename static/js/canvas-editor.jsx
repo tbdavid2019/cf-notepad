@@ -76,6 +76,8 @@ const EDGE_WIDTH_OPTIONS = [
     { value: '4', label: '粗 / Thick' },
 ]
 
+const CANVAS_COLOR_ALPHA = '2e'
+
 export function resolveCanvasColor(colorVal) {
     if (!colorVal) return ''
     if (colorVal === '1') return '#ef4444'
@@ -165,6 +167,11 @@ function CardHandles({ isEdit }) {
 function colorPickerValue(value, fallback = '#ffffff') {
     const resolved = resolveCanvasColor(value)
     return /^#[0-9a-f]{6}$/i.test(resolved) ? resolved : fallback
+}
+
+function canvasSurfaceColor(color) {
+    const resolved = resolveCanvasColor(color)
+    return resolved ? `${resolved}${CANVAS_COLOR_ALPHA}` : ''
 }
 
 function NodeToolbarControls({ id, data, selected, isEdit, isZh, palette, duplicateLabel, deleteLabel }) {
@@ -441,7 +448,7 @@ function TextCardNode({ id, data, selected }) {
         return {
             ...base,
             borderColor: resolvedColor,
-            backgroundColor: `${resolvedColor}18`,
+            backgroundColor: canvasSurfaceColor(resolvedColor),
             boxShadow: `0 0 0 1.5px ${resolvedColor}66, 0 4px 12px rgba(0,0,0,0.08)`,
         }
     }, [resolvedColor])
@@ -637,7 +644,7 @@ function WikiLinkNode({ id, data, selected }) {
             style={{
                 width: '100%',
                 height: '100%',
-                ...(resolvedColor ? { borderColor: resolvedColor, boxShadow: `0 0 0 1.5px ${resolvedColor}66` } : {}),
+                ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: canvasSurfaceColor(resolvedColor), boxShadow: `0 0 0 1.5px ${resolvedColor}66` } : {}),
             }}
         >
             <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
@@ -711,6 +718,7 @@ function WikiLinkNode({ id, data, selected }) {
 function ExternalLinkNode({ id, data, selected }) {
     const isEdit = isEditableMode
     const isZh = resolveCanvasLang() === 'zh-TW'
+    const isDark = useCanvasTheme() === 'dark'
     const [url, setUrl] = useState(data.url || '')
     const [isEditing, setIsEditing] = useState(!data.url && isEdit)
     const resolvedColor = resolveCanvasColor(data.color)
@@ -721,7 +729,7 @@ function ExternalLinkNode({ id, data, selected }) {
     }
 
     const safeUrl = safeExternalUrl(url)
-    return <div className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: `${resolvedColor}18` } : {}) }}>
+    return <div className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: canvasSurfaceColor(resolvedColor) } : {}) }}>
         <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
         <CardHandles isEdit={isEdit} />
         <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={isZh} palette={CANVAS_COLOR_PRESETS} duplicateLabel={isZh ? '複製外部連結' : 'Duplicate link'} deleteLabel={isZh ? '刪除外部連結' : 'Delete link'} />
@@ -740,8 +748,9 @@ function ExternalLinkNode({ id, data, selected }) {
 
 function GroupNode({ id, data, selected }) {
     const isEdit = isEditableMode
+    const isDark = useCanvasTheme() === 'dark'
     const resolvedColor = resolveCanvasColor(data.color)
-    return <div className={`canvas-group-node ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: `${resolvedColor}18` } : {}) }}>
+    return <div className={`canvas-group-node ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: canvasSurfaceColor(resolvedColor) } : {}) }}>
         <NodeResizer minWidth={120} minHeight={80} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
         <CardHandles isEdit={isEdit} />
         <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={resolveCanvasLang() === 'zh-TW'} palette={CANVAS_COLOR_PRESETS} duplicateLabel="Duplicate group" deleteLabel="Delete group" />
@@ -897,40 +906,56 @@ function CanvasEditorApp() {
         source.dispatchEvent(new Event('input', { bubbles: true }))
     }, [isEdit])
 
+    const nodesRef = useRef([])
+    const edgesRef = useRef([])
+    const historyRef = useRef({ past: [], future: [] })
+    const [, setHistoryVersion] = useState(0)
+    const recordHistory = useCallback(() => {
+        const snapshot = reactFlowToJsonCanvas(nodesRef.current, edgesRef.current)
+        historyRef.current.past = [...historyRef.current.past.slice(-49), snapshot]
+        historyRef.current.future = []
+        setHistoryVersion(version => version + 1)
+    }, [])
+
     // Node handlers
     const onChangeText = useCallback((nodeId, newText) => {
+        recordHistory()
         setNodes(nds => {
             const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, text: newText } } : n))
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onChangeFile = useCallback((nodeId, newFile) => {
+        recordHistory()
         setNodes(nds => {
             const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, file: newFile } } : n))
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onChangeUrl = useCallback((nodeId, newUrl) => {
+        recordHistory()
         setNodes(nds => {
             const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, url: newUrl } } : n))
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onChangeColor = useCallback((nodeId, color) => {
+        recordHistory()
         setNodes(nds => {
             const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, color } } : n))
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onDuplicateNode = useCallback((nodeId) => {
+        recordHistory()
         setNodes(nds => {
             const target = nds.find(n => n.id === nodeId)
             if (!target) return nds
@@ -948,9 +973,10 @@ function CanvasEditorApp() {
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onDeleteNode = useCallback((nodeId) => {
+        recordHistory()
         setNodes(nds => {
             const nextNodes = nds.filter(n => n.id !== nodeId)
             setEdges(eds => {
@@ -960,18 +986,20 @@ function CanvasEditorApp() {
             })
             return nextNodes
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     // Edge handlers
     const onChangeEdgeLabel = useCallback((edgeId, newLabel) => {
+        recordHistory()
         setEdges(eds => {
             const next = eds.map(e => (e.id === edgeId ? { ...e, label: newLabel, data: { ...e.data, label: newLabel } } : e))
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onChangeEdgeArrows = useCallback((edgeId, fromEnd, toEnd) => {
+        recordHistory()
         setEdges(eds => {
             const next = eds.map(e => {
                 if (e.id !== edgeId) return e
@@ -986,9 +1014,10 @@ function CanvasEditorApp() {
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onChangeEdgeStyle = useCallback((edgeId, styleUpdates) => {
+        recordHistory()
         setEdges(eds => {
             const next = eds.map(e => {
                 if (e.id !== edgeId) return e
@@ -1010,15 +1039,16 @@ function CanvasEditorApp() {
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onDeleteEdge = useCallback((edgeId) => {
+        recordHistory()
         setEdges(eds => {
             const next = eds.filter(e => e.id !== edgeId)
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [triggerSave])
+    }, [recordHistory, triggerSave])
 
     const onSelectEdge = useCallback((edgeId) => {
         setEdges(eds => eds.map(e => ({ ...e, selected: e.id === edgeId })))
@@ -1056,19 +1086,70 @@ function CanvasEditorApp() {
     const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges)
 
-    const nodesRef = useRef(nodes)
-    const edgesRef = useRef(edges)
     nodesRef.current = nodes
     edgesRef.current = edges
 
+    const restoreHistorySnapshot = useCallback(snapshot => {
+        const converted = jsonCanvasToReactFlow(snapshot, handlers, edgeHandlers)
+        setNodes(converted.nodes)
+        setEdges(converted.edges)
+        triggerSave(converted.nodes, converted.edges)
+    }, [edgeHandlers, handlers, setEdges, setNodes, triggerSave])
+
+    const undo = useCallback(() => {
+        const history = historyRef.current
+        const previous = history.past.pop()
+        if (!previous) return
+        history.future.unshift(reactFlowToJsonCanvas(nodesRef.current, edgesRef.current))
+        restoreHistorySnapshot(previous)
+        setHistoryVersion(version => version + 1)
+    }, [restoreHistorySnapshot])
+
+    const redo = useCallback(() => {
+        const history = historyRef.current
+        const next = history.future.shift()
+        if (!next) return
+        history.past.push(reactFlowToJsonCanvas(nodesRef.current, edgesRef.current))
+        restoreHistorySnapshot(next)
+        setHistoryVersion(version => version + 1)
+    }, [restoreHistorySnapshot])
+
+    useEffect(() => {
+        if (!isEdit || !window.offlineStore || !window.APP_STATE?.path) return
+        let cancelled = false
+        const restoreLocalCanvasDraft = async () => {
+            const local = await window.offlineStore.getNote(window.APP_STATE.path)
+            if (cancelled || !local || local.format !== 'canvas' || !['draft', 'pending'].includes(local.syncStatus)) return
+            if (!local.content || local.content === source.value) return
+            try {
+                const parsed = validateCanvasDocument(parseCanvasDocument(local.content, { allowFallback: false }))
+                const converted = jsonCanvasToReactFlow(parsed, handlers, edgeHandlers)
+                if (cancelled) return
+                source.value = local.content
+                setNodes(converted.nodes)
+                setEdges(converted.edges)
+                source.dispatchEvent(new Event('input', { bubbles: true }))
+                window.showToast?.(resolveCanvasLang() === 'zh-TW' ? '已恢復本機 Canvas 草稿' : 'Restored local Canvas draft')
+            } catch {
+                // Ignore stale or malformed local data and keep the server document.
+            }
+        }
+        const timer = window.setTimeout(restoreLocalCanvasDraft, 0)
+        return () => {
+            cancelled = true
+            window.clearTimeout(timer)
+        }
+    }, [edgeHandlers, handlers, isEdit, setEdges, setNodes])
+
     // Save changes when dragging/connecting
     const handleNodesChange = useCallback(changes => {
+        if (changes.some(change => change.type === 'dimensions' && change.resizing === false)) recordHistory()
         onNodesChange(changes)
         clearTimeout(window.__canvasSaveTimer)
         window.__canvasSaveTimer = setTimeout(() => {
             triggerSave(nodesRef.current, edgesRef.current)
         }, 400)
-    }, [onNodesChange, triggerSave])
+    }, [onNodesChange, recordHistory, triggerSave])
 
     const handleEdgesChange = useCallback(changes => {
         onEdgesChange(changes)
@@ -1079,6 +1160,7 @@ function CanvasEditorApp() {
     }, [onEdgesChange, triggerSave])
 
     const onConnect = useCallback(params => {
+        recordHistory()
         setEdges(eds => {
             const next = addEdge({
                 ...params,
@@ -1106,16 +1188,17 @@ function CanvasEditorApp() {
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [setEdges, triggerSave, isZh, onChangeEdgeLabel, onChangeEdgeArrows, onChangeEdgeStyle, onDeleteEdge, onSelectEdge])
+    }, [recordHistory, setEdges, triggerSave, isZh, onChangeEdgeLabel, onChangeEdgeArrows, onChangeEdgeStyle, onDeleteEdge, onSelectEdge])
 
     // Toolbar actions
     const addCard = useCallback(() => {
+        recordHistory()
         const id = 'card-' + Date.now().toString(36)
         const newNode = {
             id,
             type: 'text',
             position: { x: 120 + Math.random() * 80, y: 120 + Math.random() * 80 },
-            style: { width: 320, height: 200 },
+            style: { width: 300, height: 170 },
             data: {
                 text: isZh ? '## 新卡片\n\n點兩下開始輸入文字...' : '## New Card\n\nDouble-click to edit...',
                 ...handlers,
@@ -1126,9 +1209,10 @@ function CanvasEditorApp() {
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [handlers, isZh, setNodes, triggerSave])
+    }, [handlers, isZh, recordHistory, setNodes, triggerSave])
 
     const addSticky = useCallback(() => {
+        recordHistory()
         const colors = ['#fff9c4', '#dcedc8', '#bbdefb', '#f8bbd0', '#e1bee7', '#ffe0b2']
         const color = colors[Math.floor(Math.random() * colors.length)]
         const id = 'sticky-' + Date.now().toString(36)
@@ -1148,9 +1232,10 @@ function CanvasEditorApp() {
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [handlers, isZh, setNodes, triggerSave])
+    }, [handlers, isZh, recordHistory, setNodes, triggerSave])
 
     const addWikiLink = useCallback(() => {
+        recordHistory()
         const id = 'wiki-' + Date.now().toString(36)
         const newNode = {
             id,
@@ -1167,7 +1252,7 @@ function CanvasEditorApp() {
             triggerSave(next, edgesRef.current)
             return next
         })
-    }, [handlers, setNodes, triggerSave])
+    }, [handlers, recordHistory, setNodes, triggerSave])
 
     const exportJsonCanvas = useCallback(() => {
         const canvasDoc = reactFlowToJsonCanvas(nodesRef.current, edgesRef.current)
@@ -1186,6 +1271,7 @@ function CanvasEditorApp() {
         const reader = new FileReader()
         reader.onload = e => {
             try {
+                recordHistory()
                 const parsed = validateCanvasDocument(parseCanvasDocument(e.target.result, { allowFallback: false }))
                 const converted = jsonCanvasToReactFlow(parsed, handlers, edgeHandlers)
                 setNodes(converted.nodes)
@@ -1197,7 +1283,7 @@ function CanvasEditorApp() {
         }
         reader.readAsText(file)
         event.target.value = ''
-    }, [handlers, edgeHandlers, isZh, setEdges, setNodes, triggerSave])
+    }, [handlers, edgeHandlers, isZh, recordHistory, setEdges, setNodes, triggerSave])
 
     return (
         <div className={`david-canvas-app ${isDark ? 'theme-dark' : 'theme-light'}`} style={{ width: '100%', height: '100%' }}>
@@ -1209,6 +1295,7 @@ function CanvasEditorApp() {
                 onNodesChange={isEdit ? handleNodesChange : undefined}
                 onEdgesChange={isEdit ? handleEdgesChange : undefined}
                 onConnect={isEdit ? onConnect : undefined}
+                onNodeDragStart={isEdit ? recordHistory : undefined}
                 nodesDraggable={isEdit}
                 nodesConnectable={isEdit}
                 connectionMode={ConnectionMode.Loose}
@@ -1239,6 +1326,13 @@ function CanvasEditorApp() {
                             </button>
                             <button type="button" className="canvas-tb-btn" onClick={addWikiLink} title={isZh ? '引用 Wiki 筆記' : 'Wiki Note'}>
                                 🔗 {isZh ? '引用筆記' : 'Wiki Note'}
+                            </button>
+                            <span className="canvas-tb-divider" />
+                            <button type="button" className="canvas-tb-btn" onClick={undo} disabled={!historyRef.current.past.length} title={isZh ? '復原上一個 Canvas 操作' : 'Undo Canvas action'}>
+                                ↶ {isZh ? '復原' : 'Undo'}
+                            </button>
+                            <button type="button" className="canvas-tb-btn" onClick={redo} disabled={!historyRef.current.future.length} title={isZh ? '重做 Canvas 操作' : 'Redo Canvas action'}>
+                                ↷ {isZh ? '重做' : 'Redo'}
                             </button>
                             <span className="canvas-tb-divider" />
                             <button type="button" className="canvas-tb-btn" onClick={exportJsonCanvas} title={isZh ? '匯出 Obsidian .canvas' : 'Export .canvas'}>

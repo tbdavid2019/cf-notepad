@@ -1209,6 +1209,7 @@ ${getMarkdownCss()}
         title: title || '',
         i18n: getLangText(lang),
     }).replace(/</g, '\\u003c')}
+    window.APP_STATE = APP_STATE
 
     const syncRealtimeDocumentTitle = (text) => {
         if (typeof text !== 'string') return

@@ -169,6 +169,7 @@ test('base template renders canvas editor container and loads bundle when editor
     assert.match(html, /href="\/js\/canvas-editor\.bundle\.css"/)
     assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs"/)
     assert.match(html, /data-editable="true"/)
+    assert.match(html, /window\.APP_STATE = APP_STATE/)
     assert.match(baseTemplateSource, /isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\)/)
     assert.match(html, /id="bot-accessible-content">\s*# Canvas Test/)
 })
@@ -214,9 +215,20 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(canvasEditorSource, /type="color"/)
     assert.match(canvasEditorSource, /canvas-edge-select/)
     assert.doesNotMatch(canvasEditorSource, /structuredClone\(target(?:\.data)?\)/)
+    assert.match(canvasEditorSource, /historyRef/)
+    assert.match(canvasEditorSource, /Restored local Canvas draft/)
+    assert.match(canvasEditorSource, /↶/)
+    assert.match(canvasEditorSource, /↷/)
     assert.match(editorCssSource, /\.canvas-node-toolbar/)
     assert.match(editorCssSource, /\.canvas-edge-toolbar/)
     assert.match(editorCssSource, /\.canvas-edge-label-badge/)
+    assert.match(editorCssSource, /--canvas-font-body/)
+    assert.match(editorCssSource, /theme-dark .*canvas-node-card/)
+})
+
+test('canvas publishing validates JSON Canvas content at the setting boundary', () => {
+    assert.match(indexSource, /resolveEditorFormat\(metadata\) === 'canvas'/)
+    assert.match(indexSource, /validateCanvasDocument\(parseCanvasDocument\(content, \{ allowFallback: false \}\)\)/)
 })
 
 test('validateCanvasDocument accepts edge david888 extension and custom arrow directions', () => {

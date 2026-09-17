@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **🧭 Canvas 儲存、發布、復原與視覺一致性修正 (Canvas Persistence, Publish, Undo & Visual Consistency)**：修正本機草稿重新整理後回到預設模板，以及發布頁沒有使用目前畫布內容的問題；Canvas 現在會恢復 `draft`／`pending` 本機 JSON、發布前驗證完整 JSON Canvas，並在設定路由再次驗證 Canvas 文件。新增 Undo／Redo 歷史控制，補齊暗色節點與工具列樣式，統一卡片字級與間距、提高自訂色彩底色可見度，並讓英文入口使用英文預設模板。
+
 - **🛠️ Canvas 編輯控制補全與複製卡片修正 (Complete Canvas Editing Controls & Duplicate Fix)**：EdgeToolbar 改為獨立的箭頭方向、線條樣式、線寬、色彩與文字控制；NodeToolbar 擴充至連結／群組節點並加入原生自訂色彩選擇器；複製卡片改用可保留 callback 的資料複製方式，修正 `structuredClone` 造成的 `DataCloneError`。
 
 - **🎨 Canvas 畫布完整互動升級：NodeToolbar、EdgeToolbar、調色盤與雙向箭頭樣式控制 (Full Interactive Toolbars, Palettes & Edge Styling)**：

@@ -544,13 +544,15 @@ router.head('/', homePage)
 
 async function createNewNote(request, editorFormat) {
     const originUrl = new URL(request.url)
+    const lang = getI18n(request)
     const shareTitle = originUrl.searchParams.get('title')
     const shareText = originUrl.searchParams.get('text')
     const shareLink = originUrl.searchParams.get('url')
 
     let initialContent = ''
     if (editorFormat === 'canvas') {
-        const welcomeTitle = shareTitle || (originUrl.searchParams.get('lang') === 'en-US' ? 'Welcome to Canvas' : '歡迎使用 Canvas 畫布')
+        const isEnglish = lang === 'en-US'
+        const welcomeTitle = shareTitle || (isEnglish ? 'Welcome to Canvas' : '歡迎使用 Canvas 畫布')
         initialContent = JSON.stringify({
             nodes: [
                 {
@@ -559,8 +561,10 @@ async function createNewNote(request, editorFormat) {
                     x: 80,
                     y: 80,
                     width: 380,
-                    height: 220,
-                    text: `# ${welcomeTitle}\n\n- 雙擊卡片可編輯 Markdown 內文\n- 拖曳四邊圓點即可連線\n- 點擊上方工具列新增更多卡片`,
+                    height: 180,
+                    text: isEnglish
+                        ? `# ${welcomeTitle}\n\n- Double-click to edit Markdown\n- Drag a handle to connect cards\n- Use the toolbar to add more cards`
+                        : `# ${welcomeTitle}\n\n- 雙擊卡片可編輯 Markdown 內文\n- 拖曳四邊圓點即可連線\n- 點擊上方工具列新增更多卡片`,
                 },
                 {
                     id: 'node-sticky',
@@ -568,9 +572,11 @@ async function createNewNote(request, editorFormat) {
                     x: 520,
                     y: 80,
                     width: 240,
-                    height: 180,
+                    height: 150,
                     color: '#fff9c4',
-                    text: '💡 **靈感便籤**\n\n隨手記錄微小想法，相容 Obsidian Canvas！',
+                    text: isEnglish
+                        ? '💡 **Idea sticky**\n\nCapture a small thought and keep it next to your notes.'
+                        : '💡 **靈感便籤**\n\n隨手記錄微小想法，相容 Obsidian Canvas！',
                     david888: { cardType: 'sticky' },
                 },
             ],
@@ -3299,6 +3305,13 @@ router.post('/:path/setting', async request => {
                             validateBlockDocument(parseBlockDocument(content, { allowTextFallback: false }))
                         } catch (error) {
                             return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+                        }
+                    }
+                    if (typeof content === 'string' && resolveEditorFormat(metadata) === 'canvas') {
+                        try {
+                            validateCanvasDocument(parseCanvasDocument(content, { allowFallback: false }))
+                        } catch (error) {
+                            return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
                         }
                     }
                     const normalizedWidth = width === undefined

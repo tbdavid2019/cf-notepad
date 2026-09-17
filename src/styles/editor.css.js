@@ -1100,6 +1100,12 @@ textarea#contents {
     width: 100%;
     height: 100%;
     position: relative;
+    --canvas-font-family: var(--editor-font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
+    --canvas-font-body: 14px;
+    --canvas-font-label: 13px;
+    --canvas-font-meta: 12px;
+    --canvas-line-body: 1.55;
+    font-family: var(--canvas-font-family);
 }
 
 /* Floating Toolbar */
@@ -1161,6 +1167,9 @@ textarea#contents {
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
     overflow: hidden;
     box-sizing: border-box;
+    font-family: var(--canvas-font-family);
+    font-size: var(--canvas-font-body);
+    line-height: var(--canvas-line-body);
 }
 
 .canvas-node-card.is-selected {
@@ -1239,6 +1248,18 @@ textarea#contents {
     color: #e6edf3;
 }
 
+.david-canvas-app.theme-dark .canvas-node-card.is-light,
+.david-canvas-app.theme-dark .canvas-group-node.is-light {
+    background: #1e1e24;
+    border-color: #3d444d;
+    color: #e6edf3;
+}
+
+.david-canvas-app.theme-dark .canvas-node-card.is-dark,
+.david-canvas-app.theme-dark .canvas-group-node.is-dark {
+    color: #e6edf3;
+}
+
 .canvas-card-header {
     display: flex;
     align-items: center;
@@ -1253,8 +1274,9 @@ textarea#contents {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: var(--canvas-font-label);
+    font-weight: 650;
+    line-height: 1.25;
     opacity: 0.8;
 }
 
@@ -1295,8 +1317,8 @@ textarea#contents {
     flex: 1;
     padding: 10px 14px;
     overflow-y: auto;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: var(--canvas-font-body);
+    line-height: var(--canvas-line-body);
 }
 
 .canvas-card-textarea {
@@ -1316,8 +1338,25 @@ textarea#contents {
 }
 
 .canvas-card-markdown-preview {
-    font-size: 14px;
-    line-height: 1.5;
+    font-family: inherit;
+    font-size: var(--canvas-font-body);
+    line-height: var(--canvas-line-body);
+}
+
+.canvas-card-title-text,
+.canvas-wiki-title,
+.canvas-group-label {
+    font-family: inherit;
+}
+
+.canvas-wiki-title {
+    font-size: var(--canvas-font-body);
+    line-height: 1.4;
+}
+
+.canvas-group-label {
+    font-size: var(--canvas-font-label);
+    line-height: 1.35;
 }
 
 .canvas-card-markdown-preview h1,
@@ -1333,6 +1372,16 @@ textarea#contents {
     margin-bottom: 6px;
 }
 
+.david-canvas-app.theme-dark .canvas-card-markdown-preview h1,
+.david-canvas-app.theme-dark .canvas-card-markdown-preview h2 {
+    border-color: rgba(230, 237, 243, 0.2);
+}
+
+.david-canvas-app.theme-dark .canvas-card-markdown-preview blockquote {
+    color: #aab7c4;
+    border-color: #526171;
+}
+
 /* Sticky Note Node */
 .canvas-card-sticky {
     border: 1px solid rgba(0, 0, 0, 0.08);
@@ -1344,11 +1393,23 @@ textarea#contents {
     border-radius: 12px;
     background: color-mix(in srgb, var(--toolbar-accent, #2563a6) 8%, transparent);
     color: var(--toolbar-text, #24292f);
+    font-family: var(--canvas-font-family);
+    font-size: var(--canvas-font-body);
 }
 
 .canvas-group-node.is-selected {
     border-style: solid;
     box-shadow: 0 0 0 2px color-mix(in srgb, var(--toolbar-accent, #2563a6) 35%, transparent);
+}
+
+.david-canvas-app.theme-dark .canvas-group-node {
+    border-color: color-mix(in srgb, #79c7ff 58%, transparent);
+    background: color-mix(in srgb, #79c7ff 10%, transparent);
+    color: #e6edf3;
+}
+
+.david-canvas-app.theme-dark .canvas-group-node.is-selected {
+    box-shadow: 0 0 0 2px color-mix(in srgb, #79c7ff 42%, transparent);
 }
 
 .canvas-group-label {
@@ -1640,6 +1701,46 @@ textarea#contents {
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
     cursor: pointer;
     transition: all 0.15s ease;
+}
+
+.david-canvas-app.theme-dark .canvas-floating-toolbar,
+.david-canvas-app.theme-dark .canvas-node-toolbar,
+.david-canvas-app.theme-dark .canvas-edge-toolbar {
+    --editor-surface: #252a33;
+    --status-control-bg: #2d333b;
+    --toolbar-border: #526171;
+    --text-color: #e6edf3;
+    --toolbar-muted: #aab7c4;
+    background: color-mix(in srgb, #252a33 94%, transparent);
+    color: #e6edf3;
+    border-color: #526171;
+}
+
+.david-canvas-app.theme-dark .canvas-tb-btn,
+.david-canvas-app.theme-dark .canvas-edge-tb-btn,
+.david-canvas-app.theme-dark .canvas-edge-select-label,
+.david-canvas-app.theme-dark .canvas-color-picker {
+    background: #2d333b;
+    border-color: #526171;
+    color: #e6edf3;
+}
+
+.david-canvas-app.theme-dark .canvas-edge-select,
+.david-canvas-app.theme-dark .canvas-edge-select option {
+    background: #2d333b;
+    color: #e6edf3;
+}
+
+.david-canvas-app.theme-dark .react-flow__controls button {
+    background: #252a33;
+    border-color: #526171;
+    color: #e6edf3;
+    fill: #e6edf3;
+}
+
+.david-canvas-app.theme-dark .react-flow__minimap {
+    background: #1e1e24;
+    border-color: #526171;
 }
 
 .canvas-edge-label-badge:hover {

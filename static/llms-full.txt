@@ -29,7 +29,7 @@
 - **New Markdown Note**: `https://wiki.david888.com/new/markdown`
   Allocates a random short slug and initializes a raw Markdown document.
 - **New Canvas**: `https://wiki.david888.com/new/canvas`
-  Allocates a Canvas document whose persisted core follows JSON Canvas 1.0: text, file, link, group, and edge records. Canvas provides NodeToolbar color pickers and duplicate/delete actions, plus an EdgeToolbar for label, explicit arrow direction, line style, width, and color. DAVID888 sticky notes use an ignorable `david888` extension. Import/export `.canvas` files from the Canvas toolbar. The Footer Import content menu remains available for Markdown, audio, Office, PDF, and URL workflows; from Canvas it follows the existing Markdown-note import behavior.
+  Allocates a Canvas document whose persisted core follows JSON Canvas 1.0: text, file, link, group, and edge records. Canvas provides NodeToolbar color pickers, duplicate/delete actions, Undo/Redo, local draft restoration, dark-mode styling, and bilingual starter templates, plus an EdgeToolbar for label, explicit arrow direction, line style, width, and color. Publishing sends the current Canvas JSON and the setting route validates it. DAVID888 sticky notes use an ignorable `david888` extension. Import/export `.canvas` files from the Canvas toolbar. The Footer Import content menu remains available for Markdown, audio, Office, PDF, and URL workflows; from Canvas it follows the existing Markdown-note import behavior.
 - **Read & Edit Note**: `https://wiki.david888.com/{slug}`
   View or edit a note at `/{slug}`. Supports passcodes for view-locking (`vpw`) and edit-locking (`pw`).
 - **Public Share View**: `https://wiki.david888.com/share/{shareSlug}`

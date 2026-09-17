@@ -153,8 +153,8 @@
     },
     {
       "id": "infinite-canvas-editor",
-      "zh-TW": "小訣竅：選取 Canvas 卡片可開啟 NodeToolbar 調色、複製與刪除；選取關係線可開啟 EdgeToolbar 編輯文字、箭頭、實虛線、線寬與顏色。四邊連接點都可建立關係線。",
-      "en-US": "Tip: Select a Canvas card to open NodeToolbar for color, duplicate, and delete. Select an edge to edit its label, arrows, solid/dashed/dotted style, width, and color; all four handles can connect."
+      "zh-TW": "小訣竅：Canvas 會保存本機未發布草稿；選取卡片可開啟 NodeToolbar 調色、複製、刪除與 Undo／Redo，選取關係線可編輯文字、箭頭、實虛線、線寬與顏色。四邊連接點都可建立關係線。",
+      "en-US": "Tip: Canvas restores local unpublished drafts. Select a card for color, duplicate, delete, and Undo/Redo; select an edge to edit its label, arrows, solid/dashed/dotted style, width, and color. All four handles can connect."
     }
   ]
 }
