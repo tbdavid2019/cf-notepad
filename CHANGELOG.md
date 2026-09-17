@@ -6,7 +6,7 @@
   - 恢復 `.canvas-handle` 的 pointer events，四邊 source／target handle 現在可以實際拖曳建立關係線，`onConnect` 會正常寫入 JSON Canvas edge；`CanvasEdge` 會保留 React Flow 解析後的 marker URL，避免 SVG 收到 `[object Object]`。
   - 恢復 `persistence.mjs` 的 `restoreLocalDraft`，重新整理後會從 IndexedDB 載回 `draft`／`pending` Canvas 內容並重新適應視口；若畫面載入後已有新編輯，保留目前編輯狀態。
   - 草稿恢復改走 store subscription 的單一 `input` 儲存路徑，避免重複觸發本機／雲端同步事件。
-  - Canvas 靜態 bundle 快取版本升至 `v=2.5`，並為 SVG edge path 補上明確 stroke attributes 與 opacity，確保線條實體可見。
+  - Canvas 靜態 bundle 快取版本升至 `v=2.6`，並固定 React Flow edge layer／SVG drawing surface 為可用 viewport 尺寸；修正 edge path 寬高為 `0px` 導致資料存在但畫面無線的根因。
   - 將 `.canvas-editor-pane` 改為跟隨外層 flex 可用高度（`flex: 1 1 auto; height: 100%; min-height: 0`），移除固定 viewport 高度計算，消除畫布與 Footer 之間的空白區。
   - 新增關係線互動、草稿恢復與畫布高度的回歸測試。
 

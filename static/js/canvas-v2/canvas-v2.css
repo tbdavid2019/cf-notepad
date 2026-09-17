@@ -35,6 +35,20 @@
     stroke: var(--canvas-grid);
 }
 
+/* React Flow can measure the edge layer at 0px when the canvas is mounted
+   inside the nested editor flex layout. Keep the SVG drawing surface aligned
+   with the visible flow viewport so edge paths are actually painted. */
+.canvas-v2-root .react-flow__edges {
+    width: 100% !important;
+    height: 100% !important;
+    inset: 0;
+}
+
+.canvas-v2-root .react-flow__edges > svg {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 /* Handles with Ameliorate visibility pattern */
 .canvas-handle {
     width: 10px !important;
