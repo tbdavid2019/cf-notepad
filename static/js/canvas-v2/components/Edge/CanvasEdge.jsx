@@ -70,7 +70,10 @@ export function CanvasEdge(props) {
         stroke: selected ? '#2563eb' : color,
         strokeWidth: selected ? 2.5 : strokeWidth,
         strokeDasharray,
+        opacity: 1,
     }
+    const lineColor = selected ? '#2563eb' : color
+    const lineWidth = selected ? 2.5 : strokeWidth
 
     const displayLabel = data.label !== undefined ? data.label : (label || DEFAULT_EDGE_LABEL)
 
@@ -80,6 +83,12 @@ export function CanvasEdge(props) {
                 id={id}
                 path={edgePath}
                 style={edgeStyle}
+                stroke={lineColor}
+                strokeWidth={lineWidth}
+                strokeDasharray={strokeDasharray}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                vectorEffect="non-scaling-stroke"
                 interactionWidth={20}
                 markerEnd={markerEnd}
                 markerStart={markerStart}

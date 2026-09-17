@@ -403,6 +403,7 @@
     stroke: #475569;
     stroke-width: 2px;
     stroke-opacity: 1 !important;
+    opacity: 1 !important;
     visibility: visible !important;
     transition: stroke 0.15s ease, stroke-width 0.15s ease;
 }
