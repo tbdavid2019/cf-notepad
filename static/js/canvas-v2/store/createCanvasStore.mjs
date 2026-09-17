@@ -35,6 +35,7 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
         // document state
         nodes: initialState.nodes,
         edges: initialState.edges,
+        metadata: initialState.metadata || {},
 
         // selection state
         selectedNodeIds: [],
@@ -56,6 +57,7 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
 
         // commands
         createNode: (options) => set(state => commands.createNode(state, options)),
+        clearDocument: () => set(state => commands.clearDocument(state)),
         updateNodeContent: (id, patch) => set(state => commands.updateNodeContent(state, id, patch)),
         updateNodeFrame: (id, frame) => set(state => commands.updateNodeFrame(state, id, frame)),
         setNodeColor: (id, color) => set(state => commands.setNodeColor(state, id, color)),
@@ -82,6 +84,18 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
         })),
 
         // Selection
+        setSelection: ({ nodeIds = [], edgeIds = [] }) => set(state => {
+            const nextNodeIds = Array.isArray(nodeIds) ? nodeIds : []
+            const nextEdgeIds = Array.isArray(edgeIds) ? edgeIds : []
+            const nodeSet = new Set(nextNodeIds)
+            const edgeSet = new Set(nextEdgeIds)
+            return {
+                selectedNodeIds: nextNodeIds,
+                selectedEdgeIds: nextEdgeIds,
+                nodes: state.nodes.map(n => ({ ...n, selected: nodeSet.has(n.id) })),
+                edges: state.edges.map(e => ({ ...e, selected: edgeSet.has(e.id) })),
+            }
+        }),
         setSelectedNode: (id) => set(state => ({
             selectedNodeIds: id ? [id] : [],
             selectedEdgeIds: [],
@@ -133,6 +147,7 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
             set(() => ({
                 nodes: converted.nodes,
                 edges: converted.edges,
+                metadata: converted.metadata || {},
                 selectedNodeIds: [],
                 selectedEdgeIds: [],
                 history: createHistoryState(),
@@ -143,7 +158,11 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
         // Export helper
         toJsonCanvas: () => {
             const state = get()
-            return storeStateToJsonCanvas({ nodes: state.nodes, edges: state.edges })
+            return storeStateToJsonCanvas({
+                nodes: state.nodes,
+                edges: state.edges,
+                metadata: state.metadata,
+            })
         },
 
         // Status & UI actions

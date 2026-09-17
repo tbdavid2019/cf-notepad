@@ -11,7 +11,12 @@ export function MarkdownPreview({ text = '' }) {
         if (typeof window !== 'undefined' && typeof window.renderMarkdown === 'function') {
             window.renderMarkdown(el, text || '')
         } else if (typeof window !== 'undefined' && window.marked && typeof window.marked.parse === 'function') {
-            el.innerHTML = window.marked.parse(text || '')
+            const rawHtml = window.marked.parse(text || '')
+            if (window.DOMPurify && typeof window.DOMPurify.sanitize === 'function') {
+                el.innerHTML = window.DOMPurify.sanitize(rawHtml)
+            } else {
+                el.textContent = text || ''
+            }
         } else {
             el.textContent = text || ''
         }

@@ -32,6 +32,8 @@ export function EdgeStylePopover({
         <div
             className="canvas-menu-dropdown nodrag nopan"
             style={{ minWidth: '180px', gap: '8px', padding: '8px' }}
+            role="dialog"
+            aria-label={zh ? '線條樣式設定' : 'Line style settings'}
             onClick={(e) => e.stopPropagation()}
         >
             {/* Arrow direction */}

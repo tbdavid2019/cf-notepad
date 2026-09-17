@@ -1,8 +1,33 @@
-import React, { useRef } from 'react'
+import React, { useRef, useEffect } from 'react'
 import { parseCanvasDocument, validateCanvasDocument } from '../../../../../src/canvas_document.mjs'
 
 export function FileMenu({ isOpen = false, onClose, store }) {
     const fileInputRef = useRef(null)
+    const menuRef = useRef(null)
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                onClose?.()
+            }
+        }
+
+        const handlePointerDown = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                onClose?.()
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        window.addEventListener('pointerdown', handlePointerDown)
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+            window.removeEventListener('pointerdown', handlePointerDown)
+        }
+    }, [isOpen, onClose])
 
     if (!isOpen) return null
 
@@ -57,15 +82,20 @@ export function FileMenu({ isOpen = false, onClose, store }) {
     }
 
     const handleClear = () => {
-        if (confirm(zh ? '確定要清空畫布上的所有卡片與連線嗎？' : 'Are you sure you want to clear the canvas?')) {
-            store.getState().loadDocument({ nodes: [], edges: [] })
-            store.getState().setDirty(true)
+        if (confirm(zh ? '確定要清空畫布上的所有卡片與連線嗎？（可透過 Undo 復原）' : 'Are you sure you want to clear the canvas? (Undoable)')) {
+            store.getState().clearDocument()
         }
         onClose?.()
     }
 
     return (
-        <div className="canvas-menu-dropdown nodrag nopan" onClick={(e) => e.stopPropagation()}>
+        <div
+            ref={menuRef}
+            className="canvas-menu-dropdown nodrag nopan"
+            role="menu"
+            aria-label={zh ? '檔案選單' : 'File Menu'}
+            onClick={(e) => e.stopPropagation()}
+        >
             <input
                 ref={fileInputRef}
                 type="file"
@@ -74,19 +104,19 @@ export function FileMenu({ isOpen = false, onClose, store }) {
                 onChange={handleFileChange}
             />
 
-            <button type="button" className="canvas-menu-item" onClick={handleImportClick}>
+            <button type="button" role="menuitem" className="canvas-menu-item" onClick={handleImportClick}>
                 <span>📥</span>
                 <span>{zh ? '匯入 .canvas 檔案' : 'Import .canvas'}</span>
             </button>
 
-            <button type="button" className="canvas-menu-item" onClick={handleExport}>
+            <button type="button" role="menuitem" className="canvas-menu-item" onClick={handleExport}>
                 <span>📤</span>
                 <span>{zh ? '匯出 .canvas 檔案' : 'Export .canvas'}</span>
             </button>
 
             <div className="canvas-toolbar-divider" style={{ width: '100%', height: '1px' }} />
 
-            <button type="button" className="canvas-menu-item" style={{ color: 'var(--canvas-danger)' }} onClick={handleClear}>
+            <button type="button" role="menuitem" className="canvas-menu-item" style={{ color: 'var(--canvas-danger)' }} onClick={handleClear}>
                 <span>🗑️</span>
                 <span>{zh ? '清空畫布' : 'Clear Canvas'}</span>
             </button>

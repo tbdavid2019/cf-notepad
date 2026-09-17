@@ -1,12 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useMemo } from 'react'
 import {
     BaseEdge,
     EdgeLabelRenderer,
+    EdgeToolbar as FlowEdgeToolbar,
     getSmoothStepPath,
     MarkerType,
 } from '@xyflow/react'
 import { EdgeLabel } from './EdgeLabel.jsx'
 import { EdgeToolbar } from './EdgeToolbar.jsx'
+import { computeEdgeToolbarPosition } from './edgePositionHelpers.mjs'
 import {
     DEFAULT_EDGE_COLOR,
     DEFAULT_EDGE_WIDTH,
@@ -39,6 +41,15 @@ export function CanvasEdge(props) {
         targetPosition,
         borderRadius: 12,
     })
+
+    const toolbarPos = useMemo(() => {
+        return computeEdgeToolbarPosition({
+            labelX,
+            labelY,
+            viewportWidth: typeof window !== 'undefined' ? window.innerWidth : 800,
+            viewportHeight: typeof window !== 'undefined' ? window.innerHeight : 600,
+        })
+    }, [labelX, labelY])
 
     const color = data.color || style.stroke || DEFAULT_EDGE_COLOR
     const strokeWidth = Number(data.strokeWidth) || style.strokeWidth || DEFAULT_EDGE_WIDTH
@@ -75,6 +86,26 @@ export function CanvasEdge(props) {
                 className="canvas-edge-path"
             />
 
+            {selected && (
+                <FlowEdgeToolbar
+                    edgeId={id}
+                    x={toolbarPos.x}
+                    y={toolbarPos.y}
+                    isVisible={selected}
+                    className="nodrag nopan"
+                >
+                    <EdgeToolbar
+                        id={id}
+                        data={data}
+                        selected={selected}
+                        isEdit={data.isEdit !== false}
+                        onStartEditLabel={() => setIsEditingLabel(true)}
+                        onChangeStyle={data.onChangeEdgeStyle}
+                        onDelete={data.onDeleteEdge}
+                    />
+                </FlowEdgeToolbar>
+            )}
+
             <EdgeLabelRenderer>
                 <div
                     style={{
@@ -82,24 +113,10 @@ export function CanvasEdge(props) {
                         transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
                         pointerEvents: 'all',
                         display: 'flex',
-                        flexDirection: 'column',
                         alignItems: 'center',
-                        gap: '4px',
                     }}
                     className="nodrag nopan"
                 >
-                    {selected && (
-                        <EdgeToolbar
-                            id={id}
-                            data={data}
-                            selected={selected}
-                            isEdit={data.isEdit !== false}
-                            onStartEditLabel={() => setIsEditingLabel(true)}
-                            onChangeStyle={data.onChangeEdgeStyle}
-                            onDelete={data.onDeleteEdge}
-                        />
-                    )}
-
                     <EdgeLabel
                         id={id}
                         label={data.label || label || ''}

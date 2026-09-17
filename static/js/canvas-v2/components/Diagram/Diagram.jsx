@@ -3,6 +3,8 @@ import {
     ReactFlow,
     Background,
     BackgroundVariant,
+    Controls,
+    MiniMap,
     ConnectionMode,
     applyNodeChanges,
     applyEdgeChanges,
@@ -41,6 +43,50 @@ export function Diagram({ store }) {
     setReactFlowInstance(reactFlowInstance)
 
     const dragSnapshotRef = useRef(null)
+    const resizeSnapshotRef = useRef(null)
+
+    const handleResizeStart = useCallback(() => {
+        const currentNodes = store.getState().nodes
+        const currentEdges = store.getState().edges
+        resizeSnapshotRef.current = {
+            nodes: currentNodes.map(n => ({
+                ...n,
+                position: { ...n.position },
+                style: { ...(n.style || {}) },
+                data: { ...(n.data || {}) },
+            })),
+            edges: currentEdges.map(e => ({
+                ...e,
+                data: { ...(e.data || {}) },
+            })),
+        }
+    }, [store])
+
+    const handleResizeEnd = useCallback(() => {
+        if (resizeSnapshotRef.current) {
+            store.getState().commitTransaction(resizeSnapshotRef.current)
+            resizeSnapshotRef.current = null
+        }
+    }, [store])
+
+    // Memoized actions for nodes to preserve referential stability
+    const nodeActions = useMemo(() => ({
+        onUpdateContent: (id, patch) => store.getState().updateNodeContent(id, patch),
+        onDuplicate: (id) => store.getState().duplicateNodes(id),
+        onDelete: (id) => store.getState().deleteNodes(id),
+        onChangeColor: (id, color) => store.getState().setNodeColor(id, color),
+        onSelectNode: (id) => store.getState().setSelectedNode(id),
+        onResizeStart: handleResizeStart,
+        onResizeEnd: handleResizeEnd,
+    }), [store, handleResizeStart, handleResizeEnd])
+
+    // Memoized actions for edges
+    const edgeActions = useMemo(() => ({
+        onChangeEdgeLabel: (id, label) => store.getState().updateEdgeLabel(id, label),
+        onChangeEdgeStyle: (id, patch) => store.getState().updateEdgeStyle(id, patch),
+        onDeleteEdge: (id) => store.getState().deleteEdges(id),
+        onSelectEdge: (id) => store.getState().setSelectedEdge(id),
+    }), [store])
 
     // Node actions injected into node.data
     const nodesWithData = useMemo(() => {
@@ -49,13 +95,10 @@ export function Diagram({ store }) {
             data: {
                 ...node.data,
                 isEdit,
-                onUpdateContent: (id, patch) => store.getState().updateNodeContent(id, patch),
-                onDuplicate: (id) => store.getState().duplicateNodes(id),
-                onDelete: (id) => store.getState().deleteNodes(id),
-                onChangeColor: (id, color) => store.getState().setNodeColor(id, color),
+                ...nodeActions,
             },
         }))
-    }, [rawNodes, isEdit, store])
+    }, [rawNodes, isEdit, nodeActions])
 
     // Edge actions injected into edge.data
     const edgesWithData = useMemo(() => {
@@ -64,16 +107,26 @@ export function Diagram({ store }) {
             data: {
                 ...edge.data,
                 isEdit,
-                onChangeEdgeLabel: (id, label) => store.getState().updateEdgeLabel(id, label),
-                onChangeEdgeStyle: (id, patch) => store.getState().updateEdgeStyle(id, patch),
-                onDeleteEdge: (id) => store.getState().deleteEdges(id),
-                onSelectEdge: (id) => store.getState().setSelectedEdge(id),
+                ...edgeActions,
             },
         }))
-    }, [rawEdges, isEdit, store])
+    }, [rawEdges, isEdit, edgeActions])
 
     const handleNodesChange = useCallback((changes) => {
-        const nextNodes = applyNodeChanges(changes, store.getState().nodes)
+        const nextNodes = applyNodeChanges(changes, store.getState().nodes).map(node => {
+            const dimChange = changes.find(c => c.id === node.id && c.type === 'dimensions')
+            if (dimChange?.dimensions) {
+                return {
+                    ...node,
+                    style: {
+                        ...(node.style || {}),
+                        width: Math.round(dimChange.dimensions.width),
+                        height: Math.round(dimChange.dimensions.height),
+                    },
+                }
+            }
+            return node
+        })
         store.getState().setNodes(nextNodes)
     }, [store])
 
@@ -82,12 +135,27 @@ export function Diagram({ store }) {
         store.getState().setEdges(nextEdges)
     }, [store])
 
+    const handleSelectionChange = useCallback(({ nodes, edges }) => {
+        store.getState().setSelection({
+            nodeIds: nodes.map(n => n.id),
+            edgeIds: edges.map(e => e.id),
+        })
+    }, [store])
+
     const handleNodeDragStart = useCallback(() => {
         const currentNodes = store.getState().nodes
         const currentEdges = store.getState().edges
         dragSnapshotRef.current = {
-            nodes: currentNodes.map(n => ({ ...n, position: { ...n.position }, style: { ...n.style }, data: { ...n.data } })),
-            edges: currentEdges.map(e => ({ ...e, data: { ...e.data } })),
+            nodes: currentNodes.map(n => ({
+                ...n,
+                position: { ...n.position },
+                style: { ...(n.style || {}) },
+                data: { ...(n.data || {}) },
+            })),
+            edges: currentEdges.map(e => ({
+                ...e,
+                data: { ...(e.data || {}) },
+            })),
         }
     }, [store])
 
@@ -121,6 +189,9 @@ export function Diagram({ store }) {
                 edgeTypes={EDGE_TYPES}
                 onNodesChange={handleNodesChange}
                 onEdgesChange={handleEdgesChange}
+                onSelectionChange={handleSelectionChange}
+                onNodeClick={(e, node) => store.getState().setSelectedNode(node.id)}
+                onEdgeClick={(e, edge) => store.getState().setSelectedEdge(edge.id)}
                 onNodeDragStart={handleNodeDragStart}
                 onNodeDragStop={handleNodeDragStop}
                 onConnect={handleConnect}
@@ -135,9 +206,17 @@ export function Diagram({ store }) {
                 fitViewOptions={{ maxZoom: 1, padding: 0.2 }}
                 minZoom={0.1}
                 maxZoom={2.5}
-                deleteKeyCode={null}
+                deleteKeyCode={['Backspace', 'Delete']}
             >
                 <Background variant={BackgroundVariant.Dots} gap={20} size={1.5} />
+                <Controls showInteractive={false} position="bottom-left" />
+                <MiniMap
+                    nodeStrokeWidth={3}
+                    zoomable
+                    pannable
+                    position="bottom-right"
+                    style={{ width: 120, height: 80, margin: 16 }}
+                />
             </ReactFlow>
         </div>
     )

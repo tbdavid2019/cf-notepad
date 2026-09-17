@@ -1,6 +1,7 @@
 /**
  * JSON Canvas 1.0 Adapter for Canvas v2
  * Converts between external JSON Canvas representation and Zustand/React Flow store state.
+ * Preserves 100% round-trip fidelity including unknown root, node, and edge extensions.
  */
 
 import {
@@ -29,73 +30,120 @@ export function jsonCanvasToStoreState(doc) {
         return { nodes: [], edges: [] }
     }
 
-    const rawNodes = Array.isArray(doc.nodes) ? doc.nodes : []
-    const rawEdges = Array.isArray(doc.edges) ? doc.edges : []
+    const { nodes: rawNodesArr, edges: rawEdgesArr, ...docMetadata } = doc
+    const rawNodes = Array.isArray(rawNodesArr) ? rawNodesArr : []
+    const rawEdges = Array.isArray(rawEdgesArr) ? rawEdgesArr : []
 
     const nodes = rawNodes.map(node => {
-        const isSticky = node.type === 'sticky' || node.david888?.cardType === 'sticky'
+        const {
+            id,
+            type,
+            x,
+            y,
+            width: rawWidth,
+            height: rawHeight,
+            color,
+            text,
+            file,
+            subpath,
+            url,
+            label,
+            background,
+            backgroundStyle,
+            david888,
+            ...rawNodeExtensions
+        } = node
+
+        const isSticky = type === 'sticky' || david888?.cardType === 'sticky'
         const effectiveType = isSticky
             ? 'sticky'
-            : ['file', 'link', 'group'].includes(node.type)
-                ? node.type
+            : ['file', 'link', 'group'].includes(type)
+                ? type
                 : 'text'
 
         const defaults = NODE_DIMENSIONS[effectiveType] || NODE_DIMENSIONS.text
-        const width = Number.isInteger(node.width) && node.width > 0 ? node.width : defaults.width
-        const height = Number.isInteger(node.height) && node.height > 0 ? node.height : defaults.height
+        const width = Number.isInteger(rawWidth) && rawWidth > 0 ? rawWidth : defaults.width
+        const height = Number.isInteger(rawHeight) && rawHeight > 0 ? rawHeight : defaults.height
+
+        const nodeDavid888 = david888 && typeof david888 === 'object' ? { ...david888 } : {}
+        if (isSticky) {
+            nodeDavid888.cardType = 'sticky'
+        }
 
         return {
-            id: String(node.id),
+            id: String(id),
             type: effectiveType,
             position: {
-                x: Number.isFinite(node.x) ? node.x : 0,
-                y: Number.isFinite(node.y) ? node.y : 0,
+                x: Number.isFinite(x) ? x : 0,
+                y: Number.isFinite(y) ? y : 0,
             },
             style: {
                 width,
                 height,
             },
             data: {
-                text: node.text ?? '',
-                file: node.file ?? '',
-                subpath: node.subpath ?? '',
-                url: node.url ?? '',
-                label: node.label ?? '',
-                background: node.background ?? '',
-                backgroundStyle: node.backgroundStyle ?? '',
-                color: node.color ?? (isSticky ? '#fff9c4' : ''),
-                david888: node.david888 ? { ...node.david888 } : {},
+                text: text ?? '',
+                file: file ?? '',
+                subpath: subpath ?? '',
+                url: url ?? '',
+                label: label ?? '',
+                background: background ?? '',
+                backgroundStyle: backgroundStyle ?? '',
+                color: color ?? (isSticky ? '#fff9c4' : ''),
+                david888: nodeDavid888,
+                rawNode: rawNodeExtensions,
             },
         }
     })
 
     const edges = rawEdges.map(edge => {
-        const fromEnd = edge.fromEnd || 'none'
-        const toEnd = edge.toEnd !== undefined ? edge.toEnd : 'arrow'
-        const lineStyle = edge.david888?.lineStyle || DEFAULT_EDGE_STYLE
-        const strokeWidth = Number(edge.david888?.strokeWidth) || DEFAULT_EDGE_WIDTH
-        const color = edge.color || ''
+        const {
+            id,
+            fromNode,
+            toNode,
+            fromSide,
+            toSide,
+            fromEnd: rawFromEnd,
+            toEnd: rawToEnd,
+            color: rawColor,
+            label: rawLabel,
+            david888,
+            ...rawEdgeExtensions
+        } = edge
+
+        const fromEnd = rawFromEnd || 'none'
+        const toEnd = rawToEnd !== undefined ? rawToEnd : 'arrow'
+        const lineStyle = david888?.lineStyle || DEFAULT_EDGE_STYLE
+        const strokeWidth = Number(david888?.strokeWidth) || DEFAULT_EDGE_WIDTH
+        const color = rawColor || ''
+        const edgeDavid888 = david888 && typeof david888 === 'object' ? { ...david888 } : {}
 
         return {
-            id: String(edge.id),
-            source: String(edge.fromNode),
-            target: String(edge.toNode),
-            sourceHandle: edge.fromSide || 'right',
-            targetHandle: edge.toSide || 'left',
+            id: String(id),
+            source: String(fromNode),
+            target: String(toNode),
+            sourceHandle: fromSide || 'right',
+            targetHandle: toSide || 'left',
             type: 'canvasEdge',
-            label: edge.label || '',
+            label: rawLabel || '',
             data: {
                 fromEnd,
                 toEnd,
                 color,
                 lineStyle,
                 strokeWidth,
-                label: edge.label || '',
+                label: rawLabel || '',
+                david888: edgeDavid888,
+                rawEdge: rawEdgeExtensions,
             },
         }
     })
 
-    return { nodes, edges }
+    const out = { nodes, edges }
+    if (Object.keys(docMetadata).length > 0) {
+        out.metadata = docMetadata
+    }
+    return out
 }
 
 export function storeStateToJsonCanvas(state) {
@@ -103,17 +151,22 @@ export function storeStateToJsonCanvas(state) {
         return { nodes: [], edges: [] }
     }
 
+    const metadata = state.metadata && typeof state.metadata === 'object' ? state.metadata : {}
     const rawNodes = Array.isArray(state.nodes) ? state.nodes : []
     const rawEdges = Array.isArray(state.edges) ? state.edges : []
 
     const nodes = rawNodes.map(node => {
         const defaults = NODE_DIMENSIONS[node.type] || NODE_DIMENSIONS.text
-        const width = Math.round(node.measured?.width || node.style?.width || defaults.width)
-        const height = Math.round(node.measured?.height || node.style?.height || defaults.height)
+        const width = Math.round(node.style?.width || node.measured?.width || defaults.width)
+        const height = Math.round(node.style?.height || node.measured?.height || defaults.height)
         const x = Math.round(node.position?.x ?? 0)
         const y = Math.round(node.position?.y ?? 0)
 
+        const rawNode = node.data?.rawNode && typeof node.data.rawNode === 'object' ? node.data.rawNode : {}
+        const david888 = node.data?.david888 && typeof node.data.david888 === 'object' ? { ...node.data.david888 } : {}
+
         const base = {
+            ...rawNode,
             id: String(node.id),
             x,
             y,
@@ -131,7 +184,7 @@ export function storeStateToJsonCanvas(state) {
                 type: 'text',
                 text: node.data?.text ?? '',
                 david888: {
-                    ...(node.data?.david888 || {}),
+                    ...david888,
                     cardType: 'sticky',
                 },
             }
@@ -144,15 +197,18 @@ export function storeStateToJsonCanvas(state) {
                 file: node.data?.file ?? '',
             }
             if (node.data?.subpath) out.subpath = node.data.subpath
+            if (Object.keys(david888).length > 0) out.david888 = david888
             return out
         }
 
         if (node.type === 'link') {
-            return {
+            const out = {
                 ...base,
                 type: 'link',
                 url: node.data?.url ?? '',
             }
+            if (Object.keys(david888).length > 0) out.david888 = david888
+            return out
         }
 
         if (node.type === 'group') {
@@ -163,6 +219,7 @@ export function storeStateToJsonCanvas(state) {
             if (node.data?.label) out.label = node.data.label
             if (node.data?.background) out.background = node.data.background
             if (node.data?.backgroundStyle) out.backgroundStyle = node.data.backgroundStyle
+            if (Object.keys(david888).length > 0) out.david888 = david888
             return out
         }
 
@@ -172,14 +229,18 @@ export function storeStateToJsonCanvas(state) {
             type: 'text',
             text: node.data?.text ?? '',
         }
-        if (node.data?.david888 && Object.keys(node.data.david888).length > 0) {
-            out.david888 = { ...node.data.david888 }
+        if (Object.keys(david888).length > 0) {
+            out.david888 = david888
         }
         return out
     })
 
     const edges = rawEdges.map(edge => {
+        const rawEdge = edge.data?.rawEdge && typeof edge.data.rawEdge === 'object' ? edge.data.rawEdge : {}
+        const david888 = edge.data?.david888 && typeof edge.data.david888 === 'object' ? { ...edge.data.david888 } : {}
+
         const out = {
+            ...rawEdge,
             id: String(edge.id),
             fromNode: String(edge.source),
             toNode: String(edge.target),
@@ -202,17 +263,20 @@ export function storeStateToJsonCanvas(state) {
 
         const lineStyle = edge.data?.lineStyle || DEFAULT_EDGE_STYLE
         const strokeWidth = Number(edge.data?.strokeWidth) || DEFAULT_EDGE_WIDTH
-        const hasCustomStyle = lineStyle !== DEFAULT_EDGE_STYLE || strokeWidth !== DEFAULT_EDGE_WIDTH
 
-        if (hasCustomStyle) {
-            out.david888 = {
-                ...(lineStyle !== DEFAULT_EDGE_STYLE ? { lineStyle } : {}),
-                ...(strokeWidth !== DEFAULT_EDGE_WIDTH ? { strokeWidth } : {}),
-            }
+        if (lineStyle !== DEFAULT_EDGE_STYLE) david888.lineStyle = lineStyle
+        if (strokeWidth !== DEFAULT_EDGE_WIDTH) david888.strokeWidth = strokeWidth
+
+        if (Object.keys(david888).length > 0) {
+            out.david888 = david888
         }
 
         return out
     })
 
-    return { nodes, edges }
+    return {
+        ...metadata,
+        nodes,
+        edges,
+    }
 }

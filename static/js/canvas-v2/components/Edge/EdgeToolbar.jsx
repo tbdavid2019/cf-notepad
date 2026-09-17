@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useRef, useEffect } from 'react'
 import { EdgeStylePopover } from './EdgeStylePopover.jsx'
 
 export function EdgeToolbar({
@@ -11,6 +11,31 @@ export function EdgeToolbar({
     onDelete,
 }) {
     const [isPopoverOpen, setIsPopoverOpen] = useState(false)
+    const toolbarRef = useRef(null)
+
+    useEffect(() => {
+        if (!isPopoverOpen) return
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                setIsPopoverOpen(false)
+            }
+        }
+
+        const handlePointerDown = (e) => {
+            if (toolbarRef.current && !toolbarRef.current.contains(e.target)) {
+                setIsPopoverOpen(false)
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        window.addEventListener('pointerdown', handlePointerDown)
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+            window.removeEventListener('pointerdown', handlePointerDown)
+        }
+    }, [isPopoverOpen])
 
     if (!selected || !isEdit) return null
 
@@ -21,7 +46,7 @@ export function EdgeToolbar({
     const zh = isZh()
 
     return (
-        <div className="canvas-edge-toolbar nodrag nopan" style={{ position: 'relative' }}>
+        <div ref={toolbarRef} className="canvas-edge-toolbar nodrag nopan" style={{ position: 'relative' }}>
             <button
                 type="button"
                 className="canvas-btn-icon"
@@ -37,6 +62,8 @@ export function EdgeToolbar({
                 className={`canvas-btn-icon ${isPopoverOpen ? 'is-active' : ''}`}
                 title={zh ? '線條樣式設定' : 'Line style settings'}
                 aria-label={zh ? '線條樣式設定' : 'Line style settings'}
+                aria-haspopup="dialog"
+                aria-expanded={isPopoverOpen}
                 onClick={() => setIsPopoverOpen(!isPopoverOpen)}
             >
                 ⚙️

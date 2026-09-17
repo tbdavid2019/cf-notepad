@@ -84,11 +84,14 @@ export function normalizeCanvasDocument(value) {
  * while write boundaries must pass allowFallback: false and reject bad input.
  */
 export function parseCanvasDocument(value, { allowFallback = true } = {}) {
+    if (typeof value === 'string' && !value.trim()) {
+        return { nodes: [], edges: [] }
+    }
     try {
-        if (typeof value !== 'string' || !value.trim()) throw new TypeError('Canvas document must be JSON')
+        if (typeof value !== 'string') throw new TypeError('Canvas document must be JSON')
         return normalizeCanvasDocument(JSON.parse(value))
     } catch (error) {
-        if (allowFallback) return cloneDefaultCanvas()
+        if (allowFallback) return { nodes: [], edges: [] }
         throw error
     }
 }

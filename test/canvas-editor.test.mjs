@@ -33,13 +33,12 @@ const canvasV2CssSource = readFileSync(new URL('../static/js/canvas-v2/canvas-v2
 const canvasV2TokensSource = readFileSync(new URL('../static/js/canvas-v2/tokens.css', import.meta.url), 'utf8')
 const canvasV2PersistenceSource = readFileSync(new URL('../static/js/canvas-v2/store/persistence.mjs', import.meta.url), 'utf8')
 
-test('parseCanvasDocument returns default template when input is empty or invalid', () => {
+test('parseCanvasDocument returns empty canvas when input is empty or invalid', () => {
     const emptyDoc = parseCanvasDocument('')
-    assert.equal(emptyDoc.nodes.length, DEFAULT_CANVAS_NODES.length)
-    assert.equal(emptyDoc.edges.length, DEFAULT_CANVAS_EDGES.length)
+    assert.deepEqual(emptyDoc, { nodes: [], edges: [] })
 
     const invalidDoc = parseCanvasDocument('not a json')
-    assert.equal(invalidDoc.nodes.length, DEFAULT_CANVAS_NODES.length)
+    assert.deepEqual(invalidDoc, { nodes: [], edges: [] })
 })
 
 test('parseCanvasDocument preserves an explicitly empty canvas instead of restoring welcome cards', () => {

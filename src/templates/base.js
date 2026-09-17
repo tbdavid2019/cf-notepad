@@ -2262,6 +2262,7 @@ ${getMarkdownCss()}
         let uploadPendingAudiosToCloud = async () => false;
 
         const saveCurrentNote = async ({ showBlocked = true } = {}) => {
+            window.canvasBridge?.flush?.()
             if (!$textarea) return false
             if (!APP_STATE.isPublished) {
                 if (showBlocked) window.showToast?.(getSaveBlockedMessage())
@@ -2285,6 +2286,7 @@ ${getMarkdownCss()}
             clearAutosaveTimer()
             $loading.style.display = 'inline-block'
             showSaveStatus(APP_STATE.lang === 'zh-TW' ? '雲端同步中...' : 'Syncing...', false, 'syncing')
+            window.dispatchEvent(new CustomEvent('canvas:syncing'))
             saveInFlight = fetchJson('', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -2299,6 +2301,7 @@ ${getMarkdownCss()}
                     const syncTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                     showSaveStatus((APP_STATE.lang === 'zh-TW' ? '☁️ 雲端已同步 ' : '☁️ Cloud synced ') + syncTime, false, 'cloud-synced')
                     window.showToast?.(APP_STATE.lang === 'zh-TW' ? '文章已同步至雲端' : 'Note synced to cloud')
+                    window.dispatchEvent(new CustomEvent('canvas:synced'))
                     if (window.offlineStore) {
                         const title = String(content || '').split(new RegExp('[\\\\r\\\\n]+'))[0]?.replace(new RegExp('^#*\\\\s*'), '').trim() || APP_STATE.path
                         window.offlineStore.saveNote(APP_STATE.path, {
@@ -3709,6 +3712,7 @@ ${getMarkdownCss()}
         }
 
         const publishCurrentNote = async (preferences = defaultPublishPreferences) => {
+            window.canvasBridge?.flush?.()
             try {
                 await uploadPendingAudiosToCloud()
             } catch (e) {

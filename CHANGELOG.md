@@ -2,6 +2,26 @@
 
 ## [2026-09-17]
 
+- **🛠️ Canvas v2 審查修復與操作性全面強化 (Canvas v2 Code Review Resolution & Usability Hardening)**：
+  - **資料同步安全 (Critical 1)**：Store 變更時立即同步寫入 `#contents.value`，消除 300ms 防抖儲存與發布／離頁（`pagehide`、`beforeunload`、`visibilitychange`）競態；Bridge 新增 `flush()` 並與發布、手動儲存全面串接。
+  - **100% 格式保真 (Critical 2)**：Adapter 保留未識別之 Root Metadata、Node 自訂屬性、Edge 自訂屬性與完整 `david888` 擴充，round-trip 匯出時精準保留第三方 `.canvas` 資料。
+  - **徹底消除強制模板 (User Directive)**：新筆記與空白畫布開啟時一律呈現純淨空白畫布 (`{ nodes: [], edges: [] }`)，不再強制載入歡迎卡片與便籤。
+  - **卡片移動與縮放操作修復 (Drag & Resize Fix)**：
+    - 移除卡片標題列之 `nodrag` 阻擋，卡片 Header 與邊框即為順暢拖曳移動之把手。
+    - 點擊卡片任何區域立即獲得焦點選取，即時喚起 8 方位縮放把手。
+    - 拖曳縮放時同步更新卡片 `style.width` 與 `style.height`，不再受靜態尺寸束縛。
+    - 縮放納入交易歷史（Undo/Redo），調整卡片尺寸後可無損復原。
+  - **清空畫布可復原 (High 6)**：清空畫布改為交易式指令 `clearDocument`，清空後可隨時 Undo 還原全部卡片與連線。
+  - **視口中心建立卡片 (High 3)**：由置底工具列新增卡片時，自動計算當前視口中心座標並加入碰撞避讓位移，避免平移視角後卡片落在畫面之外。
+  - **連線工具列視口避讓與門戶 (High 2)**：接入 React Flow 原生 `EdgeToolbar` 門戶，並透過 `computeEdgeToolbarPosition` 進行視口邊界與窄螢幕 (320px) 碰撞避讓。
+  - **雙向選取單一來源 (Medium 4)**：接入 React Flow `onSelectionChange`，全面統一 Store 與畫布選取狀態。
+  - **WCAG 色彩對比度計算 (Medium 5)**：建立 `computeContrastTheme`，依背景相對亮度自動為自訂底色卡片選配高對比文字與次要色彩。
+  - **選單無障礙與自動收合 (Medium 6)**：新增選單、檔案選單、連線樣式彈窗皆支援 `role="menu"`／`role="dialog"`、Escape 鍵關閉與點擊外部區域自動收合。
+  - **安全性強化 (Medium 7)**：Markdown 預覽 fallback 嚴格經 `DOMPurify.sanitize` 淨化，防止非受信任 HTML 渲染。
+  - **依賴規格化 (Medium 2)**：將 `zustand` 提升為 `package.json` 的直接依賴。
+  - **平滑回退切換入口 (High 4)**：提供 `?v=legacy` 或 `CANVAS_EDITOR_VERSION=legacy` 運行時降級開關，保留舊版備用。
+  - **畫布導航組件 (High 5)**：加入 React Flow `Controls` 與 `MiniMap`，支援鍵盤 Backspace/Delete 刪除選取項目。
+
 - **🚀 Canvas v2 整體架構升級 (Canvas v2 Complete Architecture & Ameliorate Port)**：
   - **開源架構整體替換**：以成熟開源工具思考專案 **Ameliorate** (`0cacee5577438979b651dd808793c4cbd13864ee`，MIT License，作者 Joel Keyser) 為基準，整體替換 Canvas UI 與互動層，新增 `THIRD_PARTY_NOTICES.md` 完整保留版權與許可聲明。
   - **模組化目錄分層 (`static/js/canvas-v2/`)**：

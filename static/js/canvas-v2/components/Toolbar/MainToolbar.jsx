@@ -1,6 +1,8 @@
 import React, { useState } from 'react'
 import { AddMenu } from './AddMenu.jsx'
 import { FileMenu } from './FileMenu.jsx'
+import { getViewportCenter } from '../Diagram/viewportHelpers.mjs'
+import { NODE_DIMENSIONS } from '../../model/canvasTypes.mjs'
 import {
     selectCanUndo,
     selectCanRedo,
@@ -23,9 +25,12 @@ export function MainToolbar({ store, onFitView }) {
     }
     const zh = isZh()
 
-    const closeAll = () => {
-        setIsAddMenuOpen(false)
-        setIsFileMenuOpen(false)
+    const handleAddNode = (opts) => {
+        const center = getViewportCenter()
+        const defaults = NODE_DIMENSIONS[opts.type] || NODE_DIMENSIONS.text
+        const x = Math.round(center.x - (defaults?.width || 320) / 2)
+        const y = Math.round(center.y - (defaults?.height || 180) / 2)
+        store.getState().createNode({ ...opts, x, y })
     }
 
     return (
@@ -38,6 +43,8 @@ export function MainToolbar({ store, onFitView }) {
                             className={`canvas-tb-btn ${isAddMenuOpen ? 'is-active' : ''}`}
                             title={zh ? '新增卡片' : 'Add card'}
                             aria-label={zh ? '新增卡片' : 'Add card'}
+                            aria-haspopup="menu"
+                            aria-expanded={isAddMenuOpen}
                             onClick={() => {
                                 setIsFileMenuOpen(false)
                                 setIsAddMenuOpen(!isAddMenuOpen)
@@ -49,7 +56,7 @@ export function MainToolbar({ store, onFitView }) {
                         <AddMenu
                             isOpen={isAddMenuOpen}
                             onClose={() => setIsAddMenuOpen(false)}
-                            onAddNode={(opts) => store.getState().createNode(opts)}
+                            onAddNode={handleAddNode}
                         />
                     </div>
 
@@ -104,6 +111,8 @@ export function MainToolbar({ store, onFitView }) {
                     className={`canvas-tb-btn ${isFileMenuOpen ? 'is-active' : ''}`}
                     title={zh ? '檔案選單' : 'File menu'}
                     aria-label={zh ? '檔案選單' : 'File menu'}
+                    aria-haspopup="menu"
+                    aria-expanded={isFileMenuOpen}
                     onClick={() => {
                         setIsAddMenuOpen(false)
                         setIsFileMenuOpen(!isFileMenuOpen)
@@ -118,9 +127,19 @@ export function MainToolbar({ store, onFitView }) {
                 />
             </div>
 
+            {syncStatus === 'syncing' && (
+                <span className="canvas-status-badge is-syncing" title={zh ? '正在同步至雲端...' : 'Syncing...'}>
+                    🔄
+                </span>
+            )}
             {syncStatus === 'dirty' && (
                 <span className="canvas-status-badge is-dirty" title={zh ? '有未儲存的變更' : 'Unsaved changes'}>
                     •
+                </span>
+            )}
+            {syncStatus === 'error' && (
+                <span className="canvas-status-badge is-error" style={{ color: 'var(--canvas-danger)' }} title={zh ? '儲存失敗' : 'Save failed'}>
+                    ⚠️
                 </span>
             )}
         </div>

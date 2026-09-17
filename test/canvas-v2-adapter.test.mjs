@@ -134,3 +134,82 @@ test('round-trips all 5 node types: text, sticky, file, link, group', () => {
     assert.equal(exportedEdge2.david888?.lineStyle, 'dotted')
     assert.equal(exportedEdge2.david888?.strokeWidth, 1.5)
 })
+
+test('preserves 100% round-trip fidelity for unknown root, node, and edge extensions', () => {
+    const docWithExtensions = {
+        customTopMeta: 'my-custom-value',
+        version: '1.0.0-custom',
+        nodes: [
+            {
+                id: 'n-custom-1',
+                type: 'text',
+                x: 100,
+                y: 100,
+                width: 300,
+                height: 200,
+                text: 'Card with custom props',
+                customNodeAttr: { nested: true, count: 42 },
+                david888: {
+                    customAuthor: 'Alice',
+                    pinned: true,
+                },
+            },
+            {
+                id: 'n-sticky-custom',
+                type: 'text',
+                x: 450,
+                y: 100,
+                width: 200,
+                height: 150,
+                text: 'Sticky with custom props',
+                david888: {
+                    cardType: 'sticky',
+                    rotation: 3.5,
+                    tags: ['idea', 'todo'],
+                },
+            },
+        ],
+        edges: [
+            {
+                id: 'e-custom-1',
+                fromNode: 'n-custom-1',
+                toNode: 'n-sticky-custom',
+                fromEnd: 'none',
+                toEnd: 'arrow',
+                customEdgeAttr: 'smooth-flow',
+                david888: {
+                    lineStyle: 'dashed',
+                    strokeWidth: 4,
+                    curvature: 0.5,
+                    glowEffect: true,
+                },
+            },
+        ],
+    }
+
+    const storeState = jsonCanvasToStoreState(docWithExtensions)
+    assert.equal(storeState.metadata.customTopMeta, 'my-custom-value')
+    assert.equal(storeState.metadata.version, '1.0.0-custom')
+
+    const exported = storeStateToJsonCanvas(storeState)
+    assert.equal(exported.customTopMeta, 'my-custom-value')
+    assert.equal(exported.version, '1.0.0-custom')
+
+    const exportedNode1 = exported.nodes.find(n => n.id === 'n-custom-1')
+    assert.deepEqual(exportedNode1.customNodeAttr, { nested: true, count: 42 })
+    assert.equal(exportedNode1.david888.customAuthor, 'Alice')
+    assert.equal(exportedNode1.david888.pinned, true)
+
+    const exportedSticky = exported.nodes.find(n => n.id === 'n-sticky-custom')
+    assert.equal(exportedSticky.david888.cardType, 'sticky')
+    assert.equal(exportedSticky.david888.rotation, 3.5)
+    assert.deepEqual(exportedSticky.david888.tags, ['idea', 'todo'])
+
+    const exportedEdge = exported.edges.find(e => e.id === 'e-custom-1')
+    assert.equal(exportedEdge.customEdgeAttr, 'smooth-flow')
+    assert.equal(exportedEdge.david888.lineStyle, 'dashed')
+    assert.equal(exportedEdge.david888.strokeWidth, 4)
+    assert.equal(exportedEdge.david888.curvature, 0.5)
+    assert.equal(exportedEdge.david888.glowEffect, true)
+})
+

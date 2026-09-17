@@ -128,3 +128,155 @@ test('reconnectEdge changes source or target handle of existing edge', () => {
     const edge = store.getState().edges[0]
     assert.equal(edge.target, 'n3')
 })
+
+test('persistence bridge updates contentsElement.value immediately synchronously and supports flush', () => {
+    const store = createCanvasStore()
+    const fakeTextarea = {
+        value: '',
+        events: [],
+        dispatchEvent(evt) {
+            this.events.push(evt.type)
+            return true
+        },
+    }
+
+    import('../static/js/canvas-v2/store/persistence.mjs').then(({ createPersistenceBridge }) => {
+        const cleanup = createPersistenceBridge(store, fakeTextarea, { debounceMs: 500 })
+
+        // Create a node
+        store.getState().createNode({ id: 'imm-1', type: 'text', text: 'Immediate Sync' })
+
+        // Check immediate synchronous update of fakeTextarea.value
+        assert.ok(fakeTextarea.value.includes('Immediate Sync'), 'contentsElement.value must update synchronously on store mutation')
+        assert.equal(fakeTextarea.events.length, 0, 'debounce should delay the input event dispatch')
+
+        // Trigger flush
+        cleanup.flush()
+        assert.ok(fakeTextarea.events.includes('input'), 'flush() must dispatch the input event immediately')
+
+        cleanup()
+    })
+})
+
+test('clearDocument creates an undoable transaction', () => {
+    const store = createCanvasStore()
+    store.getState().createNode({ id: 'c1', type: 'text', text: 'Card 1' })
+    store.getState().createNode({ id: 'c2', type: 'text', text: 'Card 2' })
+    assert.equal(store.getState().nodes.length, 2)
+
+    store.getState().clearDocument()
+    assert.equal(store.getState().nodes.length, 0)
+    assert.ok(store.getState().history.past.length > 0)
+
+    // Undo restores the cleared canvas
+    store.getState().undo()
+    assert.equal(store.getState().nodes.length, 2)
+    assert.equal(store.getState().nodes[0].id, 'c1')
+    assert.equal(store.getState().nodes[1].id, 'c2')
+})
+
+test('resize transaction captures snapshot and supports undo/redo', () => {
+    const store = createCanvasStore()
+    store.getState().createNode({ id: 'res-1', type: 'text', width: 200, height: 100 })
+
+    // Simulate handleResizeStart snapshot
+    const initialSnapshot = {
+        nodes: store.getState().nodes.map(n => ({ ...n, position: { ...n.position }, style: { ...n.style }, data: { ...n.data } })),
+        edges: store.getState().edges.map(e => ({ ...e, data: { ...e.data } })),
+    }
+
+    // Simulate resizing changes
+    store.getState().setNodes(store.getState().nodes.map(n => ({
+        ...n,
+        style: { ...n.style, width: 450, height: 320 },
+    })))
+    assert.equal(store.getState().nodes[0].style.width, 450)
+
+    // Commit resize transaction
+    store.getState().commitTransaction(initialSnapshot)
+
+    // Undo should restore original 200x100 dimensions
+    store.getState().undo()
+    assert.equal(store.getState().nodes[0].style.width, 200)
+    assert.equal(store.getState().nodes[0].style.height, 100)
+
+    // Redo should restore resized 450x320 dimensions
+    store.getState().redo()
+    assert.equal(store.getState().nodes[0].style.width, 450)
+    assert.equal(store.getState().nodes[0].style.height, 320)
+})
+
+test('computeEdgeToolbarPosition avoids collision and respects narrow viewports', async () => {
+    const { computeEdgeToolbarPosition } = await import('../static/js/canvas-v2/components/Edge/edgePositionHelpers.mjs')
+
+    // Normal position
+    const normal = computeEdgeToolbarPosition({ labelX: 400, labelY: 300, viewportWidth: 800, viewportHeight: 600 })
+    assert.equal(normal.x, 400)
+    assert.equal(normal.y, 300 - 32)
+
+    // Flip below label when too close to top
+    const nearTop = computeEdgeToolbarPosition({ labelX: 400, labelY: 20, viewportWidth: 800, viewportHeight: 600 })
+    assert.equal(nearTop.y, 20 + 32)
+
+    // Narrow 320px viewport clamps x
+    const narrow = computeEdgeToolbarPosition({ labelX: 10, labelY: 200, toolbarWidth: 140, viewportWidth: 320, viewportHeight: 600 })
+    assert.ok(narrow.x >= 16 + 70, `Expected clamped x >= 86, got ${narrow.x}`)
+})
+
+test('computeContrastTheme calculates high-contrast text and border colors', async () => {
+    const { computeContrastTheme } = await import('../static/js/canvas-v2/model/contrastHelpers.mjs')
+
+    // Light yellow sticky note
+    const light = computeContrastTheme('#fff9c4')
+    assert.equal(light.isLightBg, true)
+    assert.equal(light.color, '#0f172a') // dark text
+
+    // Dark navy card
+    const dark = computeContrastTheme('#0f172a')
+    assert.equal(dark.isLightBg, false)
+    assert.equal(dark.color, '#f8fafc') // light text
+})
+
+test('performance benchmark: store handles 100 nodes and 300 edges efficiently', () => {
+    const nodes = []
+    for (let i = 0; i < 100; i++) {
+        nodes.push({
+            id: `bench-node-${i}`,
+            type: i % 2 === 0 ? 'text' : 'sticky',
+            x: (i % 10) * 260,
+            y: Math.floor(i / 10) * 180,
+            width: 240,
+            height: 140,
+            text: `Card content for benchmark item ${i}`,
+        })
+    }
+
+    const edges = []
+    for (let i = 0; i < 300; i++) {
+        const fromIdx = i % 100
+        const toIdx = (i + 1) % 100
+        edges.push({
+            id: `bench-edge-${i}`,
+            fromNode: `bench-node-${fromIdx}`,
+            toNode: `bench-node-${toIdx}`,
+            fromSide: 'right',
+            toSide: 'left',
+            toEnd: 'arrow',
+        })
+    }
+
+    const start = performance.now()
+    const store = createCanvasStore({ nodes, edges })
+    const state = store.getState()
+    const exportDoc = state.toJsonCanvas()
+    const duration = performance.now() - start
+
+    assert.equal(state.nodes.length, 100)
+    assert.equal(state.edges.length, 300)
+    assert.equal(exportDoc.nodes.length, 100)
+    assert.equal(exportDoc.edges.length, 300)
+    assert.doesNotThrow(() => validateCanvasDocument(exportDoc))
+    assert.ok(duration < 200, `Benchmark took ${duration.toFixed(2)}ms, expected < 200ms`)
+})
+
+

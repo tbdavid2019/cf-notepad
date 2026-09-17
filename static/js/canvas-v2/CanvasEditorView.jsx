@@ -26,6 +26,16 @@ export function CanvasEditorView({ store }) {
             if (isInput) return
             e.preventDefault()
             store.getState().redo()
+        } else if (e.key === 'Delete' || e.key === 'Backspace') {
+            if (isInput) return
+            const state = store.getState()
+            if (state.selectedNodeIds.length > 0) {
+                e.preventDefault()
+                state.deleteNodes(state.selectedNodeIds)
+            } else if (state.selectedEdgeIds.length > 0) {
+                e.preventDefault()
+                state.deleteEdges(state.selectedEdgeIds)
+            }
         }
     }, [store])
 

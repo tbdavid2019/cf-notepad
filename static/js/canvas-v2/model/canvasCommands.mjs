@@ -39,12 +39,21 @@ export function createNode(state, options = {}) {
     const nextHistory = recordHistoryStep(state.history, snapshot)
 
     const isSticky = type === 'sticky'
+    let posX = options.x !== undefined ? options.x : (120 + Math.random() * 80)
+    let posY = options.y !== undefined ? options.y : (120 + Math.random() * 80)
+
+    // Collision avoidance: if an existing node occupies the exact coordinate, offset slightly
+    while (state.nodes.some(n => Math.abs(n.position.x - posX) < 20 && Math.abs(n.position.y - posY) < 20)) {
+        posX += 28
+        posY += 28
+    }
+
     const newNode = {
         id,
         type,
         position: {
-            x: options.x ?? 120 + Math.random() * 80,
-            y: options.y ?? 120 + Math.random() * 80,
+            x: Math.round(posX),
+            y: Math.round(posY),
         },
         style: {
             width: options.width ?? defaults.width,
@@ -71,6 +80,23 @@ export function createNode(state, options = {}) {
         ...state,
         nodes: [...unselectedNodes, newNode],
         selectedNodeIds: [id],
+        selectedEdgeIds: [],
+        history: nextHistory,
+        dirty: true,
+    }
+}
+
+export function clearDocument(state) {
+    if (state.nodes.length === 0 && state.edges.length === 0) return state
+
+    const snapshot = takeSnapshot(state)
+    const nextHistory = recordHistoryStep(state.history, snapshot)
+
+    return {
+        ...state,
+        nodes: [],
+        edges: [],
+        selectedNodeIds: [],
         selectedEdgeIds: [],
         history: nextHistory,
         dirty: true,

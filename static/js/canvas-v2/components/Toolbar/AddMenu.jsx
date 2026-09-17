@@ -1,6 +1,32 @@
-import React from 'react'
+import React, { useRef, useEffect } from 'react'
 
 export function AddMenu({ isOpen = false, onClose, onAddNode }) {
+    const menuRef = useRef(null)
+
+    useEffect(() => {
+        if (!isOpen) return
+
+        const handleKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                e.preventDefault()
+                onClose?.()
+            }
+        }
+
+        const handlePointerDown = (e) => {
+            if (menuRef.current && !menuRef.current.contains(e.target)) {
+                onClose?.()
+            }
+        }
+
+        window.addEventListener('keydown', handleKeyDown)
+        window.addEventListener('pointerdown', handlePointerDown)
+        return () => {
+            window.removeEventListener('keydown', handleKeyDown)
+            window.removeEventListener('pointerdown', handlePointerDown)
+        }
+    }, [isOpen, onClose])
+
     if (!isOpen) return null
 
     const isZh = () => {
@@ -10,9 +36,16 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
     const zh = isZh()
 
     return (
-        <div className="canvas-menu-dropdown nodrag nopan" onClick={(e) => e.stopPropagation()}>
+        <div
+            ref={menuRef}
+            className="canvas-menu-dropdown nodrag nopan"
+            role="menu"
+            aria-label={zh ? '新增選單' : 'Add Menu'}
+            onClick={(e) => e.stopPropagation()}
+        >
             <button
                 type="button"
+                role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
                     onAddNode?.({ type: 'text' })
@@ -25,6 +58,7 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
 
             <button
                 type="button"
+                role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
                     onAddNode?.({ type: 'sticky' })
@@ -37,6 +71,7 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
 
             <button
                 type="button"
+                role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
                     onAddNode?.({ type: 'file' })
@@ -49,6 +84,7 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
 
             <button
                 type="button"
+                role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
                     onAddNode?.({ type: 'link' })
@@ -61,6 +97,7 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
 
             <button
                 type="button"
+                role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
                     onAddNode?.({ type: 'group' })
