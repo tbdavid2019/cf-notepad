@@ -209,6 +209,12 @@ test('canvas editor uses clear, loose, four-sided handles and records JSON Canva
 })
 
 test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and interactive arrow/style controls', () => {
+    assert.match(canvasEditorSource, /function BaseNode\(/)
+    assert.match(canvasEditorSource, /function BaseNodeHeader\(/)
+    assert.match(canvasEditorSource, /function BaseNodeContent\(/)
+    assert.match(canvasEditorSource, /function BaseNodeFooter\(/)
+    assert.match(canvasEditorSource, /function BaseHandle\(/)
+    assert.match(canvasEditorSource, /<EdgeToolbar/)
     assert.match(canvasEditorSource, /NodeToolbar/)
     assert.match(canvasEditorSource, /EdgeLabelRenderer/)
     assert.match(canvasEditorSource, /BaseEdge/)
@@ -234,6 +240,7 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(editorCssSource, /\.canvas-edge-label-badge/)
     assert.match(editorCssSource, /--canvas-font-body/)
     assert.match(editorCssSource, /theme-dark .*canvas-node-card/)
+    assert.match(editorCssSource, /\.david-canvas-app \.react-flow__handle \{[\s\S]*opacity: 1;/)
 })
 
 test('canvas publishing validates JSON Canvas content at the setting boundary', () => {
@@ -294,14 +301,13 @@ test('validateCanvasDocument rejects unsupported edge presentation extensions', 
     assert.throws(() => validateCanvasDocument(doc), /lineStyle is invalid/)
 })
 
-test('canvas editor eliminates fake window header bars and uses solid card color blocks and scoped typography', () => {
+test('canvas editor uses shared BaseNode anatomy, solid card color blocks, and scoped typography', () => {
     assert.match(canvasEditorSource, /resolveCardBlockColors/)
     assert.match(canvasEditorSource, /canvas-card-hover-actions/)
-    assert.doesNotMatch(canvasEditorSource, /canvas-card-header-title/)
-    assert.doesNotMatch(canvasEditorSource, /筆記卡片.*Note Card/)
+    assert.match(canvasEditorSource, /BaseNodeHeaderTitle/)
+    assert.match(canvasEditorSource, /筆記卡片.*Note Card/)
     assert.match(editorCssSource, /\.canvas-card-hover-actions/)
     assert.match(editorCssSource, /\.canvas-card-markdown-preview\.markdown-body :is\(h1, h2, h3, h4, h5, h6\)/)
     assert.match(editorCssSource, /border-bottom: none !important/)
     assert.match(canvasEditorSource, /normalizeCanvasDocument\(parsed\)/)
 })
-

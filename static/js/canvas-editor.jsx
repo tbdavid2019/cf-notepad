@@ -13,6 +13,7 @@ import {
     Position,
     NodeResizer,
     NodeToolbar,
+    EdgeToolbar,
     EdgeLabelRenderer,
     BaseEdge,
     getSmoothStepPath,
@@ -243,12 +244,39 @@ function MarkdownPreview({ text, isDark }) {
     return <div ref={containerRef} className="canvas-card-markdown-preview markdown-body" />
 }
 
+// Local equivalents of React Flow UI's BaseNode primitives. The project does
+// not use Tailwind/shadcn globally, so these keep the same composition model
+// without introducing a second application-wide styling system.
+function BaseNode({ className = '', children, ...props }) {
+    return <div className={`canvas-base-node ${className}`.trim()} {...props}>{children}</div>
+}
+
+function BaseNodeHeader({ className = '', children, ...props }) {
+    return <div className={`canvas-base-node-header ${className}`.trim()} {...props}>{children}</div>
+}
+
+function BaseNodeHeaderTitle({ className = '', children, ...props }) {
+    return <div className={`canvas-base-node-header-title ${className}`.trim()} {...props}>{children}</div>
+}
+
+function BaseNodeContent({ className = '', children, ...props }) {
+    return <div className={`canvas-base-node-content ${className}`.trim()} {...props}>{children}</div>
+}
+
+function BaseNodeFooter({ className = '', children, ...props }) {
+    return <div className={`canvas-base-node-footer ${className}`.trim()} {...props}>{children}</div>
+}
+
+function BaseHandle({ isEdit, ...props }) {
+    return <Handle {...props} className={`canvas-base-handle ${props.className || ''}`.trim()} isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+}
+
 function CardHandles({ isEdit }) {
     return <>
-        <Handle type="source" position={Position.Top} id="top" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
-        <Handle type="source" position={Position.Right} id="right" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
-        <Handle type="source" position={Position.Bottom} id="bottom" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
-        <Handle type="source" position={Position.Left} id="left" isConnectableStart={isEdit} isConnectableEnd={isEdit} />
+        <BaseHandle type="source" position={Position.Top} id="top" isEdit={isEdit} />
+        <BaseHandle type="source" position={Position.Right} id="right" isEdit={isEdit} />
+        <BaseHandle type="source" position={Position.Bottom} id="bottom" isEdit={isEdit} />
+        <BaseHandle type="source" position={Position.Left} id="left" isEdit={isEdit} />
     </>
 }
 
@@ -412,7 +440,15 @@ export function CanvasCustomEdge({
                     className="nodrag nopan canvas-edge-interactive-container"
                 >
                     {isEdit && (selected || isHovered || isEditingLabel) ? (
-                        <div className="canvas-edge-toolbar">
+                        <EdgeToolbar
+                            edgeId={id}
+                            x={labelX}
+                            y={labelY}
+                            isVisible={isEdit && (selected || isHovered || isEditingLabel)}
+                            className="canvas-edge-toolbar nodrag nopan"
+                            onMouseEnter={enterEdge}
+                            onMouseLeave={leaveEdge}
+                        >
                             {isEditingLabel ? (
                                 <div className="canvas-edge-label-editor">
                                     <input
@@ -487,7 +523,7 @@ export function CanvasCustomEdge({
                                     </button>
                                 </>
                             )}
-                        </div>
+                        </EdgeToolbar>
                     ) : label ? (
                         <div
                             className="canvas-edge-label-badge"
@@ -542,7 +578,7 @@ function TextCardNode({ id, data, selected }) {
     }, [blockColors])
 
     return (
-        <div
+        <BaseNode
             className={`canvas-node-card canvas-card-text ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
             style={cardStyle}
             onDoubleClick={() => isEdit && setIsEditing(true)}
@@ -562,8 +598,32 @@ function TextCardNode({ id, data, selected }) {
                 deleteLabel={isZh ? '刪除卡片' : 'Delete Card'}
             />
 
+            <BaseNodeHeader className="canvas-card-header">
+                <BaseNodeHeaderTitle>
+                    <span className="canvas-card-icon">📄</span>
+                    <span>{data.label || (isZh ? '筆記卡片' : 'Note Card')}</span>
+                </BaseNodeHeaderTitle>
+            </BaseNodeHeader>
+
+            <BaseNodeContent className="canvas-card-body nowheel">
+                {isEditing ? (
+                    <textarea
+                        autoFocus
+                        className="canvas-card-textarea nodrag"
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        onBlur={handleBlur}
+                        onKeyDown={handleKeyDown}
+                        placeholder={isZh ? '輸入 Markdown 內文 (按 Esc 或 Cmd+Enter 完成)...' : 'Write markdown (Esc or Cmd+Enter to finish)...'}
+                        style={blockColors ? { color: blockColors.text } : {}}
+                    />
+                ) : (
+                    <MarkdownPreview text={text} isDark={isDark} />
+                )}
+            </BaseNodeContent>
+
             {isEdit && (
-                <div className="canvas-card-hover-actions nodrag">
+                <BaseNodeFooter className="canvas-card-hover-actions nodrag">
                     <button
                         type="button"
                         className="canvas-btn-icon"
@@ -588,26 +648,9 @@ function TextCardNode({ id, data, selected }) {
                             ✕
                         </button>
                     )}
-                </div>
+                </BaseNodeFooter>
             )}
-
-            <div className="canvas-card-body nowheel">
-                {isEditing ? (
-                    <textarea
-                        autoFocus
-                        className="canvas-card-textarea nodrag"
-                        value={text}
-                        onChange={e => setText(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        placeholder={isZh ? '輸入 Markdown 內文 (按 Esc 或 Cmd+Enter 完成)...' : 'Write markdown (Esc or Cmd+Enter to finish)...'}
-                        style={blockColors ? { color: blockColors.text } : {}}
-                    />
-                ) : (
-                    <MarkdownPreview text={text} isDark={isDark} />
-                )}
-            </div>
-        </div>
+        </BaseNode>
     )
 }
 
@@ -637,7 +680,7 @@ function StickyCardNode({ id, data, selected }) {
     }
 
     return (
-        <div
+        <BaseNode
             className={`canvas-node-card canvas-card-sticky ${selected ? 'is-selected' : ''}`}
             style={{
                 width: '100%',
@@ -663,8 +706,32 @@ function StickyCardNode({ id, data, selected }) {
                 deleteLabel={isZh ? '刪除便籤' : 'Delete Sticky'}
             />
 
+            <BaseNodeHeader className="canvas-card-header canvas-sticky-header">
+                <BaseNodeHeaderTitle>
+                    <span className="canvas-card-icon">📌</span>
+                    <span>{isZh ? '靈感便籤' : 'Sticky Note'}</span>
+                </BaseNodeHeaderTitle>
+            </BaseNodeHeader>
+
+            <BaseNodeContent className="canvas-card-body canvas-sticky-body nowheel">
+                {isEditing ? (
+                    <textarea
+                        autoFocus
+                        className="canvas-card-textarea nodrag canvas-sticky-textarea"
+                        value={text}
+                        onChange={e => setText(e.target.value)}
+                        onBlur={handleBlur}
+                        onKeyDown={handleKeyDown}
+                        placeholder={isZh ? '輸入便籤內容...' : 'Write sticky note...'}
+                        style={{ color: blockColors.text }}
+                    />
+                ) : (
+                    <MarkdownPreview text={text} isDark={false} />
+                )}
+            </BaseNodeContent>
+
             {isEdit && (
-                <div className="canvas-card-hover-actions nodrag">
+                <BaseNodeFooter className="canvas-card-hover-actions nodrag">
                     <button
                         type="button"
                         className="canvas-btn-icon"
@@ -689,26 +756,9 @@ function StickyCardNode({ id, data, selected }) {
                             ✕
                         </button>
                     )}
-                </div>
+                </BaseNodeFooter>
             )}
-
-            <div className="canvas-card-body canvas-sticky-body nowheel">
-                {isEditing ? (
-                    <textarea
-                        autoFocus
-                        className="canvas-card-textarea nodrag canvas-sticky-textarea"
-                        value={text}
-                        onChange={e => setText(e.target.value)}
-                        onBlur={handleBlur}
-                        onKeyDown={handleKeyDown}
-                        placeholder={isZh ? '輸入便籤內容...' : 'Write sticky note...'}
-                        style={{ color: blockColors.text }}
-                    />
-                ) : (
-                    <MarkdownPreview text={text} isDark={false} />
-                )}
-            </div>
-        </div>
+        </BaseNode>
     )
 }
 
@@ -733,7 +783,7 @@ function WikiLinkNode({ id, data, selected }) {
     const noteHref = safeWikiNotePath(file)
 
     return (
-        <div
+        <BaseNode
             className={`canvas-node-card canvas-card-wiki ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
             style={{
                 width: '100%',
@@ -760,30 +810,14 @@ function WikiLinkNode({ id, data, selected }) {
                 deleteLabel={isZh ? '刪除卡片' : 'Delete'}
             />
 
-            {isEdit && (
-                <div className="canvas-card-hover-actions nodrag">
-                    <button
-                        type="button"
-                        className="canvas-btn-icon"
-                        onClick={() => setIsEditing(!isEditing)}
-                        title={isEditing ? (isZh ? '完成' : 'Done') : (isZh ? '修改路徑' : 'Edit')}
-                    >
-                        {isEditing ? '✓' : '✎'}
-                    </button>
-                    {data.onDeleteNode && (
-                        <button
-                            type="button"
-                            className="canvas-btn-icon canvas-btn-delete"
-                            onClick={() => data.onDeleteNode(id)}
-                            title={isZh ? '刪除' : 'Delete'}
-                        >
-                            ✕
-                        </button>
-                    )}
-                </div>
-            )}
+            <BaseNodeHeader className="canvas-card-header">
+                <BaseNodeHeaderTitle>
+                    <span className="canvas-card-icon">📖</span>
+                    <span>{isZh ? 'Wiki 筆記引用' : 'Wiki Note Reference'}</span>
+                </BaseNodeHeaderTitle>
+            </BaseNodeHeader>
 
-            <div className="canvas-card-body canvas-wiki-body nowheel">
+            <BaseNodeContent className="canvas-card-body canvas-wiki-body nowheel">
                 {isEditing ? (
                     <div className="canvas-wiki-edit-form nodrag">
                         <div className="canvas-wiki-input-wrap">
@@ -819,8 +853,31 @@ function WikiLinkNode({ id, data, selected }) {
                         </div>
                     </div>
                 )}
-            </div>
-        </div>
+            </BaseNodeContent>
+
+            {isEdit && (
+                <BaseNodeFooter className="canvas-card-hover-actions nodrag">
+                    <button
+                        type="button"
+                        className="canvas-btn-icon"
+                        onClick={() => setIsEditing(!isEditing)}
+                        title={isEditing ? (isZh ? '完成' : 'Done') : (isZh ? '修改路徑' : 'Edit')}
+                    >
+                        {isEditing ? '✓' : '✎'}
+                    </button>
+                    {data.onDeleteNode && (
+                        <button
+                            type="button"
+                            className="canvas-btn-icon canvas-btn-delete"
+                            onClick={() => data.onDeleteNode(id)}
+                            title={isZh ? '刪除' : 'Delete'}
+                        >
+                            ✕
+                        </button>
+                    )}
+                </BaseNodeFooter>
+            )}
+        </BaseNode>
     )
 }
 
@@ -839,7 +896,7 @@ function ExternalLinkNode({ id, data, selected }) {
 
     const safeUrl = safeExternalUrl(url)
     return (
-        <div
+        <BaseNode
             className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
             style={{
                 width: '100%',
@@ -850,29 +907,14 @@ function ExternalLinkNode({ id, data, selected }) {
             <NodeResizer minWidth={180} minHeight={70} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
             <CardHandles isEdit={isEdit} />
             <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={isZh} palette={CANVAS_COLOR_PRESETS} duplicateLabel={isZh ? '複製外部連結' : 'Duplicate link'} deleteLabel={isZh ? '刪除外部連結' : 'Delete link'} />
-            {isEdit && (
-                <div className="canvas-card-hover-actions nodrag">
-                    <button
-                        type="button"
-                        className="canvas-btn-icon"
-                        onClick={() => setIsEditing(!isEditing)}
-                        title={isEditing ? (isZh ? '完成' : 'Done') : (isZh ? '修改' : 'Edit')}
-                    >
-                        {isEditing ? '✓' : '✎'}
-                    </button>
-                    {data.onDeleteNode && (
-                        <button
-                            type="button"
-                            className="canvas-btn-icon canvas-btn-delete"
-                            onClick={() => data.onDeleteNode(id)}
-                            title={isZh ? '刪除' : 'Delete'}
-                        >
-                            ✕
-                        </button>
-                    )}
-                </div>
-            )}
-            <div className="canvas-card-body canvas-wiki-body nowheel">
+            <BaseNodeHeader className="canvas-card-header">
+                <BaseNodeHeaderTitle>
+                    <span className="canvas-card-icon">🔗</span>
+                    <span>{isZh ? '外部連結' : 'Web Link'}</span>
+                </BaseNodeHeaderTitle>
+            </BaseNodeHeader>
+
+            <BaseNodeContent className="canvas-card-body canvas-wiki-body nowheel">
                 {isEditing ? (
                     <div className="canvas-wiki-edit-form nodrag">
                         <div className="canvas-wiki-input-wrap">
@@ -904,8 +946,31 @@ function ExternalLinkNode({ id, data, selected }) {
                         )}
                     </div>
                 )}
-            </div>
-        </div>
+            </BaseNodeContent>
+
+            {isEdit && (
+                <BaseNodeFooter className="canvas-card-hover-actions nodrag">
+                    <button
+                        type="button"
+                        className="canvas-btn-icon"
+                        onClick={() => setIsEditing(!isEditing)}
+                        title={isEditing ? (isZh ? '完成' : 'Done') : (isZh ? '修改' : 'Edit')}
+                    >
+                        {isEditing ? '✓' : '✎'}
+                    </button>
+                    {data.onDeleteNode && (
+                        <button
+                            type="button"
+                            className="canvas-btn-icon canvas-btn-delete"
+                            onClick={() => data.onDeleteNode(id)}
+                            title={isZh ? '刪除' : 'Delete'}
+                        >
+                            ✕
+                        </button>
+                    )}
+                </BaseNodeFooter>
+            )}
+        </BaseNode>
     )
 }
 
@@ -914,7 +979,7 @@ function GroupNode({ id, data, selected }) {
     const isDark = useCanvasTheme() === 'dark'
     const blockColors = resolveCardBlockColors(data.color, isDark)
     return (
-        <div
+        <BaseNode
             className={`canvas-group-node ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
             style={{
                 width: '100%',
@@ -929,8 +994,10 @@ function GroupNode({ id, data, selected }) {
             <NodeResizer minWidth={120} minHeight={80} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
             <CardHandles isEdit={isEdit} />
             <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={resolveCanvasLang() === 'zh-TW'} palette={CANVAS_COLOR_PRESETS} duplicateLabel="Duplicate group" deleteLabel="Delete group" />
-            {data.label && <span className="canvas-group-label">{data.label}</span>}
-        </div>
+            <BaseNodeContent className="canvas-group-content">
+                {data.label && <span className="canvas-group-label">{data.label}</span>}
+            </BaseNodeContent>
+        </BaseNode>
     )
 }
 

@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **🧱 Canvas 改用 React Flow UI anatomy 與可見連線點 (React Flow UI Anatomy & Visible Handles)**：Canvas 節點改採共用 `BaseNode`、`BaseNodeHeader`、`BaseNodeHeaderTitle`、`BaseNodeContent`、`BaseNodeFooter` 與 `BaseHandle` 結構；關係線工具列接入 React Flow 原生 `EdgeToolbar`。四邊連接點恢復為可見 12px handles，保留 Loose connection 與 JSON Canvas `fromSide`／`toSide` 資料格式；未引入 Tailwind／shadcn 全域依賴，避免影響既有編輯器。
+
 - **🎨 Canvas 畫布視覺架構全面現代化與發布同步修復 (Canvas Card Modernization, Zero-Chrome Polish & Robust Publish Sync)**：
   - **徹底移除卡片擬窗頂欄 (Zero Header Blank Space)**：消除卡片頂部「📄 筆記卡片」與「📌」視窗標題列及分割線，釋放 100% 空間給筆記正文；操作統一集中於選取時的浮動工具列（NodeToolbar）與卡片右上角懸停無佔位按鈕（`canvas-card-hover-actions`），零留白浪費，全面對齊 React Flow、Obsidian Canvas、Miro 與 FigJam 的簡約現代風格。
   - **真正實心色塊填滿 (Solid Card Color Blocks)**：解決點擊色彩只改框線的痛點，調色盤現在會直接為卡片鋪設舒適飽滿的實心色塊（紅、橙、黃、綠、藍、紫及自訂色彩），並自動計算深淺色主題對應的高對比文字與邊框色。

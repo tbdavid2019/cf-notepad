@@ -1207,14 +1207,14 @@ textarea#contents {
 }
 
 .david-canvas-app .react-flow__handle {
-    width: 9px;
-    height: 9px;
-    min-width: 9px;
-    min-height: 9px;
+    width: 12px;
+    height: 12px;
+    min-width: 12px;
+    min-height: 12px;
     border: 2px solid #ffffff;
     background: #3b82f6;
     border-radius: 50%;
-    opacity: 0;
+    opacity: 1;
     transition: opacity 0.15s ease, transform 0.15s ease;
 }
 
@@ -1257,6 +1257,50 @@ textarea#contents {
     flex-direction: column;
     overflow: hidden;
     transition: box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+/* React Flow UI-style shared node anatomy. */
+.canvas-base-node {
+    min-width: 0;
+    min-height: 0;
+    box-sizing: border-box;
+}
+
+.canvas-base-node-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 0 0 auto;
+    min-width: 0;
+    padding: 7px 12px;
+    border-bottom: 1px solid rgba(128, 128, 128, 0.16);
+    user-select: none;
+}
+
+.canvas-base-node-header-title {
+    display: inline-flex;
+    align-items: center;
+    min-width: 0;
+    gap: 6px;
+    overflow: hidden;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.canvas-base-node-content {
+    min-width: 0;
+    min-height: 0;
+}
+
+.canvas-base-node-footer {
+    flex: 0 0 auto;
+}
+
+.canvas-base-handle {
+    z-index: 6;
 }
 
 .canvas-node-card.is-light {
