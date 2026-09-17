@@ -4,6 +4,7 @@
  */
 
 import { parseCanvasDocument, validateCanvasDocument } from '../../../../src/canvas_document.mjs'
+import { fitView } from '../components/Diagram/viewportHelpers.mjs'
 
 export function createPersistenceBridge(store, contentsElement, options = {}) {
     if (!contentsElement) return () => {}
@@ -93,9 +94,70 @@ export function createPersistenceBridge(store, contentsElement, options = {}) {
         document.addEventListener('visibilitychange', handleVisibilityChange)
     }
 
+    // Restore a local Canvas draft after the initial server document is mounted.
+    // The editor writes draft/pending content to IndexedDB before cloud sync, so
+    // a refresh must offer that newer local state back to the user.
+    const initialContent = contentsElement.value
+    let restoreFitFrame = null
+    let restoreFitTimer = null
+
+    const fitRestoredCanvas = () => {
+        const run = () => {
+            restoreFitFrame = null
+            restoreFitTimer = null
+            fitView({ padding: 0.2, duration: 400 })
+        }
+
+        if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+            restoreFitFrame = window.requestAnimationFrame(() => {
+                restoreFitFrame = window.requestAnimationFrame(run)
+            })
+        } else {
+            restoreFitTimer = setTimeout(run, 0)
+        }
+    }
+
+    const restoreLocalDraft = async () => {
+        if (!store.getState().isEdit || typeof window === 'undefined' || !window.offlineStore || !window.APP_STATE?.path) {
+            return
+        }
+        try {
+            const note = await window.offlineStore.getNote(window.APP_STATE.path)
+            if (!note || note.format !== 'canvas' || !['draft', 'pending'].includes(note.syncStatus)) {
+                return
+            }
+            if (!note.content || note.content === contentsElement.value) {
+                return
+            }
+
+            // Keep edits made after mount authoritative over an older async draft.
+            if (store.getState().dirty || contentsElement.value !== initialContent) {
+                return
+            }
+
+            const parsed = parseCanvasDocument(note.content, { allowFallback: false })
+            const validated = validateCanvasDocument(parsed)
+            store.getState().loadDocument(validated)
+            fitRestoredCanvas()
+
+            window.showToast?.(
+                isZh() ? '已恢復本機 Canvas 草稿' : 'Restored local Canvas draft'
+            )
+        } catch (err) {
+            console.warn('[canvas-v2] draft restoration skipped or invalid:', err)
+        }
+    }
+
+    const draftTimer = setTimeout(restoreLocalDraft, 0)
+
     const cleanup = () => {
         unsubscribe()
         if (saveTimer) clearTimeout(saveTimer)
+        clearTimeout(draftTimer)
+        if (typeof window !== 'undefined' && restoreFitFrame !== null) {
+            window.cancelAnimationFrame?.(restoreFitFrame)
+        }
+        if (restoreFitTimer !== null) clearTimeout(restoreFitTimer)
         if (typeof window !== 'undefined') {
             window.removeEventListener('pagehide', handleFlush)
             window.removeEventListener('beforeunload', handleFlush)

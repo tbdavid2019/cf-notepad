@@ -218,6 +218,9 @@ test('canvas editor uses clear, loose, four-sided handles and records JSON Canva
     assert.match(canvasV2NodeHandleSource, /Position\.Bottom/)
     assert.match(canvasV2NodeHandleSource, /Position\.Left/)
     assert.match(canvasV2CssSource, /\.canvas-handle/)
+    assert.match(canvasV2CssSource, /\.canvas-handle \{[\s\S]*pointer-events:\s*all\s*!important;/)
+    assert.match(editorCssSource, /\.canvas-editor-pane \{[\s\S]*flex:\s*1 1 auto;[\s\S]*height:\s*100%;[\s\S]*min-height:\s*0;/)
+    assert.doesNotMatch(editorCssSource, /\.canvas-editor-pane \{[\s\S]*height:\s*calc\(/)
 })
 
 test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and interactive arrow/style controls', () => {
@@ -245,6 +248,9 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(canvasV2CssSource, /\.canvas-edge-toolbar/)
     assert.match(canvasV2CssSource, /\.canvas-edge-label-badge/)
     assert.match(canvasV2TokensSource, /--canvas-bg/)
+    assert.match(canvasV2EdgeSource, /markerEnd=\{markerEnd\}/)
+    assert.doesNotMatch(canvasV2EdgeSource, /markerEnd=\{effectiveMarkerEnd\}/)
+    assert.match(canvasV2PersistenceSource, /fitView\(/)
 })
 
 test('canvas publishing validates JSON Canvas content at the setting boundary', () => {

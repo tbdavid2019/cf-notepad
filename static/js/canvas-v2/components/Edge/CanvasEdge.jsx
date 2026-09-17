@@ -62,42 +62,9 @@ export function CanvasEdge(props) {
 
     const hasArrow = (data.toEnd === 'arrow' || (data.toEnd === undefined && !data.fromEnd))
 
-    const effectiveMarkerEnd = useMemo(() => {
-        if (markerEnd && typeof markerEnd === 'object') {
-            return {
-                ...markerEnd,
-                color: selected ? '#2563eb' : (markerEnd.color || color),
-            }
-        }
-        if (hasArrow) {
-            return {
-                type: 'arrowclosed',
-                color: selected ? '#2563eb' : color,
-                width: 14,
-                height: 14,
-            }
-        }
-        return undefined
-    }, [markerEnd, hasArrow, selected, color])
-
-    const effectiveMarkerStart = useMemo(() => {
-        if (markerStart && typeof markerStart === 'object') {
-            return {
-                ...markerStart,
-                color: selected ? '#2563eb' : (markerStart.color || color),
-            }
-        }
-        if (data.fromEnd === 'arrow') {
-            return {
-                type: 'arrowclosed',
-                color: selected ? '#2563eb' : color,
-                width: 14,
-                height: 14,
-            }
-        }
-        return undefined
-    }, [markerStart, data.fromEnd, selected, color])
-
+    // React Flow resolves object marker definitions to URL strings before they
+    // reach a custom edge. BaseEdge forwards this value to the SVG path, so
+    // passing an object here would produce marker-end="[object Object]".
     const edgeStyle = {
         ...style,
         stroke: selected ? '#2563eb' : color,
@@ -114,8 +81,8 @@ export function CanvasEdge(props) {
                 path={edgePath}
                 style={edgeStyle}
                 interactionWidth={20}
-                markerEnd={effectiveMarkerEnd}
-                markerStart={effectiveMarkerStart}
+                markerEnd={markerEnd}
+                markerStart={markerStart}
                 className="canvas-edge-path"
             />
 

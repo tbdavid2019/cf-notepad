@@ -1081,10 +1081,11 @@ textarea#contents {
 }
 
 .canvas-editor-pane {
+    flex: 1 1 auto;
     position: relative;
     width: 100%;
-    height: calc(100vh - 120px);
-    min-height: 600px;
+    height: 100%;
+    min-height: 0;
     overflow: hidden;
     background: var(--canvas-workspace, #f8fafc);
 }

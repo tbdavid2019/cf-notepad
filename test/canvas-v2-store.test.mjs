@@ -1,6 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { createCanvasStore } from '../static/js/canvas-v2/store/createCanvasStore.mjs'
+import { createPersistenceBridge } from '../static/js/canvas-v2/store/persistence.mjs'
 import { validateCanvasDocument } from '../src/canvas_document.mjs'
 
 test('createCanvasStore initializes with empty or provided document', () => {
@@ -127,6 +128,58 @@ test('reconnectEdge changes source or target handle of existing edge', () => {
 
     const edge = store.getState().edges[0]
     assert.equal(edge.target, 'n3')
+})
+
+test('persistence bridge restores a newer local canvas draft after reload', async () => {
+    const originalWindow = globalThis.window
+    const localDraft = JSON.stringify({
+        nodes: [{ id: 'draft-node', type: 'text', x: 24, y: 36, width: 320, height: 180, text: 'Recovered draft' }],
+        edges: [],
+    })
+    const listeners = new Map()
+    globalThis.window = {
+        APP_STATE: { path: 'canvas-draft' },
+        offlineStore: {
+            async getNote(path) {
+                assert.equal(path, 'canvas-draft')
+                return {
+                    path,
+                    content: localDraft,
+                    format: 'canvas',
+                    syncStatus: 'draft',
+                }
+            },
+        },
+        addEventListener(type, handler) {
+            listeners.set(type, handler)
+        },
+        removeEventListener(type, handler) {
+            if (listeners.get(type) === handler) listeners.delete(type)
+        },
+        showToast() {},
+    }
+
+    try {
+        const store = createCanvasStore({ nodes: [], edges: [] })
+        const fakeTextarea = {
+            value: '',
+            events: [],
+            dispatchEvent(evt) {
+                this.events.push(evt.type)
+                return true
+            },
+        }
+
+        const cleanup = createPersistenceBridge(store, fakeTextarea, { debounceMs: 500 })
+        await new Promise(resolve => setTimeout(resolve, 10))
+
+        assert.equal(store.getState().nodes[0].data.text, 'Recovered draft')
+        assert.equal(JSON.parse(fakeTextarea.value).nodes[0].text, 'Recovered draft')
+        cleanup()
+    } finally {
+        if (originalWindow === undefined) delete globalThis.window
+        else globalThis.window = originalWindow
+    }
 })
 
 test('persistence bridge updates contentsElement.value immediately synchronously and supports flush', () => {
@@ -325,6 +378,4 @@ test('Ameliorate node types and causes relation connect correctly', () => {
     assert.equal(json.nodes[1].david888.nodeType, 'benefit')
     assert.doesNotThrow(() => validateCanvasDocument(json))
 })
-
-
 
