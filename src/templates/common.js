@@ -371,7 +371,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const unpublishTitle = lang === 'zh-TW' ? '取消發布' : 'Unpublish'
     const publicIndexTitle = publicIndex === true ? t.publicIndexDisable : t.publicIndexEnable
     const isBlockEditor = isEdit && editorFormat === 'block'
-    const isCanvasEditor = isEdit && editorFormat === 'canvas'
     const newNoteTitle = lang === 'zh-TW' ? '新增筆記' : 'New note'
     const newMarkdownTitle = lang === 'zh-TW' ? 'Markdown 筆記' : 'Markdown note'
     const newMarkdownDescription = lang === 'zh-TW' ? '純文字編輯，適合匯入內容' : 'Plain-text editing for imported content'
@@ -382,7 +381,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const createSectionTitle = lang === 'zh-TW' ? '建立筆記' : 'Create note'
     const importSectionTitle = isBlockEditor
         ? (lang === 'zh-TW' ? '匯入內容（轉成 Block）' : 'Import content (Blocks)')
-        : (lang === 'zh-TW' ? '匯入內容（Markdown）' : 'Import content (Markdown)')
+        : (lang === 'zh-TW' ? '匯入內容' : 'Import content')
     const moreToolsTitle = lang === 'zh-TW' ? '顯示更多工具' : 'Show more tools'
     const safeViewCount = Number.isSafeInteger(viewCount) && viewCount >= 0 ? viewCount : null
     const formattedViewCount = safeViewCount === null ? '' : new Intl.NumberFormat(lang).format(safeViewCount)
@@ -442,7 +441,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 <small>${newCanvasDescription}</small>
                                             </span>
                                         </a>
-                                        ${!isCanvasEditor ? `
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-menu-label">${importSectionTitle}</div>
                                         <button type="button" id="dropdown-record-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.startRecording || (lang === 'zh-TW' ? '即時錄音' : 'Live voice recording')}</span></button>
@@ -450,7 +448,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                         <button type="button" id="dropdown-import-audio-smart-format-btn" class="dropdown-item">${SVG_ICONS.sparkles}<span>${t.importAudioSmartFormatMarkdown}</span></button>
                                         <button type="button" id="dropdown-import-doc-btn" class="dropdown-item">${SVG_ICONS.import}<span>${t.importFileMarkdown}</span></button>
                                         <button type="button" id="dropdown-import-url-btn" class="dropdown-item">${SVG_ICONS.globe}<span>${t.importWebsiteMarkdown}</span></button>
-                                        ` : ''}
                                         <div class="dropdown-divider"></div>
                                         <button type="button" id="editor-preference-btn" class="dropdown-item">${SVG_ICONS.settings}<span>${lang === 'zh-TW' ? '設定預設編輯器模式' : 'Set default editor mode'}</span></button>
                                     </div>
@@ -486,7 +483,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                             <small>${newCanvasDescription}</small>
                                         </span>
                                     </a>
-                                    ${!isBlockEditor && !isCanvasEditor ? `
+                                    ${!isBlockEditor ? `
                                     <div class="dropdown-divider"></div>
                                     <div class="dropdown-menu-label">${importSectionTitle}</div>
                                     <button type="button" id="dropdown-record-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.startRecording || (lang === 'zh-TW' ? '即時錄音' : 'Live voice recording')}</span></button>

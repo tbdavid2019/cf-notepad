@@ -108,7 +108,7 @@ Use form fields `append`, `public`, `share`, `publicIndex`, `theme`, `width`, `p
 ### 2.3 Canvas Documents (`editorFormat: "canvas"`)
 Canvas is a separate JSON Canvas 1.0 document format, not Markdown. A Canvas write must send the complete JSON document, set `editorFormat` to `"canvas"`, and must never use `append`.
 
-The interoperable core accepts `text`, `file`, `link`, `group`, and `edge` records. DAVID888 sticky-note appearance is stored in an optional `david888` extension object, which other JSON Canvas tools can safely ignore. Use `/new/canvas` in the browser to create one; use its Canvas toolbar to import or export `.canvas` files. Do not use Markdown, audio, URL, or Office-document import actions on an existing Canvas.
+The interoperable core accepts `text`, `file`, `link`, `group`, and edge records. DAVID888 sticky-note appearance is stored in an optional `david888` extension object, which other JSON Canvas tools can safely ignore. Use `/new/canvas` in the browser to create one; use its Canvas toolbar to import or export `.canvas` files. The Footer `Import content` menu remains available for Markdown, audio, URL, Office, and PDF workflows; from Canvas those actions follow the existing Markdown-note import behavior and do not mutate the Canvas JSON.
 
 ```json
 {

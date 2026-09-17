@@ -140,11 +140,12 @@ test('FOOTER renders new canvas note link and canvas SVG icon', () => {
     assert.ok(SVG_ICONS.canvas)
 })
 
-test('canvas footer keeps document imports out of the Canvas menu', () => {
+test('canvas footer keeps the general document import menu available', () => {
     const footerHtml = FOOTER({ lang: 'zh-TW', isEdit: true, editorFormat: 'canvas' })
 
-    assert.doesNotMatch(footerHtml, /dropdown-import-doc-btn/)
-    assert.doesNotMatch(footerHtml, /dropdown-import-audio-btn/)
+    assert.match(footerHtml, /dropdown-import-doc-btn/)
+    assert.match(footerHtml, /dropdown-import-audio-btn/)
+    assert.match(footerHtml, /匯入內容/)
     assert.doesNotMatch(footerHtml, /匯入內容（Markdown）/)
 })
 

@@ -153,8 +153,8 @@
     },
     {
       "id": "infinite-canvas-editor",
-      "zh-TW": "小訣竅：在底欄「＋ 新增」選單點擊「Canvas 畫布」，即可在 2D 空間新增 Markdown 卡片、彩色便籤與 Wiki 筆記引用。四邊連接點都可建立關係線；請從 Canvas 工具列匯入或匯出標準 .canvas 檔案。",
-      "en-US": "Tip: Click 'Canvas' from the '+ New' menu to create 2D notes with Markdown cards, sticky notes, and Wiki references. All four handles can connect; use the Canvas toolbar to import or export standard .canvas files."
+      "zh-TW": "小訣竅：在底欄「＋ 新增」選單點擊「Canvas 畫布」，即可在 2D 空間新增 Markdown 卡片、彩色便籤與 Wiki 筆記引用。四邊連接點都可建立關係線；Canvas 工具列處理 .canvas，底欄「匯入內容」則保留文件與音訊匯入流程。",
+      "en-US": "Tip: Click 'Canvas' from the '+ New' menu to create 2D notes with Markdown cards, sticky notes, and Wiki references. All four handles can connect; use the Canvas toolbar for .canvas files and the Footer Import content menu for document and audio imports."
     }
   ]
 }

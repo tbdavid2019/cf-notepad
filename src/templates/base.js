@@ -5170,7 +5170,7 @@ ${getMarkdownCss()}
         // --- PWA File Handling & Local File Opener ---
         window.__openLocalFileContent = async function({ name, text }) {
             if (APP_STATE.editorFormat === 'canvas') {
-                window.showToast?.(APP_STATE.lang === 'zh-TW' ? 'Canvas 畫布請使用工具列的 .canvas 匯入。' : 'Use the Canvas toolbar to import a .canvas file.')
+                await createMarkdownNoteFromImport(text)
                 return
             }
             if ($textarea) {

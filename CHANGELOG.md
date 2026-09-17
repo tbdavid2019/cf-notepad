@@ -3,7 +3,7 @@
 ## [2026-09-17]
 
 - **🐛 Canvas 畫布資料安全、互通性與連線修正 (Canvas Data Safety, Interoperability & Connection Fixes)**：
-  - 將建立選單名稱統一為「Canvas 畫布」／`Canvas`；Canvas 只在自己的工具列處理 `.canvas` 匯入與匯出，底欄不再顯示 Markdown、音訊、網址或 Office 文件匯入，避免文件文字損壞畫布 JSON。
+  - 將建立選單名稱統一為「Canvas 畫布」／`Canvas`；Canvas 工具列處理 `.canvas` 匯入與匯出，底欄「匯入內容」則保留 Markdown、音訊、網址與 Office 文件匯入，並沿用既有 Markdown 筆記匯入流程。
   - 修正空畫布保存後重新開啟會回填歡迎卡片的資料遺失問題；顯式 `{ "nodes": [], "edges": [] }` 現在會完整保留。
   - 改用 JSON Canvas 1.0 的標準 text、file、link、group 與 edge 核心；便籤使用可忽略的 `david888.cardType` extension，舊版 `sticky` 節點會自動遷移。匯入時驗證節點／edge ID、座標、尺寸、關聯、URL 與數量上限，拒絕無效或危險資料。
   - React Flow 改為四邊皆可起訖的 Loose handles，強化關係線與連接中的顏色、粗細與可點擊範圍；重複關係線會顯示提示。外部連結與群組節點可安全顯示並 round-trip 保存。
