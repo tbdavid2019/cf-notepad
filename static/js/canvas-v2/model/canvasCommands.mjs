@@ -5,9 +5,12 @@
 
 import {
     NODE_DIMENSIONS,
+    AMELIORATE_NODE_TYPES,
+    getNodeTypeConfig,
     DEFAULT_EDGE_COLOR,
     DEFAULT_EDGE_WIDTH,
     DEFAULT_EDGE_STYLE,
+    DEFAULT_EDGE_LABEL,
 } from './canvasTypes.mjs'
 import { recordHistoryStep } from './canvasHistory.mjs'
 
@@ -39,6 +42,10 @@ export function createNode(state, options = {}) {
     const nextHistory = recordHistoryStep(state.history, snapshot)
 
     const isSticky = type === 'sticky'
+    const nodeType = options.nodeType || (type === 'sticky' ? 'sticky' : 'problem')
+    const typeConfig = AMELIORATE_NODE_TYPES[nodeType]
+    const initialColor = options.color || typeConfig?.color || (isSticky ? '#fff9c4' : '')
+
     let posX = options.x !== undefined ? options.x : (120 + Math.random() * 80)
     let posY = options.y !== undefined ? options.y : (120 + Math.random() * 80)
 
@@ -47,6 +54,10 @@ export function createNode(state, options = {}) {
         posX += 28
         posY += 28
     }
+
+    const defaultText = options.text !== undefined
+        ? options.text
+        : (type === 'group' ? '' : (options.file || options.url ? '' : 'new node'))
 
     const newNode = {
         id,
@@ -61,15 +72,20 @@ export function createNode(state, options = {}) {
         },
         selected: true,
         data: {
-            text: options.text ?? '',
+            text: defaultText,
+            nodeType,
             file: options.file ?? '',
             subpath: options.subpath ?? '',
             url: options.url ?? '',
-            label: options.label ?? '',
+            label: options.label ?? (typeConfig?.name || ''),
             background: options.background ?? '',
             backgroundStyle: options.backgroundStyle ?? '',
-            color: options.color ?? (isSticky ? '#fff9c4' : ''),
-            david888: options.david888 ? { ...options.david888 } : (isSticky ? { cardType: 'sticky' } : {}),
+            color: initialColor,
+            david888: {
+                ...(options.david888 || {}),
+                nodeType,
+                ...(isSticky ? { cardType: 'sticky' } : {}),
+            },
         },
     }
 
@@ -243,14 +259,15 @@ export function connectNodes(state, connection) {
     const nextHistory = recordHistoryStep(state.history, snapshot)
 
     const edgeId = generateId('edge')
+    const edgeLabel = connection.label !== undefined ? connection.label : DEFAULT_EDGE_LABEL
     const newEdge = {
         id: edgeId,
         source: String(source),
         target: String(target),
-        sourceHandle: sourceHandle || 'right',
-        targetHandle: targetHandle || 'left',
+        sourceHandle: sourceHandle || 'bottom',
+        targetHandle: targetHandle || 'top',
         type: 'canvasEdge',
-        label: '',
+        label: edgeLabel,
         selected: true,
         data: {
             fromEnd: 'none',
@@ -258,7 +275,7 @@ export function connectNodes(state, connection) {
             lineStyle: DEFAULT_EDGE_STYLE,
             strokeWidth: DEFAULT_EDGE_WIDTH,
             color: DEFAULT_EDGE_COLOR,
-            label: '',
+            label: edgeLabel,
         },
     }
 

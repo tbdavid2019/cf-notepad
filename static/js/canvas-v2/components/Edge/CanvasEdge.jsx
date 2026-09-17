@@ -3,8 +3,7 @@ import {
     BaseEdge,
     EdgeLabelRenderer,
     EdgeToolbar as FlowEdgeToolbar,
-    getSmoothStepPath,
-    MarkerType,
+    getBezierPath,
 } from '@xyflow/react'
 import { EdgeLabel } from './EdgeLabel.jsx'
 import { EdgeToolbar } from './EdgeToolbar.jsx'
@@ -13,6 +12,7 @@ import {
     DEFAULT_EDGE_COLOR,
     DEFAULT_EDGE_WIDTH,
     DEFAULT_EDGE_STYLE,
+    DEFAULT_EDGE_LABEL,
 } from '../../model/canvasTypes.mjs'
 
 export function CanvasEdge(props) {
@@ -32,14 +32,13 @@ export function CanvasEdge(props) {
 
     const [isEditingLabel, setIsEditingLabel] = useState(false)
 
-    const [edgePath, labelX, labelY] = getSmoothStepPath({
+    const [edgePath, labelX, labelY] = getBezierPath({
         sourceX,
         sourceY,
         sourcePosition,
         targetX,
         targetY,
         targetPosition,
-        borderRadius: 12,
     })
 
     const toolbarPos = useMemo(() => {
@@ -59,13 +58,7 @@ export function CanvasEdge(props) {
     if (lineStyle === 'dashed') strokeDasharray = '6 4'
     else if (lineStyle === 'dotted') strokeDasharray = '2 3'
 
-    const markerStart = data.fromEnd === 'arrow'
-        ? { type: MarkerType.ArrowClosed, color }
-        : undefined
-
-    const markerEnd = (data.toEnd === 'arrow' || (data.toEnd === undefined && !data.fromEnd))
-        ? { type: MarkerType.ArrowClosed, color }
-        : undefined
+    const hasArrow = (data.toEnd === 'arrow' || (data.toEnd === undefined && !data.fromEnd))
 
     const edgeStyle = {
         ...style,
@@ -74,13 +67,13 @@ export function CanvasEdge(props) {
         strokeDasharray,
     }
 
+    const displayLabel = data.label !== undefined ? data.label : (label || DEFAULT_EDGE_LABEL)
+
     return (
         <>
             <BaseEdge
                 id={id}
                 path={edgePath}
-                markerStart={markerStart}
-                markerEnd={markerEnd}
                 style={edgeStyle}
                 interactionWidth={20}
                 className="canvas-edge-path"
@@ -119,7 +112,8 @@ export function CanvasEdge(props) {
                 >
                     <EdgeLabel
                         id={id}
-                        label={data.label || label || ''}
+                        label={displayLabel}
+                        hasArrow={hasArrow}
                         selected={selected}
                         isEdit={data.isEdit !== false}
                         isEditing={isEditingLabel}

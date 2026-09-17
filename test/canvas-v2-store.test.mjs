@@ -279,4 +279,50 @@ test('performance benchmark: store handles 100 nodes and 300 edges efficiently',
     assert.ok(duration < 200, `Benchmark took ${duration.toFixed(2)}ms, expected < 200ms`)
 })
 
+test('Ameliorate node types and causes relation connect correctly', () => {
+    const store = createCanvasStore()
+
+    // 1. Create Problem node
+    store.getState().createNode({ nodeType: 'problem' })
+    let state = store.getState()
+    assert.equal(state.nodes.length, 1)
+    const probNode = state.nodes[0]
+    assert.equal(probNode.data.nodeType, 'problem')
+    assert.equal(probNode.data.text, 'new node')
+    assert.equal(probNode.data.color, '#c084fc')
+
+    // 2. Create Benefit node
+    store.getState().createNode({ nodeType: 'benefit' })
+    state = store.getState()
+    assert.equal(state.nodes.length, 2)
+    const benNode = state.nodes[1]
+    assert.equal(benNode.data.nodeType, 'benefit')
+    assert.equal(benNode.data.text, 'new node')
+    assert.equal(benNode.data.color, '#86efac')
+
+    // 3. Connect Problem -> Benefit
+    store.getState().connectNodes({
+        source: probNode.id,
+        target: benNode.id,
+        sourceHandle: 'bottom',
+        targetHandle: 'top',
+    })
+    state = store.getState()
+    assert.equal(state.edges.length, 1)
+    const edge = state.edges[0]
+    assert.equal(edge.label, 'causes')
+    assert.equal(edge.sourceHandle, 'bottom')
+    assert.equal(edge.targetHandle, 'top')
+
+    // 4. Export to JSON Canvas 1.0
+    const json = state.toJsonCanvas()
+    assert.equal(json.nodes.length, 2)
+    assert.equal(json.edges.length, 1)
+    assert.equal(json.edges[0].label, 'causes')
+    assert.equal(json.nodes[0].david888.nodeType, 'problem')
+    assert.equal(json.nodes[1].david888.nodeType, 'benefit')
+    assert.doesNotThrow(() => validateCanvasDocument(json))
+})
+
+
 

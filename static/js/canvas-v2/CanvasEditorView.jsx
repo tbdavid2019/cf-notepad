@@ -2,11 +2,15 @@ import React, { useEffect, useCallback } from 'react'
 import { ReactFlowProvider } from '@xyflow/react'
 import { Diagram } from './components/Diagram/Diagram.jsx'
 import { MainToolbar } from './components/Toolbar/MainToolbar.jsx'
+import { TopFloatingBar } from './components/Toolbar/TopFloatingBar.jsx'
 import { fitView } from './components/Diagram/viewportHelpers.mjs'
 import { selectIsEdit } from './store/selectors.mjs'
 
 export function CanvasEditorView({ store }) {
     const isEdit = store(selectIsEdit)
+    const nodes = store(state => state.nodes)
+    const selectedNodeIds = store(state => state.selectedNodeIds)
+    const selectedNode = nodes.find(n => n.id === selectedNodeIds[0])
 
     // Keyboard shortcuts
     const handleKeyDown = useCallback((e) => {
@@ -47,9 +51,11 @@ export function CanvasEditorView({ store }) {
     return (
         <ReactFlowProvider>
             <div className="canvas-v2-root">
+                <TopFloatingBar selectedNode={selectedNode} />
                 <Diagram store={store} />
                 <MainToolbar store={store} onFitView={() => fitView({ padding: 0.2, duration: 400 })} />
             </div>
         </ReactFlowProvider>
     )
 }
+

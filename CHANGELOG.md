@@ -2,6 +2,13 @@
 
 ## [2026-09-17]
 
+- **🎨 Canvas v2 深度對齊 Ameliorate 視覺與互動體驗 (Ameliorate Visual Design & Thought Node Parity)**：
+  - **經典角落類型標籤 (Corner Type Badge)**：完全移植 Ameliorate 的經典卡片構造，卡片左上角內嵌飽滿色票的類型標籤（`🧩 Problem`、`🌱 Benefit`、`💡 Solution`、`🔀 Cause`、`📋 Criterion`、`⚠️ Detriment`、`❓ Question`、`📄 Note`），左上圓角對齊卡片外緣、右下圓角收折，徹底告別傳統視窗式灰底頂欄。
+  - **柔和粉彩卡片底色與等寬排版 (Pastel Cards & Monospace)**：卡片底色採用各類型專屬之淡雅粉彩色塊（`#f5efff`、`#f0fdf4`、`#eff6ff` 等），搭配 2px 原生彩色邊框與自然陰影；卡片正文採精緻等寬字型排版，新建卡片預設為 `new node`，點擊即可進行無縫行內編輯。
+  - **Ameliorate 貝茲曲線與 causes 關係線 (Bézier Edges & 'causes' Relation)**：連線路徑升級為流暢的平滑貝茲曲線 (`getBezierPath`)，預設關係文字自動標註為 `causes`，並於線上直接掛載鏤空三角箭頭 (`▷`)，完美對齊 Ameliorate 知識圖譜語法。
+  - **新增選單思考節點分類 (Thought Nodes in Add Menu)**：底部工具列新增選單完整收錄 8 款 Ameliorate 思考節點（問題、效益、方案、起因、標準、缺點、疑問、筆記），點選即於視口中心建立對應卡片。
+  - **右上角懸浮操作膠囊 (Top-Right Floating Actions)**：畫布右上角加入玻璃擬態操作膠囊，提供 `文A`（中英切換）、`🔊`（Web Speech 語音朗讀選取卡片內容）、`📖`（書本閱讀模式）。
+
 - **🛠️ Canvas v2 審查修復與操作性全面強化 (Canvas v2 Code Review Resolution & Usability Hardening)**：
   - **資料同步安全 (Critical 1)**：Store 變更時立即同步寫入 `#contents.value`，消除 300ms 防抖儲存與發布／離頁（`pagehide`、`beforeunload`、`visibilitychange`）競態；Bridge 新增 `flush()` 並與發布、手動儲存全面串接。
   - **100% 格式保真 (Critical 2)**：Adapter 保留未識別之 Root Metadata、Node 自訂屬性、Edge 自訂屬性與完整 `david888` 擴充，round-trip 匯出時精準保留第三方 `.canvas` 資料。

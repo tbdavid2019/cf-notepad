@@ -25,6 +25,11 @@ export function MarkdownPreview({ text = '' }) {
     return <div ref={containerRef} className="canvas-node-markdown markdown-body" />
 }
 
+function isSimpleText(str) {
+    if (!str) return true
+    return !/[#\-*>`\[|~]|\n/.test(str.trim())
+}
+
 export function MarkdownNode(props) {
     const { id, data = {}, selected = false } = props
     const [isEditing, setIsEditing] = useState(false)
@@ -54,6 +59,8 @@ export function MarkdownNode(props) {
         }
     }
 
+    const simple = isSimpleText(localText)
+
     return (
         <FlowNode
             id={id}
@@ -62,8 +69,6 @@ export function MarkdownNode(props) {
             selected={selected}
             minWidth={NODE_DIMENSIONS.text.minWidth}
             minHeight={NODE_DIMENSIONS.text.minHeight}
-            icon="📄"
-            title={data.label || (zh ? '筆記卡片' : 'Note Card')}
             isEdit={data.isEdit !== false}
             isEditing={isEditing}
             onToggleEdit={() => setIsEditing(!isEditing)}
@@ -74,16 +79,27 @@ export function MarkdownNode(props) {
             {isEditing ? (
                 <textarea
                     autoFocus
-                    className="canvas-node-textarea nodrag"
+                    className="canvas-node-textarea nodrag nopan"
                     value={localText}
                     onChange={(e) => setLocalText(e.target.value)}
                     onBlur={handleBlur}
                     onKeyDown={handleKeyDown}
-                    placeholder={zh ? '輸入 Markdown 內容 (按 Esc 或 Cmd+Enter 完成)...' : 'Write markdown (Esc or Cmd+Enter to finish)...'}
+                    placeholder={zh ? '輸入內容 (按 Esc 或 Cmd+Enter 完成)...' : 'Write text (Esc or Cmd+Enter to finish)...'}
                 />
+            ) : simple ? (
+                <div
+                    className="ameliorate-node-text"
+                    onClick={() => data.isEdit !== false && setIsEditing(true)}
+                    title={data.isEdit !== false ? (zh ? '點擊編輯內容' : 'Click to edit') : ''}
+                >
+                    {localText || 'new node'}
+                </div>
             ) : (
-                <MarkdownPreview text={localText} />
+                <div onClick={() => data.isEdit !== false && setIsEditing(true)}>
+                    <MarkdownPreview text={localText} />
+                </div>
             )}
         </FlowNode>
     )
 }
+

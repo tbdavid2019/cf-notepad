@@ -4,6 +4,7 @@ import { NodeHandles } from './NodeHandle.jsx'
 import { NodeToolbar } from './NodeToolbar.jsx'
 import { resolveColorHex } from '../../model/jsonCanvasAdapter.mjs'
 import { computeContrastTheme } from '../../model/contrastHelpers.mjs'
+import { getNodeTypeConfig } from '../../model/canvasTypes.mjs'
 
 export { computeContrastTheme }
 
@@ -12,10 +13,10 @@ export function FlowNode({
     type,
     data = {},
     selected = false,
-    minWidth = 180,
-    minHeight = 100,
-    icon = '📄',
-    title = 'Card',
+    minWidth = 140,
+    minHeight = 56,
+    icon,
+    title,
     isEdit = true,
     isEditing = false,
     onToggleEdit,
@@ -33,30 +34,50 @@ export function FlowNode({
 
     const colorHex = resolveColorHex(data.color)
     const contrast = useMemo(() => computeContrastTheme(colorHex), [colorHex])
+    const nodeType = data.nodeType || (type === 'sticky' ? 'sticky' : 'problem')
+    const typeConfig = useMemo(() => getNodeTypeConfig(nodeType, colorHex), [nodeType, colorHex])
+
+    const effectiveIcon = icon || (data.icon || typeConfig.icon)
+    const effectiveTitle = title || (data.label || (zh ? typeConfig.nameZh : typeConfig.name))
 
     const customStyle = useMemo(() => {
-        if (!colorHex) return {}
         if (type === 'sticky') {
+            const bg = colorHex || '#fff9c4'
             return {
-                backgroundColor: colorHex,
-                borderColor: contrast?.borderColor || 'rgba(0, 0, 0, 0.15)',
-                color: contrast?.color || '#1e293b',
-                '--canvas-text': contrast?.color || '#1e293b',
-                '--canvas-text-muted': contrast?.mutedColor || '#475569',
+                '--node-bg': bg,
+                '--node-border': contrast?.borderColor || '#facc15',
+                '--node-badge-bg': '#facc15',
+                '--node-badge-text': '#713f12',
+                '--node-text': contrast?.color || '#1e293b',
             }
         }
-        return {
-            backgroundColor: colorHex,
-            borderColor: colorHex,
-            color: contrast?.color,
-            '--canvas-text': contrast?.color,
-            '--canvas-text-muted': contrast?.mutedColor,
+        if (type === 'group') {
+            return {
+                '--node-bg': 'rgba(241, 245, 249, 0.4)',
+                '--node-border': colorHex || '#94a3b8',
+                '--node-badge-bg': colorHex || '#cbd5e1',
+                '--node-badge-text': '#1e293b',
+                '--node-text': '#1e293b',
+            }
         }
-    }, [colorHex, type, contrast])
+
+        const border = colorHex || typeConfig.borderLight
+        const badgeBg = colorHex || typeConfig.badgeBg
+        const bg = typeConfig.bgLight
+        const badgeText = typeConfig.textColor || contrast?.color || '#1e293b'
+
+        return {
+            '--node-bg': bg,
+            '--node-border': border,
+            '--node-badge-bg': badgeBg,
+            '--node-badge-text': badgeText,
+            '--node-text': '#1e293b',
+        }
+    }, [colorHex, type, typeConfig, contrast])
 
     return (
         <div
-            className={`canvas-node-shell ${selected ? 'is-selected' : ''} ${type === 'sticky' ? 'is-sticky' : ''} ${type === 'group' ? 'is-group' : ''}`}
+            className={`canvas-node-shell ameliorate-node ${selected ? 'is-selected' : ''} ${type === 'sticky' ? 'is-sticky' : ''} ${type === 'group' ? 'is-group' : ''}`}
             style={customStyle}
             onClick={() => {
                 if (!selected && isEdit && data.onSelectNode) {
@@ -89,20 +110,20 @@ export function FlowNode({
             />
 
             {type !== 'group' && (
-                <div className="canvas-node-header">
-                    <div className="canvas-node-title">
-                        <span className="canvas-node-icon">{icon}</span>
-                        <span>{title}</span>
+                <div className="canvas-node-top">
+                    <div className="canvas-node-type-badge">
+                        <span className="canvas-node-type-icon">{effectiveIcon}</span>
+                        <span className="canvas-node-type-text">{effectiveTitle}</span>
                     </div>
 
-                    <div className="canvas-node-actions nodrag">
+                    <div className="canvas-node-quick-actions nodrag">
                         {headerRight}
                         {isEdit && onToggleEdit && (
                             <button
                                 type="button"
-                                className="canvas-btn-icon"
-                                title={isEditing ? (zh ? '完成' : 'Done') : (zh ? '編輯' : 'Edit')}
-                                aria-label={isEditing ? (zh ? '完成' : 'Done') : (zh ? '編輯' : 'Edit')}
+                                className="canvas-btn-icon-subtle"
+                                title={isEditing ? (zh ? '預覽' : 'Preview') : (zh ? '編輯' : 'Edit')}
+                                aria-label={isEditing ? (zh ? '預覽' : 'Preview') : (zh ? '編輯' : 'Edit')}
                                 onClick={(e) => {
                                     e.stopPropagation()
                                     onToggleEdit()
@@ -114,7 +135,7 @@ export function FlowNode({
                         {isEdit && onDelete && (
                             <button
                                 type="button"
-                                className="canvas-btn-icon is-danger"
+                                className="canvas-btn-icon-subtle is-danger"
                                 title={zh ? '刪除卡片' : 'Delete card'}
                                 aria-label={zh ? '刪除卡片' : 'Delete card'}
                                 onClick={(e) => {

@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react'
 export function EdgeLabel({
     id,
     label = '',
+    hasArrow = true,
     selected = false,
     isEdit = true,
     isEditing = false,
@@ -28,7 +29,7 @@ export function EdgeLabel({
 
     if (isEditing && isEdit) {
         return (
-            <div className="nodrag nopan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+            <div className="nodrag nopan ameliorate-edge-edit" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                 <input
                     type="text"
                     autoFocus
@@ -43,7 +44,7 @@ export function EdgeLabel({
                 />
                 <button
                     type="button"
-                    className="canvas-btn-icon"
+                    className="canvas-btn-icon-subtle"
                     onClick={handleSave}
                     title={zh ? '確定' : 'Done'}
                 >
@@ -53,11 +54,12 @@ export function EdgeLabel({
         )
     }
 
-    if (!label && !selected) return null
+    const display = label || (selected ? (zh ? '+ 標籤' : '+ Label') : '')
+    if (!display && !hasArrow && !selected) return null
 
     return (
         <div
-            className={`canvas-edge-label-badge nodrag nopan ${selected ? 'is-selected' : ''}`}
+            className={`canvas-edge-label-badge ameliorate-edge-label nodrag nopan ${selected ? 'is-selected' : ''}`}
             onClick={(e) => {
                 e.stopPropagation()
                 onSelect?.()
@@ -65,7 +67,12 @@ export function EdgeLabel({
             }}
             title={isEdit ? (zh ? '點擊編輯標籤' : 'Click to edit label') : ''}
         >
-            {label || (zh ? '+ 標籤' : '+ Label')}
+            {display && <span className="ameliorate-edge-text">{display}</span>}
+            {hasArrow && (
+                <svg className="ameliorate-edge-arrow" width="10" height="10" viewBox="0 0 10 10">
+                    <polygon points="1,1 9,5 1,9" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round" />
+                </svg>
+            )}
         </div>
     )
 }
