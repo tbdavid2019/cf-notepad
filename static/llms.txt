@@ -7,7 +7,7 @@
 - [Home / Editor](https://wiki.david888.com/): Main note workspace and editor with custom themes and real-time autosave.
 - [Block Note Editor](https://wiki.david888.com/new/block): Instantiate a new rich BlockNote document.
 - [Markdown Note Editor](https://wiki.david888.com/new/markdown): Instantiate a new standard Markdown document.
-- [Canvas](https://wiki.david888.com/new/canvas): Instantiate a JSON Canvas 1.0 card-and-connection workspace. Use its Canvas toolbar for `.canvas` files. The Footer Import content menu remains available for document/audio/URL workflows and follows the existing Markdown-note import behavior.
+- [Canvas](https://wiki.david888.com/new/canvas): Instantiate a JSON Canvas 1.0 card-and-connection workspace with node color/duplicate/delete controls and edge label, arrow, line-style, width, and color controls. Use its Canvas toolbar for `.canvas` files; the Footer Import content menu remains available for document/audio/URL workflows.
 - [Image OCR & Table Reconstruction](https://wiki.david888.com/new/markdown): Paste or drop an image to choose R2 upload, local PP-OCRv6 text recognition, or server table reconstruction via `/api/ocr?mode=table`; local OCR keeps the image on the device and table mode returns clean GFM through `data.tableMarkdown`.
 
 ## AI Agent & API Discovery

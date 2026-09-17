@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **🛠️ Canvas 編輯控制補全與複製卡片修正 (Complete Canvas Editing Controls & Duplicate Fix)**：EdgeToolbar 改為獨立的箭頭方向、線條樣式、線寬、色彩與文字控制；NodeToolbar 擴充至連結／群組節點並加入原生自訂色彩選擇器；複製卡片改用可保留 callback 的資料複製方式，修正 `structuredClone` 造成的 `DataCloneError`。
+
 - **🎨 Canvas 畫布完整互動升級：NodeToolbar、EdgeToolbar、調色盤與雙向箭頭樣式控制 (Full Interactive Toolbars, Palettes & Edge Styling)**：
   - **節點浮動工具列 (`NodeToolbar`)**：
     - 選取 Markdown 卡片、便籤或 Wiki 引用時自動在節點上方彈出浮動工具列。

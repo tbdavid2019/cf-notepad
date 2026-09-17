@@ -59,6 +59,23 @@ export const EDGE_COLORS = [
     { id: 'purple', value: '#8b5cf6', label: '神秘紫 / Purple' },
 ]
 
+const EDGE_ARROW_OPTIONS = [
+    { value: 'none:none', label: '無箭頭 / None' },
+    { value: 'none:arrow', label: '終點箭頭 / End' },
+    { value: 'arrow:none', label: '起點箭頭 / Start' },
+    { value: 'arrow:arrow', label: '雙向箭頭 / Both' },
+]
+const EDGE_LINE_OPTIONS = [
+    { value: 'solid', label: '實線 / Solid' },
+    { value: 'dashed', label: '虛線 / Dashed' },
+    { value: 'dotted', label: '點線 / Dotted' },
+]
+const EDGE_WIDTH_OPTIONS = [
+    { value: '1.5', label: '細 / Thin' },
+    { value: '2.5', label: '中 / Medium' },
+    { value: '4', label: '粗 / Thick' },
+]
+
 export function resolveCanvasColor(colorVal) {
     if (!colorVal) return ''
     if (colorVal === '1') return '#ef4444'
@@ -145,6 +162,46 @@ function CardHandles({ isEdit }) {
     </>
 }
 
+function colorPickerValue(value, fallback = '#ffffff') {
+    const resolved = resolveCanvasColor(value)
+    return /^#[0-9a-f]{6}$/i.test(resolved) ? resolved : fallback
+}
+
+function NodeToolbarControls({ id, data, selected, isEdit, isZh, palette, duplicateLabel, deleteLabel }) {
+    if (!isEdit) return null
+    const currentColor = data.color || ''
+    const resolvedCurrentColor = resolveCanvasColor(currentColor)
+    const pickerValue = colorPickerValue(currentColor)
+    return <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
+        <div className="canvas-node-toolbar nodrag nopan">
+            <div className="canvas-toolbar-colors">
+                {palette.map(color => (
+                    <button
+                        key={color.id}
+                        type="button"
+                        className={`canvas-color-dot ${(currentColor === color.value || resolvedCurrentColor === color.value || (!currentColor && color.id === 'none')) ? 'is-active' : ''}`}
+                        style={{ backgroundColor: color.preview || color.value || '#ffffff' }}
+                        title={color.label}
+                        onClick={() => data.onChangeColor?.(id, color.value)}
+                    />
+                ))}
+                <label className="canvas-color-picker" title={isZh ? '自訂顏色' : 'Custom color'}>
+                    <span aria-hidden="true">🎨</span>
+                    <input
+                        type="color"
+                        value={pickerValue}
+                        aria-label={isZh ? '自訂卡片顏色' : 'Custom card color'}
+                        onChange={event => data.onChangeColor?.(id, event.target.value)}
+                    />
+                </label>
+            </div>
+            <span className="canvas-tb-divider" />
+            <button type="button" className="canvas-node-tb-btn" onClick={() => data.onDuplicateNode?.(id)} title={duplicateLabel}>📋</button>
+            <button type="button" className="canvas-node-tb-btn canvas-btn-delete" onClick={() => data.onDeleteNode?.(id)} title={deleteLabel}>✕</button>
+        </div>
+    </NodeToolbar>
+}
+
 // Interactive Custom Edge with EdgeToolbar and EdgeLabelRenderer
 export function CanvasCustomEdge({
     id,
@@ -165,6 +222,20 @@ export function CanvasCustomEdge({
     const isZh = resolveCanvasLang() === 'zh-TW'
     const [isEditingLabel, setIsEditingLabel] = useState(false)
     const [labelText, setLabelText] = useState(label || '')
+    const [isHovered, setIsHovered] = useState(false)
+    const hoverTimer = useRef(null)
+
+    const enterEdge = () => {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current)
+        setIsHovered(true)
+    }
+    const leaveEdge = () => {
+        hoverTimer.current = setTimeout(() => setIsHovered(false), 180)
+    }
+
+    useEffect(() => () => {
+        if (hoverTimer.current) clearTimeout(hoverTimer.current)
+    }, [])
 
     useEffect(() => {
         setLabelText(label || '')
@@ -209,41 +280,11 @@ export function CanvasCustomEdge({
         data.onChangeEdgeLabel?.(id, labelText.trim())
     }
 
-    const handleToggleArrows = () => {
-        let nextFrom = 'none'
-        let nextTo = 'none'
-        if (fromEnd === 'none' && toEnd === 'arrow') {
-            nextFrom = 'arrow'
-            nextTo = 'none'
-        } else if (fromEnd === 'arrow' && toEnd === 'none') {
-            nextFrom = 'arrow'
-            nextTo = 'arrow'
-        } else if (fromEnd === 'arrow' && toEnd === 'arrow') {
-            nextFrom = 'none'
-            nextTo = 'none'
-        } else {
-            nextFrom = 'none'
-            nextTo = 'arrow'
-        }
+    const arrowMode = `${fromEnd}:${toEnd}`
+    const handleArrowChange = event => {
+        const [nextFrom, nextTo] = event.target.value.split(':')
         data.onChangeEdgeArrows?.(id, nextFrom, nextTo)
     }
-
-    const handleToggleLineStyle = () => {
-        const next = lineStyle === 'solid' ? 'dashed' : (lineStyle === 'dashed' ? 'dotted' : 'solid')
-        data.onChangeEdgeStyle?.(id, { lineStyle: next })
-    }
-
-    const handleToggleStrokeWidth = () => {
-        const next = strokeWidth === 1.5 ? 2.5 : (strokeWidth === 2.5 ? 4 : 1.5)
-        data.onChangeEdgeStyle?.(id, { strokeWidth: next })
-    }
-
-    const arrowIcon = useMemo(() => {
-        if (fromEnd === 'arrow' && toEnd === 'arrow') return '◄─►'
-        if (fromEnd === 'arrow') return '◄──'
-        if (toEnd === 'arrow') return '──►'
-        return '──'
-    }, [fromEnd, toEnd])
 
     const lineStyleIcon = useMemo(() => {
         if (lineStyle === 'dashed') return isZh ? '╌ 虛線' : '╌ Dash'
@@ -261,9 +302,13 @@ export function CanvasCustomEdge({
                 style={computedStyle}
                 className="canvas-edge-style"
                 interactionWidth={24}
+                onMouseEnter={enterEdge}
+                onMouseLeave={leaveEdge}
             />
             <EdgeLabelRenderer>
                 <div
+                    onMouseEnter={enterEdge}
+                    onMouseLeave={leaveEdge}
                     style={{
                         position: 'absolute',
                         transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
@@ -271,7 +316,7 @@ export function CanvasCustomEdge({
                     }}
                     className="nodrag nopan canvas-edge-interactive-container"
                 >
-                    {isEdit && selected ? (
+                    {isEdit && (selected || isHovered || isEditingLabel) ? (
                         <div className="canvas-edge-toolbar">
                             {isEditingLabel ? (
                                 <div className="canvas-edge-label-editor">
@@ -301,30 +346,24 @@ export function CanvasCustomEdge({
                                         🏷️ {labelText || (isZh ? '+ 標籤' : '+ Label')}
                                     </button>
                                     <span className="canvas-tb-divider" />
-                                    <button
-                                        type="button"
-                                        className="canvas-edge-tb-btn"
-                                        onClick={handleToggleArrows}
-                                        title={isZh ? `切換箭頭方向 (${arrowIcon})` : `Arrow Direction (${arrowIcon})`}
-                                    >
-                                        {arrowIcon}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="canvas-edge-tb-btn"
-                                        onClick={handleToggleLineStyle}
-                                        title={isZh ? '切換線條樣式 (實線/虛線/點線)' : 'Line Style (Solid/Dashed/Dotted)'}
-                                    >
-                                        {lineStyleIcon}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        className="canvas-edge-tb-btn"
-                                        onClick={handleToggleStrokeWidth}
-                                        title={isZh ? `切換粗細 (${strokeWidth}px)` : `Width (${strokeWidth}px)`}
-                                    >
-                                        {strokeWidth}px
-                                    </button>
+                                    <label className="canvas-edge-select-label">
+                                        <span>↔</span>
+                                        <select className="canvas-edge-select" aria-label={isZh ? '箭頭方向' : 'Arrow direction'} value={arrowMode} onChange={handleArrowChange}>
+                                            {EDGE_ARROW_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                        </select>
+                                    </label>
+                                    <label className="canvas-edge-select-label">
+                                        <span>{lineStyleIcon.split(' ')[0]}</span>
+                                        <select className="canvas-edge-select" aria-label={isZh ? '線條樣式' : 'Line style'} value={lineStyle} onChange={event => data.onChangeEdgeStyle?.(id, { lineStyle: event.target.value })}>
+                                            {EDGE_LINE_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                        </select>
+                                    </label>
+                                    <label className="canvas-edge-select-label">
+                                        <span>↕</span>
+                                        <select className="canvas-edge-select" aria-label={isZh ? '線條粗細' : 'Line width'} value={String(strokeWidth)} onChange={event => data.onChangeEdgeStyle?.(id, { strokeWidth: Number(event.target.value) })}>
+                                            {EDGE_WIDTH_OPTIONS.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
+                                        </select>
+                                    </label>
                                     <span className="canvas-tb-divider" />
                                     <div className="canvas-toolbar-colors">
                                         {EDGE_COLORS.map(c => (
@@ -337,6 +376,10 @@ export function CanvasCustomEdge({
                                                 onClick={() => data.onChangeEdgeStyle?.(id, { color: c.value })}
                                             />
                                         ))}
+                                        <label className="canvas-color-picker" title={isZh ? '自訂線條顏色' : 'Custom edge color'}>
+                                            <span aria-hidden="true">🎨</span>
+                                            <input type="color" value={colorPickerValue(strokeColor, DEFAULT_EDGE_COLOR)} aria-label={isZh ? '自訂線條顏色' : 'Custom edge color'} onChange={event => data.onChangeEdgeStyle?.(id, { color: event.target.value })} />
+                                        </label>
                                     </div>
                                     <span className="canvas-tb-divider" />
                                     <button
@@ -398,6 +441,7 @@ function TextCardNode({ id, data, selected }) {
         return {
             ...base,
             borderColor: resolvedColor,
+            backgroundColor: `${resolvedColor}18`,
             boxShadow: `0 0 0 1.5px ${resolvedColor}66, 0 4px 12px rgba(0,0,0,0.08)`,
         }
     }, [resolvedColor])
@@ -411,41 +455,16 @@ function TextCardNode({ id, data, selected }) {
 
             <CardHandles isEdit={isEdit} />
 
-            {isEdit && (
-                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
-                    <div className="canvas-node-toolbar nodrag nopan">
-                        <div className="canvas-toolbar-colors">
-                            {CANVAS_COLOR_PRESETS.map(c => (
-                                <button
-                                    key={c.id}
-                                    type="button"
-                                    className={`canvas-color-dot ${(color === c.value || (!color && c.id === 'none')) ? 'is-active' : ''}`}
-                                    style={{ backgroundColor: c.preview }}
-                                    title={c.label}
-                                    onClick={() => data.onChangeColor?.(id, c.value)}
-                                />
-                            ))}
-                        </div>
-                        <span className="canvas-tb-divider" />
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn"
-                            onClick={() => data.onDuplicateNode?.(id)}
-                            title={isZh ? '複製卡片' : 'Duplicate Card'}
-                        >
-                            📋
-                        </button>
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn canvas-btn-delete"
-                            onClick={() => data.onDeleteNode?.(id)}
-                            title={isZh ? '刪除卡片' : 'Delete Card'}
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </NodeToolbar>
-            )}
+            <NodeToolbarControls
+                id={id}
+                data={data}
+                selected={selected}
+                isEdit={isEdit}
+                isZh={isZh}
+                palette={CANVAS_COLOR_PRESETS}
+                duplicateLabel={isZh ? '複製卡片' : 'Duplicate Card'}
+                deleteLabel={isZh ? '刪除卡片' : 'Delete Card'}
+            />
 
             <div className="canvas-card-header" style={resolvedColor ? { borderTop: `3px solid ${resolvedColor}` } : {}}>
                 <div className="canvas-card-header-title">
@@ -531,41 +550,16 @@ function StickyCardNode({ id, data, selected }) {
 
             <CardHandles isEdit={isEdit} />
 
-            {isEdit && (
-                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
-                    <div className="canvas-node-toolbar nodrag nopan">
-                        <div className="canvas-toolbar-colors">
-                            {STICKY_PALETTE.map(c => (
-                                <button
-                                    key={c.id}
-                                    type="button"
-                                    className={`canvas-color-dot ${color === c.value ? 'is-active' : ''}`}
-                                    style={{ backgroundColor: c.value }}
-                                    title={c.label}
-                                    onClick={() => data.onChangeColor?.(id, c.value)}
-                                />
-                            ))}
-                        </div>
-                        <span className="canvas-tb-divider" />
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn"
-                            onClick={() => data.onDuplicateNode?.(id)}
-                            title={isZh ? '複製便籤' : 'Duplicate Sticky'}
-                        >
-                            📋
-                        </button>
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn canvas-btn-delete"
-                            onClick={() => data.onDeleteNode?.(id)}
-                            title={isZh ? '刪除便籤' : 'Delete Sticky'}
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </NodeToolbar>
-            )}
+            <NodeToolbarControls
+                id={id}
+                data={data}
+                selected={selected}
+                isEdit={isEdit}
+                isZh={isZh}
+                palette={STICKY_PALETTE}
+                duplicateLabel={isZh ? '複製便籤' : 'Duplicate Sticky'}
+                deleteLabel={isZh ? '刪除便籤' : 'Delete Sticky'}
+            />
 
             <div className="canvas-card-header canvas-sticky-header">
                 <span className="canvas-card-icon">📌</span>
@@ -650,41 +644,16 @@ function WikiLinkNode({ id, data, selected }) {
 
             <CardHandles isEdit={isEdit} />
 
-            {isEdit && (
-                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
-                    <div className="canvas-node-toolbar nodrag nopan">
-                        <div className="canvas-toolbar-colors">
-                            {CANVAS_COLOR_PRESETS.map(c => (
-                                <button
-                                    key={c.id}
-                                    type="button"
-                                    className={`canvas-color-dot ${(color === c.value || (!color && c.id === 'none')) ? 'is-active' : ''}`}
-                                    style={{ backgroundColor: c.preview }}
-                                    title={c.label}
-                                    onClick={() => data.onChangeColor?.(id, c.value)}
-                                />
-                            ))}
-                        </div>
-                        <span className="canvas-tb-divider" />
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn"
-                            onClick={() => data.onDuplicateNode?.(id)}
-                            title={isZh ? '複製引用卡片' : 'Duplicate'}
-                        >
-                            📋
-                        </button>
-                        <button
-                            type="button"
-                            className="canvas-node-tb-btn canvas-btn-delete"
-                            onClick={() => data.onDeleteNode?.(id)}
-                            title={isZh ? '刪除卡片' : 'Delete'}
-                        >
-                            ✕
-                        </button>
-                    </div>
-                </NodeToolbar>
-            )}
+            <NodeToolbarControls
+                id={id}
+                data={data}
+                selected={selected}
+                isEdit={isEdit}
+                isZh={isZh}
+                palette={CANVAS_COLOR_PRESETS}
+                duplicateLabel={isZh ? '複製引用卡片' : 'Duplicate'}
+                deleteLabel={isZh ? '刪除卡片' : 'Delete'}
+            />
 
             <div className="canvas-card-header" style={resolvedColor ? { borderTop: `3px solid ${resolvedColor}` } : {}}>
                 <div className="canvas-card-header-title">
@@ -744,6 +713,7 @@ function ExternalLinkNode({ id, data, selected }) {
     const isZh = resolveCanvasLang() === 'zh-TW'
     const [url, setUrl] = useState(data.url || '')
     const [isEditing, setIsEditing] = useState(!data.url && isEdit)
+    const resolvedColor = resolveCanvasColor(data.color)
 
     const save = () => {
         setIsEditing(false)
@@ -751,9 +721,10 @@ function ExternalLinkNode({ id, data, selected }) {
     }
 
     const safeUrl = safeExternalUrl(url)
-    return <div className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%' }}>
+    return <div className={`canvas-node-card canvas-card-link ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: `${resolvedColor}18` } : {}) }}>
         <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
         <CardHandles isEdit={isEdit} />
+        <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={isZh} palette={CANVAS_COLOR_PRESETS} duplicateLabel={isZh ? '複製外部連結' : 'Duplicate link'} deleteLabel={isZh ? '刪除外部連結' : 'Delete link'} />
         <div className="canvas-card-header"><span className="canvas-card-icon">🔗</span><span className="canvas-card-title-text">{isZh ? '外部連結' : 'Web Link'}</span></div>
         <div className="canvas-card-body canvas-wiki-body">
             {isEditing ? <div className="canvas-wiki-edit-form nodrag">
@@ -767,11 +738,13 @@ function ExternalLinkNode({ id, data, selected }) {
     </div>
 }
 
-function GroupNode({ data, selected }) {
+function GroupNode({ id, data, selected }) {
     const isEdit = isEditableMode
-    return <div className={`canvas-group-node ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%' }}>
+    const resolvedColor = resolveCanvasColor(data.color)
+    return <div className={`canvas-group-node ${selected ? 'is-selected' : ''}`} style={{ width: '100%', height: '100%', ...(resolvedColor ? { borderColor: resolvedColor, backgroundColor: `${resolvedColor}18` } : {}) }}>
         <NodeResizer minWidth={120} minHeight={80} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
         <CardHandles isEdit={isEdit} />
+        <NodeToolbarControls id={id} data={data} selected={selected} isEdit={isEdit} isZh={resolveCanvasLang() === 'zh-TW'} palette={CANVAS_COLOR_PRESETS} duplicateLabel="Duplicate group" deleteLabel="Delete group" />
         {data.label && <span className="canvas-group-label">{data.label}</span>}
     </div>
 }
@@ -963,12 +936,12 @@ function CanvasEditorApp() {
             if (!target) return nds
             const newId = (target.type || 'card') + '-' + Date.now().toString(36)
             const cloned = {
-                ...structuredClone(target),
+                ...target,
                 id: newId,
                 position: { x: target.position.x + 40, y: target.position.y + 40 },
                 selected: true,
                 data: {
-                    ...structuredClone(target.data),
+                    ...target.data,
                 },
             }
             const next = nds.map(n => ({ ...n, selected: false })).concat(cloned)

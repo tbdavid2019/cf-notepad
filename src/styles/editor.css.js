@@ -1484,6 +1484,32 @@ textarea#contents {
     transform: scale(1.15);
 }
 
+.canvas-color-picker {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 50%;
+    background: var(--status-control-bg, #ffffff);
+    cursor: pointer;
+    font-size: 11px;
+    overflow: hidden;
+}
+
+.canvas-color-picker input[type="color"] {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    border: 0;
+    opacity: 0;
+    cursor: pointer;
+}
+
 .canvas-node-tb-btn {
     display: inline-flex;
     align-items: center;
@@ -1550,6 +1576,28 @@ textarea#contents {
     background: color-mix(in srgb, var(--toolbar-border, #d0d7de) 25%, var(--status-control-bg, #ffffff));
 }
 
+.canvas-edge-select-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 4px;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 5px;
+    background: var(--status-control-bg, #ffffff);
+    color: var(--text-color, inherit);
+    font-size: 11px;
+}
+
+.canvas-edge-select {
+    max-width: 112px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: inherit;
+    font-size: 11px;
+    cursor: pointer;
+}
+
 .canvas-edge-tb-btn.canvas-btn-delete:hover {
     border-color: #ef4444;
     color: #ef4444;
@@ -1604,4 +1652,3 @@ textarea#contents {
     border-color: #3d444d;
 }
 `
-

@@ -205,12 +205,15 @@ test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and inter
     assert.match(canvasEditorSource, /CANVAS_COLOR_PRESETS/)
     assert.match(canvasEditorSource, /STICKY_PALETTE/)
     assert.match(canvasEditorSource, /EDGE_COLORS/)
-    assert.match(canvasEditorSource, /handleToggleArrows/)
-    assert.match(canvasEditorSource, /handleToggleLineStyle/)
-    assert.match(canvasEditorSource, /handleToggleStrokeWidth/)
+    assert.match(canvasEditorSource, /EDGE_ARROW_OPTIONS/)
+    assert.match(canvasEditorSource, /EDGE_LINE_OPTIONS/)
+    assert.match(canvasEditorSource, /EDGE_WIDTH_OPTIONS/)
     assert.match(canvasEditorSource, /strokeDasharray/)
     assert.match(canvasEditorSource, /onChangeEdgeLabel/)
     assert.match(canvasEditorSource, /onDuplicateNode/)
+    assert.match(canvasEditorSource, /type="color"/)
+    assert.match(canvasEditorSource, /canvas-edge-select/)
+    assert.doesNotMatch(canvasEditorSource, /structuredClone\(target(?:\.data)?\)/)
     assert.match(editorCssSource, /\.canvas-node-toolbar/)
     assert.match(editorCssSource, /\.canvas-edge-toolbar/)
     assert.match(editorCssSource, /\.canvas-edge-label-badge/)
@@ -257,3 +260,14 @@ test('validateCanvasDocument accepts edge david888 extension and custom arrow di
     assert.equal(doc.edges[1].toEnd, 'none')
 })
 
+test('validateCanvasDocument rejects unsupported edge presentation extensions', () => {
+    const doc = {
+        nodes: [
+            { id: 'n1', type: 'text', x: 0, y: 0, width: 200, height: 100, text: 'Card 1' },
+            { id: 'n2', type: 'text', x: 250, y: 0, width: 200, height: 100, text: 'Card 2' },
+        ],
+        edges: [{ id: 'e1', fromNode: 'n1', toNode: 'n2', david888: { lineStyle: 'wavy' } }],
+    }
+
+    assert.throws(() => validateCanvasDocument(doc), /lineStyle is invalid/)
+})

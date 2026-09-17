@@ -181,6 +181,12 @@ function validateEdge(edge, nodeIds, seenIds) {
 
     if (edge.david888 !== undefined) {
         if (!isPlainObject(edge.david888)) throw new TypeError('david888 extension on edge must be an object')
+        if (edge.david888.lineStyle !== undefined && !['solid', 'dashed', 'dotted'].includes(edge.david888.lineStyle)) {
+            throw new TypeError('edge david888 lineStyle is invalid')
+        }
+        if (edge.david888.strokeWidth !== undefined && ![1.5, 2.5, 4].includes(Number(edge.david888.strokeWidth))) {
+            throw new TypeError('edge david888 strokeWidth is invalid')
+        }
     }
 }
 
