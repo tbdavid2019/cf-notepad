@@ -1,0 +1,71 @@
+import React, { useState, useEffect } from 'react'
+
+export function EdgeLabel({
+    id,
+    label = '',
+    selected = false,
+    isEdit = true,
+    isEditing = false,
+    onStartEdit,
+    onFinishEdit,
+    onSelect,
+}) {
+    const [localText, setLocalText] = useState(label)
+
+    useEffect(() => {
+        setLocalText(label)
+    }, [label])
+
+    const isZh = () => {
+        const lang = document.documentElement.getAttribute('lang')
+        return lang && lang.startsWith('zh')
+    }
+    const zh = isZh()
+
+    const handleSave = () => {
+        onFinishEdit?.(localText.trim())
+    }
+
+    if (isEditing && isEdit) {
+        return (
+            <div className="nodrag nopan" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <input
+                    type="text"
+                    autoFocus
+                    className="canvas-edge-input"
+                    value={localText}
+                    onChange={(e) => setLocalText(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSave()
+                        if (e.key === 'Escape') onFinishEdit?.(label)
+                    }}
+                    placeholder={zh ? '關係標籤...' : 'Edge label...'}
+                />
+                <button
+                    type="button"
+                    className="canvas-btn-icon"
+                    onClick={handleSave}
+                    title={zh ? '確定' : 'Done'}
+                >
+                    ✓
+                </button>
+            </div>
+        )
+    }
+
+    if (!label && !selected) return null
+
+    return (
+        <div
+            className={`canvas-edge-label-badge nodrag nopan ${selected ? 'is-selected' : ''}`}
+            onClick={(e) => {
+                e.stopPropagation()
+                onSelect?.()
+                if (selected && isEdit) onStartEdit?.()
+            }}
+            title={isEdit ? (zh ? '點擊編輯標籤' : 'Click to edit label') : ''}
+        >
+            {label || (zh ? '+ 標籤' : '+ Label')}
+        </div>
+    )
+}

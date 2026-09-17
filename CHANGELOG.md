@@ -2,6 +2,16 @@
 
 ## [2026-09-17]
 
+- **🚀 Canvas v2 整體架構升級 (Canvas v2 Complete Architecture & Ameliorate Port)**：
+  - **開源架構整體替換**：以成熟開源工具思考專案 **Ameliorate** (`0cacee5577438979b651dd808793c4cbd13864ee`，MIT License，作者 Joel Keyser) 為基準，整體替換 Canvas UI 與互動層，新增 `THIRD_PARTY_NOTICES.md` 完整保留版權與許可聲明。
+  - **模組化目錄分層 (`static/js/canvas-v2/`)**：
+    - `model/`：`jsonCanvasAdapter.mjs` 提供與 JSON Canvas 1.0 的嚴格資料邊界轉換，支援所有節點與連線樣式 round-trip；`canvasCommands.mjs`、`canvasHistory.mjs` 提供交易式 command 與單步 Undo/Redo 歷史機制；`canvasTypes.mjs` 規範標準尺寸與調色盤。
+    - `store/`：`createCanvasStore.mjs` 基於 Zustand 建構分離的 document、selection、viewport、history 與 persistence slices；`selectors.mjs` 實現極簡選擇器；`persistence.mjs` 串接 `#contents`、離線草稿自動恢復與自動防抖儲存。
+    - `components/Node/`：`FlowNode.jsx` 作為通用節點外殼（Handles、縮放邊框、選取狀態），專門子組件負責各類型內容：`MarkdownNode`、`StickyNode`、`WikiNode`、`LinkNode`、`GroupNode`；選取時顯示緊湊垂直/水平動作工具列 `NodeToolbar`。
+    - `components/Edge/`：`CanvasEdge.jsx` 提供 smoothstep 路徑與 20px 隱形感應軌道；`EdgeLabel.jsx` 支援原地行內文字編輯；選取時呈現 `EdgeToolbar` 與彈出式線條設定面板 `EdgeStylePopover`（實線/虛線/點線、細/中/粗、箭頭方向與顏色）。
+    - `components/Toolbar/`：`MainToolbar.jsx` 提供置底緊湊工具列，包含新增選單 (`AddMenu`)、復原/重做、視圖置中 (`fitView`) 與檔案選單 (`FileMenu`，支援 `.canvas` 匯入、匯出與清空畫布)。
+  - **樣式完全隔離 (Isolated Stylesheet)**：從全域 `editor.css.js` 中抽離近千行畫布樣式，集中維護於 `static/js/canvas-v2/canvas-v2.css` 與語意化 `tokens.css`，隨 bundle 自動打包為 `canvas-editor.bundle.css`，零污染核心筆記佈局並完備深淺色主題適配。
+
 - **🧭 Canvas 對齊 React Flow Showcase 互動基準 (Showcase-Aligned Canvas Surface)**：採用官方 Feature Overview 的水平 Controls、25px dotted Background、MiniMap 圓角、snap-to-grid、fitView padding、無限 zoom 與右上 attribution 設定；Canvas toolbar、工作區、暗色配色、focus state 與 EdgeToolbar 改成低干擾的官方範例風格。
 
 - **🧱 Canvas 改用 React Flow UI anatomy 與可見連線點 (React Flow UI Anatomy & Visible Handles)**：Canvas 節點改採共用 `BaseNode`、`BaseNodeHeader`、`BaseNodeHeaderTitle`、`BaseNodeContent`、`BaseNodeFooter` 與 `BaseHandle` 結構；關係線工具列接入 React Flow 原生 `EdgeToolbar`。四邊連接點恢復為可見 12px handles，保留 Loose connection 與 JSON Canvas `fromSide`／`toSide` 資料格式；未引入 Tailwind／shadcn 全域依賴，避免影響既有編輯器。

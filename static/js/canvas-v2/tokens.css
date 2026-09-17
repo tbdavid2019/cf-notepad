@@ -1,0 +1,74 @@
+/**
+ * Canvas v2 Design Tokens
+ * Maps semantic tokens to cf-notepad theme variables with light/dark support.
+ */
+
+:root,
+[data-ui-theme="light"] {
+    --canvas-bg: #f8fafc;
+    --canvas-grid: #cbd5e1;
+    --canvas-paper: #ffffff;
+    --canvas-paper-muted: #f1f5f9;
+    --canvas-border: #e2e8f0;
+    --canvas-border-hover: #cbd5e1;
+    --canvas-text: #0f172a;
+    --canvas-text-muted: #64748b;
+    --canvas-accent: #2563eb;
+    --canvas-accent-hover: #1d4ed8;
+    --canvas-accent-subtle: #eff6ff;
+    --canvas-selection: #3b82f6;
+    --canvas-danger: #ef4444;
+    --canvas-danger-hover: #dc2626;
+    --canvas-danger-subtle: #fef2f2;
+    --canvas-focus: rgba(37, 99, 235, 0.4);
+    --canvas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    --canvas-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.12), 0 2px 6px -2px rgba(0, 0, 0, 0.08);
+    --canvas-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.15), 0 4px 10px -4px rgba(0, 0, 0, 0.08);
+}
+
+[data-ui-theme="dark"],
+.theme-dark {
+    --canvas-bg: #090d16;
+    --canvas-grid: #1e293b;
+    --canvas-paper: #131b2e;
+    --canvas-paper-muted: #1a243b;
+    --canvas-border: #23314d;
+    --canvas-border-hover: #334155;
+    --canvas-text: #f8fafc;
+    --canvas-text-muted: #94a3b8;
+    --canvas-accent: #3b82f6;
+    --canvas-accent-hover: #60a5fa;
+    --canvas-accent-subtle: rgba(59, 130, 246, 0.15);
+    --canvas-selection: #60a5fa;
+    --canvas-danger: #f87171;
+    --canvas-danger-hover: #ef4444;
+    --canvas-danger-subtle: rgba(239, 68, 68, 0.15);
+    --canvas-focus: rgba(96, 165, 250, 0.4);
+    --canvas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+    --canvas-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+    --canvas-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+    :root:not([data-ui-theme="light"]) {
+        --canvas-bg: #090d16;
+        --canvas-grid: #1e293b;
+        --canvas-paper: #131b2e;
+        --canvas-paper-muted: #1a243b;
+        --canvas-border: #23314d;
+        --canvas-border-hover: #334155;
+        --canvas-text: #f8fafc;
+        --canvas-text-muted: #94a3b8;
+        --canvas-accent: #3b82f6;
+        --canvas-accent-hover: #60a5fa;
+        --canvas-accent-subtle: rgba(59, 130, 246, 0.15);
+        --canvas-selection: #60a5fa;
+        --canvas-danger: #f87171;
+        --canvas-danger-hover: #ef4444;
+        --canvas-danger-subtle: rgba(239, 68, 68, 0.15);
+        --canvas-focus: rgba(96, 165, 250, 0.4);
+        --canvas-shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.3);
+        --canvas-shadow-md: 0 4px 12px -2px rgba(0, 0, 0, 0.4);
+        --canvas-shadow-lg: 0 10px 25px -3px rgba(0, 0, 0, 0.5);
+    }
+}

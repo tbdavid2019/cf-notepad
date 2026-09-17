@@ -153,8 +153,8 @@
     },
     {
       "id": "infinite-canvas-editor",
-      "zh-TW": "小訣竅：Canvas 會保存本機未發布草稿；選取卡片可開啟共用 NodeToolbar 調色、複製、刪除與 Undo／Redo，選取關係線可編輯文字、箭頭、實虛線、線寬與顏色。四個可見 BaseHandle 都能建立關係線。",
-      "en-US": "Tip: Canvas restores local unpublished drafts. Select a card for the shared NodeToolbar for color, duplicate, delete, and Undo/Redo; select an edge to edit its label, arrows, solid/dashed/dotted style, width, and color. All four visible BaseHandle points can connect."
+      "zh-TW": "小訣竅：Canvas v2 採 Ameliorate 開源架構與 Zustand 狀態管理，選取卡片可使用 NodeToolbar 調整色票、複製與刪除，選取連線可透過 EdgeToolbar 原地編輯文字與樣式面板（箭頭方向、虛實線、粗細、色彩），支援全功能交易式 Undo／Redo 與四邊連線。",
+      "en-US": "Tip: Canvas v2 adopts the Ameliorate architecture and Zustand state management. Select any card to use NodeToolbar for colors, duplicate, and delete; select an edge for inline label editing and style popover (arrows, line styles, stroke widths, colors), with transactional Undo/Redo and 4-sided connections."
     }
   ]
 }

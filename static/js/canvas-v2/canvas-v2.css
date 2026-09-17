@@ -1,0 +1,504 @@
+/**
+ * Canvas v2 Core Stylesheet
+ * Scoped and isolated for Canvas v2.
+ */
+
+@import './tokens.css';
+
+/* App Container */
+.canvas-v2-root {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: var(--canvas-bg);
+    color: var(--canvas-text);
+    overflow: hidden;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    user-select: none;
+}
+
+.canvas-v2-container {
+    width: 100%;
+    height: 100%;
+}
+
+/* React Flow Overrides */
+.canvas-v2-root .react-flow {
+    background-color: var(--canvas-bg);
+}
+
+.canvas-v2-root .react-flow__background {
+    background-color: var(--canvas-bg);
+}
+
+.canvas-v2-root .react-flow__background-pattern {
+    stroke: var(--canvas-grid);
+}
+
+/* Handles with Ameliorate visibility pattern */
+.canvas-handle {
+    width: 10px !important;
+    height: 10px !important;
+    border-radius: 50% !important;
+    background-color: var(--canvas-paper) !important;
+    border: 2px solid var(--canvas-accent) !important;
+    z-index: 20 !important;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity 0.15s ease, visibility 0.15s ease, transform 0.15s ease;
+    cursor: crosshair;
+}
+
+.canvas-handle:hover {
+    transform: scale(1.3);
+    background-color: var(--canvas-accent) !important;
+}
+
+/* Show handles on node hover, node selection, or while connecting */
+.canvas-node-shell:hover .canvas-handle,
+.canvas-node-shell.is-selected .canvas-handle,
+.canvas-v2-root.is-connecting .canvas-handle,
+.react-flow__nodes:has(.connectingfrom) .canvas-handle {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+/* Base Node Shell */
+.canvas-node-shell {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    background-color: var(--canvas-paper);
+    border: 1.5px solid var(--canvas-border);
+    border-radius: 12px;
+    box-shadow: var(--canvas-shadow-sm);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    user-select: auto;
+}
+
+.canvas-node-shell:hover {
+    border-color: var(--canvas-border-hover);
+    box-shadow: var(--canvas-shadow-md);
+}
+
+.canvas-node-shell.is-selected {
+    border-color: var(--canvas-selection);
+    box-shadow: 0 0 0 2px var(--canvas-focus), var(--canvas-shadow-md);
+}
+
+/* Resizer */
+.canvas-resizer-handle {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 2px !important;
+    background: var(--canvas-selection) !important;
+    border: 1px solid var(--canvas-paper) !important;
+    z-index: 25 !important;
+}
+
+.canvas-resizer-line {
+    border-color: var(--canvas-selection) !important;
+    border-style: dashed !important;
+}
+
+/* Node Header */
+.canvas-node-header {
+    height: 34px;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+    border-bottom: 1px solid var(--canvas-border);
+    background-color: var(--canvas-paper-muted);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--canvas-text-muted);
+    user-select: none;
+}
+
+.canvas-node-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.canvas-node-icon {
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.canvas-node-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.15s ease;
+}
+
+.canvas-node-shell:hover .canvas-node-actions,
+.canvas-node-shell.is-selected .canvas-node-actions {
+    opacity: 1;
+}
+
+.canvas-btn-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--canvas-text-muted);
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.canvas-btn-icon:hover {
+    background-color: var(--canvas-border);
+    color: var(--canvas-text);
+}
+
+.canvas-btn-icon.is-danger:hover {
+    background-color: var(--canvas-danger-subtle);
+    color: var(--canvas-danger);
+}
+
+/* Node Body Content */
+.canvas-node-body {
+    flex: 1;
+    overflow: auto;
+    padding: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+    position: relative;
+    box-sizing: border-box;
+}
+
+.canvas-node-textarea {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: transparent;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+    font-size: 13px;
+    line-height: 1.5;
+    color: inherit;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.canvas-node-markdown {
+    color: var(--canvas-text);
+    word-break: break-word;
+}
+
+.canvas-node-markdown p {
+    margin: 0 0 8px 0;
+}
+
+.canvas-node-markdown p:last-child {
+    margin-bottom: 0;
+}
+
+.canvas-node-markdown h1,
+.canvas-node-markdown h2,
+.canvas-node-markdown h3,
+.canvas-node-markdown h4 {
+    margin: 4px 0 8px 0;
+    font-weight: 600;
+}
+
+/* Sticky Note specifics */
+.canvas-node-shell.is-sticky {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.canvas-node-shell.is-sticky .canvas-node-header {
+    background: transparent;
+    border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+}
+
+/* Wiki Note specifics */
+.canvas-wiki-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    justify-content: center;
+    height: 100%;
+}
+
+.canvas-wiki-link-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--canvas-accent);
+    text-decoration: none;
+    padding: 4px 8px;
+    border-radius: 6px;
+    background: var(--canvas-accent-subtle);
+    width: fit-content;
+    font-weight: 500;
+    transition: background 0.15s ease;
+}
+
+.canvas-wiki-link-btn:hover {
+    background: var(--canvas-accent);
+    color: #ffffff;
+}
+
+/* Group Node specifics */
+.canvas-node-shell.is-group {
+    background-color: rgba(255, 255, 255, 0.04);
+    border: 2px dashed var(--canvas-border);
+    border-radius: 16px;
+}
+
+.canvas-group-label {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--canvas-text-muted);
+    padding: 8px 12px;
+    user-select: none;
+}
+
+/* Node Contextual Toolbar */
+.canvas-node-toolbar {
+    position: absolute;
+    top: -42px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+    box-shadow: var(--canvas-shadow-md);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 100;
+    white-space: nowrap;
+}
+
+.canvas-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+    transition: transform 0.15s ease;
+    padding: 0;
+}
+
+.canvas-color-dot:hover,
+.canvas-color-dot.is-active {
+    transform: scale(1.25);
+    border-color: var(--canvas-accent);
+}
+
+.canvas-toolbar-divider {
+    width: 1px;
+    height: 16px;
+    background-color: var(--canvas-border);
+    margin: 0 2px;
+}
+
+/* Edge Styling */
+.canvas-edge-path {
+    fill: none;
+    stroke: var(--canvas-accent);
+    stroke-width: 2.5;
+    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+}
+
+.canvas-edge-interactive {
+    fill: none;
+    stroke: transparent;
+    stroke-width: 20;
+    cursor: pointer;
+}
+
+.canvas-edge-label-badge {
+    padding: 3px 8px;
+    background-color: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--canvas-text);
+    box-shadow: var(--canvas-shadow-sm);
+    cursor: pointer;
+    white-space: nowrap;
+    user-select: none;
+    transition: all 0.15s ease;
+}
+
+.canvas-edge-label-badge:hover,
+.canvas-edge-label-badge.is-selected {
+    border-color: var(--canvas-selection);
+    color: var(--canvas-accent);
+    box-shadow: var(--canvas-shadow-md);
+}
+
+/* Edge Toolbar */
+.canvas-edge-toolbar {
+    background-color: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+    box-shadow: var(--canvas-shadow-lg);
+    padding: 4px 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 100;
+    max-width: 320px;
+}
+
+.canvas-edge-input {
+    border: 1px solid var(--canvas-border);
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 11px;
+    background: var(--canvas-paper-muted);
+    color: var(--canvas-text);
+    outline: none;
+    width: 100px;
+}
+
+.canvas-edge-input:focus {
+    border-color: var(--canvas-selection);
+}
+
+.canvas-edge-select {
+    border: 1px solid var(--canvas-border);
+    border-radius: 4px;
+    padding: 2px 4px;
+    font-size: 11px;
+    background: var(--canvas-paper-muted);
+    color: var(--canvas-text);
+    cursor: pointer;
+}
+
+/* Main Bottom Toolbar */
+.canvas-main-toolbar {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 10px;
+    box-shadow: var(--canvas-shadow-lg);
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 50;
+}
+
+.canvas-tb-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: var(--canvas-text);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.canvas-tb-btn:hover:not(:disabled) {
+    background-color: var(--canvas-paper-muted);
+}
+
+.canvas-tb-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.canvas-tb-btn.is-active {
+    background-color: var(--canvas-accent-subtle);
+    color: var(--canvas-accent);
+}
+
+.canvas-menu-dropdown {
+    position: absolute;
+    bottom: 46px;
+    background-color: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+    box-shadow: var(--canvas-shadow-lg);
+    padding: 4px;
+    min-width: 150px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    z-index: 110;
+}
+
+.canvas-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 4px;
+    border: none;
+    background: transparent;
+    color: var(--canvas-text);
+    font-size: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.15s ease;
+}
+
+.canvas-menu-item:hover {
+    background-color: var(--canvas-paper-muted);
+}
+
+/* Status Indicator */
+.canvas-status-badge {
+    font-size: 11px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+.canvas-status-badge.is-dirty {
+    background-color: #fef3c7;
+    color: #b45309;
+}
+
+.canvas-status-badge.is-synced {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+/* Narrow Viewport */
+@media (max-width: 640px) {
+    .canvas-main-toolbar {
+        bottom: 12px;
+        max-width: calc(100vw - 24px);
+        overflow-x: auto;
+    }
+    .canvas-tb-btn {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+}
