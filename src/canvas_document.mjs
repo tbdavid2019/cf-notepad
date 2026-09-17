@@ -139,10 +139,13 @@ function validateNode(node, seenIds) {
         if (node.text.length > MAX_NODE_TEXT_LENGTH) throw new TypeError('text node text exceeds the maximum length')
     }
     if (node.type === 'file') {
-        assertString(node.file, 'file node file', { maxLength: 8_192 })
+        assertString(node.file ?? '', 'file node file', { allowEmpty: true, maxLength: 8_192 })
         assertOptionalString(node.subpath, 'file node subpath', 8_192)
     }
-    if (node.type === 'link') assertSafeLinkUrl(node.url)
+    if (node.type === 'link') {
+        if (node.url) assertSafeLinkUrl(node.url)
+        else assertString(node.url ?? '', 'link node url', { allowEmpty: true, maxLength: 8_192 })
+    }
     if (node.type === 'group') {
         assertOptionalString(node.label, 'group node label', 8_192)
         assertOptionalString(node.background, 'group node background', 8_192)

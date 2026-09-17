@@ -79,6 +79,16 @@ test('canvas documents preserve standard JSON Canvas link and group nodes and mi
     assert.doesNotThrow(() => validateCanvasDocument(doc))
 })
 
+test('canvas allows newly inserted empty link and file cards until their value is entered', () => {
+    assert.doesNotThrow(() => validateCanvasDocument({
+        nodes: [
+            { id: 'file-empty', type: 'file', x: 0, y: 0, width: 220, height: 120, file: '' },
+            { id: 'link-empty', type: 'link', x: 260, y: 0, width: 220, height: 120, url: '' },
+        ],
+        edges: [],
+    }))
+})
+
 test('validateCanvasDocument rejects malformed nodes and dangling edges', () => {
     assert.throws(() => validateCanvasDocument({
         nodes: [{ id: 'text-1', type: 'text', x: 0, y: 0, width: 100, height: 100 }],
