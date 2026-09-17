@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Languages, Volume2, Square, BookOpen } from 'lucide-react'
 
 export function TopFloatingBar({ selectedNode }) {
     const [isPlaying, setIsPlaying] = useState(false)
@@ -61,7 +62,7 @@ export function TopFloatingBar({ selectedNode }) {
                 title={zh ? '切換中英文 (Language)' : 'Toggle Language'}
                 aria-label="Toggle Language"
             >
-                文A
+                <Languages size={14} />
             </button>
 
             <button
@@ -71,18 +72,19 @@ export function TopFloatingBar({ selectedNode }) {
                 title={isPlaying ? (zh ? '停止朗讀' : 'Stop Speaking') : (zh ? '朗讀卡片文字' : 'Read Aloud')}
                 aria-label="Read Aloud"
             >
-                {isPlaying ? '⏹' : '🔊'}
+                {isPlaying ? <Square size={13} fill="currentColor" /> : <Volume2 size={14} />}
             </button>
 
             <button
                 type="button"
                 className="canvas-top-floating-btn"
                 onClick={handleBookMode}
-                title={zh ? '書本閱讀模式' : 'Book / Reader Mode'}
+                title={zh ? '書本閱讀模式' : 'Book Mode'}
                 aria-label="Book Mode"
             >
-                📖
+                <BookOpen size={14} />
             </button>
         </div>
     )
 }
+

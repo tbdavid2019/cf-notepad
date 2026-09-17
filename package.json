@@ -40,6 +40,7 @@
     "dayjs": "^1.11.2",
     "itty-router": "^2.6.1",
     "jsdom": "^29.1.1",
+    "lucide-react": "^1.47.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
     "takumi-pdf": "^0.11.3",

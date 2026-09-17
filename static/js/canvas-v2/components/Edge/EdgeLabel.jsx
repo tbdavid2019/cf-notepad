@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Check } from 'lucide-react'
 
 export function EdgeLabel({
     id,
@@ -47,8 +48,9 @@ export function EdgeLabel({
                     className="canvas-btn-icon-subtle"
                     onClick={handleSave}
                     title={zh ? '確定' : 'Done'}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    ✓
+                    <Check size={12} />
                 </button>
             </div>
         )

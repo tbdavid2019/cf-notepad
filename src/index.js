@@ -549,49 +549,32 @@ async function createNewNote(request, editorFormat) {
     const shareText = originUrl.searchParams.get('text')
     const shareLink = originUrl.searchParams.get('url')
 
-    let initialContent = ''
     if (editorFormat === 'canvas') {
-        const isEnglish = lang === 'en-US'
-        const welcomeTitle = shareTitle || (isEnglish ? 'Welcome to Canvas' : '歡迎使用 Canvas 畫布')
-        initialContent = JSON.stringify({
-            nodes: [
-                {
-                    id: 'node-welcome',
-                    type: 'text',
-                    x: 80,
-                    y: 80,
-                    width: 380,
-                    height: 180,
-                    text: isEnglish
-                        ? `# ${welcomeTitle}\n\n- Double-click to edit Markdown\n- Drag a handle to connect cards\n- Use the toolbar to add more cards`
-                        : `# ${welcomeTitle}\n\n- 雙擊卡片可編輯 Markdown 內文\n- 拖曳四邊圓點即可連線\n- 點擊上方工具列新增更多卡片`,
-                },
-                {
-                    id: 'node-sticky',
-                    type: 'text',
-                    x: 520,
-                    y: 80,
-                    width: 240,
-                    height: 150,
-                    color: '#fff9c4',
-                    text: isEnglish
-                        ? '💡 **Idea sticky**\n\nCapture a small thought and keep it next to your notes.'
-                        : '💡 **靈感便籤**\n\n隨手記錄微小想法，相容 Obsidian Canvas！',
-                    david888: { cardType: 'sticky' },
-                },
-            ],
-            edges: [
-                {
-                    id: 'edge-welcome-sticky',
-                    fromNode: 'node-welcome',
-                    toNode: 'node-sticky',
-                    fromSide: 'right',
-                    toSide: 'left',
-                    toEnd: 'arrow',
-                    label: '延伸關聯',
-                },
-            ],
-        }, null, 2)
+        if (shareTitle || shareText || shareLink) {
+            const parts = []
+            if (shareTitle) parts.push(`# ${shareTitle}`)
+            if (shareText) parts.push(shareText)
+            if (shareLink) parts.push(shareLink)
+            initialContent = JSON.stringify({
+                nodes: [
+                    {
+                        id: 'node-1',
+                        type: 'text',
+                        x: 100,
+                        y: 100,
+                        width: 280,
+                        height: 120,
+                        text: parts.join('\n\n'),
+                    },
+                ],
+                edges: [],
+            }, null, 2)
+        } else {
+            initialContent = JSON.stringify({
+                nodes: [],
+                edges: [],
+            }, null, 2)
+        }
     } else if (shareTitle || shareText || shareLink) {
         const parts = []
         if (shareTitle) parts.push(`# ${shareTitle}`)

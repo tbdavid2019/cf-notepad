@@ -289,7 +289,7 @@ test('Ameliorate node types and causes relation connect correctly', () => {
     const probNode = state.nodes[0]
     assert.equal(probNode.data.nodeType, 'problem')
     assert.equal(probNode.data.text, 'new node')
-    assert.equal(probNode.data.color, '#c084fc')
+    assert.equal(probNode.data.color, '#9333ea')
 
     // 2. Create Benefit node
     store.getState().createNode({ nodeType: 'benefit' })
@@ -298,7 +298,7 @@ test('Ameliorate node types and causes relation connect correctly', () => {
     const benNode = state.nodes[1]
     assert.equal(benNode.data.nodeType, 'benefit')
     assert.equal(benNode.data.text, 'new node')
-    assert.equal(benNode.data.color, '#86efac')
+    assert.equal(benNode.data.color, '#16a34a')
 
     // 3. Connect Problem -> Benefit
     store.getState().connectNodes({

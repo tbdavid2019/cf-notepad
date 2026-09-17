@@ -2,12 +2,21 @@
 
 ## [2026-09-17]
 
-- **🎨 Canvas v2 深度對齊 Ameliorate 視覺與互動體驗 (Ameliorate Visual Design & Thought Node Parity)**：
-  - **經典角落類型標籤 (Corner Type Badge)**：完全移植 Ameliorate 的經典卡片構造，卡片左上角內嵌飽滿色票的類型標籤（`🧩 Problem`、`🌱 Benefit`、`💡 Solution`、`🔀 Cause`、`📋 Criterion`、`⚠️ Detriment`、`❓ Question`、`📄 Note`），左上圓角對齊卡片外緣、右下圓角收折，徹底告別傳統視窗式灰底頂欄。
-  - **柔和粉彩卡片底色與等寬排版 (Pastel Cards & Monospace)**：卡片底色採用各類型專屬之淡雅粉彩色塊（`#f5efff`、`#f0fdf4`、`#eff6ff` 等），搭配 2px 原生彩色邊框與自然陰影；卡片正文採精緻等寬字型排版，新建卡片預設為 `new node`，點擊即可進行無縫行內編輯。
-  - **Ameliorate 貝茲曲線與 causes 關係線 (Bézier Edges & 'causes' Relation)**：連線路徑升級為流暢的平滑貝茲曲線 (`getBezierPath`)，預設關係文字自動標註為 `causes`，並於線上直接掛載鏤空三角箭頭 (`▷`)，完美對齊 Ameliorate 知識圖譜語法。
-  - **新增選單思考節點分類 (Thought Nodes in Add Menu)**：底部工具列新增選單完整收錄 8 款 Ameliorate 思考節點（問題、效益、方案、起因、標準、缺點、疑問、筆記），點選即於視口中心建立對應卡片。
-  - **右上角懸浮操作膠囊 (Top-Right Floating Actions)**：畫布右上角加入玻璃擬態操作膠囊，提供 `文A`（中英切換）、`🔊`（Web Speech 語音朗讀選取卡片內容）、`📖`（書本閱讀模式）。
+- **🎨 精緻低飽和專業配色全面升級（告別過飽和熒光色，依據 Frontend Design & Impeccable 準則重構）**：
+  - **低彩度語意色票 (Low-Chroma Palette)**：全面重構 8 種思考節點（Problem、Benefit、Solution、Cause、Criterion、Detriment、Question、Note）與便籤調色盤，捨棄刺眼高飽和度熒光粉彩，改採低彩度（Low-Chroma）底色搭配深色高對比文字（文字對比度均 ≥ 5.5:1～8:1，徹底通過 WCAG AA/AAA 標準）。
+  - **純白雅緻卡片本體 (Refined Card Surface)**：卡片本體預設採用純淨白底與細緻 1px 邊框（`#e2e8f0`），搭配柔和微立體陰影，讓左上角內嵌型角標自然凸顯節點語意，杜絕滿版大面積飽和色彩產生的視覺疲勞。
+
+- **✨ 全面導入 Lucide 向量圖示庫（告別系統 Emoji 與方塊亂碼）**：
+  - 整合 `lucide-react`，節點角標（`Puzzle`, `TrendingUp`, `Lightbulb`, `GitFork`, `CheckSquare`, `AlertTriangle`, `HelpCircle`, `FileText`）、卡片頂部工具列（`Copy`, `Trash2`, `Palette`）、置底主工具列（`Plus`, `Undo2`, `Redo2`, `Maximize2`, `FolderDown`）、右上懸浮膠囊（`Languages`, `Volume2`, `BookOpen`）與連線工具列（`Tag`, `SlidersHorizontal`, `Trash2`）全面改採洗鍊的 Lucide SVG 向量圖示。
+
+- **🔌 連線完全可見與雙向四向錨點修復 (Dual Source/Target Handles & Edge Visibility)**：
+  - 修復 `NodeHandle.jsx` 先前僅宣告 `type="source"` 導致 React Flow 無法辨識 `target` 錨點座標而產生 `NaN` 路徑使連線隱形的嚴重問題；重構為上、右、下、左四邊均同時掛載相應之 `target` 與 `source` 雙向 Handles，貝茲曲線路徑 100% 穩定呈現。
+
+- **🖱️ 平移拖曳、縮放與編輯行為正常化 (Reliable Drag, Resize & Double-Click Editing)**：
+  - 解決卡片單擊時直接觸發 `nodrag textarea` 導致整張卡片無法移動或縮放的嚴重操作問題。單擊卡片立即選取卡片並可任意拖曳、邊緣 8 點可任意縮放；雙擊（或點選編輯按鈕）才進入行內編輯模式，按 Esc 或 Cmd+Enter 即刻儲存。
+
+- **🚫 徹底移除伺服器端強制模板 (Clean Blank Canvas Default)**：
+  - 修正 `src/index.js`，新建畫布 `/new/canvas` 一律初始化為純淨空白畫布 (`{ nodes: [], edges: [] }`)，杜絕任何強制注入的歡迎模板或便籤。
 
 - **🛠️ Canvas v2 審查修復與操作性全面強化 (Canvas v2 Code Review Resolution & Usability Hardening)**：
   - **資料同步安全 (Critical 1)**：Store 變更時立即同步寫入 `#contents.value`，消除 300ms 防抖儲存與發布／離頁（`pagehide`、`beforeunload`、`visibilitychange`）競態；Bridge 新增 `flush()` 並與發布、手動儲存全面串接。

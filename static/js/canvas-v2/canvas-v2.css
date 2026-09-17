@@ -68,25 +68,26 @@
     width: 100%;
     height: 100%;
     position: relative;
-    background-color: var(--node-bg, var(--canvas-paper));
-    border: 2px solid var(--node-border, var(--canvas-border));
+    background-color: var(--node-bg, #ffffff);
+    border: 1px solid var(--node-border, #e2e8f0);
     border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.03);
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     transition: border-color 0.15s ease, box-shadow 0.15s ease;
     user-select: auto;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 .canvas-node-shell:hover {
-    box-shadow: 0 3px 8px -1px rgba(0, 0, 0, 0.12), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 2px 6px -2px rgba(0, 0, 0, 0.04);
 }
 
 .canvas-node-shell.is-selected {
-    box-shadow: 0 0 0 2px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.2) !important;
+    border-color: var(--canvas-selection, #2563eb) !important;
+    box-shadow: 0 0 0 2px var(--canvas-selection, #2563eb), 0 6px 16px -2px rgba(37, 99, 235, 0.18) !important;
 }
 
 /* Resizer */
@@ -94,56 +95,61 @@
     width: 8px !important;
     height: 8px !important;
     border-radius: 2px !important;
-    background: #3b82f6 !important;
+    background: #2563eb !important;
     border: 1px solid #ffffff !important;
     z-index: 25 !important;
 }
 
 .canvas-resizer-line {
-    border-color: #3b82f6 !important;
+    border-color: #2563eb !important;
     border-style: dashed !important;
 }
 
 /* Ameliorate Top Row & Corner Type Badge */
 .canvas-node-top {
-    height: 24px;
-    min-height: 24px;
+    height: 22px;
+    min-height: 22px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     user-select: none;
     position: relative;
+    background: transparent;
 }
 
 .canvas-node-type-badge {
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    height: 22px;
-    padding: 0 7px 0 5px;
-    background-color: var(--node-badge-bg, var(--canvas-accent));
-    color: var(--node-badge-text, #1e1b4b);
-    border-top-left-radius: 6px;
-    border-bottom-right-radius: 6px;
+    height: 20px;
+    padding: 0 7px 0 6px;
+    background-color: var(--node-badge-bg, #f1f5f9);
+    color: var(--node-badge-text, #334155);
+    border-top-left-radius: 6.5px;
+    border-bottom-right-radius: 6.5px;
     border-top-right-radius: 0;
     border-bottom-left-radius: 0;
     font-size: 11px;
     font-weight: 600;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.01em;
     line-height: 1;
-    box-shadow: -1px -1px 0px 1px var(--node-badge-bg, var(--canvas-accent));
+    border-right: 1px solid var(--node-border, rgba(0, 0, 0, 0.08));
+    border-bottom: 1px solid var(--node-border, rgba(0, 0, 0, 0.08));
 }
 
 .canvas-node-type-icon {
-    font-size: 12px;
+    font-size: 11px;
     line-height: 1;
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .canvas-node-type-text {
     font-size: 11px;
     line-height: 1;
-    font-family: inherit;
+    font-weight: 600;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
 .canvas-node-quick-actions {
@@ -352,9 +358,15 @@
 /* Edge Styling */
 .canvas-edge-path {
     fill: none;
-    stroke: var(--canvas-accent);
-    stroke-width: 1.5;
-    transition: stroke 0.2s ease, stroke-width 0.2s ease;
+    stroke: #94a3b8;
+    stroke-width: 1.75;
+    transition: stroke 0.15s ease, stroke-width 0.15s ease;
+}
+
+.react-flow__edge:hover .canvas-edge-path,
+.react-flow__edge.selected .canvas-edge-path {
+    stroke: var(--canvas-selection, #2563eb) !important;
+    stroke-width: 2.25 !important;
 }
 
 .canvas-edge-interactive {
@@ -368,36 +380,37 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    padding: 2px 6px;
-    background-color: var(--canvas-bg, #ffffff);
-    color: var(--canvas-text, #334155);
+    padding: 2.5px 8px;
+    background-color: #ffffff;
+    color: #475569;
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-    font-size: 12px;
+    font-size: 11.5px;
     font-weight: 500;
-    border-radius: 4px;
+    border-radius: 12px;
     cursor: pointer;
     user-select: none;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.08), 0 1px 2px -1px rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.1);
     transition: all 0.15s ease;
 }
 
 .ameliorate-edge-label:hover,
 .ameliorate-edge-label.is-selected {
-    background-color: var(--canvas-paper, #f1f5f9);
-    border-color: var(--canvas-selection, #3b82f6);
+    background-color: #f8fafc;
+    border-color: var(--canvas-selection, #2563eb);
     color: #2563eb;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 2px 8px rgba(37, 99, 235, 0.2);
 }
 
 .ameliorate-edge-text {
     font-family: inherit;
-    font-size: 12px;
+    font-size: 11.5px;
     line-height: 1;
 }
 
 .ameliorate-edge-arrow {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
     flex-shrink: 0;
     color: inherit;
 }

@@ -89,13 +89,13 @@ export function MarkdownNode(props) {
             ) : simple ? (
                 <div
                     className="ameliorate-node-text"
-                    onClick={() => data.isEdit !== false && setIsEditing(true)}
-                    title={data.isEdit !== false ? (zh ? '點擊編輯內容' : 'Click to edit') : ''}
+                    onDoubleClick={() => data.isEdit !== false && setIsEditing(true)}
+                    title={data.isEdit !== false ? (zh ? '雙擊編輯內容' : 'Double-click to edit') : ''}
                 >
                     {localText || 'new node'}
                 </div>
             ) : (
-                <div onClick={() => data.isEdit !== false && setIsEditing(true)}>
+                <div onDoubleClick={() => data.isEdit !== false && setIsEditing(true)}>
                     <MarkdownPreview text={localText} />
                 </div>
             )}

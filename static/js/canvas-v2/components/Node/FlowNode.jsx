@@ -1,7 +1,9 @@
 import React, { useMemo } from 'react'
 import { NodeResizer } from '@xyflow/react'
+import { Check, Pencil, Trash2 } from 'lucide-react'
 import { NodeHandles } from './NodeHandle.jsx'
 import { NodeToolbar } from './NodeToolbar.jsx'
+import { NodeLucideIcon } from './nodeIcons.jsx'
 import { resolveColorHex } from '../../model/jsonCanvasAdapter.mjs'
 import { computeContrastTheme } from '../../model/contrastHelpers.mjs'
 import { getNodeTypeConfig } from '../../model/canvasTypes.mjs'
@@ -37,7 +39,6 @@ export function FlowNode({
     const nodeType = data.nodeType || (type === 'sticky' ? 'sticky' : 'problem')
     const typeConfig = useMemo(() => getNodeTypeConfig(nodeType, colorHex), [nodeType, colorHex])
 
-    const effectiveIcon = icon || (data.icon || typeConfig.icon)
     const effectiveTitle = title || (data.label || (zh ? typeConfig.nameZh : typeConfig.name))
 
     const customStyle = useMemo(() => {
@@ -112,7 +113,9 @@ export function FlowNode({
             {type !== 'group' && (
                 <div className="canvas-node-top">
                     <div className="canvas-node-type-badge">
-                        <span className="canvas-node-type-icon">{effectiveIcon}</span>
+                        <span className="canvas-node-type-icon">
+                            {icon || <NodeLucideIcon type={nodeType} size={11} />}
+                        </span>
                         <span className="canvas-node-type-text">{effectiveTitle}</span>
                     </div>
 
@@ -129,7 +132,7 @@ export function FlowNode({
                                     onToggleEdit()
                                 }}
                             >
-                                {isEditing ? '✓' : '✎'}
+                                {isEditing ? <Check size={11} /> : <Pencil size={11} />}
                             </button>
                         )}
                         {isEdit && onDelete && (
@@ -143,7 +146,7 @@ export function FlowNode({
                                     onDelete(id)
                                 }}
                             >
-                                ✕
+                                <Trash2 size={11} />
                             </button>
                         )}
                     </div>

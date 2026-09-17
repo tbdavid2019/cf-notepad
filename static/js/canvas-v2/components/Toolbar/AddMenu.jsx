@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react'
 import { AMELIORATE_NODE_TYPES } from '../../model/canvasTypes.mjs'
+import { NodeLucideIcon } from '../Node/nodeIcons.jsx'
 
 export function AddMenu({ isOpen = false, onClose, onAddNode }) {
     const menuRef = useRef(null)
@@ -76,15 +77,17 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                         style={{
                             backgroundColor: cfg.badgeBg,
                             color: cfg.textColor,
-                            padding: '1px 5px',
+                            padding: '3px 6px',
                             borderRadius: '4px',
-                            fontSize: '12px',
-                            fontWeight: 600,
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: `1px solid ${cfg.borderLight}`,
                         }}
                     >
-                        {cfg.icon}
+                        <NodeLucideIcon type={cfg.id} size={12} />
                     </span>
-                    <span style={{ fontWeight: 600, fontFamily: 'monospace' }}>{cfg.name}</span>
+                    <span style={{ fontWeight: 600, fontSize: '12px' }}>{cfg.name}</span>
                     <span style={{ color: 'var(--canvas-text-muted)', fontSize: '11px', marginLeft: 'auto' }}>
                         {zh ? cfg.nameZh : ''}
                     </span>
@@ -105,7 +108,21 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                     onClose?.()
                 }}
             >
-                <span>💡</span>
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#fef9c3',
+                        color: '#854d0e',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #fef08a',
+                    }}
+                >
+                    <NodeLucideIcon type="sticky" size={12} />
+                </span>
                 <span>{zh ? '靈感便籤' : 'Sticky Note'}</span>
             </button>
 
@@ -118,7 +135,21 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                     onClose?.()
                 }}
             >
-                <span>📖</span>
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #e2e8f0',
+                    }}
+                >
+                    <NodeLucideIcon type="file" size={12} />
+                </span>
                 <span>{zh ? '引用 Wiki 筆記' : 'Reference Wiki Note'}</span>
             </button>
 
@@ -131,7 +162,21 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                     onClose?.()
                 }}
             >
-                <span>🔗</span>
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #e2e8f0',
+                    }}
+                >
+                    <NodeLucideIcon type="link" size={12} />
+                </span>
                 <span>{zh ? '外部網頁連結' : 'Web Link'}</span>
             </button>
 
@@ -144,7 +189,21 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                     onClose?.()
                 }}
             >
-                <span>🔲</span>
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#f1f5f9',
+                        color: '#334155',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #e2e8f0',
+                    }}
+                >
+                    <NodeLucideIcon type="group" size={12} />
+                </span>
                 <span>{zh ? '卡片分組' : 'Group'}</span>
             </button>
         </div>

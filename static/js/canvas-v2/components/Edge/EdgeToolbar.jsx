@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
+import { Tag, SlidersHorizontal, Trash2 } from 'lucide-react'
 import { EdgeStylePopover } from './EdgeStylePopover.jsx'
 
 export function EdgeToolbar({
@@ -53,8 +54,9 @@ export function EdgeToolbar({
                 title={zh ? '編輯標籤' : 'Edit label'}
                 aria-label={zh ? '編輯標籤' : 'Edit label'}
                 onClick={() => onStartEditLabel?.()}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-                🏷️
+                <Tag size={13} />
             </button>
 
             <button
@@ -65,8 +67,9 @@ export function EdgeToolbar({
                 aria-haspopup="dialog"
                 aria-expanded={isPopoverOpen}
                 onClick={() => setIsPopoverOpen(!isPopoverOpen)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-                ⚙️
+                <SlidersHorizontal size={13} />
             </button>
 
             <button
@@ -75,8 +78,9 @@ export function EdgeToolbar({
                 title={zh ? '刪除連線' : 'Delete edge'}
                 aria-label={zh ? '刪除連線' : 'Delete edge'}
                 onClick={() => onDelete?.(id)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
-                ✕
+                <Trash2 size={13} />
             </button>
 
             <EdgeStylePopover

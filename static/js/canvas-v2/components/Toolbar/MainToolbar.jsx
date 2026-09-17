@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import { Plus, Undo2, Redo2, Maximize2, FolderDown, Lock } from 'lucide-react'
 import { AddMenu } from './AddMenu.jsx'
 import { FileMenu } from './FileMenu.jsx'
 import { getViewportCenter } from '../Diagram/viewportHelpers.mjs'
@@ -50,7 +51,7 @@ export function MainToolbar({ store, onFitView }) {
                                 setIsAddMenuOpen(!isAddMenuOpen)
                             }}
                         >
-                            <span>➕</span>
+                            <Plus size={15} />
                             <span>{zh ? '新增' : 'Add'}</span>
                         </button>
                         <AddMenu
@@ -70,7 +71,7 @@ export function MainToolbar({ store, onFitView }) {
                         aria-label={zh ? '復原' : 'Undo'}
                         onClick={() => store.getState().undo()}
                     >
-                        <span>↶</span>
+                        <Undo2 size={15} />
                     </button>
 
                     <button
@@ -81,14 +82,15 @@ export function MainToolbar({ store, onFitView }) {
                         aria-label={zh ? '重做' : 'Redo'}
                         onClick={() => store.getState().redo()}
                     >
-                        <span>↷</span>
+                        <Redo2 size={15} />
                     </button>
 
                     <div className="canvas-toolbar-divider" />
                 </>
             ) : (
-                <div style={{ padding: '0 8px', fontSize: '11px', color: 'var(--canvas-text-muted)' }}>
-                    <span>🔒 {zh ? '唯讀模式' : 'Read-only'}</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '0 8px', fontSize: '11px', color: 'var(--canvas-text-muted)' }}>
+                    <Lock size={12} />
+                    <span>{zh ? '唯讀模式' : 'Read-only'}</span>
                 </div>
             )}
 
@@ -99,7 +101,7 @@ export function MainToolbar({ store, onFitView }) {
                 aria-label={zh ? '適應畫面' : 'Fit view'}
                 onClick={() => onFitView?.()}
             >
-                <span>⛶</span>
+                <Maximize2 size={14} />
                 <span>{zh ? '置中' : 'Fit'}</span>
             </button>
 
@@ -118,7 +120,7 @@ export function MainToolbar({ store, onFitView }) {
                         setIsFileMenuOpen(!isFileMenuOpen)
                     }}
                 >
-                    <span>📁</span>
+                    <FolderDown size={15} />
                 </button>
                 <FileMenu
                     isOpen={isFileMenuOpen}
@@ -129,7 +131,7 @@ export function MainToolbar({ store, onFitView }) {
 
             {syncStatus === 'syncing' && (
                 <span className="canvas-status-badge is-syncing" title={zh ? '正在同步至雲端...' : 'Syncing...'}>
-                    🔄
+                    •
                 </span>
             )}
             {syncStatus === 'dirty' && (
@@ -138,10 +140,11 @@ export function MainToolbar({ store, onFitView }) {
                 </span>
             )}
             {syncStatus === 'error' && (
-                <span className="canvas-status-badge is-error" style={{ color: 'var(--canvas-danger)' }} title={zh ? '儲存失敗' : 'Save failed'}>
-                    ⚠️
+                <span className="canvas-status-badge is-error" title={zh ? '同步發生錯誤' : 'Sync error'}>
+                    !
                 </span>
             )}
         </div>
     )
 }
+

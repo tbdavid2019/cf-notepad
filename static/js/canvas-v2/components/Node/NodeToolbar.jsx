@@ -1,5 +1,6 @@
 import React from 'react'
 import { NodeToolbar as FlowNodeToolbar, Position } from '@xyflow/react'
+import { Copy, Trash2, Palette } from 'lucide-react'
 import { CANVAS_COLOR_PRESETS, STICKY_PALETTE } from '../../model/canvasTypes.mjs'
 import { resolveColorHex } from '../../model/jsonCanvasAdapter.mjs'
 
@@ -34,9 +35,9 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     <label
                         className="canvas-btn-icon"
                         title={zh ? '自訂顏色' : 'Custom color'}
-                        style={{ cursor: 'pointer', position: 'relative' }}
+                        style={{ cursor: 'pointer', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
-                        <span>🎨</span>
+                        <Palette size={13} />
                         <input
                             type="color"
                             value={currentHex}
@@ -54,8 +55,9 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     title={zh ? '複製卡片' : 'Duplicate card'}
                     aria-label={zh ? '複製卡片' : 'Duplicate card'}
                     onClick={() => onDuplicate?.(id)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    📋
+                    <Copy size={13} />
                 </button>
 
                 <button
@@ -64,8 +66,9 @@ export function NodeToolbar({ id, data, type, selected, isEdit, onDuplicate, onD
                     title={zh ? '刪除卡片' : 'Delete card'}
                     aria-label={zh ? '刪除卡片' : 'Delete card'}
                     onClick={() => onDelete?.(id)}
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                    ✕
+                    <Trash2 size={13} />
                 </button>
             </div>
         </FlowNodeToolbar>
