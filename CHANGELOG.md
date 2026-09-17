@@ -2,6 +2,10 @@
 
 ## [2026-09-17]
 
+- **🐛 修復建立新筆記路由報錯 `Worker Error: initialContent is not defined`（Fixed createNewNote ReferenceError）**：
+  - 修復 `src/index.js` 中 `createNewNote(request, editorFormat)` 存取 `/new/canvas`、`/new/block`、`/new/markdown` 時，因未事先宣告 `let initialContent = ''` 導致嚴格模式拋出 uncaught `ReferenceError: initialContent is not defined` 造成 Worker 500 錯誤之重大問題。
+  - 為 `/new/canvas`、`/new/block`、`/new/markdown` 與帶有 share 參數的建立流程補齊完整的自動化單元測試（`test/new-note-entry.test.mjs`），確保新建重定向與預設筆記儲存 100% 穩定無誤。
+
 - **👀 徹底修復節點角標文字背景零對比重大瑕疵（Fixed Low-Contrast / Unreadable Node Badges）**：
   - 徹底解決 `FlowNode.jsx` 誤將卡片主色（`colorHex`）賦予 `badgeBg`，導致 `Detriment` 深紅底疊加深紅文字、`Problem` 深紫底疊加深紫文字而無法閱讀之嚴重問題。
   - 重構為預設思考節點一律採用典雅淺色底（`badgeBg` 如 `#ffe4e6`、`#f3e8ff`、`#dcfce7`）搭配深色墨水文字（`textColor` 如 `#9f1239`、`#581c87`、`#14532d`），文字對比度高達 7.4:1～14.2:1（全面通過 WCAG AAA 標準）。

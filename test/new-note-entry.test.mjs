@@ -7,6 +7,8 @@ import {
     isNewNoteEntry,
 } from '../src/note_meta.js'
 
+import worker from '../src/index.js'
+
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
 const constantsSource = readFileSync(new URL('../src/constant.js', import.meta.url), 'utf8')
 
@@ -52,3 +54,62 @@ test('dedicated creation routes persist a locked editor format before redirectin
     assert.match(indexSource, /router\.get\('\/new\/block', request => createNewNote\(request, 'block'\)\)/)
     assert.match(indexSource, /router\.get\('\/new\/markdown', request => createNewNote\(request, 'markdown'\)\)/)
 })
+
+test('worker.fetch successfully handles /new/canvas, /new/block, and /new/markdown without ReferenceError', async () => {
+    const store = new Map()
+    const env = {
+        SCN_STORAGE_DRIVER: 'kv',
+        NOTES: {
+            getWithMetadata: async (key) => store.get(key) || { value: null, metadata: null },
+            put: async (key, value, { metadata } = {}) => { store.set(key, { value, metadata }) },
+            delete: async (key) => { store.delete(key) },
+        },
+    }
+    const ctx = { waitUntil: () => {} }
+
+    // 1. /new/canvas
+    const canvasRes = await worker.fetch(new Request('https://wiki.david888.com/new/canvas'), env, ctx)
+    assert.equal(canvasRes.status, 302)
+    const canvasLoc = canvasRes.headers.get('Location')
+    assert.ok(canvasLoc && canvasLoc.includes('?new=1'))
+    const canvasPath = new URL(canvasLoc).pathname.slice(1)
+    const canvasRecord = store.get(canvasPath)
+    assert.ok(canvasRecord, 'Canvas note should be stored')
+    assert.equal(canvasRecord.metadata.editorFormat, 'canvas')
+    const parsedCanvas = JSON.parse(canvasRecord.value)
+    assert.deepEqual(parsedCanvas, { nodes: [], edges: [] })
+
+    // 2. /new/canvas with share parameters
+    const shareRes = await worker.fetch(new Request('https://wiki.david888.com/new/canvas?title=Idea&text=Detail'), env, ctx)
+    assert.equal(shareRes.status, 302)
+    const shareLoc = shareRes.headers.get('Location')
+    const sharePath = new URL(shareLoc).pathname.slice(1)
+    const shareRecord = store.get(sharePath)
+    assert.ok(shareRecord)
+    const parsedShareCanvas = JSON.parse(shareRecord.value)
+    assert.equal(parsedShareCanvas.nodes.length, 1)
+    assert.match(parsedShareCanvas.nodes[0].text, /# Idea/)
+    assert.match(parsedShareCanvas.nodes[0].text, /Detail/)
+
+    // 3. /new/block
+    const blockRes = await worker.fetch(new Request('https://wiki.david888.com/new/block'), env, ctx)
+    assert.equal(blockRes.status, 302)
+    const blockLoc = blockRes.headers.get('Location')
+    const blockPath = new URL(blockLoc).pathname.slice(1)
+    const blockRecord = store.get(blockPath)
+    assert.ok(blockRecord)
+    assert.equal(blockRecord.metadata.editorFormat, 'block')
+    assert.equal(blockRecord.metadata.blockDocumentVersion, 2)
+    assert.equal(blockRecord.value, '')
+
+    // 4. /new/markdown
+    const mdRes = await worker.fetch(new Request('https://wiki.david888.com/new/markdown'), env, ctx)
+    assert.equal(mdRes.status, 302)
+    const mdLoc = mdRes.headers.get('Location')
+    const mdPath = new URL(mdLoc).pathname.slice(1)
+    const mdRecord = store.get(mdPath)
+    assert.ok(mdRecord)
+    assert.equal(mdRecord.metadata.editorFormat, 'markdown')
+    assert.equal(mdRecord.value, '')
+})
+

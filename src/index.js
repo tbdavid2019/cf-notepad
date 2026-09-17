@@ -548,6 +548,7 @@ async function createNewNote(request, editorFormat) {
     const shareTitle = originUrl.searchParams.get('title')
     const shareText = originUrl.searchParams.get('text')
     const shareLink = originUrl.searchParams.get('url')
+    let initialContent = ''
 
     if (editorFormat === 'canvas') {
         if (shareTitle || shareText || shareLink) {
