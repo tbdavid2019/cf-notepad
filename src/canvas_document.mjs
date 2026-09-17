@@ -178,6 +178,10 @@ function validateEdge(edge, nodeIds, seenIds) {
     }
     assertOptionalString(edge.color, 'canvas edge color', 64)
     assertOptionalString(edge.label, 'canvas edge label', 8_192)
+
+    if (edge.david888 !== undefined) {
+        if (!isPlainObject(edge.david888)) throw new TypeError('david888 extension on edge must be an object')
+    }
 }
 
 export function validateCanvasDocument(doc) {

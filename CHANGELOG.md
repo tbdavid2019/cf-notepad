@@ -2,6 +2,22 @@
 
 ## [2026-09-17]
 
+- **🎨 Canvas 畫布完整互動升級：NodeToolbar、EdgeToolbar、調色盤與雙向箭頭樣式控制 (Full Interactive Toolbars, Palettes & Edge Styling)**：
+  - **節點浮動工具列 (`NodeToolbar`)**：
+    - 選取 Markdown 卡片、便籤或 Wiki 引用時自動在節點上方彈出浮動工具列。
+    - **Obsidian 規範色彩調色盤**：提供 6 款 Obsidian Canvas 標準色票（紅、橙、黃、綠、藍、紫）與預設色，卡片支援即時色彩更換並於 JSON Canvas 雙向儲存。
+    - **便籤調色盤**：支援鵝黃、薄荷綠、天空藍、櫻花粉、淺紫、蜜橙 6 款便籤即時切換。
+    - **卡片快捷操作**：新增一鍵「📋 複製卡片 (Duplicate)」與「✕ 刪除卡片 (Delete)」。
+  - **關係線浮動工具列 (`CanvasCustomEdge` & `EdgeLabelRenderer`)**：
+    - **關係文字編輯**：點擊關係線或標籤即可原地開啟輸入框編輯、修改或清除 Label，支援 Enter 儲存與 Esc 取消。
+    - **箭頭方向 4 態循環切換**：無箭頭 (`none`)、終點箭頭 (`──►`)、起點箭頭 (`◄──`)、雙向箭頭 (`◄─►`)，不再寫死終點箭頭，完整保留 `fromEnd` 與 `toEnd`。
+    - **線條樣式切換**：支援實線 (Solid)、虛線 (Dashed)、點線 (Dotted) (`strokeDasharray`)。
+    - **線條粗細切換**：細 (1.5px)、中 (2.5px)、粗 (4px) 快速循環切換。
+    - **線條顏色調色盤**：提供 6 款主題色彩（經典藍、石板灰、翡翠綠、琥珀黃、玫瑰紅、神秘紫）即時染色。
+    - **刪除關係線**：工具列提供一鍵刪除連線按鈕。
+  - **JSON Canvas 格式保真**：
+    - 完整讀取並儲存 `fromEnd`、`toEnd`、`color`、`label`，擴充樣式（線條樣式、線寬）保存於 `david888` 擴充物件，絕不硬編碼 `toEnd: 'arrow'`。
+
 - **🐛 Canvas 畫布資料安全、互通性與連線修正 (Canvas Data Safety, Interoperability & Connection Fixes)**：
   - 將建立選單名稱統一為「Canvas 畫布」／`Canvas`；Canvas 工具列處理 `.canvas` 匯入與匯出，底欄「匯入內容」則保留 Markdown、音訊、網址與 Office 文件匯入，並沿用既有 Markdown 筆記匯入流程。
   - 修正空畫布保存後重新開啟會回填歡迎卡片的資料遺失問題；顯式 `{ "nodes": [], "edges": [] }` 現在會完整保留。

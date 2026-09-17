@@ -12,6 +12,10 @@ import {
     Handle,
     Position,
     NodeResizer,
+    NodeToolbar,
+    EdgeLabelRenderer,
+    BaseEdge,
+    getSmoothStepPath,
     MarkerType,
     ConnectionMode,
 } from '@xyflow/react'
@@ -23,7 +27,48 @@ const source = document.querySelector('#contents')
 if (!root || !source) throw new Error('Canvas editor requires #canvas-editor and #contents')
 
 const isEditableMode = root.getAttribute('data-editable') === 'true' || window.APP_STATE?.isEdit === true
-const EDGE_STYLE = { stroke: '#2563a6', strokeWidth: 2.5 }
+const DEFAULT_EDGE_COLOR = '#2563a6'
+const EDGE_STYLE = { stroke: DEFAULT_EDGE_COLOR, strokeWidth: 2.5 }
+
+// Obsidian Canvas preset color map (presets 1-6) and custom hex colors
+export const CANVAS_COLOR_PRESETS = [
+    { id: 'none', label: '預設 / Default', value: '', preview: 'var(--canvas-card-bg, #ffffff)' },
+    { id: '1', label: '紅色 / Red', value: '#ef4444', preview: '#ef4444' },
+    { id: '2', label: '橙色 / Orange', value: '#f97316', preview: '#f97316' },
+    { id: '3', label: '黃色 / Yellow', value: '#eab308', preview: '#eab308' },
+    { id: '4', label: '綠色 / Green', value: '#22c55e', preview: '#22c55e' },
+    { id: '5', label: '藍色 / Blue', value: '#3b82f6', preview: '#3b82f6' },
+    { id: '6', label: '紫色 / Purple', value: '#8b5cf6', preview: '#8b5cf6' },
+]
+
+export const STICKY_PALETTE = [
+    { id: 'yellow', value: '#fff9c4', label: '鵝黃 / Yellow' },
+    { id: 'green', value: '#dcedc8', label: '薄荷綠 / Green' },
+    { id: 'blue', value: '#bbdefb', label: '天空藍 / Blue' },
+    { id: 'pink', value: '#f8bbd0', label: '櫻花粉 / Pink' },
+    { id: 'purple', value: '#e1bee7', label: '淺紫 / Purple' },
+    { id: 'orange', value: '#ffe0b2', label: '蜜橙 / Orange' },
+]
+
+export const EDGE_COLORS = [
+    { id: 'default', value: '#2563a6', label: '經典藍 / Blue' },
+    { id: 'gray', value: '#64748b', label: '石板灰 / Slate' },
+    { id: 'green', value: '#10b981', label: '翡翠綠 / Green' },
+    { id: 'yellow', value: '#f59e0b', label: '琥珀黃 / Amber' },
+    { id: 'red', value: '#ef4444', label: '玫瑰紅 / Red' },
+    { id: 'purple', value: '#8b5cf6', label: '神秘紫 / Purple' },
+]
+
+export function resolveCanvasColor(colorVal) {
+    if (!colorVal) return ''
+    if (colorVal === '1') return '#ef4444'
+    if (colorVal === '2') return '#f97316'
+    if (colorVal === '3') return '#eab308'
+    if (colorVal === '4') return '#22c55e'
+    if (colorVal === '5') return '#3b82f6'
+    if (colorVal === '6') return '#8b5cf6'
+    return String(colorVal)
+}
 
 function safeExternalUrl(value) {
     try {
@@ -34,7 +79,7 @@ function safeExternalUrl(value) {
     }
 }
 
-function safeWikiNotePath(value) {
+export function safeWikiNotePath(value) {
     const path = String(value || '').trim()
     if (!path || path.startsWith('//') || path.includes('://') || path.startsWith('javascript:')) return ''
     return '/' + path.replace(/^\/+/, '')
@@ -100,7 +145,229 @@ function CardHandles({ isEdit }) {
     </>
 }
 
-// Custom Markdown Card Node
+// Interactive Custom Edge with EdgeToolbar and EdgeLabelRenderer
+export function CanvasCustomEdge({
+    id,
+    sourceX,
+    sourceY,
+    targetX,
+    targetY,
+    sourcePosition,
+    targetPosition,
+    style = {},
+    markerStart,
+    markerEnd,
+    label,
+    selected,
+    data = {},
+}) {
+    const isEdit = isEditableMode
+    const isZh = resolveCanvasLang() === 'zh-TW'
+    const [isEditingLabel, setIsEditingLabel] = useState(false)
+    const [labelText, setLabelText] = useState(label || '')
+
+    useEffect(() => {
+        setLabelText(label || '')
+    }, [label])
+
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
+        sourceX,
+        sourceY,
+        sourcePosition,
+        targetX,
+        targetY,
+        targetPosition,
+        borderRadius: 12,
+    })
+
+    const fromEnd = data.fromEnd || 'none'
+    const toEnd = data.toEnd !== undefined ? data.toEnd : 'arrow'
+    const lineStyle = data.lineStyle || 'solid'
+    const strokeWidth = Number(data.strokeWidth) || 2.5
+    const strokeColor = data.color || style.stroke || DEFAULT_EDGE_COLOR
+
+    let strokeDasharray = undefined
+    if (lineStyle === 'dashed') strokeDasharray = '6 4'
+    else if (lineStyle === 'dotted') strokeDasharray = '2 3'
+
+    const computedStyle = {
+        ...style,
+        stroke: strokeColor,
+        strokeWidth,
+        strokeDasharray,
+    }
+
+    const computedMarkerStart = fromEnd === 'arrow'
+        ? { type: MarkerType.ArrowClosed, color: strokeColor }
+        : undefined
+    const computedMarkerEnd = toEnd === 'arrow'
+        ? { type: MarkerType.ArrowClosed, color: strokeColor }
+        : undefined
+
+    const handleSaveLabel = () => {
+        setIsEditingLabel(false)
+        data.onChangeEdgeLabel?.(id, labelText.trim())
+    }
+
+    const handleToggleArrows = () => {
+        let nextFrom = 'none'
+        let nextTo = 'none'
+        if (fromEnd === 'none' && toEnd === 'arrow') {
+            nextFrom = 'arrow'
+            nextTo = 'none'
+        } else if (fromEnd === 'arrow' && toEnd === 'none') {
+            nextFrom = 'arrow'
+            nextTo = 'arrow'
+        } else if (fromEnd === 'arrow' && toEnd === 'arrow') {
+            nextFrom = 'none'
+            nextTo = 'none'
+        } else {
+            nextFrom = 'none'
+            nextTo = 'arrow'
+        }
+        data.onChangeEdgeArrows?.(id, nextFrom, nextTo)
+    }
+
+    const handleToggleLineStyle = () => {
+        const next = lineStyle === 'solid' ? 'dashed' : (lineStyle === 'dashed' ? 'dotted' : 'solid')
+        data.onChangeEdgeStyle?.(id, { lineStyle: next })
+    }
+
+    const handleToggleStrokeWidth = () => {
+        const next = strokeWidth === 1.5 ? 2.5 : (strokeWidth === 2.5 ? 4 : 1.5)
+        data.onChangeEdgeStyle?.(id, { strokeWidth: next })
+    }
+
+    const arrowIcon = useMemo(() => {
+        if (fromEnd === 'arrow' && toEnd === 'arrow') return '◄─►'
+        if (fromEnd === 'arrow') return '◄──'
+        if (toEnd === 'arrow') return '──►'
+        return '──'
+    }, [fromEnd, toEnd])
+
+    const lineStyleIcon = useMemo(() => {
+        if (lineStyle === 'dashed') return isZh ? '╌ 虛線' : '╌ Dash'
+        if (lineStyle === 'dotted') return isZh ? '⋯ 點線' : '⋯ Dot'
+        return isZh ? '─ 實線' : '─ Solid'
+    }, [lineStyle, isZh])
+
+    return (
+        <>
+            <BaseEdge
+                id={id}
+                path={edgePath}
+                markerStart={computedMarkerStart}
+                markerEnd={computedMarkerEnd}
+                style={computedStyle}
+                className="canvas-edge-style"
+                interactionWidth={24}
+            />
+            <EdgeLabelRenderer>
+                <div
+                    style={{
+                        position: 'absolute',
+                        transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+                        pointerEvents: 'all',
+                    }}
+                    className="nodrag nopan canvas-edge-interactive-container"
+                >
+                    {isEdit && selected ? (
+                        <div className="canvas-edge-toolbar">
+                            {isEditingLabel ? (
+                                <div className="canvas-edge-label-editor">
+                                    <input
+                                        type="text"
+                                        autoFocus
+                                        className="canvas-edge-label-input"
+                                        value={labelText}
+                                        onChange={e => setLabelText(e.target.value)}
+                                        onKeyDown={e => {
+                                            if (e.key === 'Enter') handleSaveLabel()
+                                            if (e.key === 'Escape') setIsEditingLabel(false)
+                                        }}
+                                        placeholder={isZh ? '輸入關係文字...' : 'Edge label...'}
+                                    />
+                                    <button type="button" className="canvas-edge-tb-btn" onClick={handleSaveLabel} title={isZh ? '確定' : 'Done'}>✓</button>
+                                    <button type="button" className="canvas-edge-tb-btn" onClick={() => { setLabelText(''); data.onChangeEdgeLabel?.(id, '') }} title={isZh ? '清除' : 'Clear'}>✕</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <button
+                                        type="button"
+                                        className="canvas-edge-tb-btn canvas-edge-label-btn"
+                                        onClick={() => setIsEditingLabel(true)}
+                                        title={isZh ? '編輯關係文字' : 'Edit Label'}
+                                    >
+                                        🏷️ {labelText || (isZh ? '+ 標籤' : '+ Label')}
+                                    </button>
+                                    <span className="canvas-tb-divider" />
+                                    <button
+                                        type="button"
+                                        className="canvas-edge-tb-btn"
+                                        onClick={handleToggleArrows}
+                                        title={isZh ? `切換箭頭方向 (${arrowIcon})` : `Arrow Direction (${arrowIcon})`}
+                                    >
+                                        {arrowIcon}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="canvas-edge-tb-btn"
+                                        onClick={handleToggleLineStyle}
+                                        title={isZh ? '切換線條樣式 (實線/虛線/點線)' : 'Line Style (Solid/Dashed/Dotted)'}
+                                    >
+                                        {lineStyleIcon}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        className="canvas-edge-tb-btn"
+                                        onClick={handleToggleStrokeWidth}
+                                        title={isZh ? `切換粗細 (${strokeWidth}px)` : `Width (${strokeWidth}px)`}
+                                    >
+                                        {strokeWidth}px
+                                    </button>
+                                    <span className="canvas-tb-divider" />
+                                    <div className="canvas-toolbar-colors">
+                                        {EDGE_COLORS.map(c => (
+                                            <button
+                                                key={c.id}
+                                                type="button"
+                                                className={`canvas-color-dot ${strokeColor === c.value ? 'is-active' : ''}`}
+                                                style={{ backgroundColor: c.value }}
+                                                title={c.label}
+                                                onClick={() => data.onChangeEdgeStyle?.(id, { color: c.value })}
+                                            />
+                                        ))}
+                                    </div>
+                                    <span className="canvas-tb-divider" />
+                                    <button
+                                        type="button"
+                                        className="canvas-edge-tb-btn canvas-btn-delete"
+                                        onClick={() => data.onDeleteEdge?.(id)}
+                                        title={isZh ? '刪除連線' : 'Delete Edge'}
+                                    >
+                                        ✕
+                                    </button>
+                                </>
+                            )}
+                        </div>
+                    ) : label ? (
+                        <div
+                            className="canvas-edge-label-badge"
+                            onClick={() => {
+                                if (isEdit) data.onSelectEdge?.(id)
+                            }}
+                            title={isEdit ? (isZh ? '點擊編輯連線樣式與標籤' : 'Click to edit') : ''}
+                        >
+                            {label}
+                        </div>
+                    ) : null}
+                </div>
+            </EdgeLabelRenderer>
+        </>
+    )
+}
+
+// Custom Markdown Card Node with NodeToolbar
 function TextCardNode({ id, data, selected }) {
     const isEdit = isEditableMode
     const [isEditing, setIsEditing] = useState(false)
@@ -108,6 +375,8 @@ function TextCardNode({ id, data, selected }) {
     const theme = useCanvasTheme()
     const isDark = theme === 'dark'
     const isZh = resolveCanvasLang() === 'zh-TW'
+    const color = data.color || ''
+    const resolvedColor = resolveCanvasColor(color)
 
     const handleBlur = () => {
         setIsEditing(false)
@@ -123,16 +392,62 @@ function TextCardNode({ id, data, selected }) {
         }
     }
 
+    const cardStyle = useMemo(() => {
+        const base = { width: '100%', height: '100%' }
+        if (!resolvedColor) return base
+        return {
+            ...base,
+            borderColor: resolvedColor,
+            boxShadow: `0 0 0 1.5px ${resolvedColor}66, 0 4px 12px rgba(0,0,0,0.08)`,
+        }
+    }, [resolvedColor])
+
     return (
         <div
             className={`canvas-node-card canvas-card-text ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
-            style={{ width: '100%', height: '100%' }}
+            style={cardStyle}
         >
             <NodeResizer minWidth={200} minHeight={120} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
             <CardHandles isEdit={isEdit} />
 
-            <div className="canvas-card-header">
+            {isEdit && (
+                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
+                    <div className="canvas-node-toolbar nodrag nopan">
+                        <div className="canvas-toolbar-colors">
+                            {CANVAS_COLOR_PRESETS.map(c => (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    className={`canvas-color-dot ${(color === c.value || (!color && c.id === 'none')) ? 'is-active' : ''}`}
+                                    style={{ backgroundColor: c.preview }}
+                                    title={c.label}
+                                    onClick={() => data.onChangeColor?.(id, c.value)}
+                                />
+                            ))}
+                        </div>
+                        <span className="canvas-tb-divider" />
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn"
+                            onClick={() => data.onDuplicateNode?.(id)}
+                            title={isZh ? '複製卡片' : 'Duplicate Card'}
+                        >
+                            📋
+                        </button>
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn canvas-btn-delete"
+                            onClick={() => data.onDeleteNode?.(id)}
+                            title={isZh ? '刪除卡片' : 'Delete Card'}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </NodeToolbar>
+            )}
+
+            <div className="canvas-card-header" style={resolvedColor ? { borderTop: `3px solid ${resolvedColor}` } : {}}>
                 <div className="canvas-card-header-title">
                     <span className="canvas-card-icon">📄</span>
                     <span className="canvas-card-title-text">{data.label || (isZh ? '筆記卡片' : 'Note Card')}</span>
@@ -185,7 +500,7 @@ function TextCardNode({ id, data, selected }) {
     )
 }
 
-// Custom Sticky Note Node
+// Custom Sticky Note Node with NodeToolbar
 function StickyCardNode({ id, data, selected }) {
     const isEdit = isEditableMode
     const [isEditing, setIsEditing] = useState(false)
@@ -215,6 +530,42 @@ function StickyCardNode({ id, data, selected }) {
             <NodeResizer minWidth={160} minHeight={120} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
             <CardHandles isEdit={isEdit} />
+
+            {isEdit && (
+                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
+                    <div className="canvas-node-toolbar nodrag nopan">
+                        <div className="canvas-toolbar-colors">
+                            {STICKY_PALETTE.map(c => (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    className={`canvas-color-dot ${color === c.value ? 'is-active' : ''}`}
+                                    style={{ backgroundColor: c.value }}
+                                    title={c.label}
+                                    onClick={() => data.onChangeColor?.(id, c.value)}
+                                />
+                            ))}
+                        </div>
+                        <span className="canvas-tb-divider" />
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn"
+                            onClick={() => data.onDuplicateNode?.(id)}
+                            title={isZh ? '複製便籤' : 'Duplicate Sticky'}
+                        >
+                            📋
+                        </button>
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn canvas-btn-delete"
+                            onClick={() => data.onDeleteNode?.(id)}
+                            title={isZh ? '刪除便籤' : 'Delete Sticky'}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </NodeToolbar>
+            )}
 
             <div className="canvas-card-header canvas-sticky-header">
                 <span className="canvas-card-icon">📌</span>
@@ -266,7 +617,7 @@ function StickyCardNode({ id, data, selected }) {
     )
 }
 
-// Custom Wiki Link Node
+// Custom Wiki Link Node with NodeToolbar
 function WikiLinkNode({ id, data, selected }) {
     const isEdit = isEditableMode
     const isZh = resolveCanvasLang() === 'zh-TW'
@@ -274,6 +625,8 @@ function WikiLinkNode({ id, data, selected }) {
     const isDark = theme === 'dark'
     const [file, setFile] = useState(data.file || '')
     const [isEditing, setIsEditing] = useState(!data.file && isEdit)
+    const color = data.color || ''
+    const resolvedColor = resolveCanvasColor(color)
 
     const handleSave = () => {
         setIsEditing(false)
@@ -287,13 +640,53 @@ function WikiLinkNode({ id, data, selected }) {
     return (
         <div
             className={`canvas-node-card canvas-card-wiki ${selected ? 'is-selected' : ''} ${isDark ? 'is-dark' : 'is-light'}`}
-            style={{ width: '100%', height: '100%' }}
+            style={{
+                width: '100%',
+                height: '100%',
+                ...(resolvedColor ? { borderColor: resolvedColor, boxShadow: `0 0 0 1.5px ${resolvedColor}66` } : {}),
+            }}
         >
             <NodeResizer minWidth={220} minHeight={100} isVisible={selected && isEdit} lineClassName="canvas-resizer-line" handleClassName="canvas-resizer-handle" />
 
             <CardHandles isEdit={isEdit} />
 
-            <div className="canvas-card-header">
+            {isEdit && (
+                <NodeToolbar isVisible={selected && isEdit} position={Position.Top} offset={8}>
+                    <div className="canvas-node-toolbar nodrag nopan">
+                        <div className="canvas-toolbar-colors">
+                            {CANVAS_COLOR_PRESETS.map(c => (
+                                <button
+                                    key={c.id}
+                                    type="button"
+                                    className={`canvas-color-dot ${(color === c.value || (!color && c.id === 'none')) ? 'is-active' : ''}`}
+                                    style={{ backgroundColor: c.preview }}
+                                    title={c.label}
+                                    onClick={() => data.onChangeColor?.(id, c.value)}
+                                />
+                            ))}
+                        </div>
+                        <span className="canvas-tb-divider" />
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn"
+                            onClick={() => data.onDuplicateNode?.(id)}
+                            title={isZh ? '複製引用卡片' : 'Duplicate'}
+                        >
+                            📋
+                        </button>
+                        <button
+                            type="button"
+                            className="canvas-node-tb-btn canvas-btn-delete"
+                            onClick={() => data.onDeleteNode?.(id)}
+                            title={isZh ? '刪除卡片' : 'Delete'}
+                        >
+                            ✕
+                        </button>
+                    </div>
+                </NodeToolbar>
+            )}
+
+            <div className="canvas-card-header" style={resolvedColor ? { borderTop: `3px solid ${resolvedColor}` } : {}}>
                 <div className="canvas-card-header-title">
                     <span className="canvas-card-icon">🔗</span>
                     <span className="canvas-card-title-text">{isZh ? 'Wiki 筆記引用' : 'Wiki Note Reference'}</span>
@@ -391,8 +784,14 @@ const nodeTypes = {
     group: GroupNode,
 }
 
+const edgeTypes = {
+    canvasEdge: CanvasCustomEdge,
+    smoothstep: CanvasCustomEdge,
+    default: CanvasCustomEdge,
+}
+
 // Convert JSON Canvas to React Flow elements
-function jsonCanvasToReactFlow(canvasData, handlers) {
+function jsonCanvasToReactFlow(canvasData, handlers, edgeHandlers) {
     const nodes = (canvasData.nodes || []).map(node => {
         const type = node.type === 'sticky' || node.david888?.cardType === 'sticky'
             ? 'sticky'
@@ -416,23 +815,52 @@ function jsonCanvasToReactFlow(canvasData, handlers) {
                 color: node.color || (type === 'sticky' ? '#fff9c4' : ''),
                 onChangeText: handlers.onChangeText,
                 onChangeFile: handlers.onChangeFile,
+                onChangeUrl: handlers.onChangeUrl,
                 onDeleteNode: handlers.onDeleteNode,
+                onChangeColor: handlers.onChangeColor,
+                onDuplicateNode: handlers.onDuplicateNode,
             },
         }
     })
 
-    const edges = (canvasData.edges || []).map(edge => ({
-        id: String(edge.id),
-        source: String(edge.fromNode),
-        target: String(edge.toNode),
-        sourceHandle: edge.fromSide || 'right',
-        targetHandle: edge.toSide || 'left',
-        label: edge.label || '',
-        type: 'smoothstep',
-        markerEnd: { type: MarkerType.ArrowClosed },
-        className: 'canvas-edge-style',
-        style: edge.color ? { ...EDGE_STYLE, stroke: edge.color } : EDGE_STYLE,
-    }))
+    const edges = (canvasData.edges || []).map(edge => {
+        const fromEnd = edge.fromEnd || 'none'
+        const toEnd = edge.toEnd !== undefined ? edge.toEnd : 'arrow'
+        const strokeColor = resolveCanvasColor(edge.color) || DEFAULT_EDGE_COLOR
+        const lineStyle = edge.david888?.lineStyle || 'solid'
+        const strokeWidth = Number(edge.david888?.strokeWidth) || 2.5
+
+        let strokeDasharray = undefined
+        if (lineStyle === 'dashed') strokeDasharray = '6 4'
+        else if (lineStyle === 'dotted') strokeDasharray = '2 3'
+
+        return {
+            id: String(edge.id),
+            source: String(edge.fromNode),
+            target: String(edge.toNode),
+            sourceHandle: edge.fromSide || 'right',
+            targetHandle: edge.toSide || 'left',
+            label: edge.label || '',
+            type: 'canvasEdge',
+            markerStart: fromEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color: strokeColor } : undefined,
+            markerEnd: toEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color: strokeColor } : undefined,
+            className: 'canvas-edge-style',
+            style: { stroke: strokeColor, strokeWidth, strokeDasharray },
+            data: {
+                fromEnd,
+                toEnd,
+                color: edge.color || '',
+                lineStyle,
+                strokeWidth,
+                label: edge.label || '',
+                onChangeEdgeLabel: edgeHandlers?.onChangeEdgeLabel,
+                onChangeEdgeArrows: edgeHandlers?.onChangeEdgeArrows,
+                onChangeEdgeStyle: edgeHandlers?.onChangeEdgeStyle,
+                onDeleteEdge: edgeHandlers?.onDeleteEdge,
+                onSelectEdge: edgeHandlers?.onSelectEdge,
+            },
+        }
+    })
 
     return { nodes, edges }
 }
@@ -467,9 +895,16 @@ function reactFlowToJsonCanvas(nodes, edges) {
             toNode: e.target,
             ...(e.sourceHandle ? { fromSide: e.sourceHandle } : {}),
             ...(e.targetHandle ? { toSide: e.targetHandle } : {}),
-            ...(e.label ? { label: e.label } : {}),
-            toEnd: 'arrow',
-            ...(e.style?.stroke ? { color: e.style.stroke } : {}),
+            ...(e.data?.label || e.label ? { label: e.data?.label || e.label } : {}),
+            ...(e.data?.fromEnd && e.data.fromEnd !== 'none' ? { fromEnd: e.data.fromEnd } : {}),
+            ...(e.data?.toEnd !== undefined ? { toEnd: e.data.toEnd } : { toEnd: 'arrow' }),
+            ...(e.data?.color ? { color: e.data.color } : (e.style?.stroke && e.style.stroke !== DEFAULT_EDGE_COLOR ? { color: e.style.stroke } : {})),
+            ...((e.data?.lineStyle && e.data.lineStyle !== 'solid') || (e.data?.strokeWidth && e.data.strokeWidth !== 2.5) ? {
+                david888: {
+                    ...(e.data?.lineStyle && e.data.lineStyle !== 'solid' ? { lineStyle: e.data.lineStyle } : {}),
+                    ...(e.data?.strokeWidth && e.data.strokeWidth !== 2.5 ? { strokeWidth: e.data.strokeWidth } : {}),
+                }
+            } : {}),
         })),
     }
 }
@@ -514,6 +949,34 @@ function CanvasEditorApp() {
         })
     }, [triggerSave])
 
+    const onChangeColor = useCallback((nodeId, color) => {
+        setNodes(nds => {
+            const next = nds.map(n => (n.id === nodeId ? { ...n, data: { ...n.data, color } } : n))
+            triggerSave(next, edgesRef.current)
+            return next
+        })
+    }, [triggerSave])
+
+    const onDuplicateNode = useCallback((nodeId) => {
+        setNodes(nds => {
+            const target = nds.find(n => n.id === nodeId)
+            if (!target) return nds
+            const newId = (target.type || 'card') + '-' + Date.now().toString(36)
+            const cloned = {
+                ...structuredClone(target),
+                id: newId,
+                position: { x: target.position.x + 40, y: target.position.y + 40 },
+                selected: true,
+                data: {
+                    ...structuredClone(target.data),
+                },
+            }
+            const next = nds.map(n => ({ ...n, selected: false })).concat(cloned)
+            triggerSave(next, edgesRef.current)
+            return next
+        })
+    }, [triggerSave])
+
     const onDeleteNode = useCallback((nodeId) => {
         setNodes(nds => {
             const nextNodes = nds.filter(n => n.id !== nodeId)
@@ -526,12 +989,84 @@ function CanvasEditorApp() {
         })
     }, [triggerSave])
 
+    // Edge handlers
+    const onChangeEdgeLabel = useCallback((edgeId, newLabel) => {
+        setEdges(eds => {
+            const next = eds.map(e => (e.id === edgeId ? { ...e, label: newLabel, data: { ...e.data, label: newLabel } } : e))
+            triggerSave(nodesRef.current, next)
+            return next
+        })
+    }, [triggerSave])
+
+    const onChangeEdgeArrows = useCallback((edgeId, fromEnd, toEnd) => {
+        setEdges(eds => {
+            const next = eds.map(e => {
+                if (e.id !== edgeId) return e
+                const color = resolveCanvasColor(e.data?.color) || e.style?.stroke || DEFAULT_EDGE_COLOR
+                return {
+                    ...e,
+                    data: { ...e.data, fromEnd, toEnd },
+                    markerStart: fromEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color } : undefined,
+                    markerEnd: toEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color } : undefined,
+                }
+            })
+            triggerSave(nodesRef.current, next)
+            return next
+        })
+    }, [triggerSave])
+
+    const onChangeEdgeStyle = useCallback((edgeId, styleUpdates) => {
+        setEdges(eds => {
+            const next = eds.map(e => {
+                if (e.id !== edgeId) return e
+                const nextData = { ...e.data, ...styleUpdates }
+                const color = resolveCanvasColor(nextData.color) || DEFAULT_EDGE_COLOR
+                const strokeWidth = Number(nextData.strokeWidth) || 2.5
+                let strokeDasharray = undefined
+                if (nextData.lineStyle === 'dashed') strokeDasharray = '6 4'
+                else if (nextData.lineStyle === 'dotted') strokeDasharray = '2 3'
+
+                return {
+                    ...e,
+                    data: nextData,
+                    style: { ...e.style, stroke: color, strokeWidth, strokeDasharray },
+                    markerStart: nextData.fromEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color } : undefined,
+                    markerEnd: nextData.toEnd === 'arrow' ? { type: MarkerType.ArrowClosed, color } : undefined,
+                }
+            })
+            triggerSave(nodesRef.current, next)
+            return next
+        })
+    }, [triggerSave])
+
+    const onDeleteEdge = useCallback((edgeId) => {
+        setEdges(eds => {
+            const next = eds.filter(e => e.id !== edgeId)
+            triggerSave(nodesRef.current, next)
+            return next
+        })
+    }, [triggerSave])
+
+    const onSelectEdge = useCallback((edgeId) => {
+        setEdges(eds => eds.map(e => ({ ...e, selected: e.id === edgeId })))
+    }, [])
+
     const handlers = useMemo(() => ({
         onChangeText,
         onChangeFile,
         onChangeUrl,
         onDeleteNode,
-    }), [onChangeText, onChangeFile, onChangeUrl, onDeleteNode])
+        onChangeColor,
+        onDuplicateNode,
+    }), [onChangeText, onChangeFile, onChangeUrl, onDeleteNode, onChangeColor, onDuplicateNode])
+
+    const edgeHandlers = useMemo(() => ({
+        onChangeEdgeLabel,
+        onChangeEdgeArrows,
+        onChangeEdgeStyle,
+        onDeleteEdge,
+        onSelectEdge,
+    }), [onChangeEdgeLabel, onChangeEdgeArrows, onChangeEdgeStyle, onDeleteEdge, onSelectEdge])
 
     // Parse initial content from #contents
     const initialCanvasDoc = useMemo(() => {
@@ -542,7 +1077,8 @@ function CanvasEditorApp() {
             return parseCanvasDocument('')
         }
     }, [])
-    const initialElements = useMemo(() => jsonCanvasToReactFlow(initialCanvasDoc, handlers), [initialCanvasDoc, handlers])
+
+    const initialElements = useMemo(() => jsonCanvasToReactFlow(initialCanvasDoc, handlers, edgeHandlers), [initialCanvasDoc, handlers, edgeHandlers])
 
     const [nodes, setNodes, onNodesChange] = useNodesState(initialElements.nodes)
     const [edges, setEdges, onEdgesChange] = useEdgesState(initialElements.edges)
@@ -555,7 +1091,6 @@ function CanvasEditorApp() {
     // Save changes when dragging/connecting
     const handleNodesChange = useCallback(changes => {
         onNodesChange(changes)
-        // debounce save after position/dimension changes
         clearTimeout(window.__canvasSaveTimer)
         window.__canvasSaveTimer = setTimeout(() => {
             triggerSave(nodesRef.current, edgesRef.current)
@@ -574,10 +1109,23 @@ function CanvasEditorApp() {
         setEdges(eds => {
             const next = addEdge({
                 ...params,
-                type: 'smoothstep',
-                markerEnd: { type: MarkerType.ArrowClosed },
+                type: 'canvasEdge',
+                markerEnd: { type: MarkerType.ArrowClosed, color: DEFAULT_EDGE_COLOR },
                 className: 'canvas-edge-style',
                 style: EDGE_STYLE,
+                data: {
+                    fromEnd: 'none',
+                    toEnd: 'arrow',
+                    lineStyle: 'solid',
+                    strokeWidth: 2.5,
+                    color: DEFAULT_EDGE_COLOR,
+                    label: '',
+                    onChangeEdgeLabel,
+                    onChangeEdgeArrows,
+                    onChangeEdgeStyle,
+                    onDeleteEdge,
+                    onSelectEdge,
+                },
             }, eds)
             if (next.length === eds.length) {
                 window.showToast?.(isZh ? '這兩個連接點已有關係線。' : 'These connection points are already linked.')
@@ -585,7 +1133,7 @@ function CanvasEditorApp() {
             triggerSave(nodesRef.current, next)
             return next
         })
-    }, [setEdges, triggerSave, isZh])
+    }, [setEdges, triggerSave, isZh, onChangeEdgeLabel, onChangeEdgeArrows, onChangeEdgeStyle, onDeleteEdge, onSelectEdge])
 
     // Toolbar actions
     const addCard = useCallback(() => {
@@ -608,7 +1156,7 @@ function CanvasEditorApp() {
     }, [handlers, isZh, setNodes, triggerSave])
 
     const addSticky = useCallback(() => {
-        const colors = ['#fff9c4', '#dcedc8', '#bbdefb', '#f8bbd0', '#e1bee7']
+        const colors = ['#fff9c4', '#dcedc8', '#bbdefb', '#f8bbd0', '#e1bee7', '#ffe0b2']
         const color = colors[Math.floor(Math.random() * colors.length)]
         const id = 'sticky-' + Date.now().toString(36)
         const newNode = {
@@ -666,7 +1214,7 @@ function CanvasEditorApp() {
         reader.onload = e => {
             try {
                 const parsed = validateCanvasDocument(parseCanvasDocument(e.target.result, { allowFallback: false }))
-                const converted = jsonCanvasToReactFlow(parsed, handlers)
+                const converted = jsonCanvasToReactFlow(parsed, handlers, edgeHandlers)
                 setNodes(converted.nodes)
                 setEdges(converted.edges)
                 triggerSave(converted.nodes, converted.edges)
@@ -676,7 +1224,7 @@ function CanvasEditorApp() {
         }
         reader.readAsText(file)
         event.target.value = ''
-    }, [handlers, isZh, setEdges, setNodes, triggerSave])
+    }, [handlers, edgeHandlers, isZh, setEdges, setNodes, triggerSave])
 
     return (
         <div className={`david-canvas-app ${isDark ? 'theme-dark' : 'theme-light'}`} style={{ width: '100%', height: '100%' }}>
@@ -684,13 +1232,14 @@ function CanvasEditorApp() {
                 nodes={nodes}
                 edges={edges}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 onNodesChange={isEdit ? handleNodesChange : undefined}
                 onEdgesChange={isEdit ? handleEdgesChange : undefined}
                 onConnect={isEdit ? onConnect : undefined}
                 nodesDraggable={isEdit}
                 nodesConnectable={isEdit}
                 connectionMode={ConnectionMode.Loose}
-                defaultEdgeOptions={{ type: 'smoothstep', markerEnd: { type: MarkerType.ArrowClosed }, className: 'canvas-edge-style', style: EDGE_STYLE }}
+                defaultEdgeOptions={{ type: 'canvasEdge', markerEnd: { type: MarkerType.ArrowClosed, color: DEFAULT_EDGE_COLOR }, className: 'canvas-edge-style', style: EDGE_STYLE }}
                 elementsSelectable={true}
                 colorMode={isDark ? 'dark' : 'light'}
                 fitView

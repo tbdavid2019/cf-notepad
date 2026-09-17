@@ -196,3 +196,64 @@ test('canvas editor uses clear, loose, four-sided handles and records JSON Canva
     assert.match(canvasEditorSource, /safeWikiNotePath/)
     assert.match(editorCssSource, /react-flow__edges > svg/)
 })
+
+test('canvas editor provides NodeToolbar, EdgeToolbar, color palettes, and interactive arrow/style controls', () => {
+    assert.match(canvasEditorSource, /NodeToolbar/)
+    assert.match(canvasEditorSource, /EdgeLabelRenderer/)
+    assert.match(canvasEditorSource, /BaseEdge/)
+    assert.match(canvasEditorSource, /CanvasCustomEdge/)
+    assert.match(canvasEditorSource, /CANVAS_COLOR_PRESETS/)
+    assert.match(canvasEditorSource, /STICKY_PALETTE/)
+    assert.match(canvasEditorSource, /EDGE_COLORS/)
+    assert.match(canvasEditorSource, /handleToggleArrows/)
+    assert.match(canvasEditorSource, /handleToggleLineStyle/)
+    assert.match(canvasEditorSource, /handleToggleStrokeWidth/)
+    assert.match(canvasEditorSource, /strokeDasharray/)
+    assert.match(canvasEditorSource, /onChangeEdgeLabel/)
+    assert.match(canvasEditorSource, /onDuplicateNode/)
+    assert.match(editorCssSource, /\.canvas-node-toolbar/)
+    assert.match(editorCssSource, /\.canvas-edge-toolbar/)
+    assert.match(editorCssSource, /\.canvas-edge-label-badge/)
+})
+
+test('validateCanvasDocument accepts edge david888 extension and custom arrow directions', () => {
+    const doc = {
+        nodes: [
+            { id: 'n1', type: 'text', x: 0, y: 0, width: 200, height: 100, text: 'Card 1', color: '4' },
+            { id: 'n2', type: 'text', x: 250, y: 0, width: 200, height: 100, text: 'Card 2', color: '#fff9c4' },
+        ],
+        edges: [
+            {
+                id: 'e1',
+                fromNode: 'n1',
+                toNode: 'n2',
+                fromEnd: 'arrow',
+                toEnd: 'arrow',
+                color: '#ef4444',
+                label: '雙向關聯',
+                david888: {
+                    lineStyle: 'dashed',
+                    strokeWidth: 4,
+                },
+            },
+            {
+                id: 'e2',
+                fromNode: 'n2',
+                toNode: 'n1',
+                fromEnd: 'none',
+                toEnd: 'none',
+                david888: {
+                    lineStyle: 'dotted',
+                },
+            },
+        ],
+    }
+
+    assert.doesNotThrow(() => validateCanvasDocument(doc))
+    assert.equal(doc.edges[0].fromEnd, 'arrow')
+    assert.equal(doc.edges[0].toEnd, 'arrow')
+    assert.equal(doc.edges[0].david888.lineStyle, 'dashed')
+    assert.equal(doc.edges[1].fromEnd, 'none')
+    assert.equal(doc.edges[1].toEnd, 'none')
+})
+

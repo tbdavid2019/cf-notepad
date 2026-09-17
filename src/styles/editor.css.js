@@ -1443,4 +1443,165 @@ textarea#contents {
     opacity: 1;
     text-decoration: underline;
 }
+
+/* Canvas Node Toolbar */
+.canvas-node-toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: color-mix(in srgb, var(--editor-surface, #ffffff) 94%, #000);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+}
+
+.canvas-toolbar-colors {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.canvas-color-dot {
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    border: 1.5px solid rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    padding: 0;
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.canvas-color-dot:hover {
+    transform: scale(1.25);
+}
+
+.canvas-color-dot.is-active {
+    box-shadow: 0 0 0 2px var(--toolbar-accent, #0969da);
+    transform: scale(1.15);
+}
+
+.canvas-node-tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--text-color, inherit);
+    cursor: pointer;
+    font-size: 13px;
+    transition: background 0.12s ease;
+}
+
+.canvas-node-tb-btn:hover {
+    background: rgba(128, 128, 128, 0.15);
+}
+
+.canvas-node-tb-btn.canvas-btn-delete:hover {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+}
+
+/* Canvas Edge Toolbar & Label */
+.canvas-edge-interactive-container {
+    pointer-events: all;
+    z-index: 50;
+}
+
+.canvas-edge-toolbar {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: color-mix(in srgb, var(--editor-surface, #ffffff) 94%, #000);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+    font-size: 12px;
+}
+
+.canvas-edge-tb-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 3px 7px;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 5px;
+    background: var(--status-control-bg, #ffffff);
+    color: var(--text-color, inherit);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.2;
+    transition: all 0.12s ease;
+}
+
+.canvas-edge-tb-btn:hover {
+    border-color: var(--toolbar-accent, #0969da);
+    background: color-mix(in srgb, var(--toolbar-border, #d0d7de) 25%, var(--status-control-bg, #ffffff));
+}
+
+.canvas-edge-tb-btn.canvas-btn-delete:hover {
+    border-color: #ef4444;
+    color: #ef4444;
+    background: rgba(239, 68, 68, 0.08);
+}
+
+.canvas-edge-label-editor {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.canvas-edge-label-input {
+    width: 140px;
+    padding: 3px 6px;
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    border-radius: 4px;
+    background: var(--editor-surface, #ffffff);
+    color: inherit;
+    font-size: 12px;
+    outline: none;
+}
+
+.canvas-edge-label-input:focus {
+    border-color: var(--toolbar-accent, #0969da);
+}
+
+.canvas-edge-label-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 8px;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--editor-surface, #ffffff) 90%, transparent);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border: 1px solid var(--toolbar-border, #d0d7de);
+    color: var(--text-color, #173e67);
+    font-size: 11px;
+    font-weight: 600;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.canvas-edge-label-badge:hover {
+    border-color: var(--toolbar-accent, #0969da);
+    transform: scale(1.05);
+}
+
+.david-canvas-app.theme-dark .canvas-edge-label-badge {
+    color: #d8efff;
+    border-color: #3d444d;
+}
 `
+
