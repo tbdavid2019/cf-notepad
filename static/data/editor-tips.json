@@ -150,6 +150,11 @@
       "id": "currency-protection",
       "zh-TW": "小訣竅：撰寫帳單或價格時（如 $10.00、$0.32），系統會自動智慧保護金額符號，避免被誤判為 LaTeX 數學公式，粗體與排版保持完美。",
       "en-US": "Tip: When writing prices or bills (e.g. $10.00, $0.32), currency dollar signs are automatically protected from being misidentified as LaTeX math formulas, preserving bold formatting and layout."
+    },
+    {
+      "id": "infinite-canvas-editor",
+      "zh-TW": "小訣竅：在底欄「＋ 新增」選單點擊「無限畫布 (Canvas)」，即可在 2D 自由空間內新增 Markdown 卡片、彩色靈感便籤與 Wiki 筆記引用，拖曳節點四邊圓點即可連線，相容 Obsidian JSON Canvas！",
+      "en-US": "Tip: Click 'Infinite Canvas' from the '+ New' menu in the footer to create 2D spatial notes with Markdown cards, sticky notes, and Wiki note references. Drag handles to connect edges; 100% compatible with Obsidian JSON Canvas!"
     }
   ]
 }

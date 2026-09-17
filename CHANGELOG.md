@@ -1,5 +1,22 @@
 # Changelog
 
+## [2026-09-17]
+
+- **🎨 全新無限畫布編輯模式 (Infinite Canvas Editor Mode with JSON Canvas & React Flow)**：
+  - **第三種原生筆記模式 (`editorFormat: 'canvas'`)**：與現有的 Markdown 模式、Block 筆記模式並列，專為 2D 空間思維、卡片盒筆記（Zettelkasten）與視覺化知識庫設計。在底欄「＋ 新增」選單點擊「無限畫布 (Canvas)」或存取 `/new/canvas` 即可立刻建立。
+  - **開源 JSON Canvas 規範 (`jsoncanvas.org`) 原生相容**：
+    - 底層儲存直接採用開放標準 JSON Canvas 結構，原生相容 Obsidian Canvas（`.canvas` 檔案）。
+    - 支援一鍵匯出 `.canvas` 檔案供 Obsidian 或其它相容畫布工具開啟，亦支援由瀏覽器本機直接匯入 `.canvas` 檔案並自動轉換為畫布節點。
+  - **輕量高效的 React Flow 畫布內核**：
+    - 基於 `@xyflow/react`，以純 HTML/DOM 與 SVG 渲染，獨立代碼分割打包為 `canvas-editor.bundle.mjs` (僅 ~380 KB)，零干擾既有 Markdown / BlockNote 載入效能。
+    - **Markdown 卡片節點 (Note Card)**：雙擊原地切換為 Markdown 編輯框，失焦或按 `Cmd+Enter` 立即渲染為美觀排版，支援調整卡片寬高、刪除與四邊錨點連線。
+    - **彩色靈感便籤節點 (Sticky Note)**：提供黃、綠、藍、粉、紫五種經典配色，支援縮放與隨手雙擊記事。
+    - **Wiki 筆記引用節點 (Wiki Note Link)**：可快速連結本站現有筆記路徑（如 `/note/...`），提供卡片預覽與一鍵跳轉。
+    - **平滑連線與箭頭 (Smoothstep Edges with Markers)**：拖曳卡片四邊圓點即可拉出帶有箭頭的關係線，卡片移動時連線自動即時重算路徑。
+  - **編輯模式與唯讀瀏覽模式分離 (`isEdit`)**：
+    - 編輯模式 (`/edit/:note`) 提供浮動工具列（新增卡片、靈感便籤、Wiki 引用、匯出/匯入），節點位置拖曳與邊緣連線即時自動儲存 (Autosave) 至 Cloudflare D1/KV。
+    - 唯讀分享模式 (`/share/...` 或檢視模式) 鎖定節點位置防止手滑誤觸，隱藏編輯按鈕，同時保留自由平移（Pan）、縮放（Zoom）與卡片超連結點擊跳轉。
+
 ## [2026-09-16]
 
 - **💵 智慧貨幣金額符號保護與 KaTeX 數學公式衝突防護 (Smart Currency Dollar Protection & KaTeX Math Collision Prevention)**：

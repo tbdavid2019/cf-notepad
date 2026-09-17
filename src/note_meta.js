@@ -66,6 +66,24 @@ function extractContentTitle(value = '') {
         }
         return ''
     }
+    if (trimmedVal.startsWith('{') && (trimmedVal.includes('"nodes"') || trimmedVal.includes('"edges"'))) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            if (parsed && Array.isArray(parsed.nodes)) {
+                for (const n of parsed.nodes) {
+                    if (n && typeof n.text === 'string' && n.text.trim()) {
+                        const candidate = normalizeTitleCandidate(n.text.split('\n')[0])
+                        if (candidate && !isIgnoredTitleLine(candidate)) return candidate
+                    }
+                    if (n && typeof n.label === 'string' && n.label.trim()) {
+                        const candidate = normalizeTitleCandidate(n.label)
+                        if (candidate && !isIgnoredTitleLine(candidate)) return candidate
+                    }
+                }
+                return ''
+            }
+        } catch (e) {}
+    }
     if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
         try {
             const parsed = JSON.parse(trimmedVal)
@@ -167,6 +185,13 @@ export function extractNoteDescription(value = '', fallbackTitle = '') {
     const tiptapDocument = getTiptapDocument(trimmedVal)
     if (tiptapDocument) {
         str = tiptapDocument.content.map(tiptapNodeText).filter(Boolean).join(' ')
+    } else if (trimmedVal.startsWith('{') && (trimmedVal.includes('"nodes"') || trimmedVal.includes('"edges"'))) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            if (parsed && Array.isArray(parsed.nodes)) {
+                str = parsed.nodes.map(n => (n && (n.text || n.label)) || '').filter(Boolean).join(' ')
+            }
+        } catch (e) {}
     } else if (trimmedVal.startsWith('{') && trimmedVal.includes('"blocks"')) {
         try {
             const parsed = JSON.parse(trimmedVal)
@@ -228,15 +253,17 @@ export function formatNewNoteTitle(lang = 'zh-TW', random = Math.random) {
 }
 
 export function resolveEditorFormat(metadata = {}) {
+    if (metadata && metadata.editorFormat === 'canvas') return 'canvas'
     return metadata && metadata.editorFormat === 'block' ? 'block' : 'markdown'
 }
 
 export function resolveLockedEditorFormat(metadata = {}, requestedFormat = undefined) {
     const existing = metadata?.editorFormat
-    if (existing !== undefined && existing !== 'block' && existing !== 'markdown') {
+    const validFormats = ['block', 'markdown', 'canvas']
+    if (existing !== undefined && !validFormats.includes(existing)) {
         throw new TypeError('Invalid stored editor format')
     }
-    if (requestedFormat !== undefined && requestedFormat !== 'block' && requestedFormat !== 'markdown') {
+    if (requestedFormat !== undefined && !validFormats.includes(requestedFormat)) {
         throw new TypeError('Invalid editor format')
     }
     if (existing && requestedFormat && existing !== requestedFormat) {

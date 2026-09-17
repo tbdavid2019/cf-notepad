@@ -133,9 +133,10 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
     const isBlockDocument = ext.editorFormat === 'block'
+    const isCanvasDocument = ext.editorFormat === 'canvas'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
     const textareaContent = escapeHtml(content)
-    const pageTheme = isBlockDocument
+    const pageTheme = (isBlockDocument || isCanvasDocument)
         ? (ext.theme || 'ayu-light')
         : resolvePageTheme({
             randomize: isEdit && ext.isNewEntry === true,
@@ -215,6 +216,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/styles/webawesome.css" />
     ${annotationsUiEnabled ? '<link rel="stylesheet" href="/css/share-annotations.css" />' : ''}
     ${isEdit && isBlockDocument ? '<link rel="stylesheet" href="/js/block-editor.bundle.css" />' : ''}
+    ${isCanvasDocument ? '<link rel="stylesheet" href="/js/canvas-editor.bundle.css" />' : ''}
     <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
@@ -356,7 +358,10 @@ ${getMarkdownCss()}
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
                          <article style="display:none;" id="bot-accessible-content">${isBlockDocument ? blockHtml : escapeHtml(content)}</article>
-                        ${isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
+                        ${isCanvasDocument ? `<div class="editor-pane canvas-editor-pane">
+                            <div id="canvas-editor" class="canvas-editor" aria-label="Infinite Canvas" data-editable="${isEdit}"></div>
+                            <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
+                        </div>` : (isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
                             <div id="block-editor" class="block-editor" aria-label="Block editor"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : `<div class="editor-pane">
@@ -411,9 +416,9 @@ ${getMarkdownCss()}
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
-                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'}
-                        ${(isEdit && !isBlockDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
-                        ${tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
+                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>')}
+                        ${(isEdit && !isBlockDocument && !isCanvasDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
+                        ${isCanvasDocument || tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
                                 ? `<div class="preview-pane">${!isBlockDocument ? '<div id="preview-welcome" class="editor-welcome preview-welcome" aria-hidden="true" hidden></div>' : ''}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
@@ -422,7 +427,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme, editorFormat: isBlockDocument ? 'block' : 'markdown' })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme, editorFormat: isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown') })}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
@@ -1174,8 +1179,9 @@ ${getMarkdownCss()}
         autoPresent: ext.autoPresent === true,
         autoBook: ext.autoBook === true,
         isEdit: isEdit === true,
-        editorFormat: isBlockDocument ? 'block' : 'markdown',
+        editorFormat: isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown'),
         isBlock: isBlockDocument,
+        isCanvas: isCanvasDocument,
         blockMarkdown: ext.blockMarkdown || '',
         isNewEntry: isEdit === true && ext.isNewEntry === true,
         theme: pageTheme,
@@ -5249,6 +5255,7 @@ ${getMarkdownCss()}
     ${isEdit ? '<script type="module" src="/js/ocr-client.mjs"></script>' : ''}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
+    ${isCanvasDocument ? '<script type="module" src="/js/canvas-editor.bundle.mjs"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>

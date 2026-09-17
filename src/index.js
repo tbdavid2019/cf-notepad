@@ -30,6 +30,7 @@ import {
     resolveLockedEditorFormat,
 } from './note_meta.js'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
+import { canvasToMarkdown, validateCanvasDocument, parseCanvasDocument } from './canvas_document.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
 import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
 import { summarizeHistoryContent } from './note_history_presenter.js'
@@ -461,13 +462,20 @@ async function persistNoteContent({
 
 function getBlockPageExt(value, metadata = {}) {
     const editorFormat = resolveEditorFormat(metadata)
-    return editorFormat === 'block'
-        ? { editorFormat, blockHtml: renderBlockToHtml(value), blockMarkdown: blockToMarkdown(value) }
-        : { editorFormat }
+    if (editorFormat === 'block') {
+        return { editorFormat, blockHtml: renderBlockToHtml(value), blockMarkdown: blockToMarkdown(value) }
+    }
+    if (editorFormat === 'canvas') {
+        return { editorFormat, canvasMarkdown: canvasToMarkdown(parseCanvasDocument(value)) }
+    }
+    return { editorFormat }
 }
 
 function getMarkdownExportContent(value, metadata = {}) {
-    return resolveEditorFormat(metadata) === 'block' ? blockToMarkdown(value) : value
+    const format = resolveEditorFormat(metadata)
+    if (format === 'block') return blockToMarkdown(value)
+    if (format === 'canvas') return canvasToMarkdown(parseCanvasDocument(value))
+    return value
 }
 
 async function backupCurrentNoteBeforeRestore({
@@ -541,7 +549,43 @@ async function createNewNote(request, editorFormat) {
     const shareLink = originUrl.searchParams.get('url')
 
     let initialContent = ''
-    if (shareTitle || shareText || shareLink) {
+    if (editorFormat === 'canvas') {
+        const welcomeTitle = shareTitle || (originUrl.searchParams.get('lang') === 'en-US' ? 'Welcome to Infinite Canvas' : '歡迎使用無限畫布')
+        initialContent = JSON.stringify({
+            nodes: [
+                {
+                    id: 'node-welcome',
+                    type: 'text',
+                    x: 80,
+                    y: 80,
+                    width: 380,
+                    height: 220,
+                    text: `# ${welcomeTitle}\n\n- 雙擊卡片可編輯 Markdown 內文\n- 拖曳四邊圓點即可連線\n- 點擊上方工具列新增更多卡片`,
+                },
+                {
+                    id: 'node-sticky',
+                    type: 'sticky',
+                    x: 520,
+                    y: 80,
+                    width: 240,
+                    height: 180,
+                    color: '#fff9c4',
+                    text: '💡 **靈感便籤**\n\n隨手記錄微小想法，相容 Obsidian Canvas！',
+                },
+            ],
+            edges: [
+                {
+                    id: 'edge-welcome-sticky',
+                    fromNode: 'node-welcome',
+                    toNode: 'node-sticky',
+                    fromSide: 'right',
+                    toSide: 'left',
+                    toEnd: 'arrow',
+                    label: '延伸關聯',
+                },
+            ],
+        }, null, 2)
+    } else if (shareTitle || shareText || shareLink) {
         const parts = []
         if (shareTitle) parts.push(`# ${shareTitle}`)
         if (shareText) parts.push(shareText)
@@ -567,6 +611,7 @@ async function createNewNote(request, editorFormat) {
     return returnJSON(503, 'Could not allocate a new note path', { status: 503 })
 }
 
+router.get('/new/canvas', request => createNewNote(request, 'canvas'))
 router.get('/new/block', request => createNewNote(request, 'block'))
 router.get('/new/markdown', request => createNewNote(request, 'markdown'))
 router.get('/_pwa-offline', () => createOfflinePageResponse())
@@ -2847,6 +2892,13 @@ router.post('/api/:path', async (request) => {
             validateBlockDocument(parseBlockDocument(text, { allowTextFallback: false }))
         } catch (error) {
             return returnJSON(422, `Invalid block document: ${error.message}`, { status: 422 })
+        }
+    } else if (editorFormat === 'canvas') {
+        if (append) return returnJSON(400, 'Canvas documents do not support append', { status: 400 })
+        try {
+            validateCanvasDocument(parseCanvasDocument(text))
+        } catch (error) {
+            return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
         }
     }
 
