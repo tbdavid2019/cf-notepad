@@ -1514,6 +1514,109 @@ async function formatAudioSmartMarkdown(aiBinding, rawText) {
 
 router.post('/api/audio/transcribe', async (request, context = {}) => handleAudioTranscription(request, context))
 
+function isBlockedMetadataHost(hostname) {
+    const host = String(hostname || '').toLowerCase().replace(/\.$/, '')
+    if (!host || host === 'localhost' || host.endsWith('.local') || host.endsWith('.internal')) return true
+    if (host === '::1' || host.startsWith('fc') || host.startsWith('fd') || host.startsWith('fe80:')) return true
+    const octets = host.split('.').map(Number)
+    if (octets.length !== 4 || octets.some(value => !Number.isInteger(value) || value < 0 || value > 255)) return false
+    const [a, b] = octets
+    return a === 0 || a === 10 || a === 127 || a === 169 && b === 254 || a === 172 && b >= 16 && b <= 31 || a === 192 && b === 168
+}
+
+function normalizeMetadataUrl(value) {
+    const raw = String(value || '').trim()
+    if (!raw || raw.length > 2_048) throw new Error('URL is required and must be at most 2048 characters')
+    const parsed = new URL(raw)
+    if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.port) {
+        throw new Error('Only public HTTP(S) URLs are supported')
+    }
+    if (isBlockedMetadataHost(parsed.hostname)) throw new Error('Private or local hosts are not supported')
+    return parsed
+}
+
+function decodeMetadataText(value) {
+    return String(value || '')
+        .replace(/&amp;/gi, '&')
+        .replace(/&quot;/gi, '"')
+        .replace(/&#39;|&apos;/gi, "'")
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\s+/g, ' ')
+        .trim()
+}
+
+function extractOpenGraphMetadata(html, finalUrl) {
+    const meta = new Map()
+    for (const tag of String(html || '').match(/<meta\b[^>]*>/gi) || []) {
+        const attrs = {}
+        for (const match of tag.matchAll(/([:\w-]+)\s*=\s*(["'])(.*?)\2/gs)) {
+            attrs[match[1].toLowerCase()] = decodeMetadataText(match[3])
+        }
+        const key = attrs.property || attrs.name
+        if (key && attrs.content) meta.set(key.toLowerCase(), attrs.content)
+    }
+
+    const title = decodeMetadataText(meta.get('og:title') || meta.get('twitter:title') || String(html || '').match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1] || '')
+    const description = decodeMetadataText(meta.get('og:description') || meta.get('twitter:description') || meta.get('description') || '')
+    const imageValue = meta.get('og:image') || meta.get('twitter:image') || ''
+    let image = ''
+    try {
+        if (imageValue) image = new URL(imageValue, finalUrl).href
+    } catch {}
+
+    let canonicalUrl = finalUrl
+    const canonicalMatch = String(html || '').match(/<link\b[^>]*rel\s*=\s*["'][^"']*canonical[^"']*["'][^>]*>/i)
+    const canonicalHref = canonicalMatch?.[0]?.match(/href\s*=\s*["'](.*?)["']/i)?.[1]
+    try {
+        if (canonicalHref) canonicalUrl = new URL(canonicalHref, finalUrl).href
+    } catch {}
+
+    return {
+        title,
+        description,
+        image,
+        siteName: decodeMetadataText(meta.get('og:site_name') || new URL(finalUrl).hostname),
+        canonicalUrl,
+    }
+}
+
+router.post('/api/url-meta', async request => {
+    try {
+        const body = await request.json()
+        let currentUrl = normalizeMetadataUrl(body?.url)
+        let response
+
+        for (let attempt = 0; attempt < 4; attempt += 1) {
+            response = await fetch(currentUrl.href, {
+                redirect: 'manual',
+                headers: {
+                    Accept: 'text/html,application/xhtml+xml;q=0.9,text/plain;q=0.5',
+                    'User-Agent': 'Mozilla/5.0 (compatible; David888WikiPreview/1.0)',
+                },
+            })
+            if (![301, 302, 303, 307, 308].includes(response.status)) break
+            const location = response.headers.get('Location')
+            if (!location) break
+            currentUrl = normalizeMetadataUrl(new URL(location, currentUrl).href)
+        }
+
+        if (!response?.ok) return returnJSON(502, `Metadata request failed with HTTP ${response?.status || 0}`, { status: 502 })
+        const contentType = response.headers.get('content-type') || ''
+        if (!contentType.includes('text/html') && !contentType.includes('application/xhtml+xml') && !contentType.includes('text/plain')) {
+            return returnJSON(415, 'Target does not provide an HTML document', { status: 415 })
+        }
+        const html = (await response.text()).slice(0, 1_048_576)
+        return returnJSON(0, {
+            url: String(body.url),
+            finalUrl: currentUrl.href,
+            ...extractOpenGraphMetadata(html, currentUrl.href),
+        })
+    } catch (error) {
+        return returnJSON(422, error.message || 'Invalid metadata URL', { status: 422 })
+    }
+})
+
 router.post('/api/url2md', async (request) => {
     try {
         let url = ''

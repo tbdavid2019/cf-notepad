@@ -107,17 +107,29 @@
 
 /* Resizer */
 .canvas-resizer-handle {
-    width: 8px !important;
-    height: 8px !important;
-    border-radius: 2px !important;
+    width: 20px !important;
+    height: 20px !important;
+    border-radius: 4px !important;
     background: #2563eb !important;
     border: 1px solid #ffffff !important;
-    z-index: 25 !important;
+    z-index: 100 !important;
+    pointer-events: all !important;
+    touch-action: none;
 }
 
 .canvas-resizer-line {
     border-color: #2563eb !important;
     border-style: dashed !important;
+    border-width: 4px !important;
+    z-index: 90 !important;
+    pointer-events: all !important;
+    touch-action: none;
+}
+
+.canvas-v2-root.is-resizing .canvas-handle {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
 /* Ameliorate Top Row & Corner Type Badge */
@@ -363,6 +375,15 @@
 .canvas-wiki-status {
     color: var(--canvas-text-muted);
     font-size: 11px;
+}
+
+.canvas-link-preview-image {
+    display: block;
+    width: 100%;
+    max-height: 92px;
+    border-radius: 6px;
+    object-fit: cover;
+    background: var(--canvas-paper-muted);
 }
 
 .canvas-wiki-link-btn {

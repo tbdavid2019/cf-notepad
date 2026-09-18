@@ -8,12 +8,15 @@
   - **雙軌容錯架構 (`resolveAiBinding`)**：在 `src/index.js` 實作 `resolveAiBinding(env)` 統一介面，優先使用 `env.AI`；若未配置或處於控制平面異常期，自動平滑降級調用 `env.GROQ_API_KEY`（採用 `openai/gpt-oss-20b` 與 `openai/gpt-oss-120b` 生產級模型），確保音訊智慧排版、劃線讀者助理與 `/:path/ai-format` 功能 100% 正常運作，零中斷。
   - **生產環境驗證**：成功部署至 Cloudflare Workers，經端對端實機測試 `POST /test-ai-note/ai-format` 確認排版推論功能秒級響應並格式化成功。
 
+- **🔗 外部連結 OG 預覽 API**：新增 `/api/url-meta`，安全驗證公開 HTTP(S) URL 與 redirect，讀取 `og:title`、`og:description`、`og:image`、`og:site_name` 與 canonical URL，Link node 會快取預覽資料到 `david888.ogPreview`。
+
 ## [2026-09-17]
 
 - **🧩 修復 Wiki、外部連結與群組卡片操作 (Wiki, Link & Group Node Fixes)**：Wiki 節點支援站內路徑與 share URL 預覽，外部連結與 Wiki 表單改為完整寬度排版；file/link 卡片提高預設高度；群組標題恢復拖曳，編輯 input 保留 `nodrag`，NodeResizer 可正常調整尺寸。
 - **📐 修復舊 Wiki／Link 節點表單尺寸遷移**：載入過小的既有 file/link 節點時自動提升至可容納表單的高度，並強制表單輸入框滿寬，避免 placeholder、按鈕與捲軸錯位。
 - **⛶ 編輯中的 Canvas 節點顯示 resize handles**：NodeResizer 現在在節點選取或內容編輯狀態都顯示，Wiki、Link、Group 與一般卡片可直接拖曳邊角調整大小。
 - **⌨️ Wiki／外部連結欄位改為失焦自動儲存**：移除多餘的「儲存」按鈕，Enter 儲存、失焦儲存、Escape 取消，縮短表單高度並避免卡片排版溢出。
+- **🎯 擴大 Canvas resize 感應區**：resize handles 擴大至 `20px`、邊界感應線加寬至 `4px`；resize 啟動後暫時停用 relation handles，避免拖曳調整大小時被連線操作搶走。
 
 - **📱 修復手機 Canvas 右上角三個浮動按鈕 (Mobile Canvas Floating Actions)**：修正全局 SVG cascade 將 Lucide 圖示縮成 `3px` 的問題；手機按鈕採 `44px` 觸控區、圖示 `20px`，並加入 safe-area 間距與 `v=3.0` 快取版本。
 

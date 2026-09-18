@@ -66,6 +66,7 @@ export function Diagram({ store }) {
     const resizeSnapshotRef = useRef(null)
 
     const handleResizeStart = useCallback(() => {
+        document.querySelector('.canvas-v2-root')?.classList.add('is-resizing')
         const currentNodes = store.getState().nodes
         const currentEdges = store.getState().edges
         resizeSnapshotRef.current = {
@@ -83,6 +84,7 @@ export function Diagram({ store }) {
     }, [store])
 
     const handleResizeEnd = useCallback(() => {
+        document.querySelector('.canvas-v2-root')?.classList.remove('is-resizing')
         if (resizeSnapshotRef.current) {
             store.getState().commitTransaction(resizeSnapshotRef.current)
             resizeSnapshotRef.current = null
