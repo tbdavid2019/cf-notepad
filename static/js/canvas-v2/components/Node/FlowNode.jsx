@@ -91,7 +91,7 @@ export function FlowNode({
 
     return (
         <div
-            className={`canvas-node-shell ameliorate-node ${selected ? 'is-selected' : ''} ${type === 'sticky' ? 'is-sticky' : ''} ${type === 'group' ? 'is-group' : ''}`}
+            className={`canvas-node-shell ameliorate-node ${selected ? 'is-selected' : ''} ${isEditing ? 'is-editing' : ''} ${type === 'sticky' ? 'is-sticky' : ''} ${type === 'group' ? 'is-group' : ''}`}
             style={customStyle}
             onClick={() => {
                 if (!selected && isEdit && data.onSelectNode) {

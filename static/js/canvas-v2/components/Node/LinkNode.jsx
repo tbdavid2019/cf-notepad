@@ -55,7 +55,7 @@ export function LinkNode(props) {
         >
             <div className="canvas-wiki-card">
                 {isEditing ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }} className="nodrag">
+                    <div className="canvas-wiki-form nodrag">
                         <input
                             type="url"
                             autoFocus
@@ -72,17 +72,17 @@ export function LinkNode(props) {
                         <button
                             type="button"
                             className="canvas-tb-btn"
-                            style={{ alignSelf: 'flex-start', background: 'var(--canvas-accent)', color: '#fff' }}
                             onClick={handleSave}
                         >
                             {zh ? '儲存' : 'Save'}
                         </button>
                     </div>
                 ) : (
-                    <>
-                        <div style={{ fontWeight: 600, fontSize: '13px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {localUrl || (zh ? '未設定網址' : 'No URL set')}
+                    <div className="canvas-wiki-preview">
+                        <div className="canvas-wiki-title">
+                            {safeHref ? new URL(safeHref).hostname : (localUrl || (zh ? '未設定網址' : 'No URL set'))}
                         </div>
+                        {safeHref && <p className="canvas-wiki-excerpt">{new URL(safeHref).pathname}</p>}
                         {safeHref && (
                             <a
                                 href={safeHref}
@@ -90,11 +90,10 @@ export function LinkNode(props) {
                                 rel="noopener noreferrer"
                                 className="canvas-wiki-link-btn nodrag"
                             >
-                                <span>🔗</span>
                                 <span>{zh ? '開啟連結 ↗' : 'Open Link ↗'}</span>
                             </a>
                         )}
-                    </>
+                    </div>
                 )}
             </div>
         </FlowNode>

@@ -6,8 +6,8 @@
 export const NODE_DIMENSIONS = {
     text: { width: 200, height: 76, minWidth: 140, minHeight: 56 },
     sticky: { width: 200, height: 120, minWidth: 140, minHeight: 80 },
-    file: { width: 220, height: 80, minWidth: 160, minHeight: 60 },
-    link: { width: 220, height: 80, minWidth: 160, minHeight: 60 },
+    file: { width: 280, height: 132, minWidth: 200, minHeight: 112 },
+    link: { width: 280, height: 132, minWidth: 200, minHeight: 112 },
     group: { width: 440, height: 260, minWidth: 200, minHeight: 120 },
 }
 
@@ -193,4 +193,3 @@ export const DEFAULT_EDGE_COLOR = '#475569'
 export const DEFAULT_EDGE_WIDTH = 2
 export const DEFAULT_EDGE_STYLE = 'solid'
 export const DEFAULT_EDGE_LABEL = ''
-

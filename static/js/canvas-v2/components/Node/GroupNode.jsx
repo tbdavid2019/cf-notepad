@@ -41,12 +41,12 @@ export function GroupNode(props) {
             onDelete={data.onDelete}
             onChangeColor={data.onChangeColor}
         >
-            <div className="canvas-group-label nodrag">
+            <div className="canvas-group-label">
                 {isEditing ? (
                     <input
                         type="text"
                         autoFocus
-                        className="canvas-edge-input"
+                        className="canvas-edge-input nodrag"
                         value={localLabel}
                         onChange={(e) => setLocalLabel(e.target.value)}
                         onBlur={handleSave}

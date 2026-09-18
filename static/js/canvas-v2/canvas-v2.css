@@ -220,6 +220,10 @@
     color: var(--node-text, #1e293b);
 }
 
+.canvas-node-shell.is-editing .canvas-node-body {
+    align-items: stretch;
+}
+
 .ameliorate-node-text {
     font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-size: 13.5px;
@@ -287,11 +291,72 @@
 
 /* Wiki Note specifics */
 .canvas-wiki-card {
+    width: 100%;
+    min-width: 0;
     display: flex;
     flex-direction: column;
     gap: 8px;
     justify-content: center;
     height: 100%;
+    min-height: 0;
+    overflow: hidden;
+}
+
+.canvas-wiki-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+    min-width: 0;
+}
+
+.canvas-wiki-form .canvas-edge-input {
+    min-width: 0;
+    height: 30px;
+    font-size: 12px;
+}
+
+.canvas-wiki-form .canvas-tb-btn {
+    align-self: flex-start;
+    min-height: 28px;
+    padding: 4px 10px;
+    background: var(--canvas-accent);
+    color: #fff;
+}
+
+.canvas-wiki-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.canvas-wiki-title {
+    min-width: 0;
+    overflow: hidden;
+    color: var(--node-text, var(--canvas-text));
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+}
+
+.canvas-wiki-excerpt {
+    display: -webkit-box;
+    margin: 0;
+    overflow: hidden;
+    color: var(--canvas-text-muted);
+    font-size: 11.5px;
+    line-height: 1.35;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+}
+
+.canvas-wiki-status {
+    color: var(--canvas-text-muted);
+    font-size: 11px;
 }
 
 .canvas-wiki-link-btn {

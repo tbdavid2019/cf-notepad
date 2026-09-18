@@ -2,6 +2,8 @@
 
 ## [2026-09-17]
 
+- **🧩 修復 Wiki、外部連結與群組卡片操作 (Wiki, Link & Group Node Fixes)**：Wiki 節點支援站內路徑與 share URL 預覽，外部連結與 Wiki 表單改為完整寬度排版；file/link 卡片提高預設高度；群組標題恢復拖曳，編輯 input 保留 `nodrag`，NodeResizer 可正常調整尺寸。
+
 - **📱 修復手機 Canvas 右上角三個浮動按鈕 (Mobile Canvas Floating Actions)**：修正全局 SVG cascade 將 Lucide 圖示縮成 `3px` 的問題；手機按鈕採 `44px` 觸控區、圖示 `20px`，並加入 safe-area 間距與 `v=3.0` 快取版本。
 
 - **🐛 修復 Canvas 關係線、草稿恢復與底部空白區 (Canvas Connection, Draft Recovery & Layout Fixes)**：
