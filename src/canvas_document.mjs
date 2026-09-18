@@ -60,14 +60,23 @@ function isPlainObject(value) {
 
 function normalizeNode(node) {
     if (!isPlainObject(node)) return node
-    if (node.type !== 'sticky') return node
-
-    const david888 = isPlainObject(node.david888) ? node.david888 : {}
-    return {
-        ...node,
-        type: 'text',
-        david888: { ...david888, cardType: 'sticky' },
+    if (node.type === 'sticky') {
+        const david888 = isPlainObject(node.david888) ? node.david888 : {}
+        return {
+            ...node,
+            type: 'text',
+            david888: { ...david888, cardType: 'sticky' },
+        }
     }
+    if (node.type === 'asset') {
+        const david888 = isPlainObject(node.david888) ? node.david888 : {}
+        return {
+            ...node,
+            type: 'file',
+            david888: { ...david888, subType: 'asset' },
+        }
+    }
+    return node
 }
 
 export function normalizeCanvasDocument(value) {
@@ -161,6 +170,12 @@ function validateNode(node, seenIds) {
         if (!isPlainObject(node.david888)) throw new TypeError('david888 extension must be an object')
         if (node.david888.cardType !== undefined && node.david888.cardType !== 'sticky') {
             throw new TypeError('unsupported david888 cardType')
+        }
+        if (node.david888.subType !== undefined && !['asset', 'wiki'].includes(node.david888.subType)) {
+            throw new TypeError('unsupported david888 subType')
+        }
+        if (node.david888.asset !== undefined && !isPlainObject(node.david888.asset)) {
+            throw new TypeError('david888 asset must be an object')
         }
     }
 }

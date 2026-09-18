@@ -26,6 +26,16 @@ export function resolveColorHex(color) {
     return map[str] || str
 }
 
+export function isAssetUrlOrExtension(file) {
+    if (!file || typeof file !== 'string') return false
+    const clean = file.split('?')[0].split('#')[0].toLowerCase()
+    return /\.(png|jpe?g|gif|webp|svg|bmp|ico|mp4|webm|mov|mkv|avi|mp3|wav|m4a|aac|ogg|flac|opus|pdf|docx?|xlsx?|pptx?|zip|rar|7z|tar|gz)$/.test(clean) ||
+           clean.includes('s3.wiki.david888.com') ||
+           clean.includes('box.david888.com') ||
+           clean.includes('box.aiurl.tw') ||
+           clean.includes('box.glsoft.ai')
+}
+
 export function jsonCanvasToStoreState(doc) {
     if (!doc || typeof doc !== 'object') {
         return { nodes: [], edges: [] }
@@ -56,22 +66,28 @@ export function jsonCanvasToStoreState(doc) {
         } = node
 
         const isSticky = type === 'sticky' || david888?.cardType === 'sticky'
+        const isAsset = type === 'asset' || david888?.subType === 'asset' || Boolean(david888?.asset) || (type === 'file' && isAssetUrlOrExtension(file))
         const effectiveType = isSticky
             ? 'sticky'
-            : ['file', 'link', 'group'].includes(type)
-                ? type
-                : 'text'
+            : isAsset
+                ? 'asset'
+                : ['file', 'link', 'group'].includes(type)
+                    ? type
+                    : 'text'
 
         const defaults = NODE_DIMENSIONS[effectiveType] || NODE_DIMENSIONS.text
         const width = Number.isInteger(rawWidth) && rawWidth > 0 ? rawWidth : defaults.width
         const parsedHeight = Number.isInteger(rawHeight) && rawHeight > 0 ? rawHeight : defaults.height
-        const height = ['file', 'link'].includes(effectiveType) && parsedHeight < defaults.minHeight
+        const height = ['file', 'link', 'asset'].includes(effectiveType) && parsedHeight < defaults.minHeight
             ? defaults.height
             : parsedHeight
 
         const nodeDavid888 = david888 && typeof david888 === 'object' ? { ...david888 } : {}
         if (isSticky) {
             nodeDavid888.cardType = 'sticky'
+        }
+        if (isAsset) {
+            nodeDavid888.subType = 'asset'
         }
         const effectiveNodeType = nodeDavid888.nodeType || (isSticky ? 'sticky' : undefined) || getNodeTypeConfig(null, color)?.id || 'note'
         nodeDavid888.nodeType = effectiveNodeType
@@ -211,6 +227,21 @@ export function storeStateToJsonCanvas(state) {
                     cardType: 'sticky',
                 },
             }
+        }
+
+        if (node.type === 'asset' || node.data?.david888?.subType === 'asset') {
+            const nodeDavid888 = {
+                ...david888,
+                subType: 'asset',
+            }
+            const out = {
+                ...base,
+                type: 'file',
+                file: node.data?.file ?? '',
+            }
+            if (node.data?.subpath) out.subpath = node.data.subpath
+            if (Object.keys(nodeDavid888).length > 0) out.david888 = nodeDavid888
+            return out
         }
 
         if (node.type === 'file') {

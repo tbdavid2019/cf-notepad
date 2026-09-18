@@ -8,6 +8,18 @@
   - **雙軌容錯架構 (`resolveAiBinding`)**：在 `src/index.js` 實作 `resolveAiBinding(env)` 統一介面，優先使用 `env.AI`；若未配置或處於控制平面異常期，自動平滑降級調用 `env.GROQ_API_KEY`（採用 `openai/gpt-oss-20b` 與 `openai/gpt-oss-120b` 生產級模型），確保音訊智慧排版、劃線讀者助理與 `/:path/ai-format` 功能 100% 正常運作，零中斷。
   - **生產環境驗證**：成功部署至 Cloudflare Workers，經端對端實機測試 `POST /test-ai-note/ai-format` 確認排版推論功能秒級響應並格式化成功。
 
+- **📦 Canvas 圖片／檔案資源節點 (Canvas Resource & Asset Nodes with R2 & 888box)**：
+  - **新增擴充入口**：在 Canvas 工具列「新增」選單中加入「圖片／檔案資源」入口，並支援直接拖曳任意檔案至畫布表面自動建立資源節點並在座標處上傳。
+  - **雙軌儲存管線**：圖片檔案（`image/*`）自動導流至既有 R2 儲存服務；文件、音訊、影片與壓縮檔自動經由多層容錯的 888box API（`box.david888.com` / `box.aiurl.tw` / `box.glsoft.ai`）完成上傳。
+  - **標準 JSON Canvas 1.0 相容**：嚴格保存為標準 `type: 'file'`，並將檔案元資料完整記錄於 `david888.asset`（檔名、MIME 類型、檔案大小與儲存服務商 `r2` / `888box`）。
+  - **MIME 智慧渲染**：
+    - **圖片**：呈現等比縮放預覽圖與漸層資訊遮罩（檔名、大小與儲存商）。
+    - **音訊**：呈現專屬音訊圖示、檔名、大小標籤與原生 `<audio controls>` 播放器。
+    - **影片**：內嵌原生 `<video controls>` 播放器與多媒體元資料。
+    - **文件／檔案**：顯示專業檔案卡片、檔名、大小與一鍵「下載檔案 ↗」按鈕。
+  - **完整節點生命週期操作**：保留四邊雙向關係錨點 (`NodeHandles`)、角落 `NodeResizer` 縮放、右上角「替換檔案」重新上傳、開新視窗檢視、節點複製與刪除。
+  - **靜態資產版本**：Canvas bundle 與樣式版本號遞增至 `v=3.6`。
+
 - **🔗 外部連結 OG 預覽 API**：新增 `/api/url-meta`，安全驗證公開 HTTP(S) URL 與 redirect，讀取 `og:title`、`og:description`、`og:image`、`og:site_name` 與 canonical URL，Link node 會快取預覽資料到 `david888.ogPreview`。
 
 ## [2026-09-17]

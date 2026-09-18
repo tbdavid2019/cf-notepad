@@ -14,16 +14,19 @@ import {
 import { MarkdownNode } from '../Node/MarkdownNode.jsx'
 import { StickyNode } from '../Node/StickyNode.jsx'
 import { WikiNode } from '../Node/WikiNode.jsx'
+import { AssetNode } from '../Node/AssetNode.jsx'
 import { LinkNode } from '../Node/LinkNode.jsx'
 import { GroupNode } from '../Node/GroupNode.jsx'
 import { CanvasEdge } from '../Edge/CanvasEdge.jsx'
 import { setReactFlowInstance } from './viewportHelpers.mjs'
 import { selectNodes, selectEdges, selectIsEdit } from '../../store/selectors.mjs'
+import { uploadCanvasAsset } from '../../model/assetUpload.mjs'
 
 const NODE_TYPES = {
     text: MarkdownNode,
     sticky: StickyNode,
     file: WikiNode,
+    asset: AssetNode,
     link: LinkNode,
     group: GroupNode,
 }
@@ -202,8 +205,74 @@ export function Diagram({ store }) {
         store.getState().clearSelection()
     }, [store])
 
+    const handleCanvasDragOver = useCallback((e) => {
+        if (!isEdit) return
+        if (e.dataTransfer?.types?.includes('Files')) {
+            e.preventDefault()
+            e.dataTransfer.dropEffect = 'copy'
+        }
+    }, [isEdit])
+
+    const handleCanvasDrop = useCallback(async (e) => {
+        if (!isEdit) return
+        const files = Array.from(e.dataTransfer?.files || [])
+        if (files.length === 0) return
+
+        e.preventDefault()
+        e.stopPropagation()
+
+        const dropPos = reactFlowInstance.screenToFlowPosition({
+            x: e.clientX,
+            y: e.clientY,
+        })
+
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i]
+            const posX = Math.round(dropPos.x + i * 40)
+            const posY = Math.round(dropPos.y + i * 40)
+
+            const tempId = `node-${Date.now()}-${i}`
+            store.getState().createNode({
+                id: tempId,
+                type: 'asset',
+                x: posX,
+                y: posY,
+                david888: {
+                    subType: 'asset',
+                    asset: {
+                        name: file.name,
+                        size: file.size,
+                    },
+                },
+            })
+
+            uploadCanvasAsset(file)
+                .then(result => {
+                    store.getState().updateNodeContent(tempId, {
+                        file: result.url,
+                        david888: {
+                            subType: 'asset',
+                            asset: {
+                                name: result.name,
+                                mime: result.mime,
+                                size: result.size,
+                                provider: result.provider,
+                            },
+                        },
+                    })
+                })
+                .catch(err => {
+                    console.error('[Diagram] Dropped asset upload error:', err)
+                })
+        }
+    }, [isEdit, reactFlowInstance, store])
+
     return (
-        <div className="canvas-v2-container">
+        <div
+            className="canvas-v2-container"
+            onDragOver={handleCanvasDragOver}
+            onDrop={handleCanvasDrop}
+        >
             <ReactFlow
                 nodes={nodesWithData}
                 edges={edgesWithData}

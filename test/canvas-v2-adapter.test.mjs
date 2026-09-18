@@ -64,6 +64,7 @@ test('round-trips all 5 node types: text, sticky, file, link, group', () => {
             { id: 'n-file', type: 'file', x: 10, y: 220, width: 280, height: 132, file: 'wiki-target', subpath: '#section' },
             { id: 'n-link', type: 'link', x: 310, y: 220, width: 280, height: 132, url: 'https://example.com/docs' },
             { id: 'n-group', type: 'group', x: 0, y: 0, width: 620, height: 400, label: 'Research Group', background: 'https://example.com/bg.png', backgroundStyle: 'cover' },
+            { id: 'n-asset', type: 'file', x: 10, y: 380, width: 320, height: 240, file: 'https://s3.wiki.david888.com/images/cat.png', david888: { subType: 'asset', asset: { name: 'cat.png', mime: 'image/png', size: 2048, provider: 'r2' } } },
         ],
         edges: [
             {
@@ -97,6 +98,7 @@ test('round-trips all 5 node types: text, sticky, file, link, group', () => {
     assert.equal(storeState.nodes.find(n => n.id === 'n-file').type, 'file')
     assert.equal(storeState.nodes.find(n => n.id === 'n-link').type, 'link')
     assert.equal(storeState.nodes.find(n => n.id === 'n-group').type, 'group')
+    assert.equal(storeState.nodes.find(n => n.id === 'n-asset').type, 'asset')
 
     const exported = storeStateToJsonCanvas(storeState)
     assert.doesNotThrow(() => validateCanvasDocument(exported))

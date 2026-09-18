@@ -155,6 +155,11 @@
       "id": "infinite-canvas-editor",
       "zh-TW": "小訣竅：Canvas v2 採 Ameliorate 開源架構與 Zustand 狀態管理，滑鼠移到卡片邊緣即可拖曳四邊連線點建立關係線；選取卡片可使用 NodeToolbar 調整色票、複製與刪除，選取連線可透過 EdgeToolbar 原地編輯文字與樣式。重新整理時，未同步的本機 Canvas 草稿會自動恢復。",
       "en-US": "Tip: Canvas v2 adopts the Ameliorate architecture and Zustand state management. Hover a card edge and drag a 4-sided handle to create a relationship; select cards for NodeToolbar actions and edges for inline labels and styles. Unsynced local Canvas drafts are restored after refresh."
+    },
+    {
+      "id": "canvas-asset-node",
+      "zh-TW": "小訣竅：Canvas 支援拖曳或新增「圖片／檔案資源」卡片！圖片自動走 R2 上傳，影音與文件自動走 888box 備援，卡片會依 MIME 類型自動顯示圖片預覽、音訊播放器、影片播放器或下載連結。",
+      "en-US": "Tip: Canvas supports dragging or adding 'Asset Resource' cards! Images upload to R2, while media and documents route to 888box. Cards adaptively render image previews, audio players, video players, or download links."
     }
   ]
 }

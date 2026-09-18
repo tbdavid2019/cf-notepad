@@ -12,6 +12,7 @@ import {
     BookOpen,
     ExternalLink,
     Boxes,
+    Paperclip,
 } from 'lucide-react'
 
 export const NODE_LUCIDE_ICONS = {
@@ -28,6 +29,7 @@ export const NODE_LUCIDE_ICONS = {
     wiki: BookOpen,
     link: ExternalLink,
     group: Boxes,
+    asset: Paperclip,
 }
 
 export function NodeLucideIcon({ type = 'note', size = 12, className = '' }) {

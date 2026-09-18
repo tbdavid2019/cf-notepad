@@ -158,6 +158,33 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                 role="menuitem"
                 className="canvas-menu-item"
                 onClick={() => {
+                    onAddNode?.({ type: 'asset' })
+                    onClose?.()
+                }}
+            >
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#e0f2fe',
+                        color: '#0369a1',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #bae6fd',
+                    }}
+                >
+                    <NodeLucideIcon type="asset" size={12} />
+                </span>
+                <span>{zh ? '圖片／檔案資源' : 'Image / File Asset'}</span>
+            </button>
+
+            <button
+                type="button"
+                role="menuitem"
+                className="canvas-menu-item"
+                onClick={() => {
                     onAddNode?.({ type: 'link' })
                     onClose?.()
                 }}

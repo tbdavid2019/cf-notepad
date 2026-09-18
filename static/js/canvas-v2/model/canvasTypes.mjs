@@ -9,6 +9,7 @@ export const NODE_DIMENSIONS = {
     file: { width: 280, height: 132, minWidth: 200, minHeight: 112 },
     link: { width: 280, height: 132, minWidth: 200, minHeight: 112 },
     group: { width: 440, height: 260, minWidth: 200, minHeight: 120 },
+    asset: { width: 320, height: 240, minWidth: 220, minHeight: 140 },
 }
 
 export const AMELIORATE_NODE_TYPES = {
@@ -123,6 +124,20 @@ export const AMELIORATE_NODE_TYPES = {
         borderLight: '#e2e8f0',
         borderDark: '#334155',
         textColor: '#0f172a',
+    },
+    asset: {
+        id: 'asset',
+        name: 'Asset',
+        nameZh: '資源檔案',
+        icon: '📎',
+        color: '#0284c7',
+        borderColor: '#bae6fd',
+        badgeBg: '#e0f2fe',
+        bgLight: '#ffffff',
+        bgDark: '#082f49',
+        borderLight: '#bae6fd',
+        borderDark: '#0369a1',
+        textColor: '#0369a1',
     },
 }
 
