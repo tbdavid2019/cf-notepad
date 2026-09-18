@@ -23,5 +23,7 @@ await build({
 // optional collaboration features. This Worker uses local persistence only;
 // remove the upstream public config before the asset enters our repository.
 const bundle = readFileSync(outfile, 'utf8')
-const sanitizedBundle = bundle.replace(/VITE_APP_FIREBASE_CONFIG:'[^']*'/g, "VITE_APP_FIREBASE_CONFIG:'{}'")
+const sanitizedBundle = bundle
+    .replace(/VITE_APP_FIREBASE_CONFIG:'[^']*'/g, "VITE_APP_FIREBASE_CONFIG:'{}'")
+    .replace(/cu\(window,"unload",this\.onUnload,!1\)/g, 'cu(window,"pagehide",this.onUnload,!1)')
 if (sanitizedBundle !== bundle) writeFileSync(outfile, sanitizedBundle)
