@@ -2,6 +2,14 @@
 
 ## [2026-09-18]
 
+- **🚀 Canvas P1／P2 互動與知識圖譜功能完成 (Canvas Multi-select, Export, Search, WikiLink Graph & Camera Tour)**：
+  - **框選多選**：支援滑鼠框選、Cmd／Ctrl 多選、多卡片拖曳、批次換色與批次刪除；手機保留獨立畫布操作區與觸控適配。
+  - **圖片匯出**：File Menu 新增 SVG、PNG 匯出，依節點 bounds 自動計算畫布尺寸並以 2x pixel ratio 產生檔案。
+  - **畫布搜尋**：支援 Cmd／Ctrl+F，搜尋卡片文字、標籤、Wiki path、URL 與資源檔名，點擊結果自動導航至卡片。
+  - **WikiLink 關聯圖**：File Menu 可輸入 Markdown 筆記路徑，解析 `[[WikiLink]]`、建立 Wiki file nodes 與帶箭頭關係線；WebMCP 新增 `generate_canvas_from_wikilinks`。
+  - **Camera Tour**：右上角新增畫布導覽控制，依節點座標或 `david888.cameraTour.order` 逐張平移／縮放播放。
+  - **依賴維護**：升級 `cookie@2.0.1`、BlockNote `0.54.2`、Wrangler `4.134.0`，加入 Cookie v2 相容層與邊界測試；加入 `html-to-image@1.11.13` 支援圖片匯出。
+
 - **📐 Canvas 新增選單左側基準線修正 (Canvas Add Menu Alignment)**：統一 Thought Nodes 與 Extensions 的 row 寬度、左對齊規則與 28px icon 欄位，六個擴充項目的文字現在共享同一條起始基準線；Canvas bundle cache version 更新至 `v=3.7`。
 
 - **🤖 Canvas Agent Contract 與 Book 模式整合 (WebMCP, REST API, Skill & LLM Discovery)**：

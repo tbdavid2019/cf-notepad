@@ -61,6 +61,7 @@ export function createCanvasStore(initialDoc = { nodes: [], edges: [] }, { isEdi
         updateNodeContent: (id, patch) => set(state => commands.updateNodeContent(state, id, patch)),
         updateNodeFrame: (id, frame) => set(state => commands.updateNodeFrame(state, id, frame)),
         setNodeColor: (id, color) => set(state => commands.setNodeColor(state, id, color)),
+        setNodesColor: (ids, color) => set(state => commands.setNodesColor(state, ids, color)),
         duplicateNodes: (ids) => set(state => commands.duplicateNodes(state, ids)),
         deleteNodes: (ids) => set(state => commands.deleteNodes(state, ids)),
         connectNodes: (connection) => set(state => commands.connectNodes(state, connection)),

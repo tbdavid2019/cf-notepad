@@ -180,6 +180,25 @@ export function setNodeColor(state, id, color) {
     return updateNodeContent(state, id, { color })
 }
 
+export function setNodesColor(state, ids, color) {
+    const targetIds = new Set(Array.isArray(ids) ? ids : [ids])
+    if (targetIds.size === 0) return state
+
+    const selectedNodes = state.nodes.filter(node => targetIds.has(node.id))
+    if (selectedNodes.length === 0) return state
+
+    const snapshot = takeSnapshot(state)
+    const nextHistory = recordHistoryStep(state.history, snapshot)
+    return {
+        ...state,
+        nodes: state.nodes.map(node => targetIds.has(node.id)
+            ? { ...node, data: { ...node.data, color } }
+            : node),
+        history: nextHistory,
+        dirty: true,
+    }
+}
+
 export function duplicateNodes(state, ids) {
     const targetIds = new Set(Array.isArray(ids) ? ids : [ids])
     const toDuplicate = state.nodes.filter(n => targetIds.has(n.id))

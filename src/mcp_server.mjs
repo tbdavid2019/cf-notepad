@@ -9,6 +9,7 @@ import { canPersistNoteContent } from './save_policy.mjs'
 import { getNoteHistoryConfig, saveNoteHistoryVersionIfNeeded } from './note_history.mjs'
 import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
 import { parseCanvasDocument, validateCanvasDocument } from './canvas_document.mjs'
+import { buildWikiLinkCanvas } from '../static/js/canvas-v2/model/wikiGraphGenerator.mjs'
 
 export const MCP_SERVER_INFO = {
     name: 'david888-wiki',
@@ -121,6 +122,21 @@ export const MCP_TOOLS_DEFINITIONS = [
                 document: { type: 'object', description: 'Complete JSON Canvas document.' },
             },
             required: ['document'],
+        },
+    },
+    {
+        name: 'generate_canvas_from_wikilinks',
+        description: 'Read a Markdown note, parse [[WikiLink]] references, create a JSON Canvas relationship graph, and publish it as a new Canvas note.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                source_path: { type: 'string', description: 'Markdown note path containing [[WikiLink]] references.' },
+                canvas_path: { type: 'string', description: 'Target Canvas path. Defaults to <source_path>-graph.' },
+                password: { type: 'string', description: 'Optional password for the source note and target edit lock.' },
+                make_private: { type: 'boolean', description: 'Keep the generated Canvas private when true.' },
+                theme: { type: 'string', description: 'Optional Canvas theme.' },
+            },
+            required: ['source_path'],
         },
     },
     {
@@ -440,6 +456,28 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             } catch (error) {
                 return { isError: true, text: `Invalid Canvas document: ${error.message}` }
             }
+        }
+
+        case 'generate_canvas_from_wikilinks': {
+            const sourcePath = String(args.source_path || '').trim()
+            if (!sourcePath) return { isError: true, text: 'Error: "source_path" parameter is required.' }
+            const { value: markdown, metadata } = await driverQueryNote(sourcePath)
+            if (markdown === null && (!metadata || Object.keys(metadata).length === 0)) {
+                return { isError: true, text: 'Error: Markdown note "' + sourcePath + '" not found.' }
+            }
+            if (metadata.pw || metadata.vpw) {
+                const role = await checkPasswordRole(args.password || '', metadata)
+                if (!role) return { isError: true, text: 'Error: Password required for Markdown note "' + sourcePath + '".' }
+            }
+            const document = buildWikiLinkCanvas({ sourcePath, markdown: markdown || '' })
+            const targetPath = String(args.canvas_path || (sourcePath + '-graph')).trim()
+            return executeMcpTool('write_canvas', {
+                path: targetPath,
+                document,
+                password: args.password,
+                make_private: args.make_private,
+                theme: args.theme,
+            }, requestUrl)
         }
 
         case 'write_canvas': {

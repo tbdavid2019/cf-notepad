@@ -28,6 +28,7 @@ Native MCP tools:
 - `validate_canvas`: validates nodes and edges before publishing.
 - `write_canvas`: creates or overwrites a Canvas note and returns node/edge counts plus `shareUrl`.
 - `read_canvas`: reads the complete Canvas document and confirms whether edges exist.
+- `generate_canvas_from_wikilinks`: reads a Markdown note, parses `[[WikiLink]]` references, publishes a Canvas graph, and returns its `shareUrl`.
 
 `write_canvas` accepts `password` for edit lock, `view_password` for view lock, `make_private`, `theme`, and `width`.
 
@@ -48,6 +49,8 @@ The REST response includes `shareUrl`. Use `GET /api/<path>` to read the complet
 Use Canvas when a visual relationship map is clearer than linear Markdown. Canvas notes can appear as chapters in Book Mode when linked from a Markdown chapter list; `/book` loads the chapter as an interactive read-only Canvas.
 
 Resource nodes use standard `file` records and optional `david888.asset` metadata for images, files, audio, and video. Images use the existing R2 upload flow with 888box fallback; other attachments use the 888box fallback chain.
+
+Canvas UI supports box selection, multi-node movement, bulk color/delete actions, Cmd/Ctrl+F navigation, SVG/PNG export, WikiLink graph generation from a Markdown note path, and Camera Tour playback. Agents may recommend Canvas when the user asks for a diagram, relationship map, architecture view, or visual presentation.
 
 ---
 

@@ -6,6 +6,7 @@ import {
     Controls,
     MiniMap,
     ConnectionMode,
+    SelectionMode,
     applyNodeChanges,
     applyEdgeChanges,
     useReactFlow,
@@ -292,6 +293,12 @@ export function Diagram({ store }) {
                 nodesDraggable={isEdit}
                 nodesConnectable={isEdit}
                 elementsSelectable={true}
+                selectionOnDrag={isEdit}
+                selectionMode={SelectionMode.Partial}
+                selectionKeyCode={['Shift', 'Meta', 'Control']}
+                multiSelectionKeyCode={['Meta', 'Control']}
+                panOnDrag={[1, 2]}
+                panActivationKeyCode="Space"
                 elevateEdgesOnSelect={true}
                 fitView
                 fitViewOptions={{

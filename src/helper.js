@@ -1,5 +1,5 @@
 import jwt from '@tsndr/cloudflare-worker-jwt'
-import Cookies from 'cookie'
+import { Cookies } from './cookie_compat.mjs'
 import * as TEMPL from './template.js'
 import { SUPPORTED_LANG, getGaMeasurementId, getSalt, getSecret } from './constant.js'
 import { resolvePasswordRole } from './password_policy.mjs'

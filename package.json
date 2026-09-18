@@ -5,7 +5,7 @@
   "license": "MIT",
   "devDependencies": {
     "esbuild": "^0.28.1",
-    "wrangler": "^4.120.0"
+    "wrangler": "^4.134.0"
   },
   "private": true,
   "scripts": {
@@ -25,9 +25,9 @@
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {
-    "@blocknote/core": "^0.53.0",
-    "@blocknote/mantine": "^0.53.0",
-    "@blocknote/react": "^0.53.0",
+    "@blocknote/core": "^0.54.2",
+    "@blocknote/mantine": "^0.54.2",
+    "@blocknote/react": "^0.54.2",
     "@firecrawl/anydoc-wasm": "^0.1.6",
     "@mantine/core": "^9.5.1",
     "@mantine/hooks": "^9.5.1",
@@ -36,8 +36,9 @@
     "@takumi-rs/helpers": "^2.12.0",
     "@tsndr/cloudflare-worker-jwt": "^1.1.7",
     "@xyflow/react": "^12.11.6",
-    "cookie": "^0.5.0",
+    "cookie": "^2.0.1",
     "dayjs": "^1.11.2",
+    "html-to-image": "^1.11.13",
     "itty-router": "^2.6.1",
     "jsdom": "^29.1.1",
     "lucide-react": "^1.47.0",
@@ -45,5 +46,15 @@
     "react-dom": "^19.2.8",
     "takumi-pdf": "^0.11.3",
     "zustand": "^4.5.7"
+  },
+  "overrides": {
+    "@tiptap/core": "3.31.3",
+    "@tiptap/extension-bold": "3.31.3",
+    "@tiptap/extension-code": "3.31.3",
+    "@tiptap/extension-italic": "3.31.3",
+    "@tiptap/extension-strike": "3.31.3",
+    "@tiptap/extension-text": "3.31.3",
+    "@tiptap/extension-underline": "3.31.3",
+    "@tiptap/extensions": "3.31.3"
   }
 }

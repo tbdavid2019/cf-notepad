@@ -51,11 +51,10 @@ export function CanvasEditorView({ store }) {
     return (
         <ReactFlowProvider>
             <div className="canvas-v2-root">
-                <TopFloatingBar selectedNode={selectedNode} />
+                <TopFloatingBar selectedNode={selectedNode} store={store} />
                 <Diagram store={store} />
                 <MainToolbar store={store} onFitView={() => fitView({ padding: 0.2, duration: 400 })} />
             </div>
         </ReactFlowProvider>
     )
 }
-

@@ -2,6 +2,8 @@ import React, { useState } from 'react'
 import { Plus, Undo2, Redo2, Maximize2, FolderDown, Lock } from 'lucide-react'
 import { AddMenu } from './AddMenu.jsx'
 import { FileMenu } from './FileMenu.jsx'
+import { SelectionToolbar } from './SelectionToolbar.jsx'
+import { CanvasSearch } from './CanvasSearch.jsx'
 import { getViewportCenter } from '../Diagram/viewportHelpers.mjs'
 import { NODE_DIMENSIONS } from '../../model/canvasTypes.mjs'
 import {
@@ -92,7 +94,9 @@ export function MainToolbar({ store, onFitView }) {
     }
 
     return (
-        <div className="canvas-main-toolbar nodrag nopan" onClick={(e) => e.stopPropagation()}>
+        <>
+            <SelectionToolbar store={store} />
+            <div className="canvas-main-toolbar nodrag nopan" onClick={(e) => e.stopPropagation()}>
             {isEdit ? (
                 <>
                     <div style={{ position: 'relative' }}>
@@ -163,6 +167,8 @@ export function MainToolbar({ store, onFitView }) {
                 <span>{zh ? '置中' : 'Fit'}</span>
             </button>
 
+            <CanvasSearch store={store} />
+
             <div className="canvas-toolbar-divider" />
 
             <div style={{ position: 'relative' }}>
@@ -202,6 +208,7 @@ export function MainToolbar({ store, onFitView }) {
                     !
                 </span>
             )}
-        </div>
+            </div>
+        </>
     )
 }
