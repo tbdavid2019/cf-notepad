@@ -103,7 +103,7 @@ export function FlowNode({
             <NodeResizer
                 minWidth={minWidth}
                 minHeight={minHeight}
-                isVisible={selected && isEdit}
+                isVisible={isEdit && (selected || isEditing)}
                 lineClassName="canvas-resizer-line"
                 handleClassName="canvas-resizer-handle"
                 onResizeStart={data.onResizeStart}

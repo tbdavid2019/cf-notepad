@@ -3,6 +3,9 @@
 ## [2026-09-17]
 
 - **🧩 修復 Wiki、外部連結與群組卡片操作 (Wiki, Link & Group Node Fixes)**：Wiki 節點支援站內路徑與 share URL 預覽，外部連結與 Wiki 表單改為完整寬度排版；file/link 卡片提高預設高度；群組標題恢復拖曳，編輯 input 保留 `nodrag`，NodeResizer 可正常調整尺寸。
+- **📐 修復舊 Wiki／Link 節點表單尺寸遷移**：載入過小的既有 file/link 節點時自動提升至可容納表單的高度，並強制表單輸入框滿寬，避免 placeholder、按鈕與捲軸錯位。
+- **⛶ 編輯中的 Canvas 節點顯示 resize handles**：NodeResizer 現在在節點選取或內容編輯狀態都顯示，Wiki、Link、Group 與一般卡片可直接拖曳邊角調整大小。
+- **⌨️ Wiki／外部連結欄位改為失焦自動儲存**：移除多餘的「儲存」按鈕，Enter 儲存、失焦儲存、Escape 取消，縮短表單高度並避免卡片排版溢出。
 
 - **📱 修復手機 Canvas 右上角三個浮動按鈕 (Mobile Canvas Floating Actions)**：修正全局 SVG cascade 將 Lucide 圖示縮成 `3px` 的問題；手機按鈕採 `44px` 觸控區、圖示 `20px`，並加入 safe-area 間距與 `v=3.0` 快取版本。
 

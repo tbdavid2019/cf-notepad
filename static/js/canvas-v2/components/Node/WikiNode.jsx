@@ -128,19 +128,13 @@ export function WikiNode(props) {
                             style={{ width: '100%', boxSizing: 'border-box' }}
                             value={localFile}
                             onChange={(e) => setLocalFile(e.target.value)}
+                            onBlur={handleSave}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleSave()
                                 if (e.key === 'Escape') setIsEditing(false)
                             }}
                             placeholder={zh ? '輸入文章路徑 (例如: my-note)...' : 'Enter note path (e.g. my-note)...'}
                         />
-                        <button
-                            type="button"
-                            className="canvas-tb-btn"
-                            onClick={handleSave}
-                        >
-                            {zh ? '儲存' : 'Save'}
-                        </button>
                     </div>
                 ) : (
                     <div className="canvas-wiki-preview">

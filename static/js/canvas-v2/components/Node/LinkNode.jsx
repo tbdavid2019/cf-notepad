@@ -63,19 +63,13 @@ export function LinkNode(props) {
                             style={{ width: '100%', boxSizing: 'border-box' }}
                             value={localUrl}
                             onChange={(e) => setLocalUrl(e.target.value)}
+                            onBlur={handleSave}
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleSave()
                                 if (e.key === 'Escape') setIsEditing(false)
                             }}
                             placeholder="https://"
                         />
-                        <button
-                            type="button"
-                            className="canvas-tb-btn"
-                            onClick={handleSave}
-                        >
-                            {zh ? '儲存' : 'Save'}
-                        </button>
                     </div>
                 ) : (
                     <div className="canvas-wiki-preview">

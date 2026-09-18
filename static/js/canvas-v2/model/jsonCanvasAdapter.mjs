@@ -64,7 +64,10 @@ export function jsonCanvasToStoreState(doc) {
 
         const defaults = NODE_DIMENSIONS[effectiveType] || NODE_DIMENSIONS.text
         const width = Number.isInteger(rawWidth) && rawWidth > 0 ? rawWidth : defaults.width
-        const height = Number.isInteger(rawHeight) && rawHeight > 0 ? rawHeight : defaults.height
+        const parsedHeight = Number.isInteger(rawHeight) && rawHeight > 0 ? rawHeight : defaults.height
+        const height = ['file', 'link'].includes(effectiveType) && parsedHeight < defaults.minHeight
+            ? defaults.height
+            : parsedHeight
 
         const nodeDavid888 = david888 && typeof david888 === 'object' ? { ...david888 } : {}
         if (isSticky) {
