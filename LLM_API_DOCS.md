@@ -19,6 +19,36 @@ The underlying page storage can hold very large markdown pages, but that is **no
 
 Do not assume these two flows are interchangeable.
 
+## Canvas API and Agent Tools
+
+Canvas uses complete JSON Canvas 1.0 documents. Writes must send `editorFormat: "canvas"` and the full JSON document in the `text` field; Canvas does not support append writes.
+
+Native MCP tools:
+
+- `validate_canvas`: validates nodes and edges before publishing.
+- `write_canvas`: creates or overwrites a Canvas note and returns node/edge counts plus `shareUrl`.
+- `read_canvas`: reads the complete Canvas document and confirms whether edges exist.
+
+`write_canvas` accepts `password` for edit lock, `view_password` for view lock, `make_private`, `theme`, and `width`.
+
+REST Canvas write:
+
+```bash
+curl -X POST "https://wiki.david888.com/api/<path>" \\
+  -H "Content-Type: application/json" \\
+  -d '{
+    "text": "{\"nodes\":[{\"id\":\"problem\",\"type\":\"text\",\"x\":80,\"y\":80,\"width\":320,\"height\":180,\"text\":\"# Problem\"},{\"id\":\"solution\",\"type\":\"text\",\"x\":520,\"y\":80,\"width\":320,\"height\":180,\"text\":\"# Solution\"}],\"edges\":[{\"id\":\"problem-solution\",\"fromNode\":\"problem\",\"toNode\":\"solution\",\"fromSide\":\"right\",\"toSide\":\"left\",\"toEnd\":\"arrow\"}]}",
+    "editorFormat": "canvas",
+    "share": true
+  }'
+```
+
+The REST response includes `shareUrl`. Use `GET /api/<path>` to read the complete JSON Canvas document. Agents can choose the REST contract or native MCP tools according to their runtime.
+
+Use Canvas when a visual relationship map is clearer than linear Markdown. Canvas notes can appear as chapters in Book Mode when linked from a Markdown chapter list; `/book` loads the chapter as an interactive read-only Canvas.
+
+Resource nodes use standard `file` records and optional `david888.asset` metadata for images, files, audio, and video. Images use the existing R2 upload flow with 888box fallback; other attachments use the 888box fallback chain.
+
 ---
 
 ## 🔌 Model Context Protocol (MCP) Integration (Claude Desktop, Cursor, WebMCP)

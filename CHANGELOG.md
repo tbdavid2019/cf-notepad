@@ -2,6 +2,12 @@
 
 ## [2026-09-18]
 
+- **🤖 Canvas Agent Contract 與 Book 模式整合 (WebMCP, REST API, Skill & LLM Discovery)**：
+  - **原生 WebMCP 工具**：新增 `validate_canvas`、`write_canvas`、`read_canvas`，LLM agent 可驗證節點與關係線、建立完整 JSON Canvas、讀回 edge 數量與公開 `shareUrl`。
+  - **REST／OpenAPI 對應**：`POST /api/{path}` 支援 `editorFormat: "canvas"` 與完整 JSON Canvas 文件；`/openapi.json`、`LLM_API_DOCS.md` 與動態 API 說明同步列出 Canvas 契約。
+  - **Agent 發現文件同步**：更新 `skills/SKILL.md`、`.agent/skills/`、`llms.txt`、`llms-full.txt` 與 README 中英雙語說明，明確提示 agent 在關係圖、架構圖、概念圖或卡片關聯需求下可建立 Canvas。
+  - **Book Mode 相容**：Markdown 章節清單可加入 Canvas path 或 Share URL，`/book` 會載入唯讀互動 Canvas 章節。
+
 - **🛡️ 彈性 AI 服務容錯層與全面汰換棄用模型 (Resilient AI Provider Adapter & Purge Deprecated Llama Models)**：
   - **根本原因診斷 (Root Cause Discovered)**：經跨 4 組 Cloudflare 帳號實測驗證，Cloudflare 控制平面在特定帳號（如 `379570860738dd1757ba7f67ef2bdffe`）上發生 Worker Metadata 綁定生成器內部異常，上傳驗證時報錯 `10021: binding AI of type ai failed to generate: internal error`（直接 REST API 推論則正常）。
   - **全面清理廢棄模型 (Purge Legacy Llama Models)**：徹底從專案程式碼中移除所有已廢棄或停止維護的 Meta/Llama 模型（如 `llama-3.1-8b-instruct`, `llama-3.3-70b-instruct`），統一收斂至 `@cf/openai/gpt-oss-120b` 與 `@cf/openai/gpt-oss-20b`。

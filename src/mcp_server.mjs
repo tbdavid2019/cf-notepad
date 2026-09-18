@@ -8,12 +8,13 @@ import { DEFAULT_PREVIEW_WIDTH, normalizePreviewWidth } from './constant.js'
 import { canPersistNoteContent } from './save_policy.mjs'
 import { getNoteHistoryConfig, saveNoteHistoryVersionIfNeeded } from './note_history.mjs'
 import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
+import { parseCanvasDocument, validateCanvasDocument } from './canvas_document.mjs'
 
 export const MCP_SERVER_INFO = {
     name: 'david888-wiki',
     version: '1.0.0',
     protocolVersion: '2024-11-05',
-    description: 'David888 Wiki native MCP Server. Supports Markdown publishing, 2D slide decks (---/--), dual-pane Book Mode (/book), and rich formatting. When composing multi-article books, 2D presentations, or advanced layouts, call "get_authoring_skill_guide" or fetch "https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md" for the complete authoring SOP.',
+    description: 'David888 Wiki native MCP Server. Supports Markdown, JSON Canvas diagrams, 2D slide decks (---/--), dual-pane Book Mode (/book), and rich formatting. Use write_canvas when a visual relationship map is clearer than linear Markdown.',
 }
 
 export const MCP_TOOLS_DEFINITIONS = [
@@ -80,6 +81,46 @@ export const MCP_TOOLS_DEFINITIONS = [
                 },
             },
             required: ['path', 'text'],
+        },
+    },
+    {
+        name: 'write_canvas',
+        description: 'Create or overwrite a JSON Canvas 1.0 document with nodes and relationship edges. Use this when the user asks for a visual map, concept diagram, architecture canvas, or connected card graph. Returns the edit URL and public Share URL.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'Unique note path.' },
+                document: { type: 'object', description: 'Complete JSON Canvas document with nodes and edges.' },
+                password: { type: 'string', description: 'Optional edit password.' },
+                view_password: { type: 'string', description: 'Optional view password.' },
+                make_private: { type: 'boolean', description: 'Keep the Canvas private when true.' },
+                theme: { type: 'string', description: 'Optional Canvas theme.' },
+                width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], description: 'Optional published layout width.' },
+            },
+            required: ['path', 'document'],
+        },
+    },
+    {
+        name: 'read_canvas',
+        description: 'Read a JSON Canvas document, including its nodes, edges, metadata, and Share URL. Use this to inspect whether a relationship edge exists.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'Canvas note path.' },
+                password: { type: 'string', description: 'Optional view or edit password.' },
+            },
+            required: ['path'],
+        },
+    },
+    {
+        name: 'validate_canvas',
+        description: 'Validate a JSON Canvas document before publishing. Returns node and edge counts plus validation errors.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                document: { type: 'object', description: 'Complete JSON Canvas document.' },
+            },
+            required: ['document'],
         },
     },
     {
@@ -381,6 +422,105 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                 responseText += `\n\n---\n*Share URL:* ${shareUrl}`
             }
             return { isError: false, text: responseText }
+        }
+
+        case 'validate_canvas': {
+            try {
+                const document = args.document && typeof args.document === 'object' ? args.document : null
+                const validated = validateCanvasDocument(parseCanvasDocument(JSON.stringify(document), { allowFallback: false }))
+                return {
+                    isError: false,
+                    text: JSON.stringify({
+                        valid: true,
+                        nodeCount: validated.nodes.length,
+                        edgeCount: validated.edges.length,
+                        document: validated,
+                    }, null, 2),
+                }
+            } catch (error) {
+                return { isError: true, text: `Invalid Canvas document: ${error.message}` }
+            }
+        }
+
+        case 'write_canvas': {
+            const path = String(args.path || '').trim()
+            const document = args.document && typeof args.document === 'object' ? args.document : null
+            if (!path) return { isError: true, text: 'Error: "path" parameter is required.' }
+
+            let validated
+            try {
+                validated = validateCanvasDocument(parseCanvasDocument(JSON.stringify(document), { allowFallback: false }))
+            } catch (error) {
+                return { isError: true, text: `Invalid Canvas document: ${error.message}` }
+            }
+
+            const { value: previousContent, metadata: previousMetadata } = await driverQueryNote(path)
+            const metadata = previousMetadata || {}
+            if (metadata.pw || metadata.vpw) {
+                const role = await checkPasswordRole(args.password || '', metadata)
+                if (role !== 'edit') return { isError: true, text: `Error: Edit password required for Canvas "${path}".` }
+            }
+
+            let nextMetadata = {
+                ...metadata,
+                editorFormat: 'canvas',
+                updateAt: dayjs().unix(),
+                share: args.make_private !== true,
+                theme: args.theme || metadata.theme || 'claude-canvas',
+                width: normalizePreviewWidth(args.width, metadata.width || DEFAULT_PREVIEW_WIDTH) || DEFAULT_PREVIEW_WIDTH,
+            }
+
+            if (args.password) nextMetadata.pw = await saltPassword(args.password)
+            if (args.view_password) nextMetadata.vpw = await saltPassword(args.view_password)
+            if (nextMetadata.share === true && metadata.share !== true) nextMetadata.annotationsEnabled = true
+            if (nextMetadata.share === false) {
+                nextMetadata.publicIndex = false
+                nextMetadata.annotationsEnabled = false
+            }
+            if (!canPersistNoteContent(nextMetadata)) {
+                return { isError: true, text: 'Error: Canvas saving is currently blocked by server policy.' }
+            }
+            nextMetadata = await ensureMcpShareMetadata(path, nextMetadata)
+            const content = JSON.stringify(validated, null, 2)
+            await persistMcpNote({ path, content, metadata: nextMetadata, previousContent })
+
+            const editUrl = `${origin}/${path}`
+            const shareSlug = nextMetadata.share && (nextMetadata.shareSlug || nextMetadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
+            return {
+                isError: false,
+                text: JSON.stringify({
+                    message: 'Canvas saved successfully',
+                    path,
+                    editUrl,
+                    shareUrl,
+                    nodeCount: validated.nodes.length,
+                    edgeCount: validated.edges.length,
+                    document: validated,
+                }, null, 2),
+            }
+        }
+
+        case 'read_canvas': {
+            const path = String(args.path || '').trim()
+            if (!path) return { isError: true, text: 'Error: "path" parameter is required.' }
+            const { value, metadata } = await driverQueryNote(path)
+            if (!value && (!metadata || Object.keys(metadata).length === 0)) return { isError: true, text: `Error: Canvas "${path}" not found.` }
+            if (metadata.pw || metadata.vpw) {
+                const role = await checkPasswordRole(args.password || '', metadata)
+                if (!role) return { isError: true, text: `Error: Password required for Canvas "${path}".` }
+            }
+            try {
+                const document = validateCanvasDocument(parseCanvasDocument(value, { allowFallback: false }))
+                const shareSlug = metadata.share && (metadata.shareSlug || metadata.shareId)
+                const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
+                return {
+                    isError: false,
+                    text: JSON.stringify({ path, shareUrl, nodeCount: document.nodes.length, edgeCount: document.edges.length, document }, null, 2),
+                }
+            } catch (error) {
+                return { isError: true, text: `Stored note is not valid Canvas JSON: ${error.message}` }
+            }
         }
 
         case 'write_note': {

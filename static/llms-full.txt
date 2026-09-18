@@ -39,6 +39,16 @@
 
 ## 3. Agent Integration & Machine APIs (AI & REST 介面說明)
 
+### Canvas Agent Contract
+
+The native MCP endpoint provides `validate_canvas`, `write_canvas`, and `read_canvas`. Agents should use these tools for visual diagrams, architecture maps, concept graphs, and connected card relationships. `write_canvas` returns `shareUrl`; return that URL to the human.
+
+The REST contract also accepts `POST /api/{path}` with JSON `{ "text": "<JSON.stringify(CanvasDocument)>", "editorFormat": "canvas", "share": true }`, and `GET /api/{path}` returns the stored Canvas document. The OpenAPI contract at `/openapi.json` describes the Canvas request shape.
+
+Canvas notes are valid Book Mode chapters. Add the Canvas path or share URL to a Markdown chapter list and open `/book`; the chapter loads as a read-only interactive Canvas.
+
+Resource nodes use JSON Canvas `file` records plus optional `david888.asset` metadata for `image`, `file`, `audio`, and `video` assets. Upload images through R2 with 888box fallback, and upload other attachments through the 888box fallback chain.
+
 ### REST API Endpoints
 - **Read Note**: `GET https://wiki.david888.com/api/{path}`
   Returns raw note Markdown or JSON metadata.

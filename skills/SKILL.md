@@ -117,6 +117,14 @@ The interoperable core accepts `text`, `file`, `link`, `group`, and edge records
 }
 ```
 
+### 2.3.1 Canvas Tools for Agents and WebMCP
+
+The native MCP endpoint exposes `validate_canvas`, `write_canvas`, and `read_canvas`. Use these tools when a user asks for a visual relationship map, architecture canvas, concept graph, or connected card diagram. Return the generated `shareUrl` so the human can open the Canvas.
+
+Canvas notes can also be Book Mode chapters. Include the Canvas note path or share URL in a Markdown chapter list, then open the hub with `/book`; the chapter iframe loads the read-only interactive Canvas surface.
+
+Resource nodes use standard JSON Canvas `file` records with `david888.asset` metadata for `image`, `file`, `audio`, and `video` assets. The Canvas toolbar uploads images through R2 first and other assets through the 888box fallback chain.
+
 ### 2.4 Available Themes
 Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
 > [!IMPORTANT]
