@@ -386,6 +386,26 @@
     background: var(--canvas-paper-muted);
 }
 
+.canvas-asset-preview-image {
+    display: block;
+    width: 100%;
+    max-height: 150px;
+    border-radius: 6px;
+    object-fit: contain;
+    background: var(--canvas-paper-muted);
+}
+
+.canvas-asset-player {
+    display: block;
+    width: 100%;
+    max-height: 150px;
+    border-radius: 6px;
+}
+
+.canvas-hidden-file-input {
+    display: none !important;
+}
+
 .canvas-wiki-link-btn {
     display: inline-flex;
     align-items: center;
@@ -1165,4 +1185,3 @@
 .canvas-asset-download-btn {
     margin-top: 4px;
 }
-

@@ -76,6 +76,8 @@ export function WikiNode(props) {
     }
 
     const noteHref = resolveWikiUrl(localFile)
+    const asset = data.david888?.asset
+    const isAsset = Boolean(asset?.kind && localFile)
 
     useEffect(() => {
         if (!noteHref || isEditing) {
@@ -110,7 +112,7 @@ export function WikiNode(props) {
             minWidth={NODE_DIMENSIONS.file.minWidth}
             minHeight={NODE_DIMENSIONS.file.minHeight}
             icon="📖"
-            title={zh ? 'Wiki 筆記引用' : 'Wiki Note Reference'}
+            title={isAsset ? (asset.name || (zh ? '檔案資產' : 'Canvas Asset')) : (zh ? 'Wiki 筆記引用' : 'Wiki Note Reference')}
             isEdit={data.isEdit !== false}
             isEditing={isEditing}
             onToggleEdit={() => setIsEditing(!isEditing)}
@@ -118,8 +120,18 @@ export function WikiNode(props) {
             onDelete={data.onDelete}
             onChangeColor={data.onChangeColor}
         >
-            <div className="canvas-wiki-card">
-                {isEditing ? (
+            <div className={`canvas-wiki-card ${isAsset ? 'canvas-asset-card' : ''}`}>
+                {isAsset && !isEditing ? (
+                    <div className="canvas-wiki-preview">
+                        {asset.kind === 'image' && <img className="canvas-asset-preview-image" src={localFile} alt={asset.name || ''} loading="lazy" />}
+                        {asset.kind === 'audio' && <audio className="canvas-asset-player" controls src={localFile} />}
+                        {asset.kind === 'video' && <video className="canvas-asset-player" controls src={localFile} />}
+                        <div className="canvas-wiki-title">{asset.name || (zh ? '檔案資產' : 'Canvas Asset')}</div>
+                        <a href={localFile} target="_blank" rel="noopener noreferrer" className="canvas-wiki-link-btn nodrag">
+                            {zh ? '開啟資產 ↗' : 'Open asset ↗'}
+                        </a>
+                    </div>
+                ) : isEditing ? (
                     <div className="canvas-wiki-form nodrag">
                         <input
                             type="text"

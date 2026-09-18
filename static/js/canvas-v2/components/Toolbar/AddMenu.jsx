@@ -2,8 +2,9 @@ import React, { useRef, useEffect } from 'react'
 import { AMELIORATE_NODE_TYPES } from '../../model/canvasTypes.mjs'
 import { NodeLucideIcon } from '../Node/nodeIcons.jsx'
 
-export function AddMenu({ isOpen = false, onClose, onAddNode }) {
+export function AddMenu({ isOpen = false, onClose, onAddNode, onAddAsset }) {
     const menuRef = useRef(null)
+    const assetInputRef = useRef(null)
 
     useEffect(() => {
         if (!isOpen) return
@@ -36,6 +37,14 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
         return lang && lang.startsWith('zh')
     }
     const zh = isZh()
+
+    const handleAssetChange = async (event) => {
+        const file = event.target.files?.[0]
+        event.target.value = ''
+        if (!file) return
+        await onAddAsset?.(file)
+        onClose?.()
+    }
 
     const thoughtNodes = [
         AMELIORATE_NODE_TYPES.problem,
@@ -206,6 +215,38 @@ export function AddMenu({ isOpen = false, onClose, onAddNode }) {
                 </span>
                 <span>{zh ? '外部網頁連結' : 'Web Link'}</span>
             </button>
+
+            <button
+                type="button"
+                role="menuitem"
+                className="canvas-menu-item"
+                onClick={() => assetInputRef.current?.click()}
+            >
+                <span
+                    className="canvas-menu-icon"
+                    style={{
+                        backgroundColor: '#eff6ff',
+                        color: '#1d4ed8',
+                        padding: '3px 6px',
+                        borderRadius: '4px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        border: '1px solid #bfdbfe',
+                    }}
+                >
+                    <NodeLucideIcon type="file" size={12} />
+                </span>
+                <span>{zh ? '上傳圖片／檔案' : 'Upload Asset'}</span>
+            </button>
+
+            <input
+                ref={assetInputRef}
+                className="canvas-hidden-file-input"
+                type="file"
+                accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip,.txt,.md"
+                onChange={handleAssetChange}
+            />
 
             <button
                 type="button"

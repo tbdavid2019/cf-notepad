@@ -34,6 +34,63 @@ export function MainToolbar({ store, onFitView }) {
         store.getState().createNode({ ...opts, x, y })
     }
 
+    const uploadAsset = async (file) => {
+        const isImage = file.type.startsWith('image/')
+        const endpoints = isImage
+            ? ['/upload', 'https://box.david888.com/api.php?action=upload', 'https://box.aiurl.tw/api.php?action=upload', 'https://box.glsoft.ai/api.php?action=upload']
+            : ['https://box.david888.com/api.php?action=upload', 'https://box.aiurl.tw/api.php?action=upload', 'https://box.glsoft.ai/api.php?action=upload']
+
+        let lastError
+        for (const endpoint of endpoints) {
+            try {
+                const form = new FormData()
+                form.append(endpoint === '/upload' ? 'image' : 'file', file)
+                if (endpoint !== '/upload') form.append('title', file.name || 'canvas-asset')
+                const response = await fetch(endpoint, { method: 'POST', body: form })
+                const payload = await response.json()
+                const url = payload?.data?.url || (typeof payload?.data === 'string' ? payload.data : '') || payload?.url
+                if (response.ok && url && (endpoint === '/upload' ? payload?.err === 0 : payload?.result === 'success' || payload?.data?.url || payload?.url)) {
+                    return url
+                }
+                lastError = new Error(payload?.msg || payload?.message || 'Asset upload failed')
+            } catch (error) {
+                lastError = error
+            }
+        }
+        throw lastError || new Error('Asset upload failed')
+    }
+
+    const handleAddAsset = async (file) => {
+        try {
+            const url = await uploadAsset(file)
+            const center = getViewportCenter()
+            const defaults = NODE_DIMENSIONS.file
+            const assetKind = file.type.startsWith('image/')
+                ? 'image'
+                : file.type.startsWith('audio/')
+                    ? 'audio'
+                    : file.type.startsWith('video/')
+                        ? 'video'
+                        : 'file'
+            store.getState().createNode({
+                type: 'file',
+                file: url,
+                x: Math.round(center.x - defaults.width / 2),
+                y: Math.round(center.y - defaults.height / 2),
+                david888: {
+                    asset: {
+                        kind: assetKind,
+                        name: file.name || 'Canvas asset',
+                        mimeType: file.type || 'application/octet-stream',
+                        size: file.size || 0,
+                    },
+                },
+            })
+        } catch (error) {
+            window.showToast?.(zh ? `上傳失敗：${error.message}` : `Upload failed: ${error.message}`)
+        }
+    }
+
     return (
         <div className="canvas-main-toolbar nodrag nopan" onClick={(e) => e.stopPropagation()}>
             {isEdit ? (
@@ -58,6 +115,7 @@ export function MainToolbar({ store, onFitView }) {
                             isOpen={isAddMenuOpen}
                             onClose={() => setIsAddMenuOpen(false)}
                             onAddNode={handleAddNode}
+                            onAddAsset={handleAddAsset}
                         />
                     </div>
 
@@ -147,4 +205,3 @@ export function MainToolbar({ store, onFitView }) {
         </div>
     )
 }
-
