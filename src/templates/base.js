@@ -135,15 +135,18 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const effectiveEditorFormat = resolveEditorFormat(ext, content)
     const isBlockDocument = effectiveEditorFormat === 'block'
     const isCanvasDocument = effectiveEditorFormat === 'canvas'
+    const isWhiteboardDocument = effectiveEditorFormat === 'whiteboard'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
     const accessibleContent = isBlockDocument
         ? blockHtml
         : isCanvasDocument
             ? escapeHtml(ext.canvasMarkdown || '')
-            : escapeHtml(content)
+            : isWhiteboardDocument
+                ? escapeHtml(ext.whiteboardMarkdown || '')
+                : escapeHtml(content)
     const textareaContent = escapeHtml(content)
-    const pageTheme = (isBlockDocument || isCanvasDocument)
-        ? (ext.theme || 'ayu-light')
+    const pageTheme = (isBlockDocument || isCanvasDocument || isWhiteboardDocument)
+        ? (ext.theme || (isWhiteboardDocument ? 'claude-canvas' : 'ayu-light'))
         : resolvePageTheme({
             randomize: isEdit && ext.isNewEntry === true,
             storedTheme: ext.theme,
@@ -222,7 +225,8 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     <link rel="stylesheet" href="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/styles/webawesome.css" />
     ${annotationsUiEnabled ? '<link rel="stylesheet" href="/css/share-annotations.css" />' : ''}
     ${isEdit && isBlockDocument ? '<link rel="stylesheet" href="/js/block-editor.bundle.css" />' : ''}
-    ${isCanvasDocument ? '<link rel="stylesheet" href="/js/canvas-editor.bundle.css?v=3.8" />' : ''}
+    ${isCanvasDocument ? '<link rel="stylesheet" href="/js/canvas-editor.bundle.css?v=3.9" />' : ''}
+    ${isWhiteboardDocument ? '<link rel="stylesheet" href="/js/whiteboard-editor.bundle.css?v=1.0" />' : ''}
     <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
@@ -359,12 +363,15 @@ ${getMarkdownCss()}
         <div class="stack">
             <div class="layer_1">
                 <div class="layer_2">
-                    ${isEdit && !isBlockDocument && !isCanvasDocument ? EDITOR_TOOLBAR(lang) : ''}
+                    ${isEdit && !isBlockDocument && !isCanvasDocument && !isWhiteboardDocument ? EDITOR_TOOLBAR(lang) : ''}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
                          <article style="display:none;" id="bot-accessible-content">${accessibleContent}</article>
-                        ${isCanvasDocument ? `<div class="editor-pane canvas-editor-pane">
+                        ${isWhiteboardDocument ? `<div class="editor-pane whiteboard-editor-pane">
+                            <div id="whiteboard-editor" class="whiteboard-editor" aria-label="Whiteboard" data-editable="${isEdit}"></div>
+                            <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
+                        </div>` : (isCanvasDocument ? `<div class="editor-pane canvas-editor-pane">
                             <div id="canvas-editor" class="canvas-editor" aria-label="Canvas" data-editable="${isEdit}"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : (isEdit ? (isBlockDocument ? `<div class="editor-pane block-editor-pane">
@@ -422,9 +429,9 @@ ${getMarkdownCss()}
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
-                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>')}
-                        ${(isEdit && !isBlockDocument && !isCanvasDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
-                        ${isCanvasDocument || tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
+                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'))}
+                        ${(isEdit && !isBlockDocument && !isCanvasDocument && !isWhiteboardDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
+                        ${isCanvasDocument || isWhiteboardDocument || tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
                                 ? `<div class="preview-pane">${!isBlockDocument ? '<div id="preview-welcome" class="editor-welcome preview-welcome" aria-hidden="true" hidden></div>' : ''}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
@@ -433,7 +440,7 @@ ${getMarkdownCss()}
                 </div>
             </div>
         </div>
-        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme, editorFormat: isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown') })}
+        ${isEmbed ? '' : FOOTER({ ...ext, mode: ext.mode || 'md', isEdit, lang, path, shareId, sharePath: ext.sharePath, autosave: ext.autosave === true, annotationsEnabled, theme: pageTheme, editorFormat: isWhiteboardDocument ? 'whiteboard' : (isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown')) })}
     </div>
     ${annotationsUiEnabled ? `<div id="share-annotation-root" data-share-id="${escapeHtml(shareId)}" data-lang="${escapeHtml(lang)}"></div>` : ''}
     ${ext.sharePath && !isEdit && !isEmbed ? '<button type="button" id="share-back-to-top" class="share-back-to-top" aria-label="Back to top">＾</button>' : ''}
@@ -1185,9 +1192,10 @@ ${getMarkdownCss()}
         autoPresent: ext.autoPresent === true,
         autoBook: ext.autoBook === true,
         isEdit: isEdit === true,
-        editorFormat: isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown'),
+        editorFormat: isWhiteboardDocument ? 'whiteboard' : (isCanvasDocument ? 'canvas' : (isBlockDocument ? 'block' : 'markdown')),
         isBlock: isBlockDocument,
         isCanvas: isCanvasDocument,
+        isWhiteboard: isWhiteboardDocument,
         blockMarkdown: ext.blockMarkdown || '',
         isNewEntry: isEdit === true && ext.isNewEntry === true,
         theme: pageTheme,
@@ -5268,11 +5276,12 @@ ${getMarkdownCss()}
     ${ext.enableR2 ? '<script>window.ENABLE_R2=true</script>' : ''}
     ${showPwPrompt ? '<script>passwdPrompt()</script>' : ''}
     <script type="module" src="/js/offline-store.mjs"></script>
-    ${isEdit && !isBlockDocument && !isCanvasDocument ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
-    ${isEdit ? '<script type="module" src="/js/ocr-client.mjs"></script>' : ''}
+    ${isEdit && !isBlockDocument && !isCanvasDocument && !isWhiteboardDocument ? '<script type="module" src="/js/markdown-toolbar.mjs"></script>' : ''}
+    ${isEdit && !isWhiteboardDocument ? '<script type="module" src="/js/ocr-client.mjs"></script>' : ''}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
-    ${isCanvasDocument ? '<script type="module" src="/js/canvas-editor.bundle.mjs?v=3.8"></script>' : ''}
+    ${isCanvasDocument ? '<script type="module" src="/js/canvas-editor.bundle.mjs?v=3.9"></script>' : ''}
+    ${isWhiteboardDocument ? '<script type="module" src="/js/whiteboard-editor.bundle.mjs?v=1.0"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>

@@ -632,6 +632,73 @@
 }
 
 /* Top Floating Action Pill */
+.canvas-title-editor {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 50;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    max-width: min(360px, calc(100vw - 220px));
+    min-height: 32px;
+    padding: 3px 5px 3px 10px;
+    background: var(--canvas-paper);
+    border: 1px solid var(--canvas-border);
+    border-radius: 8px;
+    box-shadow: var(--canvas-shadow-sm);
+    color: var(--canvas-text);
+}
+
+.canvas-title-text {
+    min-width: 0;
+    overflow: hidden;
+    font-size: 14px;
+    font-weight: 700;
+    line-height: 1.3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.canvas-title-editor button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 26px;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 0;
+    border-radius: 5px;
+    background: transparent;
+    color: var(--canvas-text-muted);
+    cursor: pointer;
+}
+
+.canvas-title-editor button:hover {
+    background: var(--canvas-paper-muted);
+    color: var(--canvas-text);
+}
+
+.canvas-title-editor.is-editing {
+    max-width: min(420px, calc(100vw - 220px));
+    padding-left: 7px;
+}
+
+.canvas-title-editor input {
+    width: min(300px, calc(100vw - 290px));
+    min-width: 120px;
+    height: 28px;
+    padding: 0 4px;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: var(--canvas-text);
+    font: inherit;
+    font-size: 14px;
+    font-weight: 700;
+}
+
 .canvas-top-floating-bar {
     position: absolute;
     top: 16px;
@@ -1006,6 +1073,32 @@
         right: max(12px, env(safe-area-inset-right));
         gap: 4px;
         padding: 4px;
+    }
+
+    .canvas-title-editor {
+        top: max(12px, env(safe-area-inset-top));
+        left: max(12px, env(safe-area-inset-left));
+        max-width: calc(100vw - 208px);
+        min-height: 36px;
+    }
+
+    .canvas-title-editor.is-editing {
+        top: 64px;
+        left: max(12px, env(safe-area-inset-left));
+        max-width: calc(100vw - 24px);
+    }
+
+    .canvas-title-editor input {
+        width: calc(100vw - 120px);
+        min-width: 0;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    .canvas-title-editor button {
+        flex-basis: 30px;
+        width: 30px;
+        height: 30px;
     }
 
     .canvas-top-floating-btn {

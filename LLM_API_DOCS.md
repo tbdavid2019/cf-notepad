@@ -513,6 +513,7 @@ curl -X POST "https://wiki.david888.com/<path>/setting" \
   -H "Cookie: auth=<editor-session-cookie>" \
   -d '{
     "theme": "retro",
+    "title": "My Canvas",
     "width": "1200px",
     "shareFont": "jetbrains",
     "previewDevice": "desktop",
@@ -524,6 +525,7 @@ Supported JSON fields:
 - `mode`
 - `share`
 - `theme`
+- `title`
 - `width`
 - `shareFont`
 - `previewDevice`

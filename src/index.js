@@ -31,6 +31,7 @@ import {
 } from './note_meta.js'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { canvasToMarkdown, validateCanvasDocument, parseCanvasDocument } from './canvas_document.mjs'
+import { whiteboardToMarkdown, validateWhiteboardDocument, parseWhiteboardDocument, DEFAULT_WHITEBOARD_DOCUMENT } from './whiteboard_document.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
 import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
 import { summarizeHistoryContent } from './note_history_presenter.js'
@@ -507,6 +508,9 @@ function getBlockPageExt(value, metadata = {}) {
     if (editorFormat === 'canvas') {
         return { editorFormat, canvasMarkdown: canvasToMarkdown(parseCanvasDocument(value)) }
     }
+    if (editorFormat === 'whiteboard') {
+        return { editorFormat, whiteboardMarkdown: whiteboardToMarkdown(parseWhiteboardDocument(value)) }
+    }
     return { editorFormat }
 }
 
@@ -514,6 +518,7 @@ function getMarkdownExportContent(value, metadata = {}) {
     const format = resolveEditorFormat(metadata, value)
     if (format === 'block') return blockToMarkdown(value)
     if (format === 'canvas') return canvasToMarkdown(parseCanvasDocument(value))
+    if (format === 'whiteboard') return whiteboardToMarkdown(parseWhiteboardDocument(value))
     return value
 }
 
@@ -589,7 +594,9 @@ async function createNewNote(request, editorFormat) {
     const shareLink = originUrl.searchParams.get('url')
     let initialContent = ''
 
-    if (editorFormat === 'canvas') {
+    if (editorFormat === 'whiteboard') {
+        initialContent = JSON.stringify(DEFAULT_WHITEBOARD_DOCUMENT, null, 2)
+    } else if (editorFormat === 'canvas') {
         if (shareTitle || shareText || shareLink) {
             const parts = []
             if (shareTitle) parts.push(`# ${shareTitle}`)
@@ -630,7 +637,7 @@ async function createNewNote(request, editorFormat) {
 
         await driverPutNote(path, initialContent, {
             editorFormat,
-            theme: editorFormat === 'block' ? 'ayu-light' : undefined,
+            theme: editorFormat === 'block' ? 'ayu-light' : (editorFormat === 'whiteboard' ? 'claude-canvas' : undefined),
             title: shareTitle || undefined,
             blockDocumentVersion: editorFormat === 'block' ? 2 : undefined
         })
@@ -641,6 +648,7 @@ async function createNewNote(request, editorFormat) {
     return returnJSON(503, 'Could not allocate a new note path', { status: 503 })
 }
 
+router.get('/new/whiteboard', request => createNewNote(request, 'whiteboard'))
 router.get('/new/canvas', request => createNewNote(request, 'canvas'))
 router.get('/new/block', request => createNewNote(request, 'block'))
 router.get('/new/markdown', request => createNewNote(request, 'markdown'))
@@ -2092,6 +2100,8 @@ async function handleSharePdfExport(request) {
             markdown = blockToMarkdown(doc)
         } else if (format === 'canvas') {
             markdown = canvasToMarkdown(parseCanvasDocument(value))
+        } else if (format === 'whiteboard') {
+            markdown = whiteboardToMarkdown(parseWhiteboardDocument(value))
         }
 
         const title = extractNoteTitle(markdown, path)
@@ -2826,7 +2836,7 @@ router.get('/api/:path', async (request) => {
 
     return new Response(value || '', {
         headers: {
-            'Content-Type': ['block', 'canvas'].includes(resolveEditorFormat(metadata, value))
+            'Content-Type': ['block', 'canvas', 'whiteboard'].includes(resolveEditorFormat(metadata, value))
                 ? 'application/json;charset=UTF-8'
                 : 'text/markdown;charset=UTF-8',
             'Access-Control-Allow-Origin': '*'
@@ -2868,6 +2878,8 @@ async function handleNotePdfExport(request) {
             markdown = blockToMarkdown(doc)
         } else if (format === 'canvas') {
             markdown = canvasToMarkdown(parseCanvasDocument(value))
+        } else if (format === 'whiteboard') {
+            markdown = whiteboardToMarkdown(parseWhiteboardDocument(value))
         }
 
         const title = extractNoteTitle(markdown, path)
@@ -3038,6 +3050,13 @@ router.post('/api/:path', async (request) => {
             validateCanvasDocument(parseCanvasDocument(text, { allowFallback: false }))
         } catch (error) {
             return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
+        }
+    } else if (editorFormat === 'whiteboard') {
+        if (append) return returnJSON(400, 'Whiteboard documents do not support append', { status: 400 })
+        try {
+            validateWhiteboardDocument(parseWhiteboardDocument(text))
+        } catch (error) {
+            return returnJSON(422, `Invalid whiteboard document: ${error.message}`, { status: 422 })
         }
     }
 
@@ -3425,7 +3444,7 @@ router.post('/:path/setting', async request => {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
             const { mode } = await request.clone().json()
-            const { share, theme, width, shareFont, publicIndex, content, autosave, annotationsEnabled } = await request.json()
+            const { share, theme, title, width, shareFont, publicIndex, content, autosave, annotationsEnabled } = await request.json()
 
             const { value, metadata } = await queryNote(path)
             const { valid, role } = await checkAuth(cookie, path)
@@ -3447,16 +3466,27 @@ router.post('/:path/setting', async request => {
                             return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
                         }
                     }
+                    if (typeof content === 'string' && resolvedFormat === 'whiteboard') {
+                        try {
+                            validateWhiteboardDocument(parseWhiteboardDocument(content))
+                        } catch (error) {
+                            return returnJSON(422, `Invalid whiteboard document: ${error.message}`, { status: 422 })
+                        }
+                    }
                     const normalizedWidth = width === undefined
                         ? undefined
                         : normalizePreviewWidth(width, metadata.width || DEFAULT_PREVIEW_WIDTH)
                     if (width !== undefined && normalizedWidth === null) {
                         return returnJSON(400, 'Invalid width: use 100%, 960px, 1200px, or 1440px')
                     }
+                    if (title !== undefined && (typeof title !== 'string' || title.trim().length > 200)) {
+                        return returnJSON(400, 'Invalid title: use a text value up to 200 characters')
+                    }
                     let nextMetadata = {
                         ...metadata,
                         ...share !== undefined && { share },
                         ...theme !== undefined && { theme },
+                        ...title !== undefined && { title: title.trim() },
                         ...normalizedWidth !== undefined && { width: normalizedWidth },
                         ...shareFont !== undefined && { shareFont },
                         ...publicIndex !== undefined && { publicIndex: publicIndex === true },

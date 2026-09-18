@@ -2,6 +2,8 @@
 
 ## [2026-09-18]
 
+- **✏️ Canvas 標題可直接編輯 (Editable Canvas Title)**：Canvas 左上方新增標題編輯器，支援人員直接修改頁籤標題；標題透過 `/setting` 寫入 note metadata，並同步更新瀏覽器頁籤、編輯頁、公開分享頁與重新整理後的 Canvas 標題。明確設定的 metadata title 具備最高頁面標題優先級。
+
 - **🚀 Canvas P1／P2 互動與知識圖譜功能完成 (Canvas Multi-select, Export, Search, WikiLink Graph & Camera Tour)**：
   - **框選多選**：支援滑鼠框選、Cmd／Ctrl 多選、多卡片拖曳、批次換色與批次刪除；手機保留獨立畫布操作區與觸控適配。
   - **圖片匯出**：File Menu 新增 SVG、PNG 匯出，依節點 bounds 自動計算畫布尺寸並以 2x pixel ratio 產生檔案。

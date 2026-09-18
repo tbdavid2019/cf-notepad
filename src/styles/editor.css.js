@@ -1096,4 +1096,26 @@ textarea#contents {
     position: absolute;
     inset: 0;
 }
+
+/* Whiteboard Mode (Excalidraw) */
+.layer_2:has(.whiteboard-editor-pane) #editor-toolbar {
+    display: none !important;
+}
+
+.whiteboard-editor-pane {
+    flex: 1 1 auto;
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+    background: var(--body-bg, #ffffff);
+}
+
+.whiteboard-editor {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    inset: 0;
+}
 `

@@ -5,6 +5,7 @@ import { MainToolbar } from './components/Toolbar/MainToolbar.jsx'
 import { TopFloatingBar } from './components/Toolbar/TopFloatingBar.jsx'
 import { fitView } from './components/Diagram/viewportHelpers.mjs'
 import { selectIsEdit } from './store/selectors.mjs'
+import { CanvasTitleEditor } from './components/Toolbar/CanvasTitleEditor.jsx'
 
 export function CanvasEditorView({ store }) {
     const isEdit = store(selectIsEdit)
@@ -51,6 +52,7 @@ export function CanvasEditorView({ store }) {
     return (
         <ReactFlowProvider>
             <div className="canvas-v2-root">
+                <CanvasTitleEditor isEdit={isEdit} />
                 <TopFloatingBar selectedNode={selectedNode} store={store} />
                 <Diagram store={store} />
                 <MainToolbar store={store} onFitView={() => fitView({ padding: 0.2, duration: 400 })} />

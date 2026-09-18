@@ -172,9 +172,7 @@ export function extractNoteTitle(value = '', metadataTitle = '', fallback = '') 
     const metadataCandidate = normalizeTitleCandidate(metadataTitle)
     const contentTitle = extractContentTitle(value)
 
-    if (metadataCandidate && (!isWeakTitleCandidate(metadataCandidate) || !contentTitle || isWeakTitleCandidate(contentTitle))) {
-        return metadataCandidate
-    }
+    if (metadataCandidate) return metadataCandidate
 
     return contentTitle || metadataCandidate || normalizeTitleCandidate(fallback)
 }
@@ -271,16 +269,33 @@ export function isCanvasContent(content) {
     return false
 }
 
+export function isWhiteboardContent(content) {
+    if (typeof content === 'string') {
+        const trimmed = content.trim()
+        if (trimmed.startsWith('{') && (trimmed.includes('"type":"excalidraw"') || trimmed.includes('"type": "excalidraw"') || trimmed.includes('"elements"'))) {
+            try {
+                const parsed = JSON.parse(trimmed)
+                return Boolean(parsed && typeof parsed === 'object' && (parsed.type === 'excalidraw' || Array.isArray(parsed.elements)))
+            } catch (_) {
+                return false
+            }
+        }
+    }
+    return false
+}
+
 export function resolveEditorFormat(metadata = {}, content = '') {
+    if (metadata && metadata.editorFormat === 'whiteboard') return 'whiteboard'
     if (metadata && metadata.editorFormat === 'canvas') return 'canvas'
     if (metadata && metadata.editorFormat === 'block') return 'block'
+    if (isWhiteboardContent(content)) return 'whiteboard'
     if (isCanvasContent(content)) return 'canvas'
     return 'markdown'
 }
 
 export function resolveLockedEditorFormat(metadata = {}, requestedFormat = undefined) {
     const existing = metadata?.editorFormat
-    const validFormats = ['block', 'markdown', 'canvas']
+    const validFormats = ['block', 'markdown', 'canvas', 'whiteboard']
     if (existing !== undefined && !validFormats.includes(existing)) {
         throw new TypeError('Invalid stored editor format')
     }
