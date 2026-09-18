@@ -2,6 +2,8 @@
 
 ## [2026-09-18]
 
+- **🧭 新筆記模式選擇器補全 (Four-Format Editor Preference Modal)**：首次建立筆記與「設定預設編輯器模式」現在完整提供 Markdown、Block、Canvas、Whiteboard 四種選項，支援繁中／英文、推薦標籤、記住選擇與正確路由導向。
+
 - **🏷️ Whiteboard JSON 頁籤標題修正 (Readable Whiteboard Titles)**：Excalidraw JSON 會先解析文字元素標題，空白白板使用 note path 作為 fallback；頁籤與公開 metadata 不再顯示原始 `{"type":"excalidraw"...}` 內容。
 - **🧩 Whiteboard 白屏修正 (Normalize Excalidraw Elements)**：Whiteboard mount 前使用 Excalidraw 官方 `convertToExcalidrawElements` 正規化簡化 JSON，補齊 renderer 所需 element 欄位，保留 Obsidian／Excalidraw JSON 輸入相容性。
 - **🖥️ Whiteboard runtime exception 修正 (Excalidraw UIOptions)**：將 `canvasActions.export` 從布林值改為 Excalidraw 0.18.1 要求的 `{ saveFileToDisk: true }` 物件，修正 mount 階段白屏。

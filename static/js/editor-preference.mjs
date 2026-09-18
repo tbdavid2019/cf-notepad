@@ -14,6 +14,14 @@ export const I18N_STRINGS = {
         blockBadge: 'Notion 風格',
         blockDescription: '所見即所得排版、拖拉區塊與 Slash 斜線指令。',
         blockAction: '以 Block 開始',
+        canvasTitle: 'Canvas 畫布',
+        canvasBadge: '結構化圖譜',
+        canvasDescription: '邏輯關聯圖、知識圖譜與可連線卡片。',
+        canvasAction: '以 Canvas 開始',
+        whiteboardTitle: 'Whiteboard 白板',
+        whiteboardBadge: '自由手繪',
+        whiteboardDescription: '自由畫筆、箭頭、便籤與 Excalidraw 相容白板。',
+        whiteboardAction: '以 Whiteboard 開始',
         remember: '記住我的選擇',
         cancel: '取消',
         confirm: '確定',
@@ -29,13 +37,21 @@ export const I18N_STRINGS = {
         blockBadge: 'Notion style',
         blockDescription: 'What-you-see-is-what-you-get, drag handles, and slash commands.',
         blockAction: 'Start with Block',
+        canvasTitle: 'Canvas workspace',
+        canvasBadge: 'Structured graph',
+        canvasDescription: 'Connected cards for logic maps, knowledge graphs, and architecture diagrams.',
+        canvasAction: 'Start with Canvas',
+        whiteboardTitle: 'Whiteboard',
+        whiteboardBadge: 'Freeform drawing',
+        whiteboardDescription: 'Freehand drawing, arrows, sticky notes, and Excalidraw compatibility.',
+        whiteboardAction: 'Start with Whiteboard',
         remember: 'Remember my choice',
         cancel: 'Cancel',
         confirm: 'Save',
     }
 }
 
-const isEditorFormat = value => value === 'block' || value === 'markdown'
+const isEditorFormat = value => ['block', 'markdown', 'canvas', 'whiteboard'].includes(value)
 
 const storageGet = (storage, key) => {
     try { return storage?.getItem(key) || '' } catch { return '' }

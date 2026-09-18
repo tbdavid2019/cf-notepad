@@ -84,6 +84,16 @@ export const Home = ({ lang = 'zh-TW', canonicalUrl, ogImageUrl }) => `
         .opt-button-accent { border-color: #c8654b; background: #c8654b; color: #fff; }
         .opt-button:focus-visible, .editor-preference-option:has(input:focus-visible) { outline: 2px solid #c8654b; outline-offset: 2px; }
         .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+        @media (max-width: 600px) {
+            .editor-preference-content { width: calc(100vw - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; padding: 18px; border-radius: 12px; }
+            .editor-preference-content h2 { font-size: 18px; }
+            .editor-preference-content > p { margin-bottom: 14px; font-size: 13px; }
+            .editor-preference-grid { grid-template-columns: 1fr; gap: 9px; }
+            .editor-preference-option { padding: 12px; gap: 9px; }
+            .editor-preference-option strong { font-size: 14px; }
+            .editor-preference-option small { font-size: 12px; }
+            .editor-preference-actions { position: sticky; bottom: -18px; padding: 12px 0 0; background: #fff; }
+        }
         @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; } }
     </style>
 </head>

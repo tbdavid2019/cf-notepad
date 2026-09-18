@@ -934,6 +934,16 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
     const blockDescription = zh ? '所見即所得排版、拖拉區塊與 Slash 斜線指令。' : 'What-you-see-is-what-you-get, drag handles, and slash commands.'
     const blockAction = zh ? '以 Block 開始' : 'Start with Block'
 
+    const canvasTitle = zh ? 'Canvas 畫布' : 'Canvas workspace'
+    const canvasBadge = zh ? '結構化圖譜' : 'Structured graph'
+    const canvasDescription = zh ? '邏輯關聯圖、知識圖譜與可連線卡片。' : 'Connected cards for logic maps, knowledge graphs, and architecture diagrams.'
+    const canvasAction = zh ? '以 Canvas 開始' : 'Start with Canvas'
+
+    const whiteboardTitle = zh ? 'Whiteboard 白板' : 'Whiteboard'
+    const whiteboardBadge = zh ? '自由手繪' : 'Freeform drawing'
+    const whiteboardDescription = zh ? '自由畫筆、箭頭、便籤與 Excalidraw 相容白板。' : 'Freehand drawing, arrows, sticky notes, and Excalidraw compatibility.'
+    const whiteboardAction = zh ? '以 Whiteboard 開始' : 'Start with Whiteboard'
+
     return `
 <div class="modal editor-preference-modal" role="dialog" aria-modal="true" aria-labelledby="editor-preference-title" aria-describedby="editor-preference-description" aria-hidden="true" data-editor-preference-dialog${autoOpen ? ' data-editor-preference-auto-open="true"' : ''}>
     <div class="modal-mask" data-editor-preference-close></div>
@@ -969,6 +979,28 @@ export const EDITOR_PREFERENCE_MODAL = (lang, { autoOpen = false } = {}) => {
                     </span>
                     <small data-i18n-key="blockDescription">${blockDescription}</small>
                     <button type="button" class="opt-button editor-card-action" data-editor-format-choice="block" data-i18n-key="blockAction">${blockAction}</button>
+                </span>
+            </label>
+            <label class="editor-preference-option" data-editor-card="canvas">
+                <input type="radio" name="editor-format" value="canvas">
+                <span class="editor-preference-copy">
+                    <span class="editor-preference-header">
+                        <strong data-i18n-key="canvasTitle">${canvasTitle}</strong>
+                        <span class="editor-preference-badge" data-i18n-key="canvasBadge">${canvasBadge}</span>
+                    </span>
+                    <small data-i18n-key="canvasDescription">${canvasDescription}</small>
+                    <button type="button" class="opt-button editor-card-action" data-editor-format-choice="canvas" data-i18n-key="canvasAction">${canvasAction}</button>
+                </span>
+            </label>
+            <label class="editor-preference-option" data-editor-card="whiteboard">
+                <input type="radio" name="editor-format" value="whiteboard">
+                <span class="editor-preference-copy">
+                    <span class="editor-preference-header">
+                        <strong data-i18n-key="whiteboardTitle">${whiteboardTitle}</strong>
+                        <span class="editor-preference-badge" data-i18n-key="whiteboardBadge">${whiteboardBadge}</span>
+                    </span>
+                    <small data-i18n-key="whiteboardDescription">${whiteboardDescription}</small>
+                    <button type="button" class="opt-button editor-card-action" data-editor-format-choice="whiteboard" data-i18n-key="whiteboardAction">${whiteboardAction}</button>
                 </span>
             </label>
         </fieldset>
