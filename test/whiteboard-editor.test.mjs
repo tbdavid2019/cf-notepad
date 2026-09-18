@@ -8,7 +8,7 @@ import {
     validateWhiteboardDocument,
     whiteboardToMarkdown,
 } from '../src/whiteboard_document.mjs'
-import { resolveEditorFormat, resolveLockedEditorFormat } from '../src/note_meta.js'
+import { extractNoteTitle, resolveEditorFormat, resolveLockedEditorFormat } from '../src/note_meta.js'
 import { HTML } from '../src/templates/base.js'
 
 const baseTemplateSource = readFileSync(new URL('../src/templates/base.js', import.meta.url), 'utf8')
@@ -75,6 +75,17 @@ test('resolveEditorFormat recognizes whiteboard metadata and document structures
     assert.equal(resolveEditorFormat({ editorFormat: 'whiteboard' }, ''), 'whiteboard')
     assert.equal(resolveEditorFormat({}, JSON.stringify(DEFAULT_WHITEBOARD_DOCUMENT)), 'whiteboard')
     assert.equal(resolveLockedEditorFormat({ editorFormat: 'whiteboard' }), 'whiteboard')
+})
+
+test('extractNoteTitle uses a readable fallback for raw whiteboard JSON', () => {
+    const whiteboardJson = JSON.stringify(DEFAULT_WHITEBOARD_DOCUMENT)
+    assert.equal(extractNoteTitle(whiteboardJson, '', 'test-excalidraw-wb'), 'test-excalidraw-wb')
+
+    const titledWhiteboard = {
+        ...DEFAULT_WHITEBOARD_DOCUMENT,
+        elements: [{ id: 'text-1', type: 'text', text: 'Brainstorm title' }],
+    }
+    assert.equal(extractNoteTitle(JSON.stringify(titledWhiteboard), '', 'fallback'), 'Brainstorm title')
 })
 
 test('base template renders whiteboard editor container and assets when editorFormat is whiteboard', () => {

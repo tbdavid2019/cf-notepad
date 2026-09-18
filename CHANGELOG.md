@@ -2,6 +2,8 @@
 
 ## [2026-09-18]
 
+- **🏷️ Whiteboard JSON 頁籤標題修正 (Readable Whiteboard Titles)**：Excalidraw JSON 會先解析文字元素標題，空白白板使用 note path 作為 fallback；頁籤與公開 metadata 不再顯示原始 `{"type":"excalidraw"...}` 內容。
+
 - **🎨 Excalidraw 自由手繪白板模式 (Excalidraw Freeform Whiteboard Editor & Agent Tools)**：
   - **雙軌畫布分流 (/new/whiteboard)**：引入 Excalidraw 官方 React 組件 (`@excalidraw/excalidraw@0.18.1`)，作為與 Canvas 邏輯卡片圖並行的第四種原生筆記格式 (`editorFormat: 'whiteboard'`)。Canvas 專注節點關聯與架構圖，Whiteboard 專注自由手繪塗鴉、箭頭、色鉛筆筆觸與便籤。
   - **100% 官方標準封裝**：零發明客製畫布組件，直接採用 Excalidraw 官方生態，本機 esbuild 打包至 `static/js/whiteboard-editor.bundle.mjs` (ESM) 與 `bundle.css`，字型支援透過 unpkg CDN 動態載入，維持靜態資源輕量。

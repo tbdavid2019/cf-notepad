@@ -66,6 +66,17 @@ function extractContentTitle(value = '') {
         }
         return ''
     }
+    if (isWhiteboardContent(trimmedVal)) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            for (const element of parsed.elements || []) {
+                if (element?.isDeleted || element?.type !== 'text' || typeof element.text !== 'string') continue
+                const candidate = normalizeTitleCandidate(element.text.split('\n')[0])
+                if (candidate && !isIgnoredTitleLine(candidate)) return candidate
+            }
+        } catch (e) {}
+        return ''
+    }
     if (trimmedVal.startsWith('{') && (trimmedVal.includes('"nodes"') || trimmedVal.includes('"edges"'))) {
         try {
             const parsed = JSON.parse(trimmedVal)
@@ -183,6 +194,14 @@ export function extractNoteDescription(value = '', fallbackTitle = '') {
     const tiptapDocument = getTiptapDocument(trimmedVal)
     if (tiptapDocument) {
         str = tiptapDocument.content.map(tiptapNodeText).filter(Boolean).join(' ')
+    } else if (isWhiteboardContent(trimmedVal)) {
+        try {
+            const parsed = JSON.parse(trimmedVal)
+            str = (parsed.elements || [])
+                .filter(element => element && !element.isDeleted && element.type === 'text' && typeof element.text === 'string')
+                .map(element => element.text)
+                .join(' ')
+        } catch (e) {}
     } else if (trimmedVal.startsWith('{') && (trimmedVal.includes('"nodes"') || trimmedVal.includes('"edges"'))) {
         try {
             const parsed = JSON.parse(trimmedVal)
