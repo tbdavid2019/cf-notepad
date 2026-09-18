@@ -62,6 +62,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 - [Block Note Editor](${siteOrigin}/new/block): Instantiate a new rich BlockNote document.
 - [Markdown Note Editor](${siteOrigin}/new/markdown): Instantiate a new standard Markdown document.
 - [Canvas](${siteOrigin}/new/canvas): Instantiate a JSON Canvas 1.0 workspace with relationship edges, four-sided handles, resize controls, local draft recovery, and image/file/audio/video resource nodes. Agents may use Canvas for visual relationship maps when a diagram communicates structure more clearly than linear Markdown.
+- [Whiteboard](${siteOrigin}/new/whiteboard): Instantiate an Excalidraw freeform whiteboard workspace for hand-drawn sketches, flowcharts, UI wireframes, and sticky notes. 100% compatible with Obsidian Excalidraw and exportable to PNG/SVG.
 - [Image OCR & Table Reconstruction](${siteOrigin}/new/markdown): Paste or drop an image to choose R2 upload, local PP-OCRv6 text recognition, or server table reconstruction via \`/api/ocr?mode=table\`; local OCR keeps the image on the device and table mode returns clean GFM through \`data.tableMarkdown\`.
 
 ## AI Agent & API Discovery
@@ -70,6 +71,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 - [Agent Skills Index](${siteOrigin}${AGENT_SKILLS_INDEX_PATH}): Index of machine-readable agent skills (v0.2.0 schema).
 - [Model Context Protocol (MCP)](${siteOrigin}${MCP_PATH}): Native MCP JSON-RPC 2.0 endpoint for WebMCP and AI agent tools.
 - [Canvas MCP Tools](${siteOrigin}${MCP_PATH}): Use \`validate_canvas\`, \`write_canvas\`, and \`read_canvas\` for JSON Canvas validation, publishing, and edge inspection. Canvas notes can be linked as read-only chapters in Book Mode.
+- [Whiteboard MCP Tools](${siteOrigin}${MCP_PATH}): Use \`validate_whiteboard\`, \`write_whiteboard\`, and \`read_whiteboard\` for Excalidraw whiteboard validation, hand-drawn sketch generation, and text inspection.
 - [API Catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset catalog for API discovery.
 - [API Documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
 - [OpenAPI Specification](${siteOrigin}${OPENAPI_PATH}): Machine-readable OpenAPI 3.1.0 contract.
@@ -83,6 +85,15 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 
 - [GitHub Repository](https://github.com/tbdavid2019/cf-notepad): Official project repository.
 - [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019): Lead Architecture & Core Developer.
+- [Agent Skills Direct Endpoint](${siteOrigin}/.well-known/skills/index.json): Standardized Agent Skills list.
+
+## 變更紀錄與更新摘要 (Changelog & Updates)
+
+- **2026-09-18**: Release Whiteboard editor powered by Excalidraw with MCP tools and full JSON persistence; Canvas resource nodes and Book Mode integration.
+- **2026-09-17**: Complete rewrite of Infinite Canvas with Ameliorate architecture.
+- **2026-04-18**: WebTalk comments integration across shared notes.
+- **2026-04-15**: Native MCP Server endpoint at \`/mcp\` for in-browser AI and Claude Desktop.
+- **2026-04-14**: Slide presentation engine upgrade with Reveal.js and Slidev-Lite.
 
 ## Extended Documentation
 
@@ -138,6 +149,7 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
   Accepts \`application/json\`, \`text/markdown\`, or \`multipart/form-data\`.
   Payload fields: \`text\` / \`content\`, \`append\` (boolean), \`share\` (boolean), \`publicIndex\` (boolean), \`pw\`, \`vpw\`, \`theme\`, \`width\`.
   For Canvas, send the complete JSON Canvas document as a JSON-stringified \`text\` value with \`editorFormat: \"canvas\"\`; use \`GET /api/{path}\` to read it back.
+  For Whiteboard, send the complete Excalidraw JSON document as a JSON-stringified \`text\` value with \`editorFormat: \"whiteboard\"\`; use \`GET /api/{path}\` to read it back.
 - **Upload Image**: \`POST ${siteOrigin}/api/upload\`
   Uploads an image file to R2 storage and returns the image CDN URL.
 - **Markdown Utilities (Stateless)**:
@@ -336,7 +348,7 @@ export function buildOpenApiDocument(origin) {
                         width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], default: '1200px' },
                         pw: { type: 'string', description: 'Edit password or existing edit password.' },
                         vpw: { type: 'string', description: 'View password.' },
-                        editorFormat: { type: 'string', enum: ['markdown', 'block', 'canvas'], description: 'Set to canvas when text contains a complete JSON Canvas document.' },
+                        editorFormat: { type: 'string', enum: ['markdown', 'block', 'canvas', 'whiteboard'], description: 'Set to canvas for JSON Canvas or whiteboard for Excalidraw documents.' },
                     },
                 },
                 CanvasDocument: {
@@ -354,6 +366,32 @@ export function buildOpenApiDocument(origin) {
                     properties: {
                         text: { type: 'string', description: 'JSON.stringify(CanvasDocument). The REST API stores the complete document.' },
                         editorFormat: { type: 'string', const: 'canvas' },
+                        share: { type: 'boolean', default: true },
+                        public: { type: 'boolean', description: 'Alias for share.' },
+                        publicIndex: { type: 'boolean' },
+                        theme: { type: 'string' },
+                        width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], default: '1200px' },
+                        pw: { type: 'string' },
+                        vpw: { type: 'string' },
+                    },
+                },
+                WhiteboardDocument: {
+                    type: 'object',
+                    required: ['elements'],
+                    properties: {
+                        type: { type: 'string', const: 'excalidraw' },
+                        version: { type: 'number' },
+                        elements: { type: 'array', description: 'Excalidraw elements (rectangles, arrows, text, etc.).' },
+                        appState: { type: 'object', description: 'Optional Excalidraw canvas state.' },
+                    },
+                    description: 'Complete Excalidraw whiteboard document.',
+                },
+                WhiteboardWriteRequest: {
+                    type: 'object',
+                    required: ['text', 'editorFormat'],
+                    properties: {
+                        text: { type: 'string', description: 'JSON.stringify(WhiteboardDocument). The REST API stores the complete document.' },
+                        editorFormat: { type: 'string', const: 'whiteboard' },
                         share: { type: 'boolean', default: true },
                         public: { type: 'boolean', description: 'Alias for share.' },
                         publicIndex: { type: 'boolean' },
@@ -417,6 +455,7 @@ export function buildOpenApiDocument(origin) {
                                     oneOf: [
                                         { $ref: '#/components/schemas/NoteWriteRequest' },
                                         { $ref: '#/components/schemas/CanvasWriteRequest' },
+                                        { $ref: '#/components/schemas/WhiteboardWriteRequest' },
                                     ],
                                 },
                             },

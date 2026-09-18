@@ -10,6 +10,12 @@ export function CanvasTitleEditor({ isEdit = true }) {
     const isZh = document.documentElement.getAttribute('lang')?.startsWith('zh')
 
     useEffect(() => {
+        if (!title) return
+        if (window.APP_STATE) window.APP_STATE.title = title
+        document.title = `${title} - ${window.APP_STATE?.appName || 'david888 wiki'}`
+    }, [title])
+
+    useEffect(() => {
         const handleTitleChange = (event) => {
             const nextTitle = String(event.detail?.title || initialTitle())
             setTitle(nextTitle)

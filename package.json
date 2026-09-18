@@ -11,17 +11,18 @@
   "scripts": {
     "build:block-editor": "node scripts/build-block-editor.mjs",
     "build:canvas-editor": "node scripts/build-canvas-editor.mjs",
+    "build:whiteboard-editor": "node scripts/build-whiteboard-editor.mjs",
     "build:ocr": "node scripts/build-ocr-client.mjs",
     "prepare:skill-doc": "node scripts/generate-agent-skill.mjs",
     "prestart": "npm run prepare:skill-doc",
     "start": "wrangler dev",
     "predev": "npm run prepare:skill-doc",
     "dev": "wrangler dev",
-    "predeploy": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:ocr",
+    "predeploy": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:whiteboard-editor && npm run build:ocr",
     "deploy": "wrangler deploy",
     "prepublish": "npm run prepare:skill-doc",
     "publish": "wrangler deploy",
-    "pretest": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:ocr",
+    "pretest": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:whiteboard-editor && npm run build:ocr",
     "test": "node --test test/**/*.test.mjs"
   },
   "dependencies": {

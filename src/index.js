@@ -3698,6 +3698,12 @@ router.post('/:path', async request => {
         } catch (error) {
             return returnJSON(422, `Invalid canvas document: ${error.message}`, { status: 422 })
         }
+    } else if (editorFormat === 'whiteboard') {
+        try {
+            validateWhiteboardDocument(parseWhiteboardDocument(content))
+        } catch (error) {
+            return returnJSON(422, `Invalid whiteboard document: ${error.message}`, { status: 422 })
+        }
     }
 
     try {

@@ -9,13 +9,14 @@ import { canPersistNoteContent } from './save_policy.mjs'
 import { getNoteHistoryConfig, saveNoteHistoryVersionIfNeeded } from './note_history.mjs'
 import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
 import { parseCanvasDocument, validateCanvasDocument } from './canvas_document.mjs'
+import { parseWhiteboardDocument, validateWhiteboardDocument, whiteboardToMarkdown } from './whiteboard_document.mjs'
 import { buildWikiLinkCanvas } from '../static/js/canvas-v2/model/wikiGraphGenerator.mjs'
 
 export const MCP_SERVER_INFO = {
     name: 'david888-wiki',
     version: '1.0.0',
     protocolVersion: '2024-11-05',
-    description: 'David888 Wiki native MCP Server. Supports Markdown, JSON Canvas diagrams, 2D slide decks (---/--), dual-pane Book Mode (/book), and rich formatting. Use write_canvas when a visual relationship map is clearer than linear Markdown.',
+    description: 'David888 Wiki native MCP Server. Supports Markdown, JSON Canvas diagrams, Excalidraw whiteboards, 2D slide decks (---/--), dual-pane Book Mode (/book), and rich formatting. Use write_canvas for structured card graphs, or write_whiteboard for freeform hand-drawn sketches.',
 }
 
 export const MCP_TOOLS_DEFINITIONS = [
@@ -137,6 +138,46 @@ export const MCP_TOOLS_DEFINITIONS = [
                 theme: { type: 'string', description: 'Optional Canvas theme.' },
             },
             required: ['source_path'],
+        },
+    },
+    {
+        name: 'write_whiteboard',
+        description: 'Create or overwrite an Excalidraw whiteboard document with hand-drawn elements (rectangles, arrows, sticky notes, text). Use this when the user asks for a freeform sketch, wireframe, brainstorming board, or hand-drawn flowchart. Returns the edit URL and public Share URL.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'Unique note path.' },
+                document: { type: 'object', description: 'Complete Excalidraw document with elements array.' },
+                password: { type: 'string', description: 'Optional edit password.' },
+                view_password: { type: 'string', description: 'Optional view password.' },
+                make_private: { type: 'boolean', description: 'Keep the whiteboard private when true.' },
+                theme: { type: 'string', description: 'Optional theme.' },
+                width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], description: 'Optional published layout width.' },
+            },
+            required: ['path', 'document'],
+        },
+    },
+    {
+        name: 'read_whiteboard',
+        description: 'Read an Excalidraw whiteboard document, including its elements, text labels, metadata, and Share URL.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                path: { type: 'string', description: 'Whiteboard note path.' },
+                password: { type: 'string', description: 'Optional view or edit password.' },
+            },
+            required: ['path'],
+        },
+    },
+    {
+        name: 'validate_whiteboard',
+        description: 'Validate an Excalidraw whiteboard document before publishing. Returns element counts and text summary.',
+        inputSchema: {
+            type: 'object',
+            properties: {
+                document: { type: 'object', description: 'Complete Excalidraw document.' },
+            },
+            required: ['document'],
         },
     },
     {
@@ -558,6 +599,114 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                 }
             } catch (error) {
                 return { isError: true, text: `Stored note is not valid Canvas JSON: ${error.message}` }
+            }
+        }
+
+        case 'validate_whiteboard': {
+            try {
+                const document = args.document && typeof args.document === 'object' ? args.document : null
+                const parsed = parseWhiteboardDocument(JSON.stringify(document))
+                validateWhiteboardDocument(parsed)
+                return {
+                    isError: false,
+                    text: JSON.stringify({
+                        valid: true,
+                        elementCount: (parsed.elements || []).length,
+                        markdownSummary: whiteboardToMarkdown(parsed),
+                    }, null, 2),
+                }
+            } catch (error) {
+                return { isError: true, text: `Invalid Whiteboard document: ${error.message}` }
+            }
+        }
+
+        case 'write_whiteboard': {
+            const path = String(args.path || '').trim()
+            const document = args.document && typeof args.document === 'object' ? args.document : null
+            if (!path) return { isError: true, text: 'Error: "path" parameter is required.' }
+
+            let validated
+            try {
+                const parsed = parseWhiteboardDocument(JSON.stringify(document))
+                validateWhiteboardDocument(parsed)
+                validated = parsed
+            } catch (error) {
+                return { isError: true, text: `Invalid Whiteboard document: ${error.message}` }
+            }
+
+            const { value: previousContent, metadata: previousMetadata } = await driverQueryNote(path)
+            const metadata = previousMetadata || {}
+            if (metadata.pw || metadata.vpw) {
+                const role = await checkPasswordRole(args.password || '', metadata)
+                if (role !== 'edit') return { isError: true, text: `Error: Edit password required for Whiteboard "${path}".` }
+            }
+
+            let nextMetadata = {
+                ...metadata,
+                editorFormat: 'whiteboard',
+                updateAt: dayjs().unix(),
+                share: args.make_private !== true,
+                theme: args.theme || metadata.theme || 'claude-canvas',
+                width: normalizePreviewWidth(args.width, metadata.width || DEFAULT_PREVIEW_WIDTH) || DEFAULT_PREVIEW_WIDTH,
+            }
+
+            if (args.password) nextMetadata.pw = await saltPassword(args.password)
+            if (args.view_password) nextMetadata.vpw = await saltPassword(args.view_password)
+            if (nextMetadata.share === true && metadata.share !== true) nextMetadata.annotationsEnabled = true
+            if (nextMetadata.share === false) {
+                nextMetadata.publicIndex = false
+                nextMetadata.annotationsEnabled = false
+            }
+            if (!canPersistNoteContent(nextMetadata)) {
+                return { isError: true, text: 'Error: Whiteboard saving is currently blocked by server policy.' }
+            }
+            nextMetadata = await ensureMcpShareMetadata(path, nextMetadata)
+            const content = JSON.stringify(validated, null, 2)
+            await persistMcpNote({ path, content, metadata: nextMetadata, previousContent })
+
+            const editUrl = `${origin}/${path}`
+            const shareSlug = nextMetadata.share && (nextMetadata.shareSlug || nextMetadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
+            return {
+                isError: false,
+                text: JSON.stringify({
+                    message: 'Whiteboard saved successfully',
+                    path,
+                    editUrl,
+                    shareUrl,
+                    elementCount: (validated.elements || []).length,
+                }, null, 2),
+            }
+        }
+
+        case 'read_whiteboard': {
+            const path = String(args.path || '').trim()
+            if (!path) return { isError: true, text: 'Error: "path" parameter is required.' }
+            const { value, metadata } = await driverQueryNote(path)
+            if (value === null && (!metadata || Object.keys(metadata).length === 0)) {
+                return { isError: true, text: `Error: Whiteboard "${path}" not found.` }
+            }
+            if (metadata.pw || metadata.vpw) {
+                const role = await checkPasswordRole(args.password || '', metadata)
+                if (!role) return { isError: true, text: `Error: Password required to access protected Whiteboard "${path}".` }
+            }
+            let parsedDoc
+            try {
+                parsedDoc = parseWhiteboardDocument(value)
+            } catch (e) {
+                parsedDoc = { elements: [] }
+            }
+            const shareSlug = metadata.share && (metadata.shareSlug || metadata.shareId)
+            const shareUrl = shareSlug ? `${origin}/share/${shareSlug}` : null
+            return {
+                isError: false,
+                text: JSON.stringify({
+                    path,
+                    shareUrl,
+                    elementCount: (parsedDoc.elements || []).length,
+                    markdownSummary: whiteboardToMarkdown(parsedDoc),
+                    document: parsedDoc,
+                }, null, 2),
             }
         }
 
