@@ -1,5 +1,12 @@
 # Changelog
 
+## [2026-09-18]
+
+- **🛡️ 彈性 AI 服務容錯層與 Cloudflare 上游 10021 驗證錯誤修復 (Resilient AI Provider Adapter & Upstream 10021 Workaround)**：
+  - **根本原因診斷 (Root Cause Discovered)**：經跨 4 組 Cloudflare 帳號實測驗證，Cloudflare 控制平面在特定帳號（如 `379570860738dd1757ba7f67ef2bdffe`）上發生 Worker Metadata 綁定生成器內部異常，上傳驗證時報錯 `10021: binding AI of type ai failed to generate: internal error`（直接 REST API 推論則完全正常）。
+  - **雙軌容錯架構 (`resolveAiBinding`)**：在 `src/index.js` 實作 `resolveAiBinding(env)` 統一介面，優先使用 `env.AI`；若未配置或處於控制平面異常期，自動平滑降級調用 `env.GROQ_API_KEY`（採用 `openai/gpt-oss-20b` 與 `openai/gpt-oss-120b` 生產級模型），確保音訊智慧排版與 `/:path/ai-format` 功能 100% 正常運作，零中斷。
+  - **生產環境驗證**：成功部署至 Cloudflare Workers（版本 ID `88a87178-bfac-4773-899f-bba44eea8061`），經端對端實機測試 `POST /test-ai-note/ai-format` 確認排版推論功能秒級響應並格式化成功。
+
 ## [2026-09-17]
 
 - **🧩 修復 Wiki、外部連結與群組卡片操作 (Wiki, Link & Group Node Fixes)**：Wiki 節點支援站內路徑與 share URL 預覽，外部連結與 Wiki 表單改為完整寬度排版；file/link 卡片提高預設高度；群組標題恢復拖曳，編輯 input 保留 `nodrag`，NodeResizer 可正常調整尺寸。

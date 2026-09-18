@@ -246,6 +246,45 @@ function extractAiText(payload) {
     return ''
 }
 
+function resolveAiBinding(env) {
+    if (env && env.AI) {
+        return env.AI
+    }
+    const groqKey = env && env.GROQ_API_KEY
+    if (groqKey) {
+        return {
+            async run(model, payload) {
+                const groqModel = (typeof model === 'string' && model.includes('120b'))
+                    ? 'openai/gpt-oss-120b'
+                    : 'openai/gpt-oss-20b'
+                const messages = Array.isArray(payload && payload.messages)
+                    ? payload.messages
+                    : (payload && payload.prompt ? [{ role: 'user', content: payload.prompt }] : [])
+
+                const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${groqKey}`,
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        model: groqModel,
+                        messages,
+                        temperature: 0.2,
+                        max_tokens: (payload && (payload.max_tokens || payload.max_completion_tokens)) || 8192,
+                    })
+                })
+                if (!res.ok) {
+                    const errText = await res.text()
+                    throw new Error(`Groq AI fallback failed (${res.status}): ${errText}`)
+                }
+                return await res.json()
+            }
+        }
+    }
+    return null
+}
+
 async function runAiWithTimeout(aiBinding, model, payload, timeoutMs = 120000) {
     let timeoutId
     const timeoutPromise = new Promise((_, reject) => {
@@ -1414,7 +1453,8 @@ async function handleAudioTranscription(request, context = {}) {
 
         if (shouldSmartFormat) {
             try {
-                formattedMarkdown = await formatAudioSmartMarkdown(env.AI, timestampedMarkdown)
+                const aiBinding = resolveAiBinding(env)
+                formattedMarkdown = await formatAudioSmartMarkdown(aiBinding, timestampedMarkdown)
             } catch (formatErr) {
                 console.warn('[AI] Audio smart formatting failed, falling back to raw transcript:', formatErr?.message)
                 formattedMarkdown = timestampedMarkdown
@@ -3399,8 +3439,9 @@ router.post('/:path/ai-format', async (request, { env }) => {
         return returnJSON(10002, 'Password auth failed!', { status: 401 })
     }
 
-    if (!env.AI) {
-        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
+    const aiBinding = resolveAiBinding(env)
+    if (!aiBinding) {
+        return returnJSON(50001, 'Cloudflare Workers AI or Groq AI service is not configured on this Worker.', { status: 500 })
     }
 
     let json
@@ -3469,7 +3510,7 @@ router.post('/:path/ai-format', async (request, { env }) => {
     ]
 
     try {
-        const aiResponse = await runAiWithTimeout(env.AI, model, {
+        const aiResponse = await runAiWithTimeout(aiBinding, model, {
             messages,
             reasoning_effort: 'low',
             max_completion_tokens: 8192,
@@ -3482,13 +3523,13 @@ router.post('/:path/ai-format', async (request, { env }) => {
             }
             return returnJSON(0, { result: resultText, scope: hasSelection ? 'selection' : 'document', modelUsed: model })
         }
-        return returnJSON(50003, `Workers AI returned an empty response for model ${model}`)
+        return returnJSON(50003, `AI service returned an empty response for model ${model}`)
     } catch (error) {
-        console.error(`[AI] Workers AI model ${model} failed:`, error)
+        console.error(`[AI] AI model ${model} failed:`, error)
         console.error(`[AI] Error name:`, error.name)
         console.error(`[AI] Error message:`, error.message)
         console.error(`[AI] Error stack:`, error.stack)
-        return returnJSON(50003, `Workers AI model ${model} failed: ${error.message}`)
+        return returnJSON(50003, `AI model ${model} failed: ${error.message}`)
     }
 })
 
