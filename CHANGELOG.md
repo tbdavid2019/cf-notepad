@@ -6,6 +6,7 @@
 - **🧩 Whiteboard 白屏修正 (Normalize Excalidraw Elements)**：Whiteboard mount 前使用 Excalidraw 官方 `convertToExcalidrawElements` 正規化簡化 JSON，補齊 renderer 所需 element 欄位，保留 Obsidian／Excalidraw JSON 輸入相容性。
 - **🖥️ Whiteboard runtime exception 修正 (Excalidraw UIOptions)**：將 `canvasActions.export` 從布林值改為 Excalidraw 0.18.1 要求的 `{ saveFileToDisk: true }` 物件，修正 mount 階段白屏。
 - **🧹 Whiteboard Console 清理**：將 Excalidraw 內部 `unload` cleanup listener 改為 `pagehide`，保留離頁清理並符合瀏覽器 Permissions Policy；Whiteboard 靜態資產版本升至 `v=1.1`，確保瀏覽器取得修正版 bundle。
+- **📚 Whiteboard Library 套件安裝修正 (Library Install & Persistence)**：接入 `libraryReturnUrl`、`onLibraryChange` 與 `libraryItems` JSON round-trip，外部 Excalidraw Libraries 的 `Add to Excalidraw` 現在會回到當前 Whiteboard 並保存到 note；資產版本升至 `v=1.2`。
 
 - **🎨 Excalidraw 自由手繪白板模式 (Excalidraw Freeform Whiteboard Editor & Agent Tools)**：
   - **雙軌畫布分流 (/new/whiteboard)**：引入 Excalidraw 官方 React 組件 (`@excalidraw/excalidraw@0.18.1`)，作為與 Canvas 邏輯卡片圖並行的第四種原生筆記格式 (`editorFormat: 'whiteboard'`)。Canvas 專注節點關聯與架構圖，Whiteboard 專注自由手繪塗鴉、箭頭、色鉛筆筆觸與便籤。

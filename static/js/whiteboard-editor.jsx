@@ -30,6 +30,7 @@ function parseInitialData(rawText) {
                 elements,
                 appState: parsed.appState || {},
                 files: parsed.files || {},
+                libraryItems: parsed.libraryItems || [],
             }
         }
     } catch {}
@@ -44,6 +45,7 @@ export function WhiteboardApp({ contentsEl, isEdit }) {
 
     const [theme, setTheme] = useState(getInitialTheme)
     const saveTimerRef = useRef(null)
+    const libraryItemsRef = useRef(initialDataRef.current?.libraryItems || [])
 
     useEffect(() => {
         const observer = new MutationObserver(() => {
@@ -69,10 +71,26 @@ export function WhiteboardApp({ contentsEl, isEdit }) {
                 elements,
                 appState: safeAppState,
                 files: files || {},
+                libraryItems: libraryItemsRef.current,
             }
             contentsEl.value = JSON.stringify(payload, null, 2)
             contentsEl.dispatchEvent(new Event('input', { bubbles: true }))
         }, 300)
+    }, [contentsEl, isEdit])
+
+    const handleLibraryChange = useCallback((libraryItems) => {
+        libraryItemsRef.current = Array.isArray(libraryItems) ? libraryItems : []
+        if (!isEdit) return
+        try {
+            const current = JSON.parse(contentsEl.value || '{}')
+            contentsEl.value = JSON.stringify({
+                ...current,
+                libraryItems: libraryItemsRef.current,
+            }, null, 2)
+            contentsEl.dispatchEvent(new Event('input', { bubbles: true }))
+        } catch (error) {
+            console.warn('[whiteboard] library persistence skipped:', error)
+        }
     }, [contentsEl, isEdit])
 
     const isZh = () => {
@@ -91,6 +109,8 @@ export function WhiteboardApp({ contentsEl, isEdit }) {
                 gridModeEnabled={false}
                 theme={theme}
                 langCode={isZh() ? 'zh-TW' : 'en'}
+                libraryReturnUrl={typeof window !== 'undefined' ? `${window.location.origin}${window.location.pathname}` : undefined}
+                onLibraryChange={handleLibraryChange}
                 UIOptions={{
                     canvasActions: {
                         loadScene: isEdit,
