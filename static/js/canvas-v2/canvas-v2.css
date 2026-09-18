@@ -295,6 +295,7 @@
     min-width: 0;
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     justify-content: center;
     height: 100%;
@@ -305,6 +306,7 @@
 .canvas-wiki-form {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 8px;
     width: 100%;
     min-width: 0;
@@ -329,10 +331,12 @@
 .canvas-wiki-preview {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
     gap: 6px;
     width: 100%;
     min-width: 0;
     overflow: hidden;
+    text-align: left;
 }
 
 .canvas-wiki-title {
