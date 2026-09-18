@@ -71,6 +71,7 @@ function extractContentTitle(value = '') {
             const parsed = JSON.parse(trimmedVal)
             for (const element of parsed.elements || []) {
                 if (element?.isDeleted || element?.type !== 'text' || typeof element.text !== 'string') continue
+                if (element.id === 'wb-welcome-text') continue
                 const candidate = normalizeTitleCandidate(element.text.split('\n')[0])
                 if (candidate && !isIgnoredTitleLine(candidate)) return candidate
             }

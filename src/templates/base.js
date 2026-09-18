@@ -226,7 +226,7 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     ${annotationsUiEnabled ? '<link rel="stylesheet" href="/css/share-annotations.css" />' : ''}
     ${isEdit && isBlockDocument ? '<link rel="stylesheet" href="/js/block-editor.bundle.css" />' : ''}
     ${isCanvasDocument ? '<link rel="stylesheet" href="/js/canvas-editor.bundle.css?v=3.9" />' : ''}
-    ${isWhiteboardDocument ? '<link rel="stylesheet" href="/js/whiteboard-editor.bundle.css?v=1.0" />' : ''}
+    ${isWhiteboardDocument ? '<link rel="stylesheet" href="/js/whiteboard-editor.bundle.css?v=1.1" />' : ''}
     <script type="module" src="https://ka-f.webawesome.com/webawesome@${WEB_AWESOME_VERSION}/webawesome.loader.js"></script>
     ${ext.meta?.canonicalUrl ? `<link rel="canonical" href="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
     ${ext.meta?.canonicalUrl ? `<meta property="og:url" content="${escapeHtml(ext.meta.canonicalUrl)}" />` : ''}
@@ -5281,7 +5281,7 @@ ${getMarkdownCss()}
     ${isEdit && isBlockDocument ? '<script type="module" src="/js/block-editor.bundle.mjs"></script>' : ''}
     ${isBlockDocument && !isEdit ? '<script type="module" src="/js/block-view.mjs"></script>' : ''}
     ${isCanvasDocument ? '<script type="module" src="/js/canvas-editor.bundle.mjs?v=3.9"></script>' : ''}
-    ${isWhiteboardDocument ? '<script type="module" src="/js/whiteboard-editor.bundle.mjs?v=1.0"></script>' : ''}
+    ${isWhiteboardDocument ? '<script type="module" src="/js/whiteboard-editor.bundle.mjs?v=1.1"></script>' : ''}
     <script type="module" src="/js/pwa-install.mjs"></script>
     <script type="module" src="/js/reading-progress.mjs"></script>
     <script type="module" src="/js/floating-controls.mjs"></script>
