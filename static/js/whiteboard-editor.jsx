@@ -95,7 +95,7 @@ export function WhiteboardApp({ contentsEl, isEdit }) {
                     canvasActions: {
                         loadScene: isEdit,
                         saveAsImage: true,
-                        export: isEdit,
+                        export: isEdit ? { saveFileToDisk: true } : false,
                     },
                 }}
             />
