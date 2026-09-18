@@ -6,7 +6,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@excalidraw/excalidraw/index.css'
-import { Excalidraw } from '@excalidraw/excalidraw'
+import { Excalidraw, convertToExcalidrawElements } from '@excalidraw/excalidraw'
 
 if (typeof window !== 'undefined' && !window.EXCALIDRAW_ASSET_PATH) {
     window.EXCALIDRAW_ASSET_PATH = 'https://unpkg.com/@excalidraw/excalidraw@0.18.1/dist/prod/'
@@ -25,8 +25,9 @@ function parseInitialData(rawText) {
     try {
         const parsed = JSON.parse(rawText)
         if (parsed && (parsed.type === 'excalidraw' || Array.isArray(parsed.elements))) {
+            const elements = convertToExcalidrawElements(parsed.elements || [], { regenerateIds: false })
             return {
-                elements: parsed.elements || [],
+                elements,
                 appState: parsed.appState || {},
                 files: parsed.files || {},
             }
