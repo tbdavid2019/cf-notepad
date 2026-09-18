@@ -2,10 +2,11 @@
 
 ## [2026-09-18]
 
-- **🛡️ 彈性 AI 服務容錯層與 Cloudflare 上游 10021 驗證錯誤修復 (Resilient AI Provider Adapter & Upstream 10021 Workaround)**：
-  - **根本原因診斷 (Root Cause Discovered)**：經跨 4 組 Cloudflare 帳號實測驗證，Cloudflare 控制平面在特定帳號（如 `379570860738dd1757ba7f67ef2bdffe`）上發生 Worker Metadata 綁定生成器內部異常，上傳驗證時報錯 `10021: binding AI of type ai failed to generate: internal error`（直接 REST API 推論則完全正常）。
-  - **雙軌容錯架構 (`resolveAiBinding`)**：在 `src/index.js` 實作 `resolveAiBinding(env)` 統一介面，優先使用 `env.AI`；若未配置或處於控制平面異常期，自動平滑降級調用 `env.GROQ_API_KEY`（採用 `openai/gpt-oss-20b` 與 `openai/gpt-oss-120b` 生產級模型），確保音訊智慧排版與 `/:path/ai-format` 功能 100% 正常運作，零中斷。
-  - **生產環境驗證**：成功部署至 Cloudflare Workers（版本 ID `88a87178-bfac-4773-899f-bba44eea8061`），經端對端實機測試 `POST /test-ai-note/ai-format` 確認排版推論功能秒級響應並格式化成功。
+- **🛡️ 彈性 AI 服務容錯層與全面汰換棄用模型 (Resilient AI Provider Adapter & Purge Deprecated Llama Models)**：
+  - **根本原因診斷 (Root Cause Discovered)**：經跨 4 組 Cloudflare 帳號實測驗證，Cloudflare 控制平面在特定帳號（如 `379570860738dd1757ba7f67ef2bdffe`）上發生 Worker Metadata 綁定生成器內部異常，上傳驗證時報錯 `10021: binding AI of type ai failed to generate: internal error`（直接 REST API 推論則正常）。
+  - **全面清理廢棄模型 (Purge Legacy Llama Models)**：徹底從專案程式碼中移除所有已廢棄或停止維護的 Meta/Llama 模型（如 `llama-3.1-8b-instruct`, `llama-3.3-70b-instruct`），統一收斂至 `@cf/openai/gpt-oss-120b` 與 `@cf/openai/gpt-oss-20b`。
+  - **雙軌容錯架構 (`resolveAiBinding`)**：在 `src/index.js` 實作 `resolveAiBinding(env)` 統一介面，優先使用 `env.AI`；若未配置或處於控制平面異常期，自動平滑降級調用 `env.GROQ_API_KEY`（採用 `openai/gpt-oss-20b` 與 `openai/gpt-oss-120b` 生產級模型），確保音訊智慧排版、劃線讀者助理與 `/:path/ai-format` 功能 100% 正常運作，零中斷。
+  - **生產環境驗證**：成功部署至 Cloudflare Workers，經端對端實機測試 `POST /test-ai-note/ai-format` 確認排版推論功能秒級響應並格式化成功。
 
 ## [2026-09-17]
 
@@ -397,7 +398,7 @@
 - **🎙️ 語音辨識升級：原生時間戳記標記 (`[mm:ss]`) 與自動段落排版 (Whisper Timestamps & Paragraph Segmentation)**：
   - **原生時間標記分段 (Native Timestamp Parsing & Segmentation)**：升級 Groq STT 請求格式為 `verbose_json`，並全面解析 Cloudflare Workers AI Whisper (`@cf/openai/whisper-large-v3-turbo`) 回傳之 WebVTT 字幕流，提取精確至毫秒的語音時間區間與文字片段。
   - **結構化 Markdown 段落排版 (Timestamped Paragraph Formatting)**：解決過往純逐字稿字元全部黏在一起、難以閱讀的痛點。現在「匯入音訊（逐字稿）」會依據 Whisper 語音停頓與時間戳記自動分段，輸出格式如 `**[00:15]** 段落文字內容`，每段獨立換行，兼顧 Markdown 預覽與 BlockNote 區塊編輯器的完美排版。
-  - **智慧排版同步受惠 (Smart Layout Timestamps Optimization)**：「匯入音訊（智慧排版）」亦獲得時間結構化的分段輸入，讓 LLM（`gpt-oss-120b` / `llama-3.3-70b-instruct`）在整理摘要、行動清單與主題標題時更能精確定位時間脈絡。
+  - **智慧排版同步受惠 (Smart Layout Timestamps Optimization)**：「匯入音訊（智慧排版）」亦獲得時間結構化的分段輸入，讓 LLM（`gpt-oss-120b` / `gpt-oss-20b`）在整理摘要、行動清單與主題標題時更能精確定位時間脈絡。
   - **模組化架構與完整測試 (Modular Audio Transcribe & Test Coverage)**：獨立抽離 `src/audio_transcribe.mjs` 工具模組，完整覆蓋 WebVTT 解析、標籤清理、秒數時間戳轉換與超長音訊（`[hh:mm:ss]`）單元測試。
 - **📂 編輯器音訊檔案拖曳三合一分流彈窗 (Audio Drag & Drop Tri-Action Modal with Verbatim Default)**：
   - **補齊純逐字稿選項並設為預設 (Default Verbatim Transcript Option)**：拖曳音訊進編輯器時，彈窗與左下角選單用語 100% 嚴格一致，提供三合一選項：

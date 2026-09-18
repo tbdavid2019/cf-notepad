@@ -1489,7 +1489,6 @@ async function formatAudioSmartMarkdown(aiBinding, rawText) {
 
     const modelsToTry = [
         '@cf/openai/gpt-oss-120b',
-        '@cf/meta/llama-3.3-70b-instruct',
         '@cf/openai/gpt-oss-20b'
     ]
 
@@ -2281,7 +2280,7 @@ router.delete('/api/shares/:shareId/annotations/:threadId', async request => {
 })
 
 router.post('/api/shares/:shareId/ai-assistant', async (request, context = {}) => {
-    const ai = context?.env?.AI || globalThis.AI
+    const ai = resolveAiBinding(context?.env) || context?.env?.AI || globalThis.AI
     const shareKv = context?.env?.SHARE || getShareNamespace()
     const shareId = decodeURIComponent(request.params.shareId)
     let path = shareKv ? await shareKv.get(shareId) : null
@@ -2307,7 +2306,7 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, context = {}) =
     }
 
     if (!ai) {
-        return returnJSON(50001, 'Cloudflare Workers AI service is not configured on this Worker.', { status: 500 })
+        return returnJSON(50001, 'Cloudflare Workers AI or Groq AI service is not configured on this Worker.', { status: 500 })
     }
 
     let json
