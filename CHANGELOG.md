@@ -2,6 +2,8 @@
 
 ## [2026-09-18]
 
+- **📐 Canvas 新增選單左側基準線修正 (Canvas Add Menu Alignment)**：統一 Thought Nodes 與 Extensions 的 row 寬度、左對齊規則與 28px icon 欄位，六個擴充項目的文字現在共享同一條起始基準線；Canvas bundle cache version 更新至 `v=3.7`。
+
 - **🤖 Canvas Agent Contract 與 Book 模式整合 (WebMCP, REST API, Skill & LLM Discovery)**：
   - **原生 WebMCP 工具**：新增 `validate_canvas`、`write_canvas`、`read_canvas`，LLM agent 可驗證節點與關係線、建立完整 JSON Canvas、讀回 edge 數量與公開 `shareUrl`。
   - **REST／OpenAPI 對應**：`POST /api/{path}` 支援 `editorFormat: "canvas"` 與完整 JSON Canvas 文件；`/openapi.json`、`LLM_API_DOCS.md` 與動態 API 說明同步列出 Canvas 契約。
