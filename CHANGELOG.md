@@ -2,6 +2,13 @@
 
 ## [2026-09-18]
 
+- **🎨 Excalidraw 自由手繪白板模式 (Excalidraw Freeform Whiteboard Editor & Agent Tools)**：
+  - **雙軌畫布分流 (/new/whiteboard)**：引入 Excalidraw 官方 React 組件 (`@excalidraw/excalidraw@0.18.1`)，作為與 Canvas 邏輯卡片圖並行的第四種原生筆記格式 (`editorFormat: 'whiteboard'`)。Canvas 專注節點關聯與架構圖，Whiteboard 專注自由手繪塗鴉、箭頭、色鉛筆筆觸與便籤。
+  - **100% 官方標準封裝**：零發明客製畫布組件，直接採用 Excalidraw 官方生態，本機 esbuild 打包至 `static/js/whiteboard-editor.bundle.mjs` (ESM) 與 `bundle.css`，字型支援透過 unpkg CDN 動態載入，維持靜態資源輕量。
+  - **無縫資料儲存與唯讀分享**：狀態透過 `#contents.value` 防抖同步，完整保留 Excalidraw JSON (`elements` 與 `appState`) 於 D1/KV 資料庫，無需修改資料庫 schema；支援 `/share/:id` 唯讀分享 (`viewModeEnabled: true`)、自動跟隨 20 款深淺主題色彩切換。
+  - **原生 WebMCP 與 REST API 契約**：WebMCP 支援 `validate_whiteboard`、`write_whiteboard`、`read_whiteboard`；REST API `POST /api/:path` 支援 `editorFormat: "whiteboard"`，並於 `whiteboardToMarkdown` 自動提取文字內容供搜尋引擎與 headless 讀取。
+  - **發現與文檔同步**：更新 OpenAPI 3.1.0、`llms.txt`、`llms-full.txt`、`LLM_API_DOCS.md`、`skills/SKILL.md`、`.agent/skills/` 與雙語 `README.md`。
+
 - **🔐 Whiteboard 供應商 bundle 秘密掃描修正 (Whiteboard Bundle Secret Scan Fix)**：Whiteboard build 流程會移除 Excalidraw upstream Firebase client config 後才寫入 `static/js/whiteboard-editor.bundle.mjs`；目前產物與線上資產均保留空設定，不再攜帶第三方 Google API key。
 
 - **✏️ Canvas 標題可直接編輯 (Editable Canvas Title)**：Canvas 左上方新增標題編輯器，支援人員直接修改頁籤標題；標題透過 `/setting` 寫入 note metadata，並同步更新瀏覽器頁籤、編輯頁、公開分享頁與重新整理後的 Canvas 標題。明確設定的 metadata title 具備最高頁面標題優先級。

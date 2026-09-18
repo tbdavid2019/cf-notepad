@@ -127,6 +127,18 @@ Canvas interaction capabilities include box selection and multi-drag, bulk color
 
 Resource nodes use standard JSON Canvas `file` records with `david888.asset` metadata for `image`, `file`, `audio`, and `video` assets. The Canvas toolbar uploads images through R2 first and other assets through the 888box fallback chain.
 
+### 2.3.2 Excalidraw Whiteboard Tools for Agents and WebMCP
+
+The native MCP endpoint exposes `validate_whiteboard`, `write_whiteboard`, and `read_whiteboard`. Use these tools when a user asks for a freeform hand-drawn sketch, wireframe, brainstorming doodle, or visual illustration.
+- Use `write_whiteboard` with `editorFormat: "whiteboard"` and an Excalidraw document payload (containing `elements` and optional `appState`).
+- The call returns `shareUrl`; provide that URL to the human so they can view and interact with the whiteboard.
+- Excalidraw whiteboards are 100% compatible with Obsidian Excalidraw JSON.
+
+**Format selection guidance:**
+- **Markdown**: Use for linear text, structured reports, code samples, slide presentations (`/present`), and multi-article books (`/book`).
+- **Canvas**: Use for logic node graphs, UML, architecture flows, concept cards with connection handles, and `[[WikiLink]]` knowledge graphs.
+- **Whiteboard**: Use for freeform hand-drawn sketches, wireframes, brainstorming doodles, and sticky notes.
+
 ### 2.4 Available Themes
 Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
 > [!IMPORTANT]

@@ -156,6 +156,56 @@ async def append_wiki(path: str, text: str, password: Optional[str] = None) -> s
             return f"Network Error: {exc}"
 
 
+@mcp.tool()
+async def write_whiteboard(
+    path: str,
+    document_json: str,
+    password: Optional[str] = None,
+    new_view_password: Optional[str] = None,
+    make_private: bool = False
+) -> str:
+    """
+    Create or overwrite an Excalidraw Whiteboard document on the David888 Wiki.
+    Use this for freeform hand-drawn sketches, wireframes, brainstorming doodles, and sticky notes.
+    100% compatible with Obsidian Excalidraw JSON.
+
+    Args:
+        path: The unique slug/path for the whiteboard (e.g. 'project-wireframe').
+        document_json: The complete Excalidraw JSON string containing 'elements' and optional 'appState'.
+        password: (Optional) Edit credential.
+        new_view_password: (Optional) View credential.
+        make_private: (Optional) Set to True to disable public sharing.
+    """
+    url = f"{BASE_URL}/api/{path}"
+    payload = {
+        "text": document_json,
+        "editorFormat": "whiteboard",
+        "public": not make_private
+    }
+    if password:
+        payload["pw"] = password
+    if new_view_password:
+        payload["vpw"] = new_view_password
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, json=payload, timeout=15.0)
+            if response.status_code == 200:
+                res_data = response.json()
+                if res_data.get("err") == 0:
+                    data = res_data.get('data', {})
+                    share_url = data.get('shareUrl')
+                    edit_url = data.get('url', f'{BASE_URL}/{path}')
+                    if share_url:
+                        return f"Successfully saved whiteboard!\nPublic Share URL: {share_url}\nEdit URL: {edit_url}"
+                    return f"Successfully saved whiteboard (Private). Edit URL: {edit_url}"
+                return f"Wiki API Error: {res_data.get('msg')}"
+            else:
+                return f"Server Error: HTTP {response.status_code}."
+        except httpx.RequestError as exc:
+            return f"Network Error: {exc}"
+
+
 ALLOWED_IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".bmp", ".avif"}
 MAX_IMAGE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 

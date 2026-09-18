@@ -33,6 +33,7 @@ const THEME_OPTION_LABELS = {
 
 export const SVG_ICONS = {
     canvas: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><path d="M10 6.5h4"></path><path d="M6.5 10v4"></path><path d="M17.5 10v4"></path><circle cx="6.5" cy="17.5" r="3.5"></circle></svg>`,
+    whiteboard: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M7 11l3 3 7-7"></path></svg>`,
     settings: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
     editLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="10" width="11" height="10" rx="2"></rect><path d="M7 10V7a3 3 0 0 1 5.5-1.7"></path><path d="m13.5 16.5 5.7-5.7a1.4 1.4 0 0 1 2 2l-5.7 5.7-3 1z"></path><path d="m17.8 12.2 2 2"></path></svg>`,
     readLock: `<svg class="svg-icon lock-combo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="10" width="10.5" height="10" rx="2"></rect><path d="M5.5 10V7a3 3 0 0 1 5.5-1.7"></path><path d="M14.5 14.5s2-3 4.5-3 4.5 3 4.5 3-2 3-4.5 3-4.5-3-4.5-3z"></path><circle cx="19" cy="14.5" r="1.1"></circle></svg>`,
@@ -378,6 +379,8 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
     const newBlockDescription = lang === 'zh-TW' ? '拖拉區塊與 Slash 指令' : 'Drag blocks and use slash commands'
     const newCanvasTitle = lang === 'zh-TW' ? 'Canvas 畫布' : 'Canvas'
     const newCanvasDescription = lang === 'zh-TW' ? '視覺化 2D 卡片與關係線' : 'Visual 2D cards and connections'
+    const newWhiteboardTitle = lang === 'zh-TW' ? 'Excalidraw 白板' : 'Whiteboard'
+    const newWhiteboardDescription = lang === 'zh-TW' ? '自由手繪、線條塗鴉與便籤' : 'Freeform sketch and sticky notes'
     const createSectionTitle = lang === 'zh-TW' ? '建立筆記' : 'Create note'
     const importSectionTitle = isBlockEditor
         ? (lang === 'zh-TW' ? '匯入內容（轉成 Block）' : 'Import content (Blocks)')
@@ -441,6 +444,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 <small>${newCanvasDescription}</small>
                                             </span>
                                         </a>
+                                        <a id="new-whiteboard-note-link" class="dropdown-item dropdown-item-rich" href="/new/whiteboard">
+                                            ${SVG_ICONS.whiteboard}
+                                            <span class="dropdown-item-copy">
+                                                <strong>${newWhiteboardTitle}</strong>
+                                                <small>${newWhiteboardDescription}</small>
+                                            </span>
+                                        </a>
                                         <div class="dropdown-divider"></div>
                                         <div class="dropdown-menu-label">${importSectionTitle}</div>
                                         <button type="button" id="dropdown-record-audio-btn" class="dropdown-item">${SVG_ICONS.mic}<span>${t.startRecording || (lang === 'zh-TW' ? '即時錄音' : 'Live voice recording')}</span></button>
@@ -481,6 +491,13 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                         <span class="dropdown-item-copy">
                                             <strong>${newCanvasTitle}</strong>
                                             <small>${newCanvasDescription}</small>
+                                        </span>
+                                    </a>
+                                    <a id="new-whiteboard-note-link" class="dropdown-item dropdown-item-rich" href="/new/whiteboard">
+                                        ${SVG_ICONS.whiteboard}
+                                        <span class="dropdown-item-copy">
+                                            <strong>${newWhiteboardTitle}</strong>
+                                            <small>${newWhiteboardDescription}</small>
                                         </span>
                                     </a>
                                     ${!isBlockEditor ? `

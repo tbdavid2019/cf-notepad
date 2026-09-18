@@ -190,7 +190,7 @@ test('base template renders canvas editor container and loads bundle when editor
     assert.match(html, /src="\/js\/canvas-editor\.bundle\.mjs(?:\?[^"]*)?"/)
     assert.match(html, /data-editable="true"/)
     assert.match(html, /window\.APP_STATE = APP_STATE/)
-    assert.match(baseTemplateSource, /isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\)/)
+    assert.match(baseTemplateSource, /isEdit && !isBlockDocument && !isCanvasDocument(?: && !isWhiteboardDocument)? \? EDITOR_TOOLBAR\(lang\)/)
     assert.match(html, /id="bot-accessible-content">\s*# Canvas Test/)
 })
 

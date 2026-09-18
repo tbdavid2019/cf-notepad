@@ -78,7 +78,10 @@ test('all script tags in rendered HTML have zero syntax errors across all page c
         { isEdit: false, shareId: 'share-123', title: 'Share Mode', content: '# Slide 1\n---\n# Slide 2' },
         { isEdit: false, shareId: 'share-123', autoPresent: true, presentationEntry: true, title: 'Present Mode', content: '# Presentation' },
         { isEdit: true, isBlockDocument: true, title: 'Block Edit', content: '[]' },
-        { isEdit: false, isBlockDocument: true, shareId: 'share-456', title: 'Block View', content: '[]' }
+        { isEdit: false, isBlockDocument: true, shareId: 'share-456', title: 'Block View', content: '[]' },
+        { isEdit: true, title: 'Canvas Edit', content: '{"nodes":[],"edges":[]}', ext: { editorFormat: 'canvas' } },
+        { isEdit: true, title: 'Whiteboard Edit', content: '{"type":"excalidraw","elements":[]}', ext: { editorFormat: 'whiteboard' } },
+        { isEdit: false, shareId: 'share-789', title: 'Whiteboard View', content: '{"type":"excalidraw","elements":[]}', ext: { editorFormat: 'whiteboard' } }
     ]
 
     for (const cfg of configs) {
@@ -86,7 +89,7 @@ test('all script tags in rendered HTML have zero syntax errors across all page c
             lang: 'zh-TW',
             title: cfg.title,
             content: cfg.content,
-            ext: { enableR2: true },
+            ext: { enableR2: true, ...(cfg.ext || {}) },
             tips: '',
             isEdit: cfg.isEdit,
             isBlockDocument: cfg.isBlockDocument,

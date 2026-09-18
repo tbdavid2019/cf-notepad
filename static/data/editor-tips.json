@@ -160,6 +160,11 @@
       "id": "canvas-asset-node",
       "zh-TW": "小訣竅：Canvas 支援拖曳或新增「圖片／檔案資源」卡片！圖片自動走 R2 上傳，影音與文件自動走 888box 備援，卡片會依 MIME 類型自動顯示圖片預覽、音訊播放器、影片播放器或下載連結。",
       "en-US": "Tip: Canvas supports dragging or adding 'Asset Resource' cards! Images upload to R2, while media and documents route to 888box. Cards adaptively render image previews, audio players, video players, or download links."
+    },
+    {
+      "id": "excalidraw-whiteboard",
+      "zh-TW": "小訣竅：前往 /new/whiteboard 或在「＋ 新增」選單點擊「Excalidraw 白板」，即可使用自由手繪、線條塗鴉、幾何圖形與便籤！支援雙主題、Obsidian Excalidraw 相容格式、唯讀分享與高清 PNG/SVG 匯出。",
+      "en-US": "Tip: Visit /new/whiteboard or select 'Whiteboard' from the '+ New' menu to open the Excalidraw freeform whiteboard! Supports sketch drawing, sticky notes, light/dark themes, Obsidian Excalidraw compatibility, read-only sharing, and PNG/SVG export."
     }
   ]
 }

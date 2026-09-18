@@ -54,6 +54,37 @@ Canvas UI supports box selection, multi-node movement, bulk color/delete actions
 
 ---
 
+## Whiteboard API and Agent Tools (Excalidraw)
+
+Whiteboard (`/new/whiteboard`) provides a freeform hand-drawn canvas powered by Excalidraw, side-by-side with structured Canvas (`/new/canvas`) and Markdown (`/new/markdown`). Writes send `editorFormat: "whiteboard"` and a complete Excalidraw document in the `text` field; Whiteboard does not support append writes.
+
+Native MCP tools:
+
+- `validate_whiteboard`: validates elements array and basic structure, returning element count and Markdown text summary.
+- `write_whiteboard`: creates or overwrites an Excalidraw Whiteboard document, persisting `editorFormat: "whiteboard"`, and returns `shareUrl` and element count.
+- `read_whiteboard`: reads the full Excalidraw JSON document and extracted text summary.
+
+Format decision tree:
+- **Markdown** (`/new/markdown`): linear text, articles, code, 2D presentation slides (`/present`), and multi-chapter books (`/book`).
+- **Canvas** (`/new/canvas`): structured logic diagrams, 2D card graphs, UML, knowledge relationship maps, and `[[WikiLink]]` graphs.
+- **Whiteboard** (`/new/whiteboard`): freeform hand-drawn sketches, wireframes, brainstorming doodles, and hand-drawn architecture sketches. 100% compatible with Obsidian Excalidraw JSON.
+
+REST Whiteboard write:
+
+```bash
+curl -X POST "https://wiki.david888.com/api/<path>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "{\"type\":\"excalidraw\",\"version\":2,\"elements\":[{\"id\":\"rect1\",\"type\":\"rectangle\",\"x\":100,\"y\":100,\"width\":200,\"height\":100,\"strokeColor\":\"#1e1e1e\",\"backgroundColor\":\"#e7f5ff\"}],\"appState\":{}}",
+    "editorFormat": "whiteboard",
+    "share": true
+  }'
+```
+
+The REST response includes `shareUrl`. Use `GET /api/<path>` to read the complete Excalidraw JSON document.
+
+---
+
 ## 🔌 Model Context Protocol (MCP) Integration (Claude Desktop, Cursor, WebMCP)
 
 You can connect external AI assistants directly to the Wiki via MCP:

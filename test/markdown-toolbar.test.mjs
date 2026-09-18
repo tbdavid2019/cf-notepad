@@ -132,7 +132,7 @@ test('reports the cursor line, column, and total editor length', () => {
 })
 
 test('renders the toolbar for editable Markdown pages', () => {
-    assert.match(baseTemplate, /<div class="layer_2">\s*\$\{isEdit && !isBlockDocument && !isCanvasDocument \? EDITOR_TOOLBAR\(lang\) : ''\}/)
+    assert.match(baseTemplate, /<div class="layer_2">\s*\$\{isEdit && !isBlockDocument && !isCanvasDocument(?: && !isWhiteboardDocument)? \? EDITOR_TOOLBAR\(lang\) : ''\}/)
     assert.match(commonTemplate, /data-markdown-toolbar/)
     assert.match(
         commonTemplate,
@@ -184,7 +184,7 @@ test('top AI edit control reuses the document AI editing workflow', () => {
 })
 
 test('loads the Markdown toolbar only for Markdown edit pages', () => {
-    assert.match(baseTemplate, /\$\{isEdit && !isBlockDocument && !isCanvasDocument \? '<script type="module" src="\/js\/markdown-toolbar\.mjs"><\/script>' : ''\}/)
+    assert.match(baseTemplate, /\$\{isEdit && !isBlockDocument && !isCanvasDocument(?: && !isWhiteboardDocument)? \? '<script type="module" src="\/js\/markdown-toolbar\.mjs"><\/script>' : ''\}/)
     assert.match(baseTemplate, /divide-line/)
 })
 
