@@ -2,6 +2,8 @@
 
 ## [2026-09-18]
 
+- **🔐 Whiteboard 供應商 bundle 秘密掃描修正 (Whiteboard Bundle Secret Scan Fix)**：Whiteboard build 流程會移除 Excalidraw upstream Firebase client config 後才寫入 `static/js/whiteboard-editor.bundle.mjs`；目前產物與線上資產均保留空設定，不再攜帶第三方 Google API key。
+
 - **✏️ Canvas 標題可直接編輯 (Editable Canvas Title)**：Canvas 左上方新增標題編輯器，支援人員直接修改頁籤標題；標題透過 `/setting` 寫入 note metadata，並同步更新瀏覽器頁籤、編輯頁、公開分享頁與重新整理後的 Canvas 標題。明確設定的 metadata title 具備最高頁面標題優先級。
 
 - **🚀 Canvas P1／P2 互動與知識圖譜功能完成 (Canvas Multi-select, Export, Search, WikiLink Graph & Camera Tour)**：
