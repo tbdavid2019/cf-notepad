@@ -4,7 +4,7 @@
  */
 import { CDN_PREFIX, SUPPORTED_LANG, APP_NAME, DEFAULT_PREVIEW_WIDTH } from '../constant.js'
 import { THEMES } from '../theme_data.js'
-import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, MATH_FORMAT_MODAL, URL_IMPORT_MODAL, CITE_MODAL, SVG_ICONS } from './common.js'
+import { EDITOR_TOOLBAR, FOOTER, MODAL, EDITOR_PREFERENCE_MODAL, MATH_FORMAT_MODAL, URL_IMPORT_MODAL, CITE_MODAL, VAULT_PRESETS_MODAL, SVG_ICONS } from './common.js'
 import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
@@ -507,6 +507,7 @@ ${getMarkdownCss()}
     ${URL_IMPORT_MODAL(lang)}
     ${MATH_FORMAT_MODAL(lang)}
     ${CITE_MODAL(lang)}
+    ${isEdit ? VAULT_PRESETS_MODAL(lang) : ''}
     ${isEdit ? PUBLISH_NUDGE_MODAL(lang) : ''}
     ${((ext.mode || 'md') === 'md' || ext.share || !isEdit) ? `
     <script src="${CDN_PREFIX}/dompurify@3.0.6/dist/purify.min.js"></script>
@@ -5146,6 +5147,15 @@ ${getMarkdownCss()}
         }
         // Share Actions (Delegated on document to support floating portal menus)
         document.addEventListener('click', async (e) => {
+            const openPresetsBtn = e.target.closest('#vault-presets-toolbar-btn, .vault-presets-toolbar-btn, #open-vault-presets-modal-btn, .open-vault-presets-modal-btn');
+            if (openPresetsBtn) {
+                e.preventDefault();
+                const modal = document.getElementById('vault-presets-modal');
+                if (modal) {
+                    openModal(modal, { trigger: openPresetsBtn });
+                }
+                return;
+            }
             const presetBtn = e.target.closest('.vault-preset-btn');
             if (presetBtn) {
                 e.preventDefault();
@@ -5211,7 +5221,10 @@ ${getMarkdownCss()}
                         editArea.dispatchEvent(new Event('input'));
                     }
                 }
-                const label = presetBtn.querySelector('.preset-label')?.textContent || presetId;
+                const vaultModal = document.getElementById('vault-presets-modal');
+                if (vaultModal) closeModal(vaultModal);
+
+                const label = presetBtn.querySelector('.preset-card-title')?.textContent?.trim() || presetBtn.querySelector('.preset-label')?.textContent?.trim() || presetId;
                 window.showToast?.((getI18n('quickPresetApplied') || 'Preset applied: ') + label);
                 return;
             }

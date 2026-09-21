@@ -170,6 +170,11 @@
       "id": "share-vault-security-modes",
       "zh-TW": "小訣竅：發布分享時可啟用「保險庫安全模式」！支援「閱後即焚」（訪客單次閱讀即從伺服器永久銷毀，作者視角免焚毀）、「有效期限」（10分鐘至30天到期自動下架）、「定時解鎖（時間膠囊）」（即時倒數計時卡片、到期自動重整公開）以及「亡者開關（保活心跳）」（作者定期打卡或調用 Webhook 保持封印，超期失聯自動對外公佈）。",
       "en-US": "Tip: Enable 'Vault Security Mode' when publishing! Supports 'Burn-After-Reading' (ephemeral single-use link with author exemption), 'Expiration' (auto-expires from 10m to 30d), 'Time-Locked Capsule' (live ticking countdown, auto-reveals on date), and 'Dead Man's Switch' (vault stays sealed while author checks in; auto-releases upon missed pulse)."
+    },
+    {
+      "id": "vault-quick-presets",
+      "zh-TW": "小訣竅：底欄新增獨立「範本」按鈕，可一鍵開啟 10 款安全情境範本庫！涵蓋一次性密碼、加密遺產、吹哨揭弊、產品發布、定時教材等，全數採用精美 Lucide 向量圖標，點擊立即配置模式並預填範本結構。",
+      "en-US": "Tip: Click the 'Presets' button in the footer to browse the 10 Security Scenario Presets! Featuring OTP, crypto inheritance, whistleblower disclosure, time-locked launch, and course materials with Lucide icons. One click applies mode configurations and structured templates."
     }
   ]
 }

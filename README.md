@@ -137,17 +137,19 @@
     - **閱後即焚 (Burn-After-Reading / Single-Use Ephemeral)**：訪客單次閱讀即自動從伺服器永久銷毀。內建**兩階段確認揭示卡 (Two-Step Interstitial Reveal)**，徹底阻擋通訊軟體爬蟲抓取摘要時意外燒毀連結；**嚴格實作作者存取豁免（作者編輯、存檔或預覽永不計次、永不焚毀）**；銷毀後永久返回 410 墓碑頁。
     - **定時解鎖／時間膠囊 (Time-Locked Capsule)**：封印機密內容至指定時間解鎖（1 小時、1 天、3 天、7 天、30 天後）。訪客檢視時返回 423 狀態碼並顯示動態即時倒數計時卡（日、時、分、秒），歸零時自動重新整理公開；作者享有專屬預覽橫幅與即時編輯調整權限。
     - **亡者開關／保活心跳 (Dead Man's Switch)**：保險庫在作者定期打卡保活期間持續維持機密封印（3 天、7 天、14 天、30 天週期）。作者編輯存檔、點擊「立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
-  - **⚡ 10 款一鍵快速情境範本 (10 Quick Start Presets)**：在分享選單中內建 10 款快捷按鈕，一鍵自動切換保險庫模式與到期週期，並在空白筆記中預填專業範本：
-    1. 🛡️ **一次性密碼 (One-Time Password)**：閱後即焚 (`burn`)，有效 1 小時，適合傳遞臨時金鑰。
-    2. ₿ **加密資產傳承 (Crypto Inheritance)**：亡者開關 (`deadman`)，30 天心跳，預填冷錢包與繼承指引。
-    3. 📢 **吹哨揭弊保護 (Whistleblower)**：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
-    4. 🚀 **產品發布解鎖 (Product Launch)**：時間膠囊 (`timelock`)，7 天後解鎖正式公告與促銷代碼。
-    5. 🎁 **生日驚喜禮物 (Birthday Gift)**：時間膠囊 (`timelock`)，1 天後 (生日當天) 揭曉驚喜兌換券。
-    6. ⚖️ **司法保全留存 (Legal Hold)**：標準分享 (`standard`)，30 天後自動過期下架。
-    7. 🎯 **闖關尋寶線索 (Scavenger Hunt)**：時間膠囊 (`timelock`)，1 小時後解密下一道謎題。
-    8. 📅 **課程定時教材 (Course Content)**：時間膠囊 (`timelock`)，7 天後隨課堂進度定時解鎖講義與作業解答。
-    9. 🛟 **緊急災備通道 (Emergency Backup)**：亡者開關 (`deadman`)，14 天無簽到自動釋出應急救援 SSH 與主控台存取。
-    10. 🔑 **機密金鑰分享 (Shared Secret)**：閱後即焚 (`burn`)，適合安全傳送 `.env` API Key 與連線密鑰。
+  - **⚡ 10 款安全情境範本獨立按鈕與 Lucide 彈窗庫 (10 Quick Start Presets Modal & Toolbar Button)**：
+    - **獨立工具列按鈕**：底欄右側提供獨立「範本 (Presets)」按鈕（`#vault-presets-toolbar-btn`），並在分享選單中保留單列「✨ 瀏覽 10 款安全情境範本」捷徑，點擊開啟專屬彈窗，不再擁擠。
+    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，點擊卡片一鍵套用最佳保險庫模式與到期週期，並在空白筆記中預填結構化範本骨架：
+      1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，有效 1 小時，適合傳遞臨時金鑰。
+      2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，預填冷錢包與繼承指引。
+      3. **吹哨揭弊保護 (Whistleblower)** (`megaphone`)：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
+      4. **產品發布解鎖 (Product Launch)** (`rocket`)：時間膠囊 (`timelock`)，7 天後解鎖正式公告與促銷代碼。
+      5. **生日驚喜禮物 (Birthday Gift)** (`gift`)：時間膠囊 (`timelock`)，1 天後 (生日當天) 揭曉驚喜兌換券。
+      6. **司法保全留存 (Legal Hold)** (`scale`)：標準分享 (`standard`)，30 天後自動過期下架。
+      7. **闖關尋寶線索 (Scavenger Hunt)** (`target`)：時間膠囊 (`timelock`)，1 小時後解密下一道謎題。
+      8. **課程定時教材 (Course Content)** (`graduationCap`)：時間膠囊 (`timelock`)，7 天後隨課堂進度定時解鎖講義與作業解答。
+      9. **緊急災備通道 (Emergency Backup)** (`lifeBuoy`)：亡者開關 (`deadman`)，14 天無簽到自動釋出應急救援 SSH 與主控台存取。
+      10. **機密金鑰分享 (Shared Secret)** (`key`)：閱後即焚 (`burn`)，適合安全傳送 `.env` API Key 與連線密鑰。
   - **🛡️ 嚴格安全防護 (Security Hardened)**：防範雙重揭密的高併發原子鎖標記、強制閱讀密碼校驗、PDF 匯出銷毀保護、預覽過渡頁不洩漏任何機密內文、動態 UUID 隔離密鑰。
   - **全格式通用支援**：通用於 Markdown 文章、Block 筆記、Canvas 畫布、Whiteboard 白板與簡報／PDF 匯出，全格式均受保險庫生命週期管線防護。
   - **WebMCP / REST API 完整支援**：`write_note`、`write_canvas`、`write_whiteboard` 原生支援 `share_mode`、`expires_in`、`burn_after_reading`、`unlock_in`、`pulse_interval` 參數，自動生成 pulse webhook 與到期資訊。
@@ -604,17 +606,19 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
     - **Burn-After-Reading (Single-Use Ephemeral)**: Permanently self-destructs after a single external reading. Features a **Two-Step Interstitial Reveal Card** that protects links from automated crawlers/unfurl bots (Discord, Slack, LINE, Twitter, Telegram) while granting **strict author exemptions (author edits and previews never trigger a burn)**.
     - **Time-Locked Capsule**: Cryptographically seals confidential content until a designated unlock time (`1h`, `1d`, `3d`, `7d`, `30d`). Unauthenticated visitors receive a 423 Locked status with live countdown cards (days, hours, minutes, seconds) that auto-reload upon unlocking; authors retain full live preview and unlock controls.
     - **Dead Man's Switch**: Vault remains sealed as long as the author periodically checks in (`3d`, `7d`, `14d`, `30d` pulse intervals). Heartbeats are refreshed via note edits, one-click "Pulse Now" in the editor, or a private webhook (`/api/shares/:id/pulse?token=...`). If the author misses check-ins, the vault automatically releases to the public.
-  - **⚡ 10 Quick Start Presets**: Built-in 1-click preset shortcuts in the share menu that configure the vault mode, timers, and pre-populate structured starter templates for empty pads:
-    1. 🛡️ **One-Time Password (OTP)**: Burn-after-reading (`burn`), 1h expiration.
-    2. ₿ **Crypto Inheritance**: Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.
-    3. 📢 **Whistleblower**: Dead man's switch (`deadman`), 7d pulse, public interest disclosure proof.
-    4. 🚀 **Product Launch**: Time-locked capsule (`timelock`), 7d unlock, launch announcement and coupon.
-    5. 🎁 **Birthday Gift**: Time-locked capsule (`timelock`), 1d unlock on birthday.
-    6. ⚖️ **Legal Hold**: Standard share (`standard`), 30d legal hold retention.
-    7. 🎯 **Scavenger Hunt**: Time-locked capsule (`timelock`), 1h clue reveal.
-    8. 📅 **Course Content**: Time-locked capsule (`timelock`), 7d scheduled curriculum and solution release.
-    9. 🛟 **Emergency Backup**: Dead man's switch (`deadman`), 14d backup SSH credentials.
-    10. 🔑 **Shared Secret**: Burn-after-reading (`burn`), `.env` credential template.
+  - **⚡ 10 Quick Start Security Scenario Presets Modal & Toolbar Button**:
+    - **Independent Toolbar Button**: A dedicated "Presets" button (`#vault-presets-toolbar-btn`) sits in the editor footer toolbar, alongside a clean single-row shortcut in the share menu, providing an uncluttered entry point.
+    - **Dedicated Scenario Presets Modal & 100% Lucide Icons**: Displays a responsive card grid with pure Lucide vector SVGs, badges (`burn`, `timelock`, `deadman`, `standard`), titles, and descriptions. Clicking any card instantly applies the vault configuration and pre-populates structured starter markdown:
+      1. **One-Time Password (OTP)** (`shieldAlert`): Burn-after-reading (`burn`), 1h expiration.
+      2. **Crypto Inheritance** (`bitcoin`): Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.
+      3. **Whistleblower** (`megaphone`): Dead man's switch (`deadman`), 7d pulse, public interest disclosure proof.
+      4. **Product Launch** (`rocket`): Time-locked capsule (`timelock`), 7d unlock, launch announcement and coupon.
+      5. **Birthday Gift** (`gift`): Time-locked capsule (`timelock`), 1d unlock on birthday.
+      6. **Legal Hold** (`scale`): Standard share (`standard`), 30d legal hold retention.
+      7. **Scavenger Hunt** (`target`): Time-locked capsule (`timelock`), 1h clue reveal.
+      8. **Course Content** (`graduationCap`): Time-locked capsule (`timelock`), 7d scheduled curriculum and solution release.
+      9. **Emergency Backup** (`lifeBuoy`): Dead man's switch (`deadman`), 14d backup SSH credentials.
+      10. **Shared Secret** (`key`): Burn-after-reading (`burn`), `.env` credential template.
   - **🛡️ Security Hardened**: Concurrent atomic burn claiming, mandatory password verification on reveal, explicit confirmation (`?burn_confirm=true`) for PDF exports on burn notes, zero secret leaks in interstitial DOM, and dynamic runtime ephemeral secrets.
   - **Universal Format Compatibility**: Supported seamlessly across Markdown, BlockNote, JSON Canvas, Excalidraw Whiteboard, and presentation/PDF exports.
 - **⚡ PWA Offline Workstation, Background Sync & Media Caching (`/_pwa-offline`)**:

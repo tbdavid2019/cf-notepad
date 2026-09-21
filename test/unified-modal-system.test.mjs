@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { MODAL, CITE_MODAL, URL_IMPORT_MODAL, MATH_FORMAT_MODAL } from '../src/templates/common.js'
+import { MODAL, CITE_MODAL, URL_IMPORT_MODAL, MATH_FORMAT_MODAL, VAULT_PRESETS_MODAL } from '../src/templates/common.js'
 import { getBaseCss } from '../src/styles/base.css.js'
 import { HTML } from '../src/templates/base.js'
 
@@ -24,10 +24,11 @@ test('MODAL renders standardized close buttons and data-modal-close attributes',
     assert.match(enHtml, /class="close-btn note-history-close" data-modal-close aria-label="Close">×<\/button>/)
 })
 
-test('CITE_MODAL, URL_IMPORT_MODAL, and MATH_FORMAT_MODAL render data-modal-close attributes', () => {
+test('CITE_MODAL, URL_IMPORT_MODAL, MATH_FORMAT_MODAL, and VAULT_PRESETS_MODAL render data-modal-close attributes', () => {
     const citeZh = CITE_MODAL('zh-TW')
     const urlZh = URL_IMPORT_MODAL('zh-TW')
     const mathZh = MATH_FORMAT_MODAL('zh-TW')
+    const vaultZh = VAULT_PRESETS_MODAL('zh-TW')
 
     assert.match(citeZh, /id="cite-modal-mask" data-modal-close/)
     assert.match(citeZh, /id="cite-modal-close-btn" data-modal-close/)
@@ -40,6 +41,10 @@ test('CITE_MODAL, URL_IMPORT_MODAL, and MATH_FORMAT_MODAL render data-modal-clos
     assert.match(mathZh, /id="math-format-mask" data-modal-close/)
     assert.match(mathZh, /id="math-format-close-btn" data-modal-close/)
     assert.match(mathZh, /id="math-format-cancel-btn" data-modal-close/)
+
+    assert.match(vaultZh, /id="vault-presets-mask" data-modal-close/)
+    assert.match(vaultZh, /id="vault-presets-close-btn" data-modal-close/)
+    assert.match(vaultZh, /id="vault-presets-cancel-btn" data-modal-close/)
 })
 
 test('BASE_CSS defines standard modal variables and cards across light and dark themes', () => {

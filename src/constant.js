@@ -118,6 +118,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'otp',
         icon: '🛡️',
+        iconName: 'shieldAlert',
         labelZh: '一次性密碼',
         labelEn: 'One-Time Password',
         mode: 'burn',
@@ -129,6 +130,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'crypto',
         icon: '₿',
+        iconName: 'bitcoin',
         labelZh: '加密資產傳承',
         labelEn: 'Crypto Inheritance',
         mode: 'deadman',
@@ -140,6 +142,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'whistleblower',
         icon: '📢',
+        iconName: 'megaphone',
         labelZh: '吹哨揭弊保護',
         labelEn: 'Whistleblower',
         mode: 'deadman',
@@ -151,6 +154,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'launch',
         icon: '🚀',
+        iconName: 'rocket',
         labelZh: '產品發布解鎖',
         labelEn: 'Product Launch',
         mode: 'timelock',
@@ -162,6 +166,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'birthday',
         icon: '🎁',
+        iconName: 'gift',
         labelZh: '生日驚喜禮物',
         labelEn: 'Birthday Gift',
         mode: 'timelock',
@@ -173,6 +178,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'legal',
         icon: '⚖️',
+        iconName: 'scale',
         labelZh: '司法保全留存',
         labelEn: 'Legal Hold',
         mode: 'standard',
@@ -184,6 +190,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'scavenger',
         icon: '🎯',
+        iconName: 'target',
         labelZh: '闖關尋寶線索',
         labelEn: 'Scavenger Hunt',
         mode: 'timelock',
@@ -195,6 +202,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'course',
         icon: '📅',
+        iconName: 'graduationCap',
         labelZh: '課程定時教材',
         labelEn: 'Course Content',
         mode: 'timelock',
@@ -206,6 +214,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'backup',
         icon: '🛟',
+        iconName: 'lifeBuoy',
         labelZh: '緊急災備通道',
         labelEn: 'Emergency Backup',
         mode: 'deadman',
@@ -217,6 +226,7 @@ export const VAULT_QUICK_PRESETS = Object.freeze([
     {
         id: 'secret',
         icon: '🔑',
+        iconName: 'key',
         labelZh: '機密金鑰分享',
         labelEn: 'Shared Secret',
         mode: 'burn',

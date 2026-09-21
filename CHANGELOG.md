@@ -2,6 +2,11 @@
 
 ## [2026-09-21]
 
+- **✨ 快速情境範本獨立工具列按鈕與 Lucide 向量圖標彈窗庫 (Independent Presets Toolbar Button & Lucide Modal)**：
+  - **工具列獨立入口**：將原本擠在分享選單內的 10 款範本分離，在編輯器底部控制列新增獨立「範本 (Presets)」按鈕（`#vault-presets-toolbar-btn`），並在分享下拉選單內提供乾淨單列快捷鍵「✨ 瀏覽 10 款安全情境範本」，徹底消除擁擠雜亂。
+  - **精美卡片式彈窗庫 (Scenario Presets Modal)**：點擊開啟專屬的「安全情境範本庫」彈窗（`#vault-presets-modal`），以響應式卡片網格完整呈現各情境的官方 Lucide 圖標、模式標籤（閱後即焚／定時解鎖／亡者開關／保留期限）、標題與詳細說明；點擊任何卡片即刻套用保險庫設定，並自動關閉彈窗。
+  - **100% 採用 Lucide SVG 向量圖標**：全數淘汰 Emoji 表情符號，統一採用官方 Lucide 向量圖標（`shieldAlert`, `bitcoin`, `megaphone`, `rocket`, `gift`, `scale`, `target`, `graduationCap`, `lifeBuoy`, `key`），支援 20 款深淺主題色彩自動調適與高解析度視網膜螢幕抗鋸齒。
+
 - **🔐 分享保險庫安全模式與快速情境範本 (Share Vault Security Modes, 10 Quick Start Presets & Security Hardening)**：
   - **4 種進階發布與生命週期管理模式**：
     - **標準公開與有效期限 (Standard & Expiration)**：支援為任何公開分享設定到期時間（`10m`, `1h`, `1d`, `7d`, `30d` 或永久有效）。整合 Cloudflare KV 原生 TTL 與 Worker 雙層檢查，到期自動下架並顯示友善的 410 墓碑頁面。

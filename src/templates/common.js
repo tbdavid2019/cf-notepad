@@ -9,16 +9,11 @@ import { THEMES } from '../theme_data.js'
 const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
 const VAULT_PRESETS_RENDER = (lang) => `
-    <div class="dropdown-item-control vault-presets-container">
-        <label>${lang === 'zh-TW' ? '快速情境範本' : 'Quick Start Templates'}</label>
-        <div class="vault-presets-grid" role="group" aria-label="${lang === 'zh-TW' ? '快速情境範本' : 'Quick Start Templates'}">
-            ${(VAULT_QUICK_PRESETS || []).map(p => `
-                <button type="button" class="vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" title="${(lang === 'zh-TW' ? p.descZh : p.descEn).replace(/"/g, '&quot;')}">
-                    <span class="preset-icon">${p.icon}</span>
-                    <span class="preset-label">${(lang === 'zh-TW' ? p.labelZh : p.labelEn).replace(/"/g, '&quot;')}</span>
-                </button>
-            `).join('')}
-        </div>
+    <div class="dropdown-item-control vault-preset-menu-row">
+        <button type="button" class="opt-button open-vault-presets-modal-btn" id="open-vault-presets-modal-btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; height:34px; font-weight:500; font-size:12px;" title="${lang === 'zh-TW' ? '快速情境範本 (10 種情境)' : 'Quick Scenario Presets (10)'}">
+            ${SVG_ICONS.shieldCheck}
+            <span>${lang === 'zh-TW' ? '安全情境範本 (10 種)...' : 'Scenario Presets (10)...'}</span>
+        </button>
     </div>
 `
 
@@ -100,7 +95,18 @@ export const SVG_ICONS = {
     highlighter: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h3l6-6"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>`,
     alert: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`,
     footnote: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="8" y1="10" x2="14" y2="10"/><path d="M12 18h4"/></svg>`,
-    book: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>`
+    book: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><path d="M6 2v20"/></svg>`,
+    shieldCheck: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg>`,
+    shieldAlert: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>`,
+    bitcoin: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11.767 19.089c4.924.868 6.14-6.025 1.216-6.894m-1.216 6.894L5.86 18.047m5.908 1.042l-.347 1.97m1.563-8.864c4.924.869 6.14-6.025 1.215-6.893m-1.215 6.893l-3.94-.694m5.155-6.2L8.29 4.26m5.908 1.042l.348-1.97M7.48 20.364l3.126-17.727"/></svg>`,
+    megaphone: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 6a13 13 0 0 0 8.4-2.8A1 1 0 0 1 21 4v12a1 1 0 0 1-1.6.8A13 13 0 0 0 11 14H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2z"/><path d="M6 14a12 12 0 0 0 2.4 7.2a2 2 0 0 0 3.2-2.4A8 8 0 0 1 10 14"/><line x1="8" y1="6" x2="8" y2="14"/></svg>`,
+    rocket: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"/><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09"/><path d="M9 12a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.4 22.4 0 0 1-4 2z"/><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 .05 5 .05"/></svg>`,
+    gift: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="7" x2="12" y2="21"/><path d="M20 11v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8"/><path d="M7.5 7a1 1 0 0 1 0-5A4.8 8 0 0 1 12 7a4.8 8 0 0 1 4.5-5a1 1 0 0 1 0 5"/><rect width="18" height="4" x="3" y="7" rx="1"/></svg>`,
+    scale: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="3" x2="12" y2="21"/><path d="M19 8l3 8a5 5 0 0 1-6 0zV8"/><path d="M3 7h1a17 17 0 0 0 8-2a17 17 0 0 0 8 2h1"/><path d="M5 8l3 8a5 5 0 0 1-6 0zV8"/><line x1="7" y1="21" x2="17" y2="21"/></svg>`,
+    target: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>`,
+    graduationCap: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg>`,
+    lifeBuoy: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>`,
+    key: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="15.5" cy="7.5" r="5.5"/><line x1="2" y1="21" x2="11.6" y2="11.4"/><line x1="7.5" y1="15.5" x2="9.8" y2="17.8"/><line x1="5.4" y1="17.6" x2="7.7" y2="19.9"/></svg>`
 }
 
 const EDITOR_TOOLBAR_COMMANDS = [
@@ -774,6 +780,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     </div>
                                 </div>
                             </div>
+                            <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
+                                <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
+                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
+                            </button>
                         </div>
                         <div class="save-control-group" aria-label="${lang === 'zh-TW' ? '儲存設定' : 'Save settings'}">
                             <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
@@ -1422,6 +1432,52 @@ export const CITE_MODAL = (lang) => {
         <div class="cite-modal-actions">
             <button type="button" class="opt-button" id="cite-modal-cancel-btn" data-modal-close>${closeLabel}</button>
             <button type="button" class="opt-button opt-button-accent" id="cite-modal-copy-btn">${zh ? '📋 複製引用' : '📋 Copy Citation'}</button>
+        </div>
+    </div>
+</div>`
+}
+
+export const VAULT_PRESETS_MODAL = (lang) => {
+    const zh = lang === 'zh-TW'
+    const closeLabel = zh ? '關閉' : 'Close'
+    return `
+<div id="vault-presets-modal" class="modal vault-presets-modal" role="dialog" aria-modal="true" aria-labelledby="vault-presets-title" aria-hidden="true" style="display:none;">
+    <div class="modal-mask" id="vault-presets-mask" data-modal-close></div>
+    <div class="vault-presets-modal-content">
+        <button type="button" class="close-btn" id="vault-presets-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
+        <div class="vault-presets-header">
+            <h3 id="vault-presets-title" class="vault-presets-title">
+                ${SVG_ICONS.shieldCheck} <span>${zh ? '安全情境範本庫' : 'Security Scenario Presets'}</span>
+            </h3>
+            <p class="vault-presets-subtitle">${zh ? '一鍵套用 10 大安全發布情境，自動配置保險庫模式、解鎖定時或心跳週期；空白筆記可自動載入結構化範本骨架。' : '10 Quick-Start security scenarios. Automatically sets vault modes, timers, and starter templates.'}</p>
+        </div>
+        <div class="vault-presets-body">
+            <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
+                ${(VAULT_QUICK_PRESETS || []).map(p => {
+                    const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
+                    const modeBadge = p.mode === 'burn'
+                        ? (zh ? '🔥 閱後即焚' : '🔥 Burn After Read')
+                        : (p.mode === 'timelock'
+                            ? (zh ? `🔒 定時解鎖 (${p.unlockIn})` : `🔒 Time-Locked (${p.unlockIn})`)
+                            : (p.mode === 'deadman'
+                                ? (zh ? `💓 亡者開關 (${p.pulseInterval})` : `💓 Dead Man (${p.pulseInterval})`)
+                                : (zh ? `⏱️ 保留期限 (${p.expiresIn})` : `⏱️ Expiration (${p.expiresIn})`)))
+                    return `
+                    <button type="button" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}">
+                        <div class="preset-card-top">
+                            <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
+                            <span class="preset-card-badge mode-${p.mode}">${modeBadge}</span>
+                        </div>
+                        <div class="preset-card-title">${zh ? p.labelZh : p.labelEn}</div>
+                        <div class="preset-card-desc">${zh ? p.descZh : p.descEn}</div>
+                    </button>
+                    `
+                }).join('')}
+            </div>
+        </div>
+        <div class="vault-presets-footer">
+            <span class="vault-presets-tip">${zh ? '💡 點選任一範本即可套用設定；若目前編輯區空白將自動載入結構化格式。' : '💡 Click a preset to apply. Empty notes will auto-load structured templates.'}</span>
+            <button type="button" class="opt-button" id="vault-presets-cancel-btn" data-modal-close>${zh ? '取消' : 'Cancel'}</button>
         </div>
     </div>
 </div>`

@@ -21,5 +21,5 @@ export { Admin } from './templates/admin.js'
 export { Home, NeedPasswd, Page404, ShareExpired, ShareBurned, ShareTimeLocked, ShareDeadmanLocked } from './templates/pages.js'
 
 // Also re-export shared utilities for any code that imports them from template.js
-export { FOOTER, MODAL, SWITCHER } from './templates/common.js'
+export { FOOTER, MODAL, SWITCHER, VAULT_PRESETS_MODAL } from './templates/common.js'
 export { HTML } from './templates/base.js'

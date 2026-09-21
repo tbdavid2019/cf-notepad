@@ -1476,51 +1476,209 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 .share-vault-mode-select {
     width: 100%;
 }
-.vault-presets-container {
+.vault-preset-menu-row {
     margin-bottom: 8px;
 }
-.vault-presets-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-top: 6px;
-    max-height: 175px;
-    overflow-y: auto;
-    padding-right: 2px;
+.vault-presets-toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
-.vault-preset-btn {
+.vault-presets-modal-content {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: var(--modal-bg, #ffffff);
+    color: var(--modal-text, #2c2a29);
+    border: 1px solid var(--modal-border, #e2dacd);
+    padding: 24px;
+    border-radius: 14px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
+    z-index: 1001;
+    width: min(720px, calc(100vw - 32px));
+    max-height: min(88vh, 780px);
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.vault-presets-modal-content .close-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background: transparent;
+    color: var(--modal-muted, #7c7670);
+    cursor: pointer;
+    font-size: 20px;
+    border-radius: 8px;
+    transition: background 0.15s ease, color 0.15s ease;
+    z-index: 10;
+}
+.vault-presets-modal-content .close-btn:hover {
+    background: var(--modal-surface-hover, rgba(0, 0, 0, 0.08));
+    color: var(--modal-text, #2c2a29);
+}
+.vault-presets-header {
+    margin-bottom: 16px;
+    padding-right: 32px;
+}
+.vault-presets-title {
+    margin: 0 0 6px 0;
+    font-size: 1.15rem;
+    font-weight: 700;
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 8px;
-    border-radius: 8px;
+    gap: 8px;
+    color: var(--modal-text, #2c2a29);
+}
+.vault-presets-title svg {
+    width: 22px;
+    height: 22px;
+    color: var(--modal-accent, #c8654b);
+}
+.vault-presets-subtitle {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--modal-muted, #7c7670);
+    line-height: 1.45;
+}
+.vault-presets-body {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    padding: 4px 4px 10px 2px;
+    margin: 0 -4px 0 -2px;
+}
+.vault-presets-modal-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+@media (max-width: 620px) {
+    .vault-presets-modal-grid {
+        grid-template-columns: 1fr;
+    }
+}
+.vault-preset-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 14px 15px;
+    border-radius: 12px;
     border: 1px solid var(--modal-border, #e2dacd);
-    background: var(--toolbar-bg, #ffffff);
-    color: var(--toolbar-text, #2c2a29);
-    font-size: 11px;
+    background: var(--modal-surface, #ffffff);
+    color: var(--modal-text, #2c2a29);
     cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    position: relative;
+    outline: none;
+    box-sizing: border-box;
 }
-.vault-preset-btn:hover {
+.vault-preset-card:hover {
     border-color: var(--modal-accent, #c8654b);
-    background: var(--toolbar-hover, rgba(0, 0, 0, 0.04));
+    background: var(--modal-surface-hover, rgba(200, 101, 75, 0.05));
+    transform: translateY(-2px);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
-.vault-preset-btn.active {
+.vault-preset-card:focus-visible {
+    outline: 2px solid var(--modal-accent, #c8654b);
+    outline-offset: 2px;
+}
+.vault-preset-card.active {
     border-color: var(--modal-accent, #c8654b);
-    background: rgba(200, 101, 75, 0.12);
-    font-weight: 600;
+    background: rgba(200, 101, 75, 0.1);
 }
-.vault-preset-btn .preset-icon {
-    font-size: 13px;
+.preset-card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+.preset-card-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--modal-surface-hover, rgba(0, 0, 0, 0.05));
+    color: var(--modal-accent, #c8654b);
     flex-shrink: 0;
 }
-.vault-preset-btn .preset-label {
-    overflow: hidden;
-    text-overflow: ellipsis;
+.preset-card-icon svg {
+    width: 18px;
+    height: 18px;
+}
+.preset-card-icon.mode-burn {
+    color: #ea580c;
+    background: rgba(234, 88, 12, 0.12);
+}
+.preset-card-icon.mode-timelock {
+    color: #6366f1;
+    background: rgba(99, 102, 241, 0.12);
+}
+.preset-card-icon.mode-deadman {
+    color: #e11d48;
+    background: rgba(225, 29, 72, 0.12);
+}
+.preset-card-icon.mode-standard {
+    color: #0284c7;
+    background: rgba(2, 132, 199, 0.12);
+}
+.preset-card-badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    line-height: 1.3;
+    white-space: nowrap;
+}
+.preset-card-badge.mode-burn {
+    color: #c2410c;
+    background: rgba(234, 88, 12, 0.12);
+}
+.preset-card-badge.mode-timelock {
+    color: #4f46e5;
+    background: rgba(99, 102, 241, 0.12);
+}
+.preset-card-badge.mode-deadman {
+    color: #be123c;
+    background: rgba(225, 29, 72, 0.12);
+}
+.preset-card-badge.mode-standard {
+    color: #0369a1;
+    background: rgba(2, 132, 199, 0.12);
+}
+.preset-card-title {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--modal-text, #2c2a29);
+    line-height: 1.3;
+}
+.preset-card-desc {
+    font-size: 12px;
+    color: var(--modal-muted, #7c7670);
+    line-height: 1.4;
+}
+.vault-presets-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--modal-border, #e2dacd);
+}
+.vault-presets-tip {
+    font-size: 12px;
+    color: var(--modal-muted, #7c7670);
 }
 
 /* Share, New note, Export, Copy & Theme dropdowns */

@@ -186,6 +186,9 @@ test('styles/base.css.js: contains required vault countdown, interstitial, and b
     assert.match(baseCssSource, /\.share-deadman-released-banner/)
     assert.match(baseCssSource, /\.share-burn-interstitial/)
     assert.match(baseCssSource, /\.burn-interstitial-card/)
+    assert.match(baseCssSource, /\.vault-presets-toolbar-btn/)
+    assert.match(baseCssSource, /\.vault-presets-modal-content/)
+    assert.match(baseCssSource, /\.vault-preset-card/)
 })
 
 test('templates/common.js: renders vault security mode options and pulse controls', () => {
@@ -196,6 +199,9 @@ test('templates/common.js: renders vault security mode options and pulse control
     assert.match(commonTemplateSource, /id="share-pulse-select"/)
     assert.match(commonTemplateSource, /id="share-pulse-now-btn"/)
     assert.match(commonTemplateSource, /id="share-pulse-copy-btn"/)
+    assert.match(commonTemplateSource, /id="vault-presets-toolbar-btn"/)
+    assert.match(commonTemplateSource, /open-vault-presets-modal-btn/)
+    assert.match(commonTemplateSource, /id="vault-presets-modal"/)
 })
 
 test('templates/base.js: renders author preview banner, deadman released banner, and wires vault events', () => {
@@ -205,6 +211,8 @@ test('templates/base.js: renders author preview banner, deadman released banner,
     assert.match(baseTemplateSource, /syncVaultModeUI/)
     assert.match(baseTemplateSource, /action="\/share\/\$\{escapeHtml\(shareId\)\}/)
     assert.match(baseTemplateSource, /\/api\/shares\/'\s*\+\s*encodeURIComponent\(APP_STATE\.shareId\)\s*\+\s*'\/pulse/)
+    assert.match(baseTemplateSource, /vault-presets-modal/)
+    assert.match(baseTemplateSource, /vault-presets-toolbar-btn/)
 })
 
 test('index.js: contains vault security endpoints and protections', () => {
@@ -336,6 +344,7 @@ test('constant: VAULT_QUICK_PRESETS contains all 10 Quick Start Presets with tem
 
     for (const preset of VAULT_QUICK_PRESETS) {
         assert.ok(preset.icon, `Preset ${preset.id} missing icon`)
+        assert.ok(preset.iconName, `Preset ${preset.id} missing iconName`)
         assert.ok(preset.labelZh, `Preset ${preset.id} missing labelZh`)
         assert.ok(preset.labelEn, `Preset ${preset.id} missing labelEn`)
         assert.ok(preset.mode, `Preset ${preset.id} missing mode`)
