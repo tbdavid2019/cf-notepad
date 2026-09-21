@@ -2,6 +2,12 @@
 
 ## [2026-09-21]
 
+- **🐛 修復分享選單中「保險庫安全模式（標準發布）」等下拉選單點擊即關閉無法開啟問題 (Fix Dropdown Select Premature Closure)**：
+  - **根因修復**：全域浮動控制腳本 `static/js/floating-controls.mjs` 中 `documentRef` 監聽之全域 click 事件未防護選單內部控件，導致點擊 `<select>`（標準發布／閱後即焚／定時解鎖／亡者開關）時冒泡觸發 `closeAll()` 將選單強制移回 DOM 並關閉，使瀏覽器原生選項視窗被強制取消。現於選單內部阻斷表單控件的 `click`, `pointerdown`, `mousedown` 冒泡，點擊外部時才關閉。
+  - **鍵盤方向鍵放行**：當焦點在 `<select>` 或 `<input>` 上時放行原生方向鍵與 Home/End 鍵切換選項，不再被選單焦點跳轉攔截。
+  - **樣式整合與深淺主題**：統一補齊 `.opt-select`, `.share-vault-mode-select`, `.share-expires-select`, `.share-unlock-select`, `.share-pulse-select` 的 28px 高度、圓角與深淺模式色彩，移除衝突的 `width: 100%`，讓標籤與選單左右橫向平順對齊。
+  - **回歸測試保護**：於 `test/floating-controls-ui.test.mjs` 新增點擊 select、label、toggle 不關閉與方向鍵不被攔截之完整回歸測試。
+
 - **🎨 底部工具列單列排版與情境範本彈窗網格重構 (Footer Single-Line Toolbar & Presets Modal Layout Fixes)**：
   - **徹底根除 WebKit / Safari `<button>` 佈局引擎缺陷 (WebKit Bug 137351 Fix)**：在 macOS / iOS Safari 及 WebKit 內核中，`<button>` 採用原生 `RenderButton` 控件，會忽略內部垂直彈性盒模型 (`display: flex; flex-direction: column`)，導致卡片頂部圖標徽章與底部說明被擠出按鈕外層造成文字混亂重疊。全面重構為 `<div role="button" tabindex="0">`，100% 依循標準 CSS 盒子模型封裝，完美相容所有瀏覽器。
   - **完美參照 fx 公式複製格式架構 (Matching Math Format Modal Architecture)**：全面借鑒成熟的 `MATH_FORMAT_MODAL`（fx 公式複製格式）架構與色彩系統，彈窗開窗時自動聚焦於第一張卡片，消除右上角關閉鈕初次開啟時的藍色焦點外框；支援鍵盤 Tab、Enter 與 Space 快速鍵選取。

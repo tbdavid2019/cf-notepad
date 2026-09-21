@@ -5087,6 +5087,27 @@ ${getMarkdownCss()}
                 syncVaultModeUI($shareVaultModeSelectDraft.value, true)
             })
         }
+        document.addEventListener('change', async (e) => {
+            const vaultModeSel = e.target.closest('#share-vault-mode-select');
+            if (vaultModeSel && vaultModeSel !== $shareVaultModeSelect) {
+                const mode = vaultModeSel.value;
+                syncVaultModeUI(mode, false);
+                try {
+                    await persistSetting({ shareMode: mode, shareBurnAfterReading: mode === 'burn' });
+                    APP_STATE.shareMode = mode;
+                    APP_STATE.shareBurnAfterReading = mode === 'burn';
+                    window.showToast?.(getI18n('saved') || 'Saved');
+                } catch (err) {
+                    errHandle(err);
+                }
+                return;
+            }
+            const vaultModeDraftSel = e.target.closest('#share-vault-mode-select-draft');
+            if (vaultModeDraftSel && vaultModeDraftSel !== $shareVaultModeSelectDraft) {
+                syncVaultModeUI(vaultModeDraftSel.value, true);
+                return;
+            }
+        });
         const $shareUnlockSelect = document.querySelector('#share-unlock-select')
         if ($shareUnlockSelect) {
             $shareUnlockSelect.addEventListener('change', async () => {
