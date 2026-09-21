@@ -2,6 +2,12 @@
 
 ## [2026-09-21]
 
+- **🛡️ 安全情境範本庫深度修復：純安全發布參數配置、動態雙語切換與下拉選單原生互動修正 (Vault Presets Pure Security Config, Bilingual Switcher & Select Fix)**：
+  - **嚴禁覆蓋筆記內文 (Zero Note Content Overwrite)**：徹底刪除套用情境範本時改寫或注入 `#contents` 的代碼；情境範本僅專注配置保險庫發布安全參數（安全模式、有效期限、定時解鎖倒數、亡者開關保活週期），絕不修改、覆蓋或破壞使用者現有的筆記內容。更新彈窗提示為「💡 點選任一情境即可即時配置安全發布參數，不會影響現有筆記內容。」
+  - **草稿與發布參數雙向完整同步 (Draft & Published Parameter Synchronization)**：修復點選情境範本時僅尋址已發布選單而忽略草稿選單的缺陷；現在點選範本會同時更新草稿發布（`#share-vault-mode-select-draft`, `#share-expires-select-draft`, `#share-unlock-select-draft`, `#share-pulse-select-draft`, `#burn-after-reading-btn-draft`）與已發布選單（`#share-vault-mode-select` 等），同步刷新 UI 面板並在筆記已發布時即時調用 `/setting` 持久化。
+  - **情境範本彈窗內建動態雙語切換 (In-Modal Bilingual Switcher & i18n Sync)**：借鑒預設編輯器彈窗設計，在「安全情境範本庫」頂部新增雙語切換群組（`中` / `En`），支援在彈窗內無重整即時切換標題、副標題、底部提示與所有卡片名稱、說明及模式標籤（`data-title-zh/en`, `data-desc-zh/en`, `data-badge-zh/en`），並依當前語系提供「已套用情境範本：... / Preset applied: ...」雙語 Toast 提示。
+  - **徹底排除標準發布等下拉選單完全無法點開之衝突 (Native Select Interaction Fix in Floating Menus)**：移除 `static/js/floating-controls.mjs` 中對 `pointerdown` 與 `mousedown` 的攔截與 `stopPropagation` 調用，消除造成 macOS / Safari / Chromium 原生 `<select>` 選單彈出被取消的事件衝突；同時免除 click 的 `stopPropagation`，使選單內的按鈕（如開啟範本庫按鈕）能順利冒泡觸發全域代理處理器。
+
 - **🐛 修復分享選單中「保險庫安全模式（標準發布）」等下拉選單點擊即關閉無法開啟問題 (Fix Dropdown Select Premature Closure)**：
   - **根因修復**：全域浮動控制腳本 `static/js/floating-controls.mjs` 中 `documentRef` 監聽之全域 click 事件未防護選單內部控件，導致點擊 `<select>`（標準發布／閱後即焚／定時解鎖／亡者開關）時冒泡觸發 `closeAll()` 將選單強制移回 DOM 並關閉，使瀏覽器原生選項視窗被強制取消。現於選單內部阻斷表單控件的 `click`, `pointerdown`, `mousedown` 冒泡，點擊外部時才關閉。
   - **鍵盤方向鍵放行**：當焦點在 `<select>` 或 `<input>` 上時放行原生方向鍵與 Home/End 鍵切換選項，不再被選單焦點跳轉攔截。

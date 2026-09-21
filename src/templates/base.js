@@ -5176,12 +5176,49 @@ ${getMarkdownCss()}
                 }
             }
         });
+        const updateVaultModalLanguage = (targetLang) => {
+            const isZh = targetLang === 'zh-TW';
+            const modal = document.getElementById('vault-presets-modal');
+            if (!modal) return;
+            const titleSpan = modal.querySelector('.vault-presets-title [data-i18n-key="title"]');
+            if (titleSpan) titleSpan.textContent = isZh ? '安全情境範本庫' : 'Security Scenario Presets';
+            const subtitle = modal.querySelector('.vault-presets-subtitle');
+            if (subtitle) subtitle.textContent = isZh ? '一鍵快速套用 10 大安全發布情境，自動配置保險庫模式、解鎖倒數、有效期限或心跳保活週期。' : 'One-click quick presets for 10 security scenarios. Automatically configures vault mode, unlock timer, expiration, or heartbeat pulse.';
+            const tip = modal.querySelector('.vault-presets-tip');
+            if (tip) tip.textContent = isZh ? '💡 點選任一情境即可即時配置安全發布參數，不會影響現有筆記內容。' : '💡 Click any scenario to configure security sharing settings without affecting existing note content.';
+            const cancelBtn = modal.querySelector('#vault-presets-cancel-btn');
+            if (cancelBtn) cancelBtn.textContent = isZh ? '取消' : 'Cancel';
+            modal.querySelectorAll('.vault-pref-lang-btn').forEach(btn => {
+                const active = btn.getAttribute('data-vault-lang') === targetLang;
+                btn.classList.toggle('is-active', active);
+                btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+            });
+            modal.querySelectorAll('.vault-preset-card').forEach(card => {
+                const title = card.querySelector('.preset-card-title');
+                const desc = card.querySelector('.preset-card-desc');
+                const badge = card.querySelector('.preset-card-badge');
+                if (title) title.textContent = (isZh ? card.getAttribute('data-title-zh') : card.getAttribute('data-title-en')) || title.textContent;
+                if (desc) desc.textContent = (isZh ? card.getAttribute('data-desc-zh') : card.getAttribute('data-desc-en')) || desc.textContent;
+                if (badge) badge.textContent = (isZh ? card.getAttribute('data-badge-zh') : card.getAttribute('data-badge-en')) || badge.textContent;
+            });
+        };
+
         document.addEventListener('click', async (e) => {
+            const vaultLangBtn = e.target.closest('.vault-pref-lang-btn');
+            if (vaultLangBtn) {
+                e.preventDefault();
+                const targetLang = vaultLangBtn.getAttribute('data-vault-lang') || 'zh-TW';
+                updateVaultModalLanguage(targetLang);
+                return;
+            }
             const openPresetsBtn = e.target.closest('#vault-presets-toolbar-btn, .vault-presets-toolbar-btn, #open-vault-presets-modal-btn, .open-vault-presets-modal-btn');
             if (openPresetsBtn) {
                 e.preventDefault();
                 const modal = document.getElementById('vault-presets-modal');
                 if (modal) {
+                    if (typeof updateVaultModalLanguage === 'function') {
+                        updateVaultModalLanguage(APP_STATE.lang || 'zh-TW');
+                    }
                     const firstOption = modal.querySelector('.vault-preset-btn');
                     openModal(modal, { initialFocus: firstOption || openPresetsBtn, trigger: openPresetsBtn });
                 }
@@ -5199,23 +5236,52 @@ ${getMarkdownCss()}
                 document.querySelectorAll('.vault-preset-btn').forEach(b => b.classList.remove('active'));
                 presetBtn.classList.add('active');
 
-                const isPublishedMenu = !presetBtn.closest('.share-menu-unpublished');
-                const modeSelect = isPublishedMenu ? document.querySelector('#share-vault-mode-select') : document.querySelector('#share-vault-mode-select-draft');
-                const expiresSelect = isPublishedMenu ? document.querySelector('#share-expires-select') : document.querySelector('#share-expires-select-draft');
-                const unlockSelect = isPublishedMenu ? document.querySelector('#share-unlock-select') : document.querySelector('#share-unlock-select-draft');
-                const pulseSelect = isPublishedMenu ? document.querySelector('#share-pulse-select') : document.querySelector('#share-pulse-select-draft');
+                // 1. Update BOTH published and draft dropdown selects so parameters are consistently applied
+                document.querySelectorAll('#share-vault-mode-select, #share-vault-mode-select-draft').forEach(sel => {
+                    sel.value = mode;
+                });
+                if (expires) {
+                    document.querySelectorAll('#share-expires-select, #share-expires-select-draft').forEach(sel => {
+                        sel.value = expires;
+                    });
+                }
+                if (unlock) {
+                    document.querySelectorAll('#share-unlock-select, #share-unlock-select-draft').forEach(sel => {
+                        sel.value = unlock;
+                    });
+                }
+                if (pulse) {
+                    document.querySelectorAll('#share-pulse-select, #share-pulse-select-draft').forEach(sel => {
+                        sel.value = pulse;
+                    });
+                }
 
-                if (modeSelect) modeSelect.value = mode;
-                if (expires && expiresSelect) expiresSelect.value = expires;
-                if (unlock && unlockSelect) unlockSelect.value = unlock;
-                if (pulse && pulseSelect) pulseSelect.value = pulse;
+                // 2. Synchronize burn button states
+                const isBurn = mode === 'burn';
+                document.querySelectorAll('#burn-after-reading-btn, #burn-after-reading-btn-draft').forEach(btn => {
+                    btn.setAttribute('data-burn-after-reading', isBurn ? 'true' : 'false');
+                    btn.setAttribute('aria-pressed', isBurn ? 'true' : 'false');
+                    btn.classList.toggle('opt-button-accent', isBurn);
+                    btn.textContent = isBurn ? (getI18n('burnAfterReadingOn') || 'On') : (getI18n('burnAfterReadingOff') || 'Off');
+                });
 
-                syncVaultModeUI(mode, !isPublishedMenu);
+                // 3. Synchronize UI panels for both published and draft views
+                syncVaultModeUI(mode, false);
+                syncVaultModeUI(mode, true);
 
-                if (isPublishedMenu) {
+                // 4. Update APP_STATE
+                APP_STATE.shareMode = mode;
+                APP_STATE.shareBurnAfterReading = isBurn;
+                if (expires) APP_STATE.shareExpiresIn = expires;
+                if (unlock) APP_STATE.shareUnlockIn = unlock;
+                if (pulse) APP_STATE.sharePulseInterval = pulse;
+
+                // 5. If note is already published, persist settings to server immediately
+                const isPublished = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId);
+                if (isPublished) {
                     const settingPayload = {
                         shareMode: mode,
-                        shareBurnAfterReading: mode === 'burn',
+                        shareBurnAfterReading: isBurn,
                     };
                     if (expires) settingPayload.shareExpiresIn = expires;
                     if (unlock) settingPayload.shareUnlockIn = unlock;
@@ -5223,40 +5289,23 @@ ${getMarkdownCss()}
 
                     try {
                         await persistSetting(settingPayload);
-                        APP_STATE.shareMode = mode;
-                        APP_STATE.shareBurnAfterReading = mode === 'burn';
-                        if (expires) APP_STATE.shareExpiresIn = expires;
-                        if (unlock) APP_STATE.shareUnlockIn = unlock;
-                        if (pulse) APP_STATE.sharePulseInterval = pulse;
                     } catch (err) {
                         errHandle(err);
                     }
                 }
 
-                const editArea = document.getElementById('contents');
-                if (editArea && !editArea.value.trim()) {
-                    const presetTemplates = {
-                        otp: ['# 一次性密碼 / One-Time Password', '', '- 帳號 / Username: ', '- 暫時密碼 / Password: ', '- 安全注意: 此分享僅限閱覽 1 次，閱畢即刻從伺服器永久銷毀。'].join('\\n'),
-                        crypto: ['# 加密資產遺產傳承指引 / Crypto Inheritance', '', '## 1. 錢包與保管箱資訊', '- 助記詞保管位置：', '', '## 2. 繼承人存取指示', '請依指示辦理資產繼承...'].join('\\n'),
-                        whistleblower: ['# 公共利益揭弊文件 / Whistleblower Disclosure', '', '## 核心揭露事證', '本備忘錄受亡者開關保護。若作者連續 7 天未簽到保活，本檔案將自動對外公開。', '', '## 佐證資料清單', '1. ...'].join('\\n'),
-                        launch: ['# 新產品發布公告 / Product Launch Announcement', '', '> 🔒 本文檔於倒數結束前處於時間封印狀態。', '', '## 發布內容與優惠活動', '- 正式版功能亮點：', '- 限時促銷代碼：'].join('\\n'),
-                        birthday: ['# 生日快樂！ / Happy Birthday! 🎂', '', '親愛的朋友：', '祝你生日快樂！這是一份為你提前封印的驚喜禮物。', '', '- 禮物兌換代碼 / 祝福信件：'].join('\\n'),
-                        legal: ['# 法律保全與存證紀錄 / Legal Hold Notice', '', '本通知所載內容依循保全程序存證，預計保留 30 天後自動過期下架。', '', '- 案件編號：', '- 保全事由：'].join('\\n'),
-                        scavenger: ['# 闖關尋寶 — 第 1 道線索 / Scavenger Hunt Clue #1', '', '恭喜你來到這裡！解開以下謎題即可獲得下一關座標：', '', '> 謎題：'].join('\\n'),
-                        course: ['# 第 1 單元教材與隨堂解答 / Course Content & Solutions', '', '本教材於課堂開始時自動解鎖供修課同學研讀。', '', '## 重點複習', '1. ...'].join('\\n'),
-                        backup: ['# 緊急災難復原通道 / Emergency Backup & Recovery', '', '## 救援存取金鑰', '- 備用 DNS 主控台：', '- 緊急 SSH 救援公鑰：', '- 第一線緊急應變小組聯絡電話：'].join('\\n'),
-                        secret: ['# 機密憑據傳遞 / Confidential Shared Secret', '', '\\x60\\x60\\x60env', 'API_KEY=', 'DATABASE_PASSWORD=', 'CLIENT_SECRET=', '\\x60\\x60\\x60', '', '⚠️ 本連結為一次性閱後即焚分享。'].join('\\n')
-                    };
-                    if (presetTemplates[presetId]) {
-                        editArea.value = presetTemplates[presetId];
-                        editArea.dispatchEvent(new Event('input'));
-                    }
-                }
+                // Close presets modal
                 const vaultModal = document.getElementById('vault-presets-modal');
                 if (vaultModal) closeModal(vaultModal);
 
-                const label = presetBtn.querySelector('.preset-card-title')?.textContent?.trim() || presetBtn.querySelector('.preset-label')?.textContent?.trim() || presetId;
-                window.showToast?.((getI18n('quickPresetApplied') || 'Preset applied: ') + label);
+                // Bilingual Toast Feedback
+                const isZh = APP_STATE.lang === 'zh-TW';
+                const label = (isZh ? presetBtn.getAttribute('data-title-zh') : presetBtn.getAttribute('data-title-en'))
+                    || presetBtn.querySelector('.preset-card-title')?.textContent?.trim()
+                    || presetBtn.querySelector('.preset-label')?.textContent?.trim()
+                    || presetId;
+                const toastPrefix = getI18n('quickPresetApplied') || (isZh ? '已套用情境範本：' : 'Preset applied: ');
+                window.showToast?.(toastPrefix + label);
                 return;
             }
             const unpublishBtn = e.target.closest('.unpublish-btn');

@@ -522,6 +522,36 @@ test('index.js and base.js: direct path vault enforcement and batched preset upd
     const presetClickBlock = baseSource.substring(baseSource.indexOf('const presetBtn = e.target.closest'), baseSource.indexOf('const unpublishBtn'))
     assert.match(presetClickBlock, /await persistSetting\(settingPayload\)/)
     assert.ok(!presetClickBlock.includes("modeSelect.dispatchEvent(new Event('change'))"), 'Must not dispatch separate change events that cause racing requests')
+    assert.ok(!presetClickBlock.includes('editArea.value'), 'Presets must never overwrite or modify note content')
+    assert.match(presetClickBlock, /#share-vault-mode-select-draft/, 'Must update draft vault mode select')
 })
+
+test('templates/common.js & base.js: VAULT_PRESETS_MODAL provides bilingual toggle and preserves note text', async () => {
+    const { VAULT_PRESETS_MODAL } = await import('../src/templates/common.js')
+    const zhModal = VAULT_PRESETS_MODAL('zh-TW')
+    const enModal = VAULT_PRESETS_MODAL('en-US')
+
+    // 1. Language switcher buttons rendered in header
+    assert.match(zhModal, /class="vault-pref-lang-btn\s+is-active"\s+data-vault-lang="zh-TW"/)
+    assert.match(zhModal, /data-vault-lang="en-US"/)
+    assert.match(enModal, /class="vault-pref-lang-btn\s+is-active"\s+data-vault-lang="en-US"/)
+
+    // 2. Bilingual data attributes on cards
+    assert.match(zhModal, /data-title-zh="一次性密碼"/)
+    assert.match(zhModal, /data-title-en="One-Time Password"/)
+    assert.match(zhModal, /data-badge-zh="🔥 閱後即焚"/)
+    assert.match(zhModal, /data-badge-en="🔥 Burn After Read"/)
+
+    // 3. Subtitle & tip clarify that note text is never modified
+    assert.match(zhModal, /不會影響現有筆記內容/)
+    assert.match(enModal, /without affecting existing note content/)
+
+    // 4. base.js provides updateVaultModalLanguage client-side switcher
+    const fs = await import('fs')
+    const baseSource = fs.readFileSync('src/templates/base.js', 'utf-8')
+    assert.match(baseSource, /updateVaultModalLanguage/)
+    assert.match(baseSource, /vault-pref-lang-btn/)
+})
+
 
 

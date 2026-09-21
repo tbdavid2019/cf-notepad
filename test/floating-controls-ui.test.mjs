@@ -181,8 +181,13 @@ test('clicking select elements, labels, or toggles inside dropdown does not clos
     assert.equal(container.classList.contains('show'), true, 'Clicking label must not close dropdown')
 
     // Click toggle button: MUST NOT close dropdown!
+    let delegatedClicked = false
+    document.addEventListener('click', e => {
+        if (e.target.closest('#public-index-btn')) delegatedClicked = true
+    })
     toggle.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }))
     assert.equal(container.classList.contains('show'), true, 'Clicking toggle button must not close dropdown')
+    assert.equal(delegatedClicked, true, 'Click event on controls inside dropdown menu must bubble to document')
 
     // Arrow down on select: MUST NOT be intercepted by menu navigation
     const arrowDownEvent = new dom.window.KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })

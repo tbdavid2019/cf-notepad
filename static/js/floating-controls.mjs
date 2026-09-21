@@ -156,22 +156,10 @@ export function setupDropdownMenus(documentRef = document, windowRef = window) {
             }
         })
         menu.addEventListener('click', event => {
-            if (event.target.closest('select, option, input, textarea, label, .dropdown-item-control, .dropdown-item-toggle, .dropdown-menu-label')) {
-                event.stopPropagation()
-                return
-            }
+            const isControl = event.target.closest('select, option, input, textarea, label, .dropdown-item-control, .dropdown-item-toggle, .dropdown-menu-label, .opt-button, button.opt-button')
+            if (isControl) return
             if (event.target.closest('.dropdown-item, .theme-item, .width-item, a[href]')) {
                 close({ restoreFocus: true })
-            }
-        })
-        menu.addEventListener('pointerdown', event => {
-            if (event.target.closest('select, option, input, textarea, label, .dropdown-item-control, .dropdown-item-toggle, .dropdown-menu-label')) {
-                event.stopPropagation()
-            }
-        })
-        menu.addEventListener('mousedown', event => {
-            if (event.target.closest('select, option, input, textarea, label, .dropdown-item-control, .dropdown-item-toggle, .dropdown-menu-label')) {
-                event.stopPropagation()
             }
         })
         menu.addEventListener('keydown', event => {

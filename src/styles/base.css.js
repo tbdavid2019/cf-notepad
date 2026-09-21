@@ -1543,6 +1543,57 @@ html[data-ui-theme="dark"] .vault-presets-modal-content {
     color: var(--modal-text, #f1f5f9);
     border-color: var(--modal-border, #334155);
 }
+.vault-presets-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+.vault-presets-header-bar .close-btn {
+    position: static;
+}
+.vault-presets-lang-group {
+    display: inline-flex;
+    align-items: center;
+    background: var(--input-border, rgba(0, 0, 0, 0.08));
+    padding: 2px;
+    border-radius: 999px;
+    gap: 2px;
+}
+.vault-pref-lang-btn {
+    border: 0;
+    background: transparent;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--modal-muted, #7c7670);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    line-height: 1.2;
+}
+.vault-pref-lang-btn:hover {
+    color: var(--modal-text, #2c2a29);
+}
+.vault-pref-lang-btn.is-active {
+    background: var(--modal-bg, #ffffff);
+    color: var(--theme-accent, #c8654b);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
+}
+html[data-ui-theme="dark"] .vault-presets-lang-group {
+    background: var(--modal-border, rgba(255, 255, 255, 0.1));
+}
+html[data-ui-theme="dark"] .vault-pref-lang-btn {
+    color: var(--modal-muted, #94a3b8);
+}
+html[data-ui-theme="dark"] .vault-pref-lang-btn:hover {
+    color: var(--modal-text, #f1f5f9);
+}
+html[data-ui-theme="dark"] .vault-pref-lang-btn.is-active {
+    background: var(--modal-surface, #334155);
+    color: var(--theme-accent, #f97316);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
 .vault-presets-modal-content .close-btn {
     position: absolute;
     top: 14px;

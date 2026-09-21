@@ -139,7 +139,7 @@
     - **亡者開關／保活心跳 (Dead Man's Switch)**：保險庫在作者定期打卡保活期間持續維持機密封印（3 天、7 天、14 天、30 天週期）。作者編輯存檔、點擊「立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
   - **⚡ 10 款安全情境範本獨立按鈕與 Lucide 彈窗庫 (10 Quick Start Presets Modal & Toolbar Button)**：
     - **獨立工具列按鈕**：底欄右側提供獨立「範本 (Presets)」按鈕（`#vault-presets-toolbar-btn`），並在分享選單中保留單列「✨ 瀏覽 10 款安全情境範本」捷徑，點擊開啟專屬彈窗，不再擁擠。
-    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，點擊卡片一鍵套用最佳保險庫模式與到期週期，並在空白筆記中預填結構化範本骨架：
+    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，點擊卡片一鍵套用最佳保險庫模式與到期週期。純安全發布參數配置，絕不修改或覆蓋現有筆記內文，並支援彈窗頂部中／英雙語即時切換：
       1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，有效 1 小時，適合傳遞臨時金鑰。
       2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，預填冷錢包與繼承指引。
       3. **吹哨揭弊保護 (Whistleblower)** (`megaphone`)：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
@@ -608,7 +608,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
     - **Dead Man's Switch**: Vault remains sealed as long as the author periodically checks in (`3d`, `7d`, `14d`, `30d` pulse intervals). Heartbeats are refreshed via note edits, one-click "Pulse Now" in the editor, or a private webhook (`/api/shares/:id/pulse?token=...`). If the author misses check-ins, the vault automatically releases to the public.
   - **⚡ 10 Quick Start Security Scenario Presets Modal & Toolbar Button**:
     - **Independent Toolbar Button**: A dedicated "Presets" button (`#vault-presets-toolbar-btn`) sits in the editor footer toolbar, alongside a clean single-row shortcut in the share menu, providing an uncluttered entry point.
-    - **Dedicated Scenario Presets Modal & 100% Lucide Icons**: Displays a responsive card grid with pure Lucide vector SVGs, badges (`burn`, `timelock`, `deadman`, `standard`), titles, and descriptions. Clicking any card instantly applies the vault configuration and pre-populates structured starter markdown:
+    - **Dedicated Scenario Presets Modal & 100% Lucide Icons**: Displays a responsive card grid with pure Lucide vector SVGs, badges (`burn`, `timelock`, `deadman`, `standard`), titles, and descriptions. Features an in-modal `中` / `En` bilingual switcher for instantaneous language toggling. Strictly configures vault security sharing parameters without ever modifying or overwriting existing note content:
       1. **One-Time Password (OTP)** (`shieldAlert`): Burn-after-reading (`burn`), 1h expiration.
       2. **Crypto Inheritance** (`bitcoin`): Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.
       3. **Whistleblower** (`megaphone`): Dead man's switch (`deadman`), 7d pulse, public interest disclosure proof.

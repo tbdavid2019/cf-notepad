@@ -1448,40 +1448,56 @@ export const VAULT_PRESETS_MODAL = (lang) => {
 <div id="vault-presets-modal" class="modal vault-presets-modal" role="dialog" aria-modal="true" aria-labelledby="vault-presets-title" aria-hidden="true" style="display:none;">
     <div class="modal-mask" id="vault-presets-mask" data-modal-close></div>
     <div class="vault-presets-modal-content">
-        <button type="button" class="close-btn" id="vault-presets-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
+        <div class="vault-presets-header-bar">
+            <div class="vault-presets-lang-group" role="group" aria-label="${zh ? '切換語言 / Switch language' : 'Switch language / 切換語言'}">
+                <button type="button" class="vault-pref-lang-btn ${zh ? 'is-active' : ''}" data-vault-lang="zh-TW" title="繁體中文">中</button>
+                <button type="button" class="vault-pref-lang-btn ${!zh ? 'is-active' : ''}" data-vault-lang="en-US" title="English">En</button>
+            </div>
+            <button type="button" class="close-btn" id="vault-presets-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
+        </div>
         <div class="vault-presets-header">
             <h3 id="vault-presets-title" class="vault-presets-title">
-                ${SVG_ICONS.shieldCheck} <span>${zh ? '安全情境範本庫' : 'Security Scenario Presets'}</span>
+                ${SVG_ICONS.shieldCheck} <span data-i18n-key="title">${zh ? '安全情境範本庫' : 'Security Scenario Presets'}</span>
             </h3>
-            <p class="vault-presets-subtitle">${zh ? '一鍵套用 10 大安全發布情境，自動配置保險庫模式、解鎖定時或心跳週期；空白筆記可自動載入結構化範本骨架。' : '10 Quick-Start security scenarios. Automatically sets vault modes, timers, and starter templates.'}</p>
+            <p class="vault-presets-subtitle" data-i18n-key="subtitle">${zh ? '一鍵快速套用 10 大安全發布情境，自動配置保險庫模式、解鎖倒數、有效期限或心跳保活週期。' : 'One-click quick presets for 10 security scenarios. Automatically configures vault mode, unlock timer, expiration, or heartbeat pulse.'}</p>
         </div>
         <div class="vault-presets-body">
             <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
                 ${(VAULT_QUICK_PRESETS || []).map(p => {
                     const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
-                    const modeBadge = p.mode === 'burn'
-                        ? (zh ? '🔥 閱後即焚' : '🔥 Burn After Read')
+                    const badgeZh = p.mode === 'burn'
+                        ? '🔥 閱後即焚'
                         : (p.mode === 'timelock'
-                            ? (zh ? `🔒 定時解鎖 (${p.unlockIn})` : `🔒 Time-Locked (${p.unlockIn})`)
+                            ? `🔒 定時解鎖 (${p.unlockIn})`
                             : (p.mode === 'deadman'
-                                ? (zh ? `💓 亡者開關 (${p.pulseInterval})` : `💓 Dead Man (${p.pulseInterval})`)
-                                : (zh ? `⏱️ 保留期限 (${p.expiresIn})` : `⏱️ Expiration (${p.expiresIn})`)))
+                                ? `💓 亡者開關 (${p.pulseInterval})`
+                                : `⏱️ 保留期限 (${p.expiresIn})`))
+                    const badgeEn = p.mode === 'burn'
+                        ? '🔥 Burn After Read'
+                        : (p.mode === 'timelock'
+                            ? `🔒 Time-Locked (${p.unlockIn})`
+                            : (p.mode === 'deadman'
+                                ? `💓 Dead Man (${p.pulseInterval})`
+                                : `⏱️ Expiration (${p.expiresIn})`))
+                    const titleText = zh ? p.labelZh : p.labelEn
+                    const descText = zh ? p.descZh : p.descEn
+                    const badgeText = zh ? badgeZh : badgeEn
                     return `
-                    <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}">
+                    <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" data-title-zh="${p.labelZh}" data-title-en="${p.labelEn}" data-desc-zh="${p.descZh}" data-desc-en="${p.descEn}" data-badge-zh="${badgeZh}" data-badge-en="${badgeEn}">
                         <span class="preset-card-top">
                             <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
-                            <span class="preset-card-badge mode-${p.mode}">${modeBadge}</span>
+                            <span class="preset-card-badge mode-${p.mode}">${badgeText}</span>
                         </span>
-                        <span class="preset-card-title">${zh ? p.labelZh : p.labelEn}</span>
-                        <span class="preset-card-desc">${zh ? p.descZh : p.descEn}</span>
+                        <span class="preset-card-title">${titleText}</span>
+                        <span class="preset-card-desc">${descText}</span>
                     </div>
                     `
                 }).join('')}
             </div>
         </div>
         <div class="vault-presets-footer">
-            <span class="vault-presets-tip">${zh ? '💡 點選任一範本即可套用設定；若目前編輯區空白將自動載入結構化格式。' : '💡 Click a preset to apply. Empty notes will auto-load structured templates.'}</span>
-            <button type="button" class="opt-button" id="vault-presets-cancel-btn" data-modal-close>${zh ? '取消' : 'Cancel'}</button>
+            <span class="vault-presets-tip" data-i18n-key="tip">${zh ? '💡 點選任一情境即可即時配置安全發布參數，不會影響現有筆記內容。' : '💡 Click any scenario to configure security sharing settings without affecting existing note content.'}</span>
+            <button type="button" class="opt-button" id="vault-presets-cancel-btn" data-modal-close data-i18n-key="cancel">${zh ? '取消' : 'Cancel'}</button>
         </div>
     </div>
 </div>`
