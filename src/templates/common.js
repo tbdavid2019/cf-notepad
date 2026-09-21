@@ -780,10 +780,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                     </div>
                                 </div>
                             </div>
-                            <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
-                                <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
-                                <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
-                            </button>
                         </div>
                         <div class="save-control-group" aria-label="${lang === 'zh-TW' ? '儲存設定' : 'Save settings'}">
                             <button type="button" id="share-history-btn" class="toolbar-icon-button share-history-trigger" data-tooltip="${t.recentSharesTitle}" title="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-label="${lang === 'zh-TW' ? '最近分享紀錄' : 'Recent shares'}" aria-haspopup="dialog" aria-expanded="false">
@@ -838,6 +834,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.quote}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
                         </button>
+                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
+                            <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
+                        </button>
                         ` : ''}
                         ${!isBlockEditor ? `
                         <button type="button" id="import-md-btn" class="toolbar-icon-button" data-tooltip="${t.importMarkdown}" title="${t.importMarkdown}" aria-label="${t.importMarkdown}">
@@ -853,6 +853,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                         <button type="button" id="math-format-btn" class="toolbar-icon-button math-format-trigger" data-tooltip="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" title="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}" aria-label="${lang === 'zh-TW' ? '公式複製格式' : 'Formula copy format'}">
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
+                        </button>
+                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
+                            <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
+                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
                         </button>
                         <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
                             <div class="footer-preview-group footer-control-group">
@@ -1464,12 +1468,12 @@ export const VAULT_PRESETS_MODAL = (lang) => {
                                 : (zh ? `⏱️ 保留期限 (${p.expiresIn})` : `⏱️ Expiration (${p.expiresIn})`)))
                     return `
                     <button type="button" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}">
-                        <div class="preset-card-top">
+                        <span class="preset-card-top">
                             <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
                             <span class="preset-card-badge mode-${p.mode}">${modeBadge}</span>
-                        </div>
-                        <div class="preset-card-title">${zh ? p.labelZh : p.labelEn}</div>
-                        <div class="preset-card-desc">${zh ? p.descZh : p.descEn}</div>
+                        </span>
+                        <span class="preset-card-title">${zh ? p.labelZh : p.labelEn}</span>
+                        <span class="preset-card-desc">${zh ? p.descZh : p.descEn}</span>
                     </button>
                     `
                 }).join('')}

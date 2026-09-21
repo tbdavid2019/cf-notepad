@@ -1482,6 +1482,7 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
 .vault-presets-toolbar-btn {
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 4px;
 }
 .vault-presets-modal-content {
@@ -1502,6 +1503,11 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+}
+html[data-ui-theme="dark"] .vault-presets-modal-content {
+    background: var(--modal-bg, #1e293b);
+    color: var(--modal-text, #f1f5f9);
+    border-color: var(--modal-border, #334155);
 }
 .vault-presets-modal-content .close-btn {
     position: absolute;
@@ -1525,6 +1531,13 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     background: var(--modal-surface-hover, rgba(0, 0, 0, 0.08));
     color: var(--modal-text, #2c2a29);
 }
+html[data-ui-theme="dark"] .vault-presets-modal-content .close-btn {
+    color: var(--modal-muted, #94a3b8);
+}
+html[data-ui-theme="dark"] .vault-presets-modal-content .close-btn:hover {
+    background: var(--modal-surface-hover, rgba(255, 255, 255, 0.1));
+    color: var(--modal-text, #f1f5f9);
+}
 .vault-presets-header {
     margin-bottom: 16px;
     padding-right: 32px;
@@ -1543,11 +1556,17 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     height: 22px;
     color: var(--modal-accent, #c8654b);
 }
+html[data-ui-theme="dark"] .vault-presets-title {
+    color: var(--modal-text, #f1f5f9);
+}
 .vault-presets-subtitle {
     margin: 0;
     font-size: 0.86rem;
     color: var(--modal-muted, #7c7670);
     line-height: 1.45;
+}
+html[data-ui-theme="dark"] .vault-presets-subtitle {
+    color: var(--modal-muted, #94a3b8);
 }
 .vault-presets-body {
     flex: 1 1 auto;
@@ -1560,7 +1579,7 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
 }
-@media (max-width: 620px) {
+@media (max-width: 640px) {
     .vault-presets-modal-grid {
         grid-template-columns: 1fr;
     }
@@ -1572,7 +1591,7 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     padding: 14px 15px;
     border-radius: 12px;
     border: 1px solid var(--modal-border, #e2dacd);
-    background: var(--modal-surface, #ffffff);
+    background: var(--modal-surface, #f8fafc);
     color: var(--modal-text, #2c2a29);
     cursor: pointer;
     transition: all 0.16s cubic-bezier(0.16, 1, 0.3, 1);
@@ -1581,19 +1600,35 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     outline: none;
     box-sizing: border-box;
 }
+html[data-ui-theme="dark"] .vault-preset-card {
+    background: var(--modal-surface, #0f172a);
+    color: var(--modal-text, #f1f5f9);
+    border-color: var(--modal-border, #334155);
+}
 .vault-preset-card:hover {
     border-color: var(--modal-accent, #c8654b);
     background: var(--modal-surface-hover, rgba(200, 101, 75, 0.05));
     transform: translateY(-2px);
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
 }
+html[data-ui-theme="dark"] .vault-preset-card:hover {
+    border-color: var(--modal-accent, #38bdf8);
+    background: var(--modal-surface-hover, #1e293b);
+}
 .vault-preset-card:focus-visible {
     outline: 2px solid var(--modal-accent, #c8654b);
     outline-offset: 2px;
 }
+html[data-ui-theme="dark"] .vault-preset-card:focus-visible {
+    outline-color: var(--modal-accent, #38bdf8);
+}
 .vault-preset-card.active {
     border-color: var(--modal-accent, #c8654b);
     background: rgba(200, 101, 75, 0.1);
+}
+html[data-ui-theme="dark"] .vault-preset-card.active {
+    border-color: var(--modal-accent, #38bdf8);
+    background: rgba(56, 189, 248, 0.15);
 }
 .preset-card-top {
     display: flex;
@@ -1656,16 +1691,40 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     color: #0369a1;
     background: rgba(2, 132, 199, 0.12);
 }
+html[data-ui-theme="dark"] .preset-card-badge.mode-burn {
+    color: #fb923c;
+    background: rgba(234, 88, 12, 0.22);
+}
+html[data-ui-theme="dark"] .preset-card-badge.mode-timelock {
+    color: #818cf8;
+    background: rgba(99, 102, 241, 0.22);
+}
+html[data-ui-theme="dark"] .preset-card-badge.mode-deadman {
+    color: #f43f5e;
+    background: rgba(225, 29, 72, 0.22);
+}
+html[data-ui-theme="dark"] .preset-card-badge.mode-standard {
+    color: #38bdf8;
+    background: rgba(2, 132, 199, 0.22);
+}
 .preset-card-title {
+    display: block;
     font-size: 13.5px;
     font-weight: 600;
     color: var(--modal-text, #2c2a29);
     line-height: 1.3;
 }
+html[data-ui-theme="dark"] .preset-card-title {
+    color: var(--modal-text, #f1f5f9);
+}
 .preset-card-desc {
+    display: block;
     font-size: 12px;
     color: var(--modal-muted, #7c7670);
     line-height: 1.4;
+}
+html[data-ui-theme="dark"] .preset-card-desc {
+    color: var(--modal-muted, #94a3b8);
 }
 .vault-presets-footer {
     display: flex;
@@ -1676,9 +1735,15 @@ html[data-ui-theme="dark"] .editor-pref-lang-btn.is-active {
     padding-top: 12px;
     border-top: 1px solid var(--modal-border, #e2dacd);
 }
+html[data-ui-theme="dark"] .vault-presets-footer {
+    border-color: var(--modal-border, #334155);
+}
 .vault-presets-tip {
     font-size: 12px;
     color: var(--modal-muted, #7c7670);
+}
+html[data-ui-theme="dark"] .vault-presets-tip {
+    color: var(--modal-muted, #94a3b8);
 }
 
 /* Share, New note, Export, Copy & Theme dropdowns */

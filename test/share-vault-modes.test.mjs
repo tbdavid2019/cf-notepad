@@ -189,6 +189,11 @@ test('styles/base.css.js: contains required vault countdown, interstitial, and b
     assert.match(baseCssSource, /\.vault-presets-toolbar-btn/)
     assert.match(baseCssSource, /\.vault-presets-modal-content/)
     assert.match(baseCssSource, /\.vault-preset-card/)
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\]\s+\.vault-presets-modal-content/)
+    assert.match(baseCssSource, /html\[data-ui-theme="dark"\]\s+\.vault-preset-card/)
+    assert.match(baseCssSource, /@media\s*\(max-width:\s*640px\)\s*\{[\s\S]*?\.vault-presets-modal-grid\s*\{[\s\S]*?grid-template-columns:\s*1fr/)
+    assert.match(baseCssSource, /\.preset-card-title\s*\{[^}]*display:\s*block/)
+    assert.match(baseCssSource, /\.preset-card-desc\s*\{[^}]*display:\s*block/)
 })
 
 test('templates/common.js: renders vault security mode options and pulse controls', () => {
@@ -202,6 +207,16 @@ test('templates/common.js: renders vault security mode options and pulse control
     assert.match(commonTemplateSource, /id="vault-presets-toolbar-btn"/)
     assert.match(commonTemplateSource, /open-vault-presets-modal-btn/)
     assert.match(commonTemplateSource, /id="vault-presets-modal"/)
+
+    // Verify Bug 1: vault-presets-toolbar-btn is moved out of footer-control-group and placed after math-format-btn
+    assert.doesNotMatch(commonTemplateSource, /id="vault-presets-toolbar-btn"[\s\S]*?class="save-control-group"/)
+    assert.match(commonTemplateSource, /id="math-format-btn"[\s\S]*?id="vault-presets-toolbar-btn"/)
+
+    // Verify Bug 2: modal cards inside button do not contain invalid nested div block elements
+    assert.match(commonTemplateSource, /<span class="preset-card-top">/)
+    assert.match(commonTemplateSource, /<span class="preset-card-title">/)
+    assert.match(commonTemplateSource, /<span class="preset-card-desc">/)
+    assert.doesNotMatch(commonTemplateSource, /<button[^>]*class="[^"]*vault-preset-card[^"]*"[^>]*>(?:(?!<\/button>)[\s\S])*?<div/i)
 })
 
 test('templates/base.js: renders author preview banner, deadman released banner, and wires vault events', () => {
