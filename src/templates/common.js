@@ -1467,14 +1467,14 @@ export const VAULT_PRESETS_MODAL = (lang) => {
                                 ? (zh ? `💓 亡者開關 (${p.pulseInterval})` : `💓 Dead Man (${p.pulseInterval})`)
                                 : (zh ? `⏱️ 保留期限 (${p.expiresIn})` : `⏱️ Expiration (${p.expiresIn})`)))
                     return `
-                    <button type="button" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}">
+                    <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}">
                         <span class="preset-card-top">
                             <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
                             <span class="preset-card-badge mode-${p.mode}">${modeBadge}</span>
                         </span>
                         <span class="preset-card-title">${zh ? p.labelZh : p.labelEn}</span>
                         <span class="preset-card-desc">${zh ? p.descZh : p.descEn}</span>
-                    </button>
+                    </div>
                     `
                 }).join('')}
             </div>

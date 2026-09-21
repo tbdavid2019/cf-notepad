@@ -3,8 +3,10 @@
 ## [2026-09-21]
 
 - **🎨 底部工具列單列排版與情境範本彈窗網格重構 (Footer Single-Line Toolbar & Presets Modal Layout Fixes)**：
+  - **徹底根除 WebKit / Safari `<button>` 佈局引擎缺陷 (WebKit Bug 137351 Fix)**：在 macOS / iOS Safari 及 WebKit 內核中，`<button>` 採用原生 `RenderButton` 控件，會忽略內部垂直彈性盒模型 (`display: flex; flex-direction: column`)，導致卡片頂部圖標徽章與底部說明被擠出按鈕外層造成文字混亂重疊。全面重構為 `<div role="button" tabindex="0">`，100% 依循標準 CSS 盒子模型封裝，完美相容所有瀏覽器。
+  - **完美參照 fx 公式複製格式架構 (Matching Math Format Modal Architecture)**：全面借鑒成熟的 `MATH_FORMAT_MODAL`（fx 公式複製格式）架構與色彩系統，彈窗開窗時自動聚焦於第一張卡片，消除右上角關閉鈕初次開啟時的藍色焦點外框；支援鍵盤 Tab、Enter 與 Space 快速鍵選取。
   - **修復底欄按鈕雙層堆疊 (Bug 1 Fix)**：修正原本 `#vault-presets-toolbar-btn` 與 `#share-dropdown` 共同置於 `.footer-control-group` (`flex-direction: column`) 導致在編輯器底欄垂直折行成雙層的問題；將「範本」按鈕移出控制組並置於右側操作按鈕列中（緊鄰公式按鈕 `#math-format-btn` 與引用按鈕旁），高度固定 28px 並嚴格維持單列水平均勻對齊。
-  - **修復範本卡片重疊與彈窗深淺主題相容性 (Bug 2 Fix)**：消除 `<button>` 內部嵌套 `<div>` 非法區塊元素的 HTML 語法錯誤，改為語意化 `<span>` 搭配 `display: block` / `display: flex`，杜絕瀏覽器 DOM 解析異常引起的混亂重疊；補全實心不透明背景（淺色 `#f8fafc`、深色 `#0f172a`），支援深淺主題自適應；將彈窗網格改為電腦雙欄、手機 (`<= 640px`) 單欄響應式排版。
+  - **修復範本卡片重疊與彈窗深淺主題相容性 (Bug 2 Fix)**：補全實心不透明背景（淺色 `#f8fafc`、深色 `#0f172a`），支援深淺主題自適應；將彈窗網格改為電腦雙欄、手機 (`<= 640px`) 單欄響應式排版。
 
 - **✨ 快速情境範本獨立工具列按鈕與 Lucide 向量圖標彈窗庫 (Independent Presets Toolbar Button & Lucide Modal)**：
   - **工具列獨立入口**：將原本擠在分享選單內的 10 款範本分離，在編輯器底部控制列新增獨立「範本 (Presets)」按鈕（`#vault-presets-toolbar-btn`），並在分享下拉選單內提供乾淨單列快捷鍵「✨ 瀏覽 10 款安全情境範本」，徹底消除擁擠雜亂。

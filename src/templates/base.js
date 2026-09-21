@@ -5146,13 +5146,23 @@ ${getMarkdownCss()}
             })
         }
         // Share Actions (Delegated on document to support floating portal menus)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                const presetBtn = e.target.closest?.('.vault-preset-btn');
+                if (presetBtn && e.target === presetBtn) {
+                    e.preventDefault();
+                    presetBtn.click();
+                }
+            }
+        });
         document.addEventListener('click', async (e) => {
             const openPresetsBtn = e.target.closest('#vault-presets-toolbar-btn, .vault-presets-toolbar-btn, #open-vault-presets-modal-btn, .open-vault-presets-modal-btn');
             if (openPresetsBtn) {
                 e.preventDefault();
                 const modal = document.getElementById('vault-presets-modal');
                 if (modal) {
-                    openModal(modal, { trigger: openPresetsBtn });
+                    const firstOption = modal.querySelector('.vault-preset-btn');
+                    openModal(modal, { initialFocus: firstOption || openPresetsBtn, trigger: openPresetsBtn });
                 }
                 return;
             }
