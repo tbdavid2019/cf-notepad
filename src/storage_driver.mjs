@@ -228,7 +228,7 @@ export async function driverQueryShare(shareId) {
  * @param {string} shareId - Share ID
  * @param {string} path - Target note path
  */
-export async function driverPutShare(shareId, path) {
+export async function driverPutShare(shareId, path, options = {}) {
     const driver = getStorageDriverName()
     const db = getStorageDb()
     const kv = getShareKv()
@@ -249,7 +249,14 @@ export async function driverPutShare(shareId, path) {
     }
 
     if (kv) {
-        await kv.put(shareId, path)
+        const kvOptions = {}
+        const now = Math.floor(Date.now() / 1000)
+        if (options?.expiration && Number(options.expiration) > now + 60) {
+            kvOptions.expiration = Number(options.expiration)
+        } else if (options?.expirationTtl && Number(options.expirationTtl) >= 60) {
+            kvOptions.expirationTtl = Number(options.expirationTtl)
+        }
+        await kv.put(shareId, path, kvOptions)
     }
 }
 
@@ -272,4 +279,161 @@ export async function driverDeleteShare(shareId) {
     if (kv) {
         await kv.delete(shareId)
     }
+}
+
+/**
+ * Record share status (e.g. burned, expired) in tombstone cache
+ * @param {string} shareId
+ * @param {'burned' | 'expired' | 'unshared'} status
+ * @param {object} details
+ */
+export async function driverSetShareStatus(shareId, status, details = {}) {
+    if (!shareId) return
+    const kv = getShareKv()
+    if (!kv) return
+    if (!status) {
+        try {
+            await kv.delete(`SHARE_STATUS:${shareId}`)
+        } catch (err) {
+            console.warn('KV Delete Share Status Error:', err)
+        }
+        return
+    }
+    try {
+        await kv.put(`SHARE_STATUS:${shareId}`, JSON.stringify({
+            status,
+            ...details,
+            updatedAt: Math.floor(Date.now() / 1000),
+        }), { expirationTtl: 7 * 86400 })
+    } catch (err) {
+        console.warn('KV Set Share Status Error:', err)
+    }
+}
+
+/**
+ * Retrieve recorded share status from tombstone cache
+ * @param {string} shareId
+ */
+export async function driverGetShareStatus(shareId) {
+    if (!shareId) return null
+    const kv = getShareKv()
+    if (kv) {
+        try {
+            const raw = await kv.get(`SHARE_STATUS:${shareId}`)
+            if (raw) return JSON.parse(raw)
+        } catch {}
+    }
+    return null
+}
+
+/**
+ * Find note metadata and content by shareSlug, shareId, or path in D1
+ * @param {string} shareId
+ */
+export async function driverFindNoteByShareId(shareId) {
+    const db = getStorageDb()
+    if (!db || !shareId) return null
+    try {
+        const row = await db.prepare(`
+            SELECT path, metadata, content FROM notes
+            WHERE (
+                json_extract(metadata, '$.shareSlug') = ?
+                OR json_extract(metadata, '$.shareId') = ?
+                OR path = ?
+            )
+            LIMIT 1
+        `).bind(shareId, shareId, shareId).first()
+        if (row) {
+            let metadata = {}
+            try {
+                metadata = typeof row.metadata === 'string' ? JSON.parse(row.metadata) : (row.metadata || {})
+            } catch {}
+            return { path: row.path, metadata, value: row.content || '' }
+        }
+    } catch (err) {
+        console.warn('driverFindNoteByShareId error:', err)
+    }
+    return null
+}
+
+const IN_FLIGHT_CLAIMS = new Map()
+
+/**
+ * Atomically claim a burn-after-reading note to prevent concurrent double-read
+ * @param {string} shareId
+ * @param {string} path
+ * @param {number} now
+ * @returns {Promise<boolean>} true if successfully claimed, false if already burned
+ */
+export async function driverClaimBurnShare(shareId, path, now = Math.floor(Date.now() / 1000)) {
+    if (!shareId || !path) return false
+    const db = getStorageDb()
+    const kv = getShareKv()
+    const notesKv = getNotesKv()
+
+    // Fast-path in-memory lock on current isolate to block concurrent promises
+    if (IN_FLIGHT_CLAIMS.has(shareId)) {
+        return false
+    }
+    IN_FLIGHT_CLAIMS.set(shareId, now)
+    // Clean up memory lock after 10 seconds
+    setTimeout(() => IN_FLIGHT_CLAIMS.delete(shareId), 10000)
+
+    // 1. Check KV tombstone first
+    const tombstone = await driverGetShareStatus(shareId)
+    if (tombstone?.status === 'burned') {
+        return false
+    }
+
+    // 2. If D1 is available, atomic check-and-set via UPDATE
+    if (db) {
+        try {
+            const res = await db.prepare(`
+                UPDATE notes
+                SET metadata = json_set(metadata, '$.share', 0, '$.shareBurnedAt', ?)
+                WHERE path = ?
+                  AND (
+                      json_extract(metadata, '$.share') = 1
+                      OR json_extract(metadata, '$.share') = true
+                  )
+                  AND json_extract(metadata, '$.shareBurnedAt') IS NULL
+            `).bind(now, path).run()
+            if (res && typeof res.meta?.changes === 'number' && res.meta.changes === 0) {
+                return false
+            }
+        } catch (err) {
+            console.warn('D1 Claim Burn Share Error:', err)
+        }
+    }
+
+    // 3. In KV-only mode (or parallel KV storage), perform two-phase claim check with unique nonce
+    if (kv) {
+        try {
+            const claimKey = `SHARE_CLAIM:${shareId}`
+            const claimNonce = `${now}-${Math.random().toString(36).slice(2)}`
+            await kv.put(claimKey, claimNonce, { expirationTtl: 300 })
+            const registeredNonce = await kv.get(claimKey)
+            if (registeredNonce && registeredNonce !== claimNonce) {
+                return false
+            }
+        } catch (err) {
+            console.warn('KV Claim Nonce Error:', err)
+        }
+    }
+
+    // 4. Mark tombstone in SHARE kv immediately
+    await driverSetShareStatus(shareId, 'burned', { burnedAt: now, path })
+
+    // 5. Update KV note metadata as well
+    if (notesKv) {
+        try {
+            const current = await notesKv.getWithMetadata(path)
+            if (current?.metadata) {
+                const nextMeta = { ...current.metadata, share: false, shareBurnedAt: now }
+                await notesKv.put(path, current.value || '', { metadata: nextMeta })
+            }
+        } catch {}
+    }
+
+    return true
 }

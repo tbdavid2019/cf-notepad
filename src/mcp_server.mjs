@@ -11,6 +11,7 @@ import { AGENT_SKILL_MARKDOWN } from './generated/agent-skill.generated.mjs'
 import { parseCanvasDocument, validateCanvasDocument } from './canvas_document.mjs'
 import { parseWhiteboardDocument, validateWhiteboardDocument, whiteboardToMarkdown } from './whiteboard_document.mjs'
 import { buildWikiLinkCanvas } from '../static/js/canvas-v2/model/wikiGraphGenerator.mjs'
+import { parseExpirationSeconds, formatShareRemainingTime } from './note_meta.js'
 
 export const MCP_SERVER_INFO = {
     name: 'david888-wiki',
@@ -81,6 +82,27 @@ export const MCP_TOOLS_DEFINITIONS = [
                     type: 'string',
                     description: 'Optional layout width: "100%", "960px", "1200px", or "1440px" (default: "1200px").',
                 },
+                share_mode: {
+                    type: 'string',
+                    enum: ['standard', 'burn_after_reading', 'timelock', 'deadman'],
+                    description: 'Vault security mode: "standard" (normal public/expiring share), "burn_after_reading" (single-use self-destructing note), "timelock" (sealed until unlock_in time), or "deadman" (sealed while author pulses; auto-releases if pulse expires).',
+                },
+                expires_in: {
+                    type: 'string',
+                    description: 'Expiration duration for standard share (e.g. "10m", "1h", "1d", "7d", "30d", or seconds).',
+                },
+                burn_after_reading: {
+                    type: 'boolean',
+                    description: 'Shorthand for share_mode="burn_after_reading". Destroys note on first visitor read.',
+                },
+                unlock_in: {
+                    type: 'string',
+                    description: 'Sealed duration for timelock capsule (e.g. "1h", "1d", "7d", "30d"). Note becomes visible after this duration.',
+                },
+                pulse_interval: {
+                    type: 'string',
+                    description: 'Author pulse check-in interval for deadman switch (e.g. "3d", "7d", "14d", "30d"). If author fails to check in, the note auto-releases.',
+                },
             },
             required: ['path', 'text'],
         },
@@ -98,6 +120,11 @@ export const MCP_TOOLS_DEFINITIONS = [
                 make_private: { type: 'boolean', description: 'Keep the Canvas private when true.' },
                 theme: { type: 'string', description: 'Optional Canvas theme.' },
                 width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], description: 'Optional published layout width.' },
+                share_mode: { type: 'string', enum: ['standard', 'burn_after_reading', 'timelock', 'deadman'], description: 'Vault security mode.' },
+                expires_in: { type: 'string', description: 'Expiration duration (e.g. "10m", "1h", "1d", "7d", "30d").' },
+                burn_after_reading: { type: 'boolean', description: 'Single-use burn-after-reading switch.' },
+                unlock_in: { type: 'string', description: 'Time-locked capsule duration.' },
+                pulse_interval: { type: 'string', description: 'Dead man switch pulse interval.' },
             },
             required: ['path', 'document'],
         },
@@ -153,6 +180,11 @@ export const MCP_TOOLS_DEFINITIONS = [
                 make_private: { type: 'boolean', description: 'Keep the whiteboard private when true.' },
                 theme: { type: 'string', description: 'Optional theme.' },
                 width: { type: 'string', enum: ['100%', '960px', '1200px', '1440px'], description: 'Optional published layout width.' },
+                share_mode: { type: 'string', enum: ['standard', 'burn_after_reading', 'timelock', 'deadman'], description: 'Vault security mode.' },
+                expires_in: { type: 'string', description: 'Expiration duration (e.g. "10m", "1h", "1d", "7d", "30d").' },
+                burn_after_reading: { type: 'boolean', description: 'Single-use burn-after-reading switch.' },
+                unlock_in: { type: 'string', description: 'Time-locked capsule duration.' },
+                pulse_interval: { type: 'string', description: 'Dead man switch pulse interval.' },
             },
             required: ['path', 'document'],
         },
@@ -401,19 +433,56 @@ async function ensureMcpShareMetadata(path, metadata = {}) {
     }
 }
 
+function applyVaultMetadata(nextMetadata, args, nowUnix = dayjs().unix()) {
+    if (args.share_mode || args.burn_after_reading || args.expires_in || args.unlock_in || args.pulse_interval) {
+        let mode = args.share_mode || (args.burn_after_reading ? 'burn_after_reading' : 'standard')
+        nextMetadata.shareMode = mode
+        if (mode === 'burn_after_reading' || args.burn_after_reading) {
+            nextMetadata.shareBurnAfterReading = true
+            nextMetadata.shareMaxViews = 1
+        }
+        if (args.expires_in) {
+            const expSec = parseExpirationSeconds(args.expires_in)
+            if (expSec > 0) {
+                nextMetadata.shareExpiresIn = args.expires_in
+                nextMetadata.shareExpiresAt = nowUnix + expSec
+            }
+        }
+        if (mode === 'timelock' && args.unlock_in) {
+            const unlockSec = parseExpirationSeconds(args.unlock_in)
+            if (unlockSec > 0) {
+                nextMetadata.shareUnlockIn = args.unlock_in
+                nextMetadata.shareUnlockAt = nowUnix + unlockSec
+            }
+        }
+        if (mode === 'deadman' && args.pulse_interval) {
+            const pulseSec = parseExpirationSeconds(args.pulse_interval)
+            if (pulseSec > 0) {
+                nextMetadata.sharePulseInterval = pulseSec
+                nextMetadata.sharePulseDueAt = nowUnix + pulseSec
+                if (!nextMetadata.sharePulseToken) {
+                    nextMetadata.sharePulseToken = genRandomStr(24)
+                }
+            }
+        }
+    }
+    return nextMetadata
+}
+
 async function persistMcpNote({ path, content, metadata, previousContent }) {
     await driverPutNote(path, content, metadata)
 
     if (metadata.share === true) {
+        const shareOpts = metadata.shareExpiresAt ? { expiration: metadata.shareExpiresAt } : undefined
         const legacyShareId = await md5Hex(path)
         if (legacyShareId) {
-            await driverPutShare(legacyShareId, path)
+            await driverPutShare(legacyShareId, path, shareOpts)
         }
         if (metadata.shareSlug) {
-            await driverPutShare(metadata.shareSlug, path)
+            await driverPutShare(metadata.shareSlug, path, shareOpts)
         }
         if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
-            await driverPutShare(metadata.shareId, path)
+            await driverPutShare(metadata.shareId, path, shareOpts)
         }
     }
 
@@ -559,6 +628,7 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             if (!canPersistNoteContent(nextMetadata)) {
                 return { isError: true, text: 'Error: Canvas saving is currently blocked by server policy.' }
             }
+            nextMetadata = applyVaultMetadata(nextMetadata, args)
             nextMetadata = await ensureMcpShareMetadata(path, nextMetadata)
             const content = JSON.stringify(validated, null, 2)
             await persistMcpNote({ path, content, metadata: nextMetadata, previousContent })
@@ -573,6 +643,13 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                     path,
                     editUrl,
                     shareUrl,
+                    vaultMode: nextMetadata.shareMode || 'standard',
+                    expiresAt: nextMetadata.shareExpiresAt ? dayjs.unix(nextMetadata.shareExpiresAt).toISOString() : undefined,
+                    unlockAt: nextMetadata.shareUnlockAt ? dayjs.unix(nextMetadata.shareUnlockAt).toISOString() : undefined,
+                    pulseDueAt: nextMetadata.sharePulseDueAt ? dayjs.unix(nextMetadata.sharePulseDueAt).toISOString() : undefined,
+                    pulseWebhookUrl: (nextMetadata.shareMode === 'deadman' && shareSlug && nextMetadata.sharePulseToken)
+                        ? `${origin}/api/shares/${shareSlug}/pulse?token=${nextMetadata.sharePulseToken}`
+                        : undefined,
                     nodeCount: validated.nodes.length,
                     edgeCount: validated.edges.length,
                     document: validated,
@@ -660,6 +737,7 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             if (!canPersistNoteContent(nextMetadata)) {
                 return { isError: true, text: 'Error: Whiteboard saving is currently blocked by server policy.' }
             }
+            nextMetadata = applyVaultMetadata(nextMetadata, args)
             nextMetadata = await ensureMcpShareMetadata(path, nextMetadata)
             const content = JSON.stringify(validated, null, 2)
             await persistMcpNote({ path, content, metadata: nextMetadata, previousContent })
@@ -674,6 +752,13 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                     path,
                     editUrl,
                     shareUrl,
+                    vaultMode: nextMetadata.shareMode || 'standard',
+                    expiresAt: nextMetadata.shareExpiresAt ? dayjs.unix(nextMetadata.shareExpiresAt).toISOString() : undefined,
+                    unlockAt: nextMetadata.shareUnlockAt ? dayjs.unix(nextMetadata.shareUnlockAt).toISOString() : undefined,
+                    pulseDueAt: nextMetadata.sharePulseDueAt ? dayjs.unix(nextMetadata.sharePulseDueAt).toISOString() : undefined,
+                    pulseWebhookUrl: (nextMetadata.shareMode === 'deadman' && shareSlug && nextMetadata.sharePulseToken)
+                        ? `${origin}/api/shares/${shareSlug}/pulse?token=${nextMetadata.sharePulseToken}`
+                        : undefined,
                     elementCount: (validated.elements || []).length,
                 }, null, 2),
             }
@@ -755,6 +840,7 @@ async function executeMcpTool(name, args = {}, requestUrl) {
                 nextMetadata.annotationsEnabled = false
             }
 
+            nextMetadata = applyVaultMetadata(nextMetadata, args)
             nextMetadata = await ensureMcpShareMetadata(path, nextMetadata)
 
             if (!canPersistNoteContent(nextMetadata)) {
@@ -777,6 +863,18 @@ async function executeMcpTool(name, args = {}, requestUrl) {
             let resText = `Successfully saved note "${path}"!\n`
             if (shareUrl) {
                 resText += `Public Share URL: ${shareUrl} (Give this link to readers)\n`
+                if (nextMetadata.shareMode === 'burn_after_reading' || nextMetadata.shareBurnAfterReading) {
+                    resText += `Vault Mode: 🔥 Burn-After-Reading (Single-use ephemeral link)\n`
+                } else if (nextMetadata.shareMode === 'timelock' && nextMetadata.shareUnlockAt) {
+                    resText += `Vault Mode: ⏳ Time-Locked Capsule (Locked until ${dayjs.unix(nextMetadata.shareUnlockAt).toISOString()})\n`
+                } else if (nextMetadata.shareMode === 'deadman' && nextMetadata.sharePulseDueAt) {
+                    resText += `Vault Mode: 💓 Dead Man's Switch (Pulse due before ${dayjs.unix(nextMetadata.sharePulseDueAt).toISOString()})\n`
+                    if (nextMetadata.sharePulseToken) {
+                        resText += `Pulse Webhook URL: ${origin}/api/shares/${shareSlug}/pulse?token=${nextMetadata.sharePulseToken}\n`
+                    }
+                } else if (nextMetadata.shareExpiresAt) {
+                    resText += `Vault Expiration: ⏱️ Expires at ${dayjs.unix(nextMetadata.shareExpiresAt).toISOString()}\n`
+                }
                 if (hasChapterLinks) {
                     resText += `Book Mode: ${shareUrl}/book (Dual-pane TOC eBook)\n`
                 }

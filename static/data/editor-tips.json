@@ -165,6 +165,11 @@
       "id": "excalidraw-whiteboard",
       "zh-TW": "小訣竅：前往 /new/whiteboard 或在「＋ 新增」選單點擊「Excalidraw 白板」，即可使用自由手繪、線條塗鴉、幾何圖形與便籤！支援雙主題、Obsidian Excalidraw 相容格式、唯讀分享與高清 PNG/SVG 匯出。",
       "en-US": "Tip: Visit /new/whiteboard or select 'Whiteboard' from the '+ New' menu to open the Excalidraw freeform whiteboard! Supports sketch drawing, sticky notes, light/dark themes, Obsidian Excalidraw compatibility, read-only sharing, and PNG/SVG export."
+    },
+    {
+      "id": "share-vault-security-modes",
+      "zh-TW": "小訣竅：發布分享時可啟用「保險庫安全模式」！支援「閱後即焚」（訪客單次閱讀即從伺服器永久銷毀，作者視角免焚毀）、「有效期限」（10分鐘至30天到期自動下架）、「定時解鎖（時間膠囊）」（即時倒數計時卡片、到期自動重整公開）以及「亡者開關（保活心跳）」（作者定期打卡或調用 Webhook 保持封印，超期失聯自動對外公佈）。",
+      "en-US": "Tip: Enable 'Vault Security Mode' when publishing! Supports 'Burn-After-Reading' (ephemeral single-use link with author exemption), 'Expiration' (auto-expires from 10m to 30d), 'Time-Locked Capsule' (live ticking countdown, auto-reveals on date), and 'Dead Man's Switch' (vault stays sealed while author checks in; auto-releases upon missed pulse)."
     }
   ]
 }

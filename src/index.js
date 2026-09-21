@@ -28,12 +28,18 @@ import {
     resolveAnnotationsEnabled,
     resolveEditorFormat,
     resolveLockedEditorFormat,
+    parseExpirationSeconds,
+    isShareExpired,
+    isShareBurned,
+    isShareTimeLocked,
+    isShareDeadmanLocked,
+    formatShareRemainingTime,
 } from './note_meta.js'
 import { renderBlockToHtml, blockToMarkdown, parseBlockDocument, validateBlockDocument } from './block_renderer.mjs'
 import { canvasToMarkdown, validateCanvasDocument, parseCanvasDocument } from './canvas_document.mjs'
 import { whiteboardToMarkdown, validateWhiteboardDocument, parseWhiteboardDocument, DEFAULT_WHITEBOARD_DOCUMENT } from './whiteboard_document.mjs'
 import { renderMarkdownToHtml, parseHtmlToMarkdown, extractMarkdownData, lintMarkdownText } from './markdown-processor.mjs'
-import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare } from './storage_driver.mjs'
+import { driverQueryNote, driverPutNote, driverDeleteNote, driverQueryShare, driverPutShare, driverDeleteShare, driverSetShareStatus, driverGetShareStatus, driverFindNoteByShareId, driverClaimBurnShare } from './storage_driver.mjs'
 import { summarizeHistoryContent } from './note_history_presenter.js'
 import {
     AGENT_SKILL_MARKDOWN,
@@ -391,19 +397,77 @@ async function ensureShareMetadata(path, metadata = {}) {
     }
 }
 
+let EPHEMERAL_AUTHOR_SECRET = null
+function getAuthorSecretFallback() {
+    if (!EPHEMERAL_AUTHOR_SECRET) {
+        EPHEMERAL_AUTHOR_SECRET = crypto.randomUUID()
+    }
+    return EPHEMERAL_AUTHOR_SECRET
+}
+
+async function isNoteAuthor(request, path, cookie = {}) {
+    if (!path) return false
+    const adminPassword = getAdminPassword()
+    if (adminPassword && await verifyAdminSession(cookie, adminPassword)) {
+        return true
+    }
+    const { valid, role } = await checkAuth(cookie, path)
+    if (valid && role === 'edit') {
+        return true
+    }
+    const secret = getSecret() || adminPassword || getAuthorSecretFallback()
+    const authorCookieKey = 'cn_author_' + (await MD5(path)).substring(0, 16)
+    if (cookie && cookie[authorCookieKey]) {
+        try {
+            const validAuthor = await jwt.verify(cookie[authorCookieKey], secret)
+            if (validAuthor) {
+                const payload = jwt.decode(cookie[authorCookieKey])
+                if (payload?.path === path) return true
+            }
+        } catch {}
+    }
+    return false
+}
+
+async function createAuthorCookie(path) {
+    const secret = getSecret() || getAdminPassword() || getAuthorSecretFallback()
+    const exp = Math.floor(Date.now() / 1000) + 30 * 86400
+    const token = await jwt.sign({ path, role: 'author', exp }, secret)
+    const authorCookieKey = 'cn_author_' + (await MD5(path)).substring(0, 16)
+    return Cookies.serialize(authorCookieKey, token, {
+        path: '/',
+        maxAge: 30 * 86400,
+        httpOnly: true,
+        secure: true,
+        sameSite: 'Lax',
+    })
+}
+
 async function syncShareMappings(path, metadata = {}, previousMetadata = {}) {
     const legacyShareId = await MD5(path)
 
     if (metadata.share === true) {
-        if (legacyShareId) await driverPutShare(legacyShareId, path)
-        if (metadata.shareSlug) {
-            await driverPutShare(metadata.shareSlug, path)
+        const options = metadata.shareExpiresAt ? { expiration: metadata.shareExpiresAt } : undefined
+        if (options) {
+            if (legacyShareId) await driverPutShare(legacyShareId, path, options)
+            if (metadata.shareSlug) {
+                await driverPutShare(metadata.shareSlug, path, options)
+            }
+            if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
+                await driverPutShare(metadata.shareId, path, options)
+            }
+            await driverPutShare(path, path, options)
+        } else {
+            if (legacyShareId) await driverPutShare(legacyShareId, path)
+            if (metadata.shareSlug) {
+                await driverPutShare(metadata.shareSlug, path)
+            }
+            if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
+                await driverPutShare(metadata.shareId, path)
+            }
+            // Also map direct note path as share alias
+            await driverPutShare(path, path)
         }
-        if (metadata.shareId && metadata.shareId !== metadata.shareSlug) {
-            await driverPutShare(metadata.shareId, path)
-        }
-        // Also map direct note path as share alias
-        await driverPutShare(path, path)
     } else {
         if (legacyShareId) await driverDeleteShare(legacyShareId)
         if (previousMetadata.shareSlug) {
@@ -1904,10 +1968,12 @@ router.post('/share/:shareId/auth', async request => {
     return returnJSON(404, 'Share not found')
 })
 
-async function renderSharePage(request, presentationMode = false, execution = {}, bookMode = false) {
+async function renderSharePage(request, presentationMode = false, execution = {}, bookMode = false, options = {}) {
     const lang = getI18n(request)
     const { shareId } = request.params
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const now = Math.floor(Date.now() / 1000)
     let path = await driverQueryShare(shareId)
 
     // Fallback: If not found in shares mapping, check if shareId is directly a note path
@@ -1921,128 +1987,227 @@ async function renderSharePage(request, presentationMode = false, execution = {}
         }
     }
 
+    if (!path) {
+        const tombstone = await driverGetShareStatus(shareId)
+        if (tombstone?.status === 'burned') {
+            return returnPage('ShareBurned', { lang, title: 'Share Destroyed', shareId, ext: tombstone }, { status: 410 })
+        }
+        if (tombstone?.status === 'expired') {
+            return returnPage('ShareExpired', { lang, title: 'Share Expired', shareId, ext: tombstone }, { status: 410 })
+        }
+        const found = await driverFindNoteByShareId(shareId)
+        if (found) {
+            const isAuthor = await isNoteAuthor(request, found.path, cookie)
+            if (found.metadata?.shareBurnedAt) {
+                return returnPage('ShareBurned', { lang, title: 'Share Destroyed', shareId, path: found.path, ext: { ...(found.metadata || {}), isAuthor } }, { status: 410 })
+            }
+            if (found.metadata?.shareExpiresAt && found.metadata.shareExpiresAt <= now) {
+                return returnPage('ShareExpired', { lang, title: 'Share Expired', shareId, path: found.path, ext: { ...(found.metadata || {}), isAuthor } }, { status: 410 })
+            }
+        }
+        return returnPage('Page404', { lang, title: '404' })
+    }
+
     const sharePath = `/share/${shareId}`
     const presentationPath = `${sharePath}/present`
     const bookPath = `${sharePath}/book`
     const authPath = `${sharePath}/auth`
     const gaMeasurementId = getGaMeasurementId()
 
-    if (!!path) {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-        const { value, metadata } = await queryNote(path)
-        const origin = new URL(request.url).origin
+    const { value, metadata } = await queryNote(path)
+    const origin = new URL(request.url).origin
+    const isAuthor = await isNoteAuthor(request, path, cookie)
 
-        // Check if View Password is set
-        if (metadata.vpw) {
-            const { valid } = await checkAuth(cookie, path)
-
-            if (!valid) {
-                return returnPage('NeedPasswd', {
-                    lang,
-                    title: 'Password Protected',
-                    shareId,
-                    path,
-                    ext: {
-                        authPath,
-                        sharePath,
-                        presentationPath,
-                        gaMeasurementId,
-                        webtalk: getWebtalkConfig(),
-                        presentationEntry: presentationMode,
-                        autoPresent: false,
-                    },
-                })
-            }
+    if (metadata.share !== true) {
+        if (metadata.shareBurnedAt) {
+            return returnPage('ShareBurned', { lang, title: 'Share Destroyed', shareId, path, ext: { ...metadata, isAuthor } }, { status: 410 })
         }
-
-        const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
-        const description = extractNoteDescription(value, title)
-        const blockPageExt = getBlockPageExt(value, metadata)
-        const markdownExportContent = getMarkdownExportContent(value, metadata)
-        const canonicalPath = presentationMode ? presentationPath : sharePath
-        const canonicalUrl = `${origin}${canonicalPath}`
-
-        const acceptsMarkdown = requestAcceptsMarkdown(request)
-        if (acceptsMarkdown) {
-            return createMarkdownResponse(
-                buildMarkdownDocument(markdownExportContent, {
-                    title,
-                    description,
-                    canonical_url: canonicalUrl,
-                    share_url: `${origin}${sharePath}`,
-                    presentation_url: presentationMode ? canonicalUrl : `${origin}${presentationPath}`,
-                    note_path: path,
-                }),
-            )
+        if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+            return returnPage('ShareExpired', { lang, title: 'Share Expired', shareId, path, ext: { ...metadata, isAuthor } }, { status: 410 })
         }
-
-        let viewCount = null
-        let viewDeviceCookie = null
-        if (shouldCountShareView({
-            method: request.method,
-            presentationMode,
-            embedMode,
-            acceptsMarkdown,
-        })) {
-            const statsDb = getNoteStatsDb()
-            if (statsDb) {
-                try {
-                    const { deviceId, isNew } = resolveViewDeviceId(cookie.cn_device)
-                    const deviceHash = await hashViewDeviceId(deviceId)
-                    const recordedView = await recordUniqueNoteView(statsDb, path, deviceHash)
-                    viewCount = recordedView.viewCount
-
-                    if (isNew) {
-                        viewDeviceCookie = Cookies.serialize('cn_device', deviceId, {
-                            path: '/',
-                            maxAge: 365 * 24 * 60 * 60,
-                            httpOnly: true,
-                            secure: true,
-                            sameSite: 'lax',
-                        })
-                    }
-                } catch (error) {
-                    console.error('Share view count failed:', error)
-                    viewCount = null
-                }
-            }
-        }
-
-        return returnPage('Share', {
-            lang,
-            title,
-            content: value,
-            shareId,
-            ext: {
-                ...metadata,
-                ...blockPageExt,
-                ...(metadata.pw || metadata.vpw ? { authPath } : {}),
-                sharePath,
-                presentationPath,
-                bookPath,
-                gaMeasurementId,
-                webtalk: getWebtalkConfig(),
-                presentationEntry: presentationMode && !embedMode,
-                autoPresent: presentationMode && !embedMode,
-                bookMode: bookMode && !embedMode,
-                autoBook: bookMode && !embedMode,
-                embed: embedMode,
-                viewCount,
-                meta: {
-                    canonicalUrl,
-                    description,
-                    ogImageUrl: getOgImageUrl(origin),
-                    ogType: 'article',
-                    robots: 'index,follow',
-                    siteName: 'DAVID888 WIKI',
-                    twitterCard: 'summary_large_image',
-                },
-            },
-            path,
-        }, viewDeviceCookie ? { 'Set-Cookie': viewDeviceCookie } : {})
+        return returnPage('Page404', { lang, title: '404' })
     }
 
-    return returnPage('Page404', { lang, title: '404' })
+    // Check expiration
+    if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+        metadata.share = false
+        metadata.shareExpiredAt = now
+        await syncShareMappings(path, { share: false }, metadata)
+        await driverPutNote(path, value, metadata)
+        await driverSetShareStatus(shareId, 'expired', { expiredAt: now, path })
+        return returnPage('ShareExpired', { lang, title: 'Share Expired', shareId, path, ext: { ...metadata, isAuthor } }, { status: 410 })
+    }
+
+    // Check if View Password is set
+    if (metadata.vpw) {
+        const { valid } = await checkAuth(cookie, path)
+
+        if (!valid) {
+            return returnPage('NeedPasswd', {
+                lang,
+                title: 'Password Protected',
+                shareId,
+                path,
+                ext: {
+                    authPath,
+                    sharePath,
+                    presentationPath,
+                    gaMeasurementId,
+                    webtalk: getWebtalkConfig(),
+                    presentationEntry: presentationMode,
+                    autoPresent: false,
+                },
+            })
+        }
+    }
+
+    // Check timelock
+    if (isShareTimeLocked(metadata, now)) {
+        if (!isAuthor) {
+            if (requestAcceptsMarkdown(request)) {
+                return new Response('This note is time-locked and cannot be viewed yet.', { status: 423 })
+            }
+            return returnPage('ShareTimeLocked', { lang, title: 'Time-Locked Note', shareId, path, ext: { ...metadata, isAuthor } }, { status: 423 })
+        }
+    }
+
+    // Check dead man's switch
+    let deadmanReleased = false
+    if (metadata.shareMode === 'deadman') {
+        if (isAuthor) {
+            // Author visits: auto-pulse check-in
+            const pulseInterval = metadata.sharePulseInterval || 7 * 86400
+            metadata.sharePulseDueAt = now + pulseInterval
+            metadata.shareLastPulseAt = now
+            await driverPutNote(path, value, metadata)
+        } else {
+            if (metadata.sharePulseDueAt && metadata.sharePulseDueAt > now) {
+                // Author active: sealed
+                if (requestAcceptsMarkdown(request)) {
+                    return new Response("Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+                }
+                return returnPage('ShareDeadmanLocked', { lang, title: "Dead Man's Switch Active", shareId, path, ext: { ...metadata, isAuthor } }, { status: 423 })
+            } else {
+                deadmanReleased = true
+            }
+        }
+    }
+
+    let burnUnlocked = options?.burnUnlocked === true
+    let burnActiveNotice = false
+
+    if (metadata.shareBurnAfterReading === true && !isAuthor) {
+        if (burnUnlocked) {
+            const claimed = await driverClaimBurnShare(shareId, path, now)
+            if (!claimed) {
+                return returnPage('ShareBurned', { lang, title: 'Share Destroyed', shareId, path, ext: { ...metadata, isAuthor: false } }, { status: 410 })
+            }
+            metadata.share = false
+            metadata.shareBurnedAt = now
+            await syncShareMappings(path, { share: false }, metadata)
+            burnActiveNotice = true
+        }
+    }
+
+    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const description = extractNoteDescription(value, title)
+    const blockPageExt = getBlockPageExt(value, metadata)
+    const markdownExportContent = getMarkdownExportContent(value, metadata)
+    const canonicalPath = presentationMode ? presentationPath : sharePath
+    const canonicalUrl = `${origin}${canonicalPath}`
+
+    const acceptsMarkdown = requestAcceptsMarkdown(request)
+    if (acceptsMarkdown) {
+        if (isShareTimeLocked(metadata, now) && !isAuthor) {
+            return new Response('This note is time-locked and cannot be viewed yet.', { status: 423 })
+        }
+        if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+            return new Response("Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+        }
+        if (metadata.shareBurnAfterReading === true && !isAuthor && !burnUnlocked) {
+            return new Response('Burn-after-reading note requires user confirmation before access.', { status: 403 })
+        }
+        return createMarkdownResponse(
+            buildMarkdownDocument(markdownExportContent, {
+                title,
+                description,
+                canonical_url: canonicalUrl,
+                share_url: `${origin}${sharePath}`,
+                presentation_url: presentationMode ? canonicalUrl : `${origin}${presentationPath}`,
+                note_path: path,
+            }),
+        )
+    }
+
+    let viewCount = null
+    let viewDeviceCookie = null
+    const isBurnInterstitial = metadata.shareBurnAfterReading === true && !isAuthor && !burnUnlocked
+    if (!isAuthor && !isBurnInterstitial && shouldCountShareView({
+        method: request.method,
+        presentationMode,
+        embedMode,
+        acceptsMarkdown,
+    })) {
+        const statsDb = getNoteStatsDb()
+        if (statsDb) {
+            try {
+                const { deviceId, isNew } = resolveViewDeviceId(cookie.cn_device)
+                const deviceHash = await hashViewDeviceId(deviceId)
+                const recordedView = await recordUniqueNoteView(statsDb, path, deviceHash)
+                viewCount = recordedView.viewCount
+
+                if (isNew) {
+                    viewDeviceCookie = Cookies.serialize('cn_device', deviceId, {
+                        path: '/',
+                        maxAge: 365 * 24 * 60 * 60,
+                        httpOnly: true,
+                        secure: true,
+                        sameSite: 'lax',
+                    })
+                }
+            } catch (error) {
+                console.error('Share view count failed:', error)
+                viewCount = null
+            }
+        }
+    }
+
+    return returnPage('Share', {
+        lang,
+        title,
+        content: value,
+        shareId,
+        ext: {
+            ...metadata,
+            ...blockPageExt,
+            ...(metadata.pw || metadata.vpw ? { authPath } : {}),
+            sharePath,
+            presentationPath,
+            bookPath,
+            gaMeasurementId,
+            webtalk: getWebtalkConfig(),
+            presentationEntry: presentationMode && !embedMode,
+            autoPresent: presentationMode && !embedMode,
+            bookMode: bookMode && !embedMode,
+            autoBook: bookMode && !embedMode,
+            embed: embedMode,
+            viewCount,
+            isAuthor,
+            burnUnlocked,
+            burnActiveNotice,
+            deadmanReleased,
+            meta: {
+                canonicalUrl,
+                description,
+                ogImageUrl: getOgImageUrl(origin),
+                ogType: 'article',
+                robots: (metadata.shareBurnAfterReading || metadata.shareExpiresAt) ? 'noindex,nofollow' : 'index,follow',
+                siteName: 'DAVID888 WIKI',
+                twitterCard: 'summary_large_image',
+            },
+        },
+        path,
+    }, viewDeviceCookie ? { 'Set-Cookie': viewDeviceCookie } : {})
 }
 
 router.get('/share/:shareId', async (request, execution) => {
@@ -2053,6 +2218,10 @@ router.head('/share/:shareId', async (request, execution) => {
     return renderSharePage(request, false, execution)
 })
 
+router.post('/share/:shareId/reveal', async (request, execution) => {
+    return renderSharePage(request, false, execution, false, { burnUnlocked: true })
+})
+
 router.get('/share/:shareId/present', async (request, execution) => {
     return renderSharePage(request, true, execution)
 })
@@ -2061,12 +2230,177 @@ router.head('/share/:shareId/present', async (request, execution) => {
     return renderSharePage(request, true, execution)
 })
 
+router.post('/share/:shareId/present/reveal', async (request, execution) => {
+    return renderSharePage(request, true, execution, false, { burnUnlocked: true })
+})
+
 router.get('/share/:shareId/book', async (request, execution) => {
     return renderSharePage(request, false, execution, true)
 })
 
 router.head('/share/:shareId/book', async (request, execution) => {
     return renderSharePage(request, false, execution, true)
+})
+
+router.post('/share/:shareId/book/reveal', async (request, execution) => {
+    return renderSharePage(request, false, execution, true, { burnUnlocked: true })
+})
+
+async function handlePulseRequest(request) {
+    const lang = getI18n(request)
+    const { shareId } = request.params
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    let path = await driverQueryShare(shareId)
+    if (!path) {
+        const found = await driverFindNoteByShareId(shareId)
+        if (found) path = found.path
+    }
+    if (!path) return returnJSON(404, 'Share not found', { status: 404 })
+
+    const { value, metadata } = await queryNote(path)
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    const url = new URL(request.url)
+    const queryToken = url.searchParams.get('token')
+    const authHeader = request.headers.get('Authorization')
+    const bearerToken = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+    const token = queryToken || bearerToken
+
+    const tokenMatches = token && metadata.sharePulseToken && token === metadata.sharePulseToken
+    if (!isAuthor && !tokenMatches) {
+        return returnJSON(403, 'Permission denied: invalid pulse token or author session', { status: 403 })
+    }
+
+    const now = Math.floor(Date.now() / 1000)
+    const rawInterval = metadata.sharePulseInterval
+    const interval = (typeof rawInterval === 'number' && rawInterval > 0)
+        ? rawInterval
+        : (parseExpirationSeconds(rawInterval) || 7 * 86400)
+    const nextDueAt = now + interval
+    metadata.sharePulseDueAt = nextDueAt
+    metadata.shareLastPulseAt = now
+    if (!metadata.sharePulseToken) {
+        metadata.sharePulseToken = (await MD5(path + now + 'pulse')).substring(0, 24)
+    }
+    await driverPutNote(path, value, metadata)
+    await driverSetShareStatus(shareId, null)
+
+    const acceptsHtml = request.headers.get('Accept')?.includes('text/html') && request.method === 'GET'
+    if (acceptsHtml) {
+        return new Response(`<!DOCTYPE html><html><head><meta charset="utf-8"><title>Heartbeat Confirmed</title><style>body{font-family:sans-serif;display:grid;place-items:center;min-height:100vh;margin:0;background:#f8f7f3;color:#2c2a29;}.card{background:#fff;padding:32px;border-radius:14px;box-shadow:0 4px 16px rgba(0,0,0,0.08);text-align:center;max-width:400px;}</style></head><body><div class="card"><div style="font-size:48px;margin-bottom:12px;">💓</div><h2>${lang === 'zh-TW' ? '保活簽到成功！' : 'Heartbeat Confirmed!'}</h2><p>${lang === 'zh-TW' ? '下次心跳截止時間：' : 'Next check-in deadline:'}<br><strong>${new Date(nextDueAt * 1000).toLocaleString()}</strong></p><p><a href="/share/${encodeURIComponent(shareId)}" style="color:#c8654b;">${lang === 'zh-TW' ? '前往分享頁面' : 'View Share Page'}</a></p></div></body></html>`, {
+            headers: { 'Content-Type': 'text/html;charset=UTF-8' },
+        })
+    }
+
+    return returnJSON(0, {
+        success: true,
+        message: 'Pulse check-in successful',
+        pulseDueAt: nextDueAt,
+        remaining: formatShareRemainingTime(nextDueAt, now, lang),
+    })
+}
+
+router.get('/api/shares/:shareId/pulse', async request => handlePulseRequest(request))
+router.post('/api/shares/:shareId/pulse', async request => handlePulseRequest(request))
+
+router.post('/api/shares/:shareId/reveal', async request => {
+    const { shareId } = request.params
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const now = Math.floor(Date.now() / 1000)
+    let path = await driverQueryShare(shareId)
+
+    if (!path) {
+        const tombstone = await driverGetShareStatus(shareId)
+        if (tombstone?.status === 'burned') {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+        if (tombstone?.status === 'expired') {
+            return returnJSON(410, 'Share has expired', { status: 410 })
+        }
+        const found = await driverFindNoteByShareId(shareId)
+        if (found?.metadata?.shareBurnedAt) {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+        if (found?.metadata?.shareExpiresAt && found.metadata.shareExpiresAt <= now) {
+            return returnJSON(410, 'Share has expired', { status: 410 })
+        }
+        return returnJSON(404, 'Share not found', { status: 404 })
+    }
+
+    const { value, metadata } = await queryNote(path)
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+
+    if (metadata.share !== true) {
+        if (metadata.shareBurnedAt) {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+        return returnJSON(404, 'Share not found', { status: 404 })
+    }
+
+    if (metadata.shareBurnAfterReading !== true && !isAuthor) {
+        return returnJSON(400, 'Reveal endpoint is only applicable to burn-after-reading shares', { status: 400 })
+    }
+
+    if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+        metadata.share = false
+        metadata.shareExpiredAt = now
+        await syncShareMappings(path, { share: false }, metadata)
+        await driverPutNote(path, value, metadata)
+        await driverSetShareStatus(shareId, 'expired', { expiredAt: now, path })
+        return returnJSON(410, 'Share has expired', { status: 410 })
+    }
+
+    if (isShareTimeLocked(metadata, now) && !isAuthor) {
+        return returnJSON(423, 'Share is time-locked and cannot be viewed yet', { status: 423 })
+    }
+    if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+        return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+    }
+
+    const url = new URL(request.url)
+    const queryPw = url.searchParams.get('pw')
+    const authHeader = request.headers.get('Authorization')
+    const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
+    let bodyPw = null
+    try {
+        const body = await request.clone().json().catch(() => ({}))
+        bodyPw = body?.pw || null
+    } catch {}
+    const providedPw = queryPw || headerPw || bodyPw
+
+    if (metadata.vpw || metadata.pw) {
+        const { valid } = await checkAuth(cookie, path)
+        const hasAccess = valid || isAuthor || (providedPw && (
+            (metadata.vpw && await passwordMatches(providedPw, metadata.vpw)) ||
+            (metadata.pw && await passwordMatches(providedPw, metadata.pw))
+        ))
+        if (!hasAccess) {
+            return returnJSON(401, 'Password required to reveal this note', { status: 401 })
+        }
+    }
+
+    if (metadata.shareBurnAfterReading === true && !isAuthor) {
+        const claimed = await driverClaimBurnShare(shareId, path, now)
+        if (!claimed) {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+        metadata.share = false
+        metadata.shareBurnedAt = now
+        await syncShareMappings(path, { share: false }, metadata)
+    }
+
+    const title = extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
+    const blockPageExt = getBlockPageExt(value, metadata)
+
+    return returnJSON(0, {
+        path,
+        title,
+        content: value,
+        ...blockPageExt,
+        metadata: {
+            ...metadata,
+            shareBurned: !isAuthor && metadata.shareBurnAfterReading === true,
+        },
+    })
 })
 
 async function handleSharePdfExport(request) {
@@ -2078,18 +2412,49 @@ async function handleSharePdfExport(request) {
         const { value, metadata } = await queryNote(path)
         if (metadata.share !== true) return returnJSON(404, 'Share not found', { status: 404 })
 
+        const now = Math.floor(Date.now() / 1000)
+        if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+            return returnJSON(410, 'Share has expired', { status: 410 })
+        }
+        if (metadata.shareBurnedAt) {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+        const isAuthor = await isNoteAuthor(request, path, cookie)
+        if (isShareTimeLocked(metadata, now) && !isAuthor) {
+            return returnJSON(423, 'Share is time-locked and cannot be exported', { status: 423 })
+        }
+        if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+            return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+        }
+
         const url = new URL(request.url)
-        if (metadata.vpw) {
+
+        if (metadata.vpw || metadata.pw) {
             const queryPw = url.searchParams.get('pw')
             const authHeader = request.headers.get('Authorization')
             const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
-            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
             const { valid } = await checkAuth(cookie, path)
 
             const providedPw = queryPw || headerPw
-            const hasViewAccess = valid || (providedPw && await passwordMatches(providedPw, metadata.vpw))
+            const hasViewAccess = valid || isAuthor || (providedPw && (
+                (metadata.vpw && await passwordMatches(providedPw, metadata.vpw)) ||
+                (metadata.pw && await passwordMatches(providedPw, metadata.pw))
+            ))
             if (!hasViewAccess) {
                 return returnJSON(401, 'Unauthorized: Share view password required', { status: 401 })
+            }
+        }
+
+        if (metadata.shareBurnAfterReading === true && !isAuthor) {
+            const confirm = url.searchParams.get('burn_confirm') === 'true' || url.searchParams.get('burn_confirm') === '1'
+            if (!confirm) {
+                return returnJSON(400, 'PDF export will permanently destroy this burn-after-reading note. Pass burn_confirm=true to confirm.', { status: 400 })
+            }
+            const tombstone = await driverGetShareStatus(shareId)
+            if (tombstone?.status === 'burned') {
+                return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
             }
         }
 
@@ -2118,6 +2483,17 @@ async function handleSharePdfExport(request) {
             siteUrl,
         })
 
+        // Claim and burn share only after PDF generation succeeds
+        if (metadata.shareBurnAfterReading === true && !isAuthor) {
+            const claimed = await driverClaimBurnShare(shareId, path, now)
+            if (!claimed) {
+                return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+            }
+            metadata.share = false
+            metadata.shareBurnedAt = now
+            await syncShareMappings(path, { share: false }, metadata)
+        }
+
         const filename = `${title.replace(/[\/\\:*?"<>|]/g, '_') || shareId}.pdf`
         return createPdfResponse(pdfBytes, filename)
     } catch (e) {
@@ -2127,6 +2503,7 @@ async function handleSharePdfExport(request) {
 }
 
 router.get('/share/:shareId/export/pdf', async (request) => handleSharePdfExport(request))
+router.get('/share/:shareId/export.pdf', async (request) => handleSharePdfExport(request))
 router.get('/api/shares/:shareId/pdf', async (request) => handleSharePdfExport(request))
 
 router.get('/api/shares/:shareId/annotations', async request => {
@@ -2137,8 +2514,24 @@ router.get('/api/shares/:shareId/annotations', async request => {
     const { value, metadata } = await queryNote(path)
     if (metadata.share !== true) return returnJSON(404, 'Share not found', { status: 404 })
 
+    const now = Math.floor(Date.now() / 1000)
+    if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+        return returnJSON(410, 'Share has expired', { status: 410 })
+    }
+    if (metadata.shareBurnedAt) {
+        return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+    }
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    if (isShareTimeLocked(metadata, now) && !isAuthor) {
+        return returnJSON(423, 'Share is time-locked', { status: 423 })
+    }
+    if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+        return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+    }
+
     if (metadata.vpw) {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
         const { valid } = await checkAuth(cookie, path)
         if (!valid) return returnJSON(401, 'Share password required', { status: 401 })
     }
@@ -2206,8 +2599,32 @@ async function getWritableAnnotationContext(request) {
         }
     }
 
+    const now = Math.floor(Date.now() / 1000)
+    if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+        return {
+            response: returnJSON(410, 'Share has expired', { status: 410 }),
+        }
+    }
+    if (metadata.shareBurnedAt) {
+        return {
+            response: returnJSON(410, 'Share has been burned and destroyed', { status: 410 }),
+        }
+    }
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    if (isShareTimeLocked(metadata, now) && !isAuthor) {
+        return {
+            response: returnJSON(423, 'Share is time-locked and cannot be annotated yet', { status: 423 }),
+        }
+    }
+    if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+        return {
+            response: returnJSON(423, "Dead Man's Switch is active. Annotations sealed until check-in expires.", { status: 423 }),
+        }
+    }
+
     if (metadata.vpw) {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
         const { valid } = await checkAuth(cookie, path)
         if (!valid) {
             return {
@@ -2410,8 +2827,24 @@ router.post('/api/shares/:shareId/ai-assistant', async (request, context = {}) =
     if (!metadata || metadata.share !== true) {
         return returnJSON(404, 'Share not found or expired', { status: 404 })
     }
+    const now = Math.floor(Date.now() / 1000)
+    if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+        return returnJSON(410, 'Share has expired', { status: 410 })
+    }
+    if (metadata.shareBurnedAt) {
+        return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+    }
+
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    if (isShareTimeLocked(metadata, now) && !isAuthor) {
+        return returnJSON(423, 'Share is time-locked', { status: 423 })
+    }
+    if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now && !isAuthor) {
+        return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+    }
+
     if (metadata.vpw) {
-        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
         const { valid, role } = await checkAuth(cookie, path)
         if (!valid || (role !== 'view' && role !== 'edit')) {
             return returnJSON(10002, 'Password authentication required', { status: 401 })
@@ -2812,6 +3245,27 @@ router.get('/api/:path', async (request) => {
     const { path } = request.params
     const { value, metadata } = await queryNote(path)
     const url = new URL(request.url)
+    const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    const now = Math.floor(Date.now() / 1000)
+
+    if (!isAuthor) {
+        if (metadata.shareBurnedAt) {
+            return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+        }
+        if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+            return returnJSON(410, 'Share has expired', { status: 410 })
+        }
+        if (isShareTimeLocked(metadata, now)) {
+            return returnJSON(423, 'Share is time-locked and cannot be viewed yet', { status: 423 })
+        }
+        if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now) {
+            return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+        }
+        if (metadata.shareBurnAfterReading === true) {
+            return returnJSON(400, 'Burn-after-reading notes must be revealed via /share/:shareId or /api/shares/:shareId/reveal', { status: 400 })
+        }
+    }
 
     if (metadata.pw || metadata.vpw) {
         const queryPw = url.searchParams.get('pw')
@@ -2852,12 +3306,33 @@ async function handleNotePdfExport(request) {
             return returnJSON(404, 'Note not found', { status: 404 })
         }
 
+        const cookie = Cookies.parse(request.headers.get('Cookie') || '')
+        const isAuthor = await isNoteAuthor(request, path, cookie)
+        const now = Math.floor(Date.now() / 1000)
+
+        if (!isAuthor) {
+            if (metadata.shareBurnedAt) {
+                return returnJSON(410, 'Share has been burned and destroyed', { status: 410 })
+            }
+            if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+                return returnJSON(410, 'Share has expired', { status: 410 })
+            }
+            if (isShareTimeLocked(metadata, now)) {
+                return returnJSON(423, 'Share is time-locked and cannot be exported', { status: 423 })
+            }
+            if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now) {
+                return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
+            }
+            if (metadata.shareBurnAfterReading === true) {
+                return returnJSON(400, 'Burn-after-reading notes cannot be exported directly via path', { status: 400 })
+            }
+        }
+
         const url = new URL(request.url)
         if (metadata.pw || metadata.vpw) {
             const queryPw = url.searchParams.get('pw')
             const authHeader = request.headers.get('Authorization')
             const headerPw = authHeader ? authHeader.replace('Bearer ', '').trim() : null
-            const cookie = Cookies.parse(request.headers.get('Cookie') || '')
             const { valid } = await checkAuth(cookie, path)
 
             const providedPw = queryPw || headerPw
@@ -3094,6 +3569,74 @@ router.post('/api/:path', async (request) => {
         updateMetadata.publicIndex = reqBody.publicIndex === true
     }
 
+    const rawExpiresIn = reqBody.expires_in !== undefined ? reqBody.expires_in : reqBody.shareExpiresIn
+    if (rawExpiresIn !== undefined) {
+        if (rawExpiresIn === null || rawExpiresIn === 'never' || rawExpiresIn === '') {
+            updateMetadata.shareExpiresIn = null
+            delete updateMetadata.shareExpiresAt
+            delete updateMetadata.shareExpiredAt
+        } else {
+            const expSec = parseExpirationSeconds(rawExpiresIn)
+            if (expSec) {
+                updateMetadata.shareExpiresIn = rawExpiresIn
+                updateMetadata.shareExpiresAt = dayjs().unix() + expSec
+                delete updateMetadata.shareExpiredAt
+            } else {
+                updateMetadata.shareExpiresIn = null
+                delete updateMetadata.shareExpiresAt
+            }
+        }
+    }
+
+    const rawMode = reqBody.shareMode || reqBody.mode
+    if (rawMode !== undefined) {
+        updateMetadata.shareMode = rawMode
+        if (rawMode === 'burn') {
+            updateMetadata.shareBurnAfterReading = true
+        } else {
+            updateMetadata.shareBurnAfterReading = false
+            delete updateMetadata.shareBurnedAt
+            if (rawMode === 'standard') {
+                delete updateMetadata.shareUnlockAt
+                delete updateMetadata.shareUnlockIn
+                delete updateMetadata.sharePulseDueAt
+                delete updateMetadata.sharePulseInterval
+            }
+        }
+    }
+
+    const rawBurn = reqBody.burn_after_reading !== undefined ? reqBody.burn_after_reading : reqBody.shareBurnAfterReading
+    if (rawBurn !== undefined) {
+        updateMetadata.shareBurnAfterReading = rawBurn === true
+    }
+
+    if (rawMode === 'timelock' || reqBody.shareUnlockIn !== undefined) {
+        const unlockIn = reqBody.shareUnlockIn || updateMetadata.shareUnlockIn || '1d'
+        const unlockSec = parseExpirationSeconds(unlockIn) || 86400
+        updateMetadata.shareUnlockIn = unlockIn
+        updateMetadata.shareUnlockAt = dayjs().unix() + unlockSec
+    }
+
+    if (rawMode === 'deadman' || reqBody.sharePulseInterval !== undefined) {
+        const pulseIn = reqBody.sharePulseInterval || updateMetadata.sharePulseInterval || '7d'
+        const pulseSec = parseExpirationSeconds(pulseIn) || 7 * 86400
+        updateMetadata.sharePulseInterval = pulseSec
+        updateMetadata.sharePulseDueAt = dayjs().unix() + pulseSec
+        updateMetadata.shareLastPulseAt = dayjs().unix()
+        if (!updateMetadata.sharePulseToken) {
+            updateMetadata.sharePulseToken = (await MD5(path + dayjs().unix() + 'pulse')).substring(0, 24)
+        }
+    }
+
+    if (updateMetadata.share === true) {
+        if (metadata.shareBurnedAt) {
+            delete updateMetadata.shareSlug
+            delete updateMetadata.shareId
+        }
+        delete updateMetadata.shareBurnedAt
+        delete updateMetadata.shareExpiredAt
+    }
+
     if (updateMetadata.share === true && metadata.share !== true) {
         updateMetadata.annotationsEnabled = true
     }
@@ -3108,12 +3651,13 @@ router.post('/api/:path', async (request) => {
         if (reqBody.share === false || reqBody.public === false) {
             await driverPutNote(path, newContent, updateMetadata)
             await syncShareMappings(path, updateMetadata, metadata)
+            const authorCookie = await createAuthorCookie(path)
             const fullUrl = new URL(request.url)
             return returnJSON(0, {
                 msg: 'Unpublished successfully',
                 url: `${fullUrl.protocol}//${fullUrl.host}/${path}`,
                 shareUrl: null,
-            })
+            }, { 'Set-Cookie': authorCookie })
         }
         return returnJSON(10005, getSaveBlockedMessage(getI18n(request)))
     }
@@ -3136,10 +3680,22 @@ router.post('/api/:path', async (request) => {
         
         // Always provide the share URL if it's shared, so the LLM can give a safe link to the human
         if (updateMetadata.share) {
-            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${await getShareIdForPath(path, updateMetadata)}`
+            const shareId = await getShareIdForPath(path, updateMetadata)
+            if (shareId) {
+                await driverSetShareStatus(shareId, null)
+            }
+            responseData.shareUrl = `${fullUrl.protocol}//${fullUrl.host}/share/${shareId}`
+            if (updateMetadata.shareExpiresAt) {
+                responseData.shareExpiresAt = updateMetadata.shareExpiresAt
+                responseData.shareExpiresIn = updateMetadata.shareExpiresIn
+            }
+            if (updateMetadata.shareBurnAfterReading) {
+                responseData.shareBurnAfterReading = true
+            }
         }
 
-        return returnJSON(0, responseData)
+        const authorCookie = await createAuthorCookie(path)
+        return returnJSON(0, responseData, { 'Set-Cookie': authorCookie })
     } catch (error) {
         console.error('API Error:', error)
         return returnJSON(500, `API Internal Error: ${error.message}${error.stack ? '\n' + error.stack : ''}`)
@@ -3198,6 +3754,39 @@ router.get('/:path', async (request) => {
     }
     const shareId = await getShareIdForPath(path, activeMetadata)
 
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    const now = Math.floor(Date.now() / 1000)
+
+    if (!isAuthor && (metadata.share === true || metadata.shareMode || metadata.shareBurnAfterReading || metadata.shareBurnedAt || metadata.shareExpiresAt)) {
+        if (metadata.shareBurnedAt) {
+            if (requestAcceptsMarkdown(request)) {
+                return new Response('Share has been burned and destroyed', { status: 410, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
+            }
+            return returnPage('Page404', { lang, title: 'Burned', message: 'This note was configured to burn after reading and has already been destroyed.' }, { status: 410 })
+        }
+        if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+            if (requestAcceptsMarkdown(request)) {
+                return new Response('Share has expired', { status: 410, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
+            }
+            return returnPage('Page404', { lang, title: 'Expired', message: 'This shared note has expired and is no longer available.' }, { status: 410 })
+        }
+        if (isShareTimeLocked(metadata, now)) {
+            if (requestAcceptsMarkdown(request)) {
+                return new Response('Share is time-locked and cannot be viewed yet', { status: 423, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
+            }
+            return returnPage('ShareLocked', { lang, title, path, ext: { ...pageMetadata, ...blockPageExt, timelocked: true, unlockAt: metadata.shareUnlockAt } }, { status: 423 })
+        }
+        if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now) {
+            if (requestAcceptsMarkdown(request)) {
+                return new Response("Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
+            }
+            return returnPage('ShareLocked', { lang, title, path, ext: { ...pageMetadata, ...blockPageExt, deadman: true, pulseDueAt: metadata.sharePulseDueAt } }, { status: 423 })
+        }
+        if (metadata.shareBurnAfterReading === true) {
+            return Response.redirect(`${new URL(request.url).origin}/share/${shareId}`, 302)
+        }
+    }
+
     const embedMode = new URL(request.url).searchParams.get('embed') === '1'
 
     if (!metadata.pw && !metadata.vpw) {
@@ -3252,6 +3841,7 @@ router.get('/:path', async (request) => {
             )
         }
 
+        const authorCookie = await createAuthorCookie(path)
         return returnPage('Edit', {
             lang,
             title,
@@ -3259,7 +3849,7 @@ router.get('/:path', async (request) => {
             ext: { ...pageMetadata, ...blockPageExt, enableR2: getEnableR2(), ...await getEditorPublicationStats(path, metadata) },
             shareId,
             path,
-        })
+        }, { 'Set-Cookie': authorCookie })
     }
 
     if (valid && role === 'view') {
@@ -3299,6 +3889,24 @@ router.head('/:path', async (request) => {
         : extractNoteTitle(value, metadata?.title, decodeURIComponent(path))
     const pageMetadata = newEntry ? { ...metadata, isNewEntry: true } : metadata
     const shareId = await getShareIdForPath(path, metadata)
+
+    const isAuthor = await isNoteAuthor(request, path, cookie)
+    const now = Math.floor(Date.now() / 1000)
+
+    if (!isAuthor && (metadata.share === true || metadata.shareMode || metadata.shareBurnAfterReading || metadata.shareBurnedAt || metadata.shareExpiresAt)) {
+        if (metadata.shareBurnedAt) {
+            return new Response(null, { status: 410, headers: { 'content-type': 'text/html; charset=UTF-8' } })
+        }
+        if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
+            return new Response(null, { status: 410, headers: { 'content-type': 'text/html; charset=UTF-8' } })
+        }
+        if (isShareTimeLocked(metadata, now) || (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now)) {
+            return new Response(null, { status: 423, headers: { 'content-type': 'text/html; charset=UTF-8' } })
+        }
+        if (metadata.shareBurnAfterReading === true) {
+            return new Response(null, { status: 302, headers: { Location: `${new URL(request.url).origin}/share/${shareId}` } })
+        }
+    }
 
     if (!metadata.pw && !metadata.vpw) {
         if (requestAcceptsMarkdown(request)) {
@@ -3443,7 +4051,7 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-            const { mode } = await request.clone().json()
+            const { mode, shareMode, shareExpiresIn, shareBurnAfterReading, shareUnlockIn, sharePulseInterval, shareMaxViews } = await request.clone().json().catch(() => ({}))
             const { share, theme, title, width, shareFont, publicIndex, content, autosave, annotationsEnabled } = await request.json()
 
             const { value, metadata } = await queryNote(path)
@@ -3495,6 +4103,76 @@ router.post('/:path/setting', async request => {
                         ...mode !== undefined && { mode },
                     }
 
+                    if (shareMode !== undefined) {
+                        nextMetadata.shareMode = shareMode
+                        if (shareMode === 'burn') {
+                            nextMetadata.shareBurnAfterReading = true
+                        } else {
+                            nextMetadata.shareBurnAfterReading = false
+                            delete nextMetadata.shareBurnedAt
+                            if (shareMode === 'standard') {
+                                delete nextMetadata.shareUnlockAt
+                                delete nextMetadata.shareUnlockIn
+                                delete nextMetadata.sharePulseDueAt
+                                delete nextMetadata.sharePulseInterval
+                            }
+                        }
+                    }
+
+                    if (shareExpiresIn !== undefined) {
+                        if (shareExpiresIn === null || shareExpiresIn === 'never' || shareExpiresIn === '') {
+                            nextMetadata.shareExpiresIn = null
+                            delete nextMetadata.shareExpiresAt
+                            delete nextMetadata.shareExpiredAt
+                        } else {
+                            const expSec = parseExpirationSeconds(shareExpiresIn)
+                            if (expSec) {
+                                nextMetadata.shareExpiresIn = shareExpiresIn
+                                nextMetadata.shareExpiresAt = dayjs().unix() + expSec
+                                delete nextMetadata.shareExpiredAt
+                            } else {
+                                nextMetadata.shareExpiresIn = null
+                                delete nextMetadata.shareExpiresAt
+                            }
+                        }
+                    }
+
+                    if (shareBurnAfterReading !== undefined) {
+                        nextMetadata.shareBurnAfterReading = shareBurnAfterReading === true
+                    }
+
+                    if (shareUnlockIn !== undefined || (nextMetadata.shareMode === 'timelock' && !nextMetadata.shareUnlockAt)) {
+                        const effectiveUnlockIn = shareUnlockIn || nextMetadata.shareUnlockIn || '1d'
+                        const unlockSec = parseExpirationSeconds(effectiveUnlockIn) || 86400
+                        nextMetadata.shareUnlockIn = effectiveUnlockIn
+                        nextMetadata.shareUnlockAt = dayjs().unix() + unlockSec
+                    }
+
+                    if (sharePulseInterval !== undefined || (nextMetadata.shareMode === 'deadman' && !nextMetadata.sharePulseDueAt)) {
+                        const effectivePulse = sharePulseInterval || nextMetadata.sharePulseInterval || '7d'
+                        const pulseSec = parseExpirationSeconds(effectivePulse) || 7 * 86400
+                        nextMetadata.sharePulseInterval = pulseSec
+                        nextMetadata.sharePulseDueAt = dayjs().unix() + pulseSec
+                        nextMetadata.shareLastPulseAt = dayjs().unix()
+                        if (!nextMetadata.sharePulseToken) {
+                            nextMetadata.sharePulseToken = (await MD5(path + dayjs().unix() + 'pulse')).substring(0, 24)
+                        }
+                    }
+
+                    if (shareMaxViews !== undefined) {
+                        const maxV = parseInt(shareMaxViews, 10)
+                        if (Number.isFinite(maxV) && maxV > 0) nextMetadata.shareMaxViews = maxV
+                    }
+
+                    if (share === true) {
+                        if (metadata.shareBurnedAt) {
+                            delete nextMetadata.shareSlug
+                            delete nextMetadata.shareId
+                        }
+                        delete nextMetadata.shareBurnedAt
+                        delete nextMetadata.shareExpiredAt
+                    }
+
                     if (share === true && metadata.share !== true && annotationsEnabled === undefined) {
                         nextMetadata.annotationsEnabled = true
                     }
@@ -3522,16 +4200,20 @@ router.post('/:path/setting', async request => {
                         await driverPutNote(path, textToSave, nextMetadata)
                     }
 
-                    if (share) {
+                    const authorCookie = await createAuthorCookie(path)
+                    if (nextMetadata.share === true) {
                         await syncShareMappings(path, nextMetadata, metadata)
-                        return returnJSON(0, await getShareIdForPath(path, nextMetadata))
+                        const shareId = await getShareIdForPath(path, nextMetadata)
+                        if (shareId && (shareExpiresIn !== undefined || share === true)) {
+                            await driverSetShareStatus(shareId, null)
+                        }
+                        return returnJSON(0, shareId, { 'Set-Cookie': authorCookie })
                     }
                     if (share === false) {
                         await syncShareMappings(path, nextMetadata, metadata)
                     }
 
-
-                    return returnJSON(0)
+                    return returnJSON(0, null, { 'Set-Cookie': authorCookie })
                 } catch (error) {
                     console.error(error)
                     throw error
@@ -3711,6 +4393,11 @@ router.post('/:path', async request => {
             ...metadata,
             ...(editorFormat !== 'markdown' && !metadata.editorFormat ? { editorFormat } : {}),
             updateAt: dayjs().unix(),
+        }
+        if (metadata.shareMode === 'deadman') {
+            const pulseInterval = metadata.sharePulseInterval || 7 * 86400
+            nextMeta.sharePulseDueAt = dayjs().unix() + pulseInterval
+            nextMeta.shareLastPulseAt = dayjs().unix()
         }
         await persistNoteContent({
             path,

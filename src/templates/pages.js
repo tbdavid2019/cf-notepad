@@ -16,6 +16,216 @@ const escapeHtml = value => String(value || '')
 export const NeedPasswd = data => HTML({ tips: SUPPORTED_LANG[data.lang].tipEncrypt, showPwPrompt: true, ...data })
 export const Page404 = data => HTML({ tips: SUPPORTED_LANG[data.lang].tip404, ...data })
 
+export const ShareExpired = data => {
+    const lang = data?.lang || 'zh-TW'
+    const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
+    const isAuthor = data?.ext?.isAuthor === true
+    const editUrl = data?.path ? `/${data.path}` : '/'
+    return HTML({
+        ...data,
+        title: t.shareExpiredTitle || 'Share Expired',
+        tips: `
+            <div class="share-status-page share-expired-page">
+                <div class="share-status-icon">⏳</div>
+                <h2>${escapeHtml(t.shareExpiredTitle || '分享已過期')}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareExpiredDesc || '此分享連結的有效期限已截止，無法再進行存取。')}</p>
+                ${isAuthor ? `
+                    <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，可返回編輯頁面重新發布分享連結。' : 'You are the author of this note. You can return to the editor to republish.'}</p>
+                    <div class="share-status-actions">
+                        <a href="${escapeHtml(editUrl)}" class="opt-button opt-button-accent">${escapeHtml(t.backToEdit || '返回編輯')}</a>
+                    </div>
+                ` : `
+                    <div class="share-status-actions">
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                    </div>
+                `}
+            </div>
+        `,
+    })
+}
+
+export const ShareBurned = data => {
+    const lang = data?.lang || 'zh-TW'
+    const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
+    const isAuthor = data?.ext?.isAuthor === true
+    const editUrl = data?.path ? `/${data.path}` : '/'
+    return HTML({
+        ...data,
+        title: t.shareBurnedTitle || 'Share Destroyed',
+        tips: `
+            <div class="share-status-page share-burned-page">
+                <div class="share-status-icon">🔥</div>
+                <h2>${escapeHtml(t.shareBurnedTitle || '分享已銷毀')}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareBurnedDesc || '此分享為「閱後即焚」機密內容，已被他人讀取並永久銷毀。')}</p>
+                ${isAuthor ? `
+                    <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，該分享連結已按閱後即焚規則自動註銷，原始筆記仍安全保存在您的 Wiki 中。' : 'You are the author of this note. The share link was destroyed per burn-after-reading rules. The original note remains safe in your Wiki.'}</p>
+                    <div class="share-status-actions">
+                        <a href="${escapeHtml(editUrl)}" class="opt-button opt-button-accent">${escapeHtml(t.backToEdit || '返回編輯')}</a>
+                    </div>
+                ` : `
+                    <div class="share-status-actions">
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                    </div>
+                `}
+            </div>
+        `,
+    })
+}
+
+export const ShareTimeLocked = data => {
+    const lang = data?.lang || 'zh-TW'
+    const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
+    const isAuthor = data?.ext?.isAuthor === true
+    const unlockAt = Number(data?.ext?.shareUnlockAt) || 0
+    const editUrl = data?.path ? `/${data.path}` : '/'
+    return HTML({
+        ...data,
+        title: t.shareTimeLockedTitle || 'Time-Locked Capsule',
+        tips: `
+            <div class="share-status-page share-timelock-page">
+                <div class="share-status-icon">⏳</div>
+                <h2>${escapeHtml(t.shareTimeLockedTitle || '時間膠囊封印中')}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareTimeLockedDesc || '此筆記已封印鎖定，將於預定解鎖時間到達後自動公開。')}</p>
+                <div class="share-countdown-wrapper" data-target-timestamp="${unlockAt}">
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="tl-days">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '天' : 'Days'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="tl-hours">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '時' : 'Hours'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="tl-mins">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '分' : 'Mins'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="tl-secs">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '秒' : 'Secs'}</span>
+                    </div>
+                </div>
+                <div class="share-countdown-notice">${lang === 'zh-TW' ? '倒數歸零時頁面將自動重整解鎖' : 'This page will automatically refresh and reveal when time is reached.'}</div>
+                ${isAuthor ? `
+                    <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，可隨時返回編輯頁面調整解鎖時間或取消封印。' : 'You are the author of this note. You can return to editor to adjust unlock time.'}</p>
+                    <div class="share-status-actions">
+                        <a href="${escapeHtml(editUrl)}" class="opt-button opt-button-accent">${escapeHtml(t.backToEdit || '返回編輯')}</a>
+                    </div>
+                ` : `
+                    <div class="share-status-actions">
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                    </div>
+                `}
+            </div>
+            <script>
+                (function() {
+                    var wrap = document.querySelector('.share-countdown-wrapper');
+                    var target = wrap ? Number(wrap.getAttribute('data-target-timestamp')) : 0;
+                    function update() {
+                        var now = Math.floor(Date.now() / 1000);
+                        var diff = target - now;
+                        if (diff <= 0) {
+                            window.location.reload();
+                            return;
+                        }
+                        var d = Math.floor(diff / 86400);
+                        var h = Math.floor((diff % 86400) / 3600);
+                        var m = Math.floor((diff % 3600) / 60);
+                        var s = diff % 60;
+                        var ed = document.getElementById('tl-days');
+                        var eh = document.getElementById('tl-hours');
+                        var em = document.getElementById('tl-mins');
+                        var es = document.getElementById('tl-secs');
+                        if (ed) ed.textContent = d < 10 ? '0' + d : d;
+                        if (eh) eh.textContent = h < 10 ? '0' + h : h;
+                        if (em) em.textContent = m < 10 ? '0' + m : m;
+                        if (es) es.textContent = s < 10 ? '0' + s : s;
+                    }
+                    update();
+                    setInterval(update, 1000);
+                })();
+            </script>
+        `,
+    })
+}
+
+export const ShareDeadmanLocked = data => {
+    const lang = data?.lang || 'zh-TW'
+    const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
+    const isAuthor = data?.ext?.isAuthor === true
+    const pulseDueAt = Number(data?.ext?.sharePulseDueAt) || 0
+    const editUrl = data?.path ? `/${data.path}` : '/'
+    const shareId = data?.shareId
+    return HTML({
+        ...data,
+        title: t.shareDeadmanTitle || "Dead Man's Switch Active",
+        tips: `
+            <div class="share-status-page share-deadman-page">
+                <div class="share-status-icon">🛡️</div>
+                <h2>${escapeHtml(t.shareDeadmanTitle || '亡者開關保活中')}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareDeadmanDesc || '作者心跳簽到正常，保險庫持續處於機密鎖定狀態。若作者失聯超期未簽到，將自動對外公開。')}</p>
+                <div class="share-countdown-wrapper" data-target-timestamp="${pulseDueAt}">
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="dm-days">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '天' : 'Days'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="dm-hours">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '時' : 'Hours'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="dm-mins">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '分' : 'Mins'}</span>
+                    </div>
+                    <div class="countdown-card">
+                        <span class="countdown-val" id="dm-secs">00</span>
+                        <span class="countdown-lbl">${lang === 'zh-TW' ? '秒' : 'Secs'}</span>
+                    </div>
+                </div>
+                <div class="share-countdown-notice">${lang === 'zh-TW' ? '距離下次簽到截止尚有如上時間；若逾期未簽到，內容將自動解鎖' : 'Next check-in deadline shown above. If the author misses check-in, content unlocks.'}</div>
+                ${isAuthor ? `
+                    <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，保活狀態一切正常。您可點擊立即簽到以延長截止時間。' : 'You are the author. Heartbeat active. You can pulse now to extend deadline.'}</p>
+                    <div class="share-status-actions">
+                        <button type="button" id="deadman-pulse-btn" class="opt-button opt-button-accent" onclick="fetch('/api/shares/${escapeHtml(shareId)}/pulse', { method: 'POST' }).then(function() { window.location.reload(); })">${escapeHtml(t.pulseNowBtn || '立即簽到保活 (Pulse)')}</button>
+                        <a href="${escapeHtml(editUrl)}" class="opt-button">${escapeHtml(t.backToEdit || '返回編輯')}</a>
+                    </div>
+                ` : `
+                    <div class="share-status-actions">
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                    </div>
+                `}
+            </div>
+            <script>
+                (function() {
+                    var wrap = document.querySelector('.share-countdown-wrapper');
+                    var target = wrap ? Number(wrap.getAttribute('data-target-timestamp')) : 0;
+                    function update() {
+                        var now = Math.floor(Date.now() / 1000);
+                        var diff = target - now;
+                        if (diff <= 0) {
+                            window.location.reload();
+                            return;
+                        }
+                        var d = Math.floor(diff / 86400);
+                        var h = Math.floor((diff % 86400) / 3600);
+                        var m = Math.floor((diff % 3600) / 60);
+                        var s = diff % 60;
+                        var ed = document.getElementById('dm-days');
+                        var eh = document.getElementById('dm-hours');
+                        var em = document.getElementById('dm-mins');
+                        var es = document.getElementById('dm-secs');
+                        if (ed) ed.textContent = d < 10 ? '0' + d : d;
+                        if (eh) eh.textContent = h < 10 ? '0' + h : h;
+                        if (em) em.textContent = m < 10 ? '0' + m : m;
+                        if (es) es.textContent = s < 10 ? '0' + s : s;
+                    }
+                    update();
+                    setInterval(update, 1000);
+                })();
+            </script>
+        `,
+    })
+}
+
 export const Home = ({ lang = 'zh-TW', canonicalUrl, ogImageUrl }) => `
 <!DOCTYPE html>
 <html lang="${lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'}">

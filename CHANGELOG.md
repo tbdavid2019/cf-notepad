@@ -1,5 +1,45 @@
 # Changelog
 
+## [2026-09-21]
+
+- **🔐 分享保險庫安全模式與快速情境範本 (Share Vault Security Modes, 10 Quick Start Presets & Security Hardening)**：
+  - **4 種進階發布與生命週期管理模式**：
+    - **標準公開與有效期限 (Standard & Expiration)**：支援為任何公開分享設定到期時間（`10m`, `1h`, `1d`, `7d`, `30d` 或永久有效）。整合 Cloudflare KV 原生 TTL 與 Worker 雙層檢查，到期自動下架並顯示友善的 410 墓碑頁面。
+    - **閱後即焚 (Burn-After-Reading / Single-Use Ephemeral)**：單次讀取即從伺服器永久銷毀。內建兩階段確認揭示卡（防止 LINE、Discord、Telegram、Twitter 等爬蟲機器人抓取摘要時意外焚毀）；**嚴格實作作者存取豁免（作者編輯或檢視不計次、不觸發焚毀）**；銷毀後永久返回 410 墓碑頁。
+    - **定時解鎖／時間膠囊 (Time-Locked Capsule)**：封印機密內容直至指定時間解鎖（`1h`, `1d`, `3d`, `7d`, `30d` 後）。外部訪客返回 423 Locked 狀態碼並顯示動態倒數計時卡（日、時、分、秒），倒數歸零自動重整公開；作者在封印期間具備專屬預覽橫幅與提前解封設定。
+    - **亡者開關／保活心跳 (Dead Man's Switch)**：保險庫在作者定期打卡保活期間持續維持機密封印（`3d`, `7d`, `14d`, `30d` 簽到週期）。作者編輯筆記、點擊「立即簽到保活 (Pulse)」或透過專屬 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯，保險庫自動對外公開並顯示解封說明。
+  - **⚡ 10 款一鍵快速情境範本 (10 Quick Start Presets)**：
+    - 在分享選單中內建 10 款快速情境按鈕，點擊即自動套用最佳保險庫模式、倒數／簽到週期，並在空白筆記中預填專業排版範本：
+      1. 🛡️ **一次性密碼 (One-Time Password)**：閱後即焚 (`burn`)，有效 1 小時，適合傳遞臨時金鑰。
+      2. ₿ **加密資產傳承 (Crypto Inheritance)**：亡者開關 (`deadman`)，30 天保活心跳，預填冷錢包與繼承指引。
+      3. 📢 **吹哨揭弊保護 (Whistleblower)**：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
+      4. 🚀 **產品發布解鎖 (Product Launch)**：時間膠囊 (`timelock`)，7 天後解鎖正式公告與促銷代碼。
+      5. 🎁 **生日驚喜禮物 (Birthday Gift)**：時間膠囊 (`timelock`)，1 天後 (生日當天) 揭曉驚喜兌換券。
+      6. ⚖️ **司法保全留存 (Legal Hold)**：標準分享 (`standard`)，30 天後自動過期下架。
+      7. 🎯 **闖關尋寶線索 (Scavenger Hunt)**：時間膠囊 (`timelock`)，1 小時後解密下一道謎題。
+      8. 📅 **課程定時教材 (Course Content)**：時間膠囊 (`timelock`)，7 天後隨課堂進度定時解鎖講義與作業解答。
+      9. 🛟 **緊急災備通道 (Emergency Backup)**：亡者開關 (`deadman`)，14 天無簽到自動釋出應急救援 SSH 與主控台存取。
+      10. 🔑 **機密金鑰分享 (Shared Secret)**：閱後即焚 (`burn`)，適合安全傳送 `.env` API Key 與連線密鑰。
+  - **🛡️ Codex 安全代碼審查與深度防護 (Security Hardening & Review Fixes)**：
+    - **原子化銷毀 (Atomic Tombstone Claiming)**：實作 `driverClaimBurnShare`，在 D1 與 KV 層以條件更新原子化註記墓碑，消除高併發雙重揭示 (double-read race condition) 漏洞。
+    - **授權優先驗證 (Authenticate Before Burn)**：PDF 匯出與揭示端點均在執行焚毀前強制校驗密碼 (`vpw` / `pw`)，避免未授權請求藉由 `burn_confirm=true` 惡意觸發非預期銷毀。
+    - **路徑 API 保險庫聯防 (Vault Enforced on Path APIs)**：在 `GET /api/:path` 與筆記直接 PDF 匯出端點針對非作者請求強制套用過期 (410)、銷毀 (410)、時間膠囊 (423) 與亡者開關 (423) 防護；閱後即焚禁止透過 path 直讀。
+    - **分享頁隱蔽路徑 (Mask Internal Path in Client State)**：公開分享頁針對外部訪客屏蔽 `APP_STATE.path` 與 `settingPath`，杜絕透過客戶端狀態探知內部私有 pad 路徑。
+    - **重新發布自動換址 (Rotate Burned Share Slugs)**：重新公開已焚毀的筆記時自動清空舊的 `shareSlug` 與 `shareId` 並重新派發新網址，確保持有舊連結的訪客持續收到 410 墓碑。
+    - **修正 D1 欄位對應**：修復 `driverFindNoteByShareId` 之 SQL 查詢欄位為 `content`（原誤填 `value`），確保 D1 模式下正確檢索筆記內文。
+    - **切換模式自動重置焚毀狀態**：由閱後即焚切換至其他保險庫模式時，自動重置 `shareBurnAfterReading = false` 並刪除 `shareBurnedAt`。
+    - **未發布範本選單綁定修正**：修正草稿分享選單點擊情境按鈕時正確尋址 `#share-unlock-select-draft` 與 `#share-pulse-select-draft`。
+    - **消弭預覽洩漏**：閱後即焚過渡確認頁面徹底清空隱藏 `<article id="bot-accessible-content">` 與 client state，杜絕爬蟲抓取。
+    - **密鑰動態隔離**：移除靜態 fallback 字串，採用執行時期 `crypto.randomUUID()` 隔離作者 token；Pulse 週期支援數值秒數與文字縮寫防呆。
+  - **全格式通用支援 (Universal Format Compatibility)**：支援 Markdown 筆記、BlockNote 塊編輯器、Ameliorate JSON Canvas 知識圖譜、Excalidraw 自由白板與簡報／PDF 匯出，全格式均受保險庫生命週期管線防護。
+  - **原生 WebMCP 與 REST API 擴充**：`write_note`、`write_canvas`、`write_whiteboard` 支援 `share_mode`、`expires_in`、`burn_after_reading`、`unlock_in`、`pulse_interval` 參數，自動生成 pulse webhook 與到期資訊。
+  - **🌐 對外文檔自動全面同步 (External LLMs, Skills & OpenAPI Sync)**：
+    - `LLM_API_DOCS.md`：新增第 7 章專節說明 4 種保險庫模式、10 款情境範本、Pulse 心跳 Webhook 與 Reveal API。
+    - `skills/SKILL.md` & `.agent/skills/`：同步包含保險庫模式、REST 呼叫規範與 WebMCP 參數。
+    - `static/llms.txt` & `static/llms-full.txt`：同步更新 Share Vault、Excalidraw Whiteboard、生命週期端點與安全模型。
+    - `src/discovery.mjs`：動態更新 `/llms.txt`、`/llms-full.txt`、OpenAPI 3.1.0 綱要 (`NoteWriteRequest` 與 `/api/shares/{shareId}/pulse`、`/api/shares/{shareId}/reveal` 路由)。
+  - **完整測試與雙語支援**：擴充 `test/share-vault-modes.test.mjs`，測試套件 494/494 100% 通過；介面與文檔完整支援繁體中文 (`zh-TW`) 與英文 (`en-US`)。
+
 ## [2026-09-18]
 
 - **🧭 新筆記模式選擇器補全 (Four-Format Editor Preference Modal)**：首次建立筆記與「設定預設編輯器模式」現在完整提供 Markdown、Block、Canvas、Whiteboard 四種選項，支援繁中／英文、推薦標籤、記住選擇與正確路由導向。

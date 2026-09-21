@@ -9,7 +9,7 @@ import { getBaseCss } from '../styles/base.css.js'
 import { getEditorCss } from '../styles/editor.css.js'
 import { getMarkdownCss } from '../styles/markdown.css.js'
 import { AUTOSAVE_IDLE_MS } from '../save_policy.mjs'
-import { resolveAnnotationsEnabled, resolveEditorFormat, isCanvasContent } from '../note_meta.js'
+import { resolveAnnotationsEnabled, resolveEditorFormat, isCanvasContent, formatShareRemainingTime } from '../note_meta.js'
 
 const PUBLIC_ICON_SVG_URL = '/icon.svg'
 const PUBLIC_ICON_PNG_URL = '/icon.png'
@@ -132,19 +132,22 @@ export const HTML = ({ lang, title, content = '', ext = {}, tips, isEdit, showPw
     const htmlLang = lang === 'zh-TW' ? 'zh-Hant-TW' : 'en'
     const ogLocale = lang === 'zh-TW' ? 'zh_TW' : 'en_US'
     const isSharePage = Boolean(shareId && !isEdit)
+    const isBurnInterstitial = isSharePage && ext.shareBurnAfterReading === true && !ext.isAuthor && !ext.burnUnlocked
     const effectiveEditorFormat = resolveEditorFormat(ext, content)
     const isBlockDocument = effectiveEditorFormat === 'block'
     const isCanvasDocument = effectiveEditorFormat === 'canvas'
     const isWhiteboardDocument = effectiveEditorFormat === 'whiteboard'
     const blockHtml = isBlockDocument ? String(ext.blockHtml || '<p></p>') : ''
-    const accessibleContent = isBlockDocument
-        ? blockHtml
-        : isCanvasDocument
-            ? escapeHtml(ext.canvasMarkdown || '')
-            : isWhiteboardDocument
-                ? escapeHtml(ext.whiteboardMarkdown || '')
-                : escapeHtml(content)
-    const textareaContent = escapeHtml(content)
+    const accessibleContent = isBurnInterstitial
+        ? ''
+        : (isBlockDocument
+            ? blockHtml
+            : isCanvasDocument
+                ? escapeHtml(ext.canvasMarkdown || '')
+                : isWhiteboardDocument
+                    ? escapeHtml(ext.whiteboardMarkdown || '')
+                    : escapeHtml(content))
+    const textareaContent = isBurnInterstitial ? '' : escapeHtml(content)
     const pageTheme = (isBlockDocument || isCanvasDocument || isWhiteboardDocument)
         ? (ext.theme || (isWhiteboardDocument ? 'claude-canvas' : 'ayu-light'))
         : resolvePageTheme({
@@ -367,8 +370,48 @@ ${getMarkdownCss()}
                     <div class="layer_3">
                         ${tips ? `<div class="tips">${tips}</div>` : ''}
                         ${ext.sharePath && !isEdit ? `<h1 class="sr-only">${escapeHtml(title || APP_NAME)}</h1>` : ''}
-                         <article style="display:none;" id="bot-accessible-content">${accessibleContent}</article>
-                        ${isWhiteboardDocument ? `<div class="editor-pane whiteboard-editor-pane">
+                        ${isSharePage && ext.isAuthor ? `
+                            <div class="share-author-preview-banner">
+                                <span class="author-banner-badge">👑 ${escapeHtml(
+                                    ext.shareMode === 'timelock'
+                                        ? (SUPPORTED_LANG[lang].authorTimeLockPreview || 'Time-Locked Capsule Preview: unlocks at {time}').replace('{time}', ext.shareUnlockAt ? new Date(ext.shareUnlockAt * 1000).toLocaleString() : '')
+                                        : ext.shareMode === 'deadman'
+                                        ? (SUPPORTED_LANG[lang].authorDeadmanPreview || "Dead Man's Switch Preview: next pulse due {time}").replace('{time}', ext.sharePulseDueAt ? new Date(ext.sharePulseDueAt * 1000).toLocaleString() : '')
+                                        : (SUPPORTED_LANG[lang].authorPreviewNotice || 'Author Preview')
+                                )}</span>
+                                ${ext.shareExpiresAt ? `<span class="author-banner-time">⏳ ${formatShareRemainingTime(ext.shareExpiresAt, lang)}</span>` : ''}
+                                ${ext.shareMode === 'deadman' ? `<button type="button" class="opt-button opt-button-accent author-pulse-btn" style="height:26px;font-size:12px;padding:0 8px;margin-left:8px;" onclick="fetch('/api/shares/' + encodeURIComponent('${escapeHtml(shareId)}') + '/pulse', {method:'POST'}).then(function() { window.location.reload(); })">${escapeHtml(SUPPORTED_LANG[lang].pulseNowBtn || 'Pulse Now')}</button>` : ''}
+                                ${path ? `<a href="/${escapeHtml(path)}" class="author-banner-edit">✏️ ${lang === 'zh-TW' ? '返回編輯' : 'Back to Editor'}</a>` : ''}
+                            </div>
+                        ` : ''}
+                        ${isSharePage && ext.deadmanReleased ? `
+                            <div class="share-deadman-released-banner">
+                                <span>⚠️ ${lang === 'zh-TW' ? '亡者開關已觸發解鎖：作者超期未簽到保活，機密保險庫已自動向公眾解鎖。' : 'Dead Man\'s Switch Triggered: The author missed the check-in deadline. Vault auto-released.'}</span>
+                            </div>
+                        ` : ''}
+                        ${isSharePage && ext.burnActiveNotice ? `
+                            <div class="share-burn-active-banner">
+                                <span>🔥 ${escapeHtml(SUPPORTED_LANG[lang].burnActiveNotice || 'This note has self-destructed and cannot be re-opened.')}</span>
+                            </div>
+                        ` : ''}
+                        ${isBurnInterstitial ? `
+                            <div class="share-burn-interstitial">
+                                <div class="burn-interstitial-card">
+                                    <div class="burn-card-icon">🔥</div>
+                                    <h2 class="burn-card-title">${escapeHtml(SUPPORTED_LANG[lang].burnRevealTitle || 'Burn After Reading')}</h2>
+                                    <p class="burn-card-desc">${escapeHtml(SUPPORTED_LANG[lang].burnRevealDesc || 'This secret note will self-destruct permanently after being read once.')}</p>
+                                    <form method="POST" action="/share/${escapeHtml(shareId)}${ext.presentationEntry ? '/present' : (ext.bookMode ? '/book' : '')}/reveal">
+                                        <button type="submit" class="burn-reveal-btn" id="burn-reveal-btn">
+                                            <span>🔓</span>
+                                            <span>${escapeHtml(SUPPORTED_LANG[lang].burnRevealBtn || 'Click to Reveal Note')}</span>
+                                        </button>
+                                    </form>
+                                    <p class="burn-card-warning">${escapeHtml(SUPPORTED_LANG[lang].burnRevealWarning || 'Warning: Once revealed, the share link becomes invalid immediately.')}</p>
+                                </div>
+                            </div>
+                        ` : ''}
+                        <article style="display:none;" id="bot-accessible-content">${accessibleContent}</article>
+                        ${isBurnInterstitial ? '' : (isWhiteboardDocument ? `<div class="editor-pane whiteboard-editor-pane">
                             <div id="whiteboard-editor" class="whiteboard-editor" aria-label="Whiteboard" data-editable="${isEdit}"></div>
                             <textarea id="contents" class="contents hide" spellcheck="false" aria-hidden="true">${textareaContent}</textarea>
                         </div>` : (isCanvasDocument ? `<div class="editor-pane canvas-editor-pane">
@@ -429,9 +472,9 @@ ${getMarkdownCss()}
                                 ${isEdit && !isBlockDocument ? '<div id="editor-welcome" class="editor-welcome" aria-hidden="true" hidden></div>' : ''}
                             </div>
                             <div id="editor-status" class="editor-status" aria-live="polite"></div>
-                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>'))}
-                        ${(isEdit && !isBlockDocument && !isCanvasDocument && !isWhiteboardDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : ''}
-                        ${isCanvasDocument || isWhiteboardDocument || tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
+                        </div>`) : '<textarea id="contents" class="contents hide" spellcheck="false">' + textareaContent + '</textarea>')))}
+                        ${!isBurnInterstitial && ((isEdit && !isBlockDocument && !isCanvasDocument && !isWhiteboardDocument && (ext.mode || 'md') === 'md') ? '<div class="divide-line"></div>' : '')}
+                        ${isBurnInterstitial || isCanvasDocument || isWhiteboardDocument || tips || (isEdit && (isBlockDocument || (ext.mode || 'md') !== 'md')) ? '' : (
                             isEdit
                                 ? `<div class="preview-pane">${!isBlockDocument ? '<div id="preview-welcome" class="editor-welcome preview-welcome" aria-hidden="true" hidden></div>' : ''}<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body"></div>${EDITOR_PUBLICATION_STATUS({ lang, ext, shareId })}</div>`
                                 : `<div id="preview-${(ext.mode || 'md') === 'md' ? 'md' : 'plain'}" class="contents markdown-body">${isBlockDocument ? blockHtml : ''}</div>`
@@ -1185,8 +1228,8 @@ ${getMarkdownCss()}
         embed: isEmbed,
         presentationPath: ext.presentationPath || '',
         bookPath: ext.bookPath || '',
-        settingPath: ext.settingPath || (path ? '/' + path + '/setting' : ''),
-        path: path || '',
+        settingPath: (ext.isAuthor || !isSharePage) ? (ext.settingPath || (path ? '/' + path + '/setting' : '')) : '',
+        path: (ext.isAuthor || !isSharePage) ? (path || '') : '',
         shareId: shareId || '',
         presentationEntry: ext.presentationEntry === true,
         autoPresent: ext.autoPresent === true,
@@ -1196,7 +1239,7 @@ ${getMarkdownCss()}
         isBlock: isBlockDocument,
         isCanvas: isCanvasDocument,
         isWhiteboard: isWhiteboardDocument,
-        blockMarkdown: ext.blockMarkdown || '',
+        blockMarkdown: isBurnInterstitial ? '' : (ext.blockMarkdown || ''),
         isNewEntry: isEdit === true && ext.isNewEntry === true,
         theme: pageTheme,
         isPublished: ext.share === true,
@@ -1206,6 +1249,19 @@ ${getMarkdownCss()}
         versionCount: Number.isSafeInteger(ext.versionCount) && ext.versionCount >= 0 ? ext.versionCount : null,
         viewCount: Number.isSafeInteger(ext.viewCount) && ext.viewCount >= 0 ? ext.viewCount : null,
         updateAt: Number.isFinite(Number(ext.updateAt)) ? Number(ext.updateAt) : null,
+        shareExpiresAt: Number.isFinite(Number(ext.shareExpiresAt)) ? Number(ext.shareExpiresAt) : null,
+        shareExpiresIn: ext.shareExpiresIn || 'none',
+        shareBurnAfterReading: ext.shareBurnAfterReading === true,
+        shareMode: ext.shareMode || (ext.shareBurnAfterReading === true ? 'burn' : 'standard'),
+        shareUnlockIn: ext.shareUnlockIn || '1d',
+        shareUnlockAt: Number.isFinite(Number(ext.shareUnlockAt)) ? Number(ext.shareUnlockAt) : null,
+        sharePulseInterval: Number.isFinite(Number(ext.sharePulseInterval)) ? Number(ext.sharePulseInterval) : 604800,
+        sharePulseDueAt: Number.isFinite(Number(ext.sharePulseDueAt)) ? Number(ext.sharePulseDueAt) : null,
+        sharePulseToken: ext.isAuthor === true ? (ext.sharePulseToken || '') : '',
+        deadmanReleased: ext.deadmanReleased === true,
+        isAuthor: ext.isAuthor === true,
+        burnUnlocked: ext.burnUnlocked === true,
+        burnActiveNotice: ext.burnActiveNotice === true,
         annotationsEnabled: resolveAnnotationsEnabled(ext),
         noteSettings: {
             width: ext.width || '',
@@ -3730,6 +3786,16 @@ ${getMarkdownCss()}
             const wasPublished = APP_STATE.isPublished === true
             const currentWidth = APP_STATE.noteSettings.width || (APP_STATE.isEdit ? '1200px' : '100%')
             const currentTheme = APP_STATE.theme || 'claude-canvas'
+            const draftModeSelect = document.querySelector('#share-vault-mode-select-draft')
+            const draftExpiresSelect = document.querySelector('#share-expires-select-draft')
+            const draftBurnBtn = document.querySelector('#burn-after-reading-btn-draft')
+            const draftUnlockSelect = document.querySelector('#share-unlock-select-draft')
+            const draftPulseSelect = document.querySelector('#share-pulse-select-draft')
+            const shareMode = draftModeSelect ? draftModeSelect.value : (APP_STATE.shareMode || 'standard')
+            const shareExpiresIn = draftExpiresSelect ? draftExpiresSelect.value : (APP_STATE.shareExpiresIn || 'none')
+            const shareBurnAfterReading = draftBurnBtn ? draftBurnBtn.getAttribute('data-burn-after-reading') === 'true' : (APP_STATE.shareBurnAfterReading === true || shareMode === 'burn')
+            const shareUnlockIn = draftUnlockSelect ? draftUnlockSelect.value : (APP_STATE.shareUnlockIn || '1d')
+            const sharePulseInterval = draftPulseSelect ? draftPulseSelect.value : (APP_STATE.sharePulseInterval || '7d')
             return fetchJson(window.location.pathname + '/setting', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -3740,6 +3806,11 @@ ${getMarkdownCss()}
                     theme: currentTheme,
                     autosave: preferences.autosave,
                     publicIndex: preferences.publicIndex,
+                    shareMode,
+                    shareExpiresIn,
+                    shareBurnAfterReading,
+                    shareUnlockIn,
+                    sharePulseInterval,
                 })
             })
                 .then(res => {
@@ -3758,6 +3829,29 @@ ${getMarkdownCss()}
                     }
                     APP_STATE.isPublished = true;
                     APP_STATE.shareId = nextShareId;
+                    APP_STATE.shareMode = shareMode;
+                    APP_STATE.shareExpiresIn = shareExpiresIn;
+                    APP_STATE.shareBurnAfterReading = shareBurnAfterReading;
+                    APP_STATE.shareUnlockIn = shareUnlockIn;
+                    APP_STATE.sharePulseInterval = sharePulseInterval;
+                    const liveModeSelect = document.querySelector('#share-vault-mode-select')
+                    if (liveModeSelect && shareMode) {
+                        liveModeSelect.value = shareMode
+                        if (typeof syncVaultModeUI === 'function') syncVaultModeUI(shareMode, false)
+                    }
+                    const liveExpiresSelect = document.querySelector('#share-expires-select')
+                    if (liveExpiresSelect && shareExpiresIn) liveExpiresSelect.value = shareExpiresIn
+                    const liveBurnBtn = document.querySelector('#burn-after-reading-btn')
+                    if (liveBurnBtn) {
+                        liveBurnBtn.classList.toggle('opt-button-accent', shareBurnAfterReading)
+                        liveBurnBtn.setAttribute('data-burn-after-reading', String(shareBurnAfterReading))
+                        liveBurnBtn.setAttribute('aria-pressed', String(shareBurnAfterReading))
+                        liveBurnBtn.textContent = shareBurnAfterReading ? (getI18n('burnAfterReadingOn') || 'On') : (getI18n('burnAfterReadingOff') || 'Off')
+                    }
+                    const liveUnlockSelect = document.querySelector('#share-unlock-select')
+                    if (liveUnlockSelect && shareUnlockIn) liveUnlockSelect.value = shareUnlockIn
+                    const livePulseSelect = document.querySelector('#share-pulse-select')
+                    if (livePulseSelect && sharePulseInterval) livePulseSelect.value = sharePulseInterval
                     if (!wasPublished) APP_STATE.annotationsEnabled = true;
                     APP_STATE.autosave = preferences.autosave === true;
                     APP_STATE.publicIndex = preferences.publicIndex === true;
@@ -4918,8 +5012,209 @@ ${getMarkdownCss()}
                 }
             })
         }
+        const $shareExpiresSelect = document.querySelector('#share-expires-select')
+        if ($shareExpiresSelect) {
+            $shareExpiresSelect.addEventListener('change', async () => {
+                const val = $shareExpiresSelect.value
+                try {
+                    await persistSetting({ shareExpiresIn: val })
+                    APP_STATE.shareExpiresIn = val
+                    window.showToast?.(getI18n('saved') || 'Saved')
+                } catch (err) {
+                    errHandle(err)
+                }
+            })
+        }
+        const $burnAfterReadingBtn = document.querySelector('#burn-after-reading-btn')
+        if ($burnAfterReadingBtn) {
+            $burnAfterReadingBtn.addEventListener('click', async () => {
+                const current = APP_STATE.shareBurnAfterReading === true
+                const nextVal = !current
+                try {
+                    await persistSetting({ shareBurnAfterReading: nextVal })
+                    APP_STATE.shareBurnAfterReading = nextVal
+                    $burnAfterReadingBtn.classList.toggle('opt-button-accent', nextVal)
+                    $burnAfterReadingBtn.setAttribute('data-burn-after-reading', String(nextVal))
+                    $burnAfterReadingBtn.setAttribute('aria-pressed', String(nextVal))
+                    $burnAfterReadingBtn.textContent = nextVal ? (getI18n('burnAfterReadingOn') || 'On') : (getI18n('burnAfterReadingOff') || 'Off')
+                    window.showToast?.(getI18n('saved') || 'Saved')
+                } catch (err) {
+                    errHandle(err)
+                }
+            })
+        }
+        const $burnAfterReadingBtnDraft = document.querySelector('#burn-after-reading-btn-draft')
+        if ($burnAfterReadingBtnDraft) {
+            $burnAfterReadingBtnDraft.addEventListener('click', () => {
+                const current = $burnAfterReadingBtnDraft.getAttribute('data-burn-after-reading') === 'true'
+                const nextVal = !current
+                $burnAfterReadingBtnDraft.classList.toggle('opt-button-accent', nextVal)
+                $burnAfterReadingBtnDraft.setAttribute('data-burn-after-reading', String(nextVal))
+                $burnAfterReadingBtnDraft.setAttribute('aria-pressed', String(nextVal))
+                $burnAfterReadingBtnDraft.textContent = nextVal ? (getI18n('burnAfterReadingOn') || 'On') : (getI18n('burnAfterReadingOff') || 'Off')
+            })
+        }
+        const syncVaultModeUI = (mode, isDraft) => {
+            const suffix = isDraft ? '-draft' : ''
+            const pExpires = document.getElementById('vault-panel-expires' + suffix)
+            const pBurn = document.getElementById('vault-panel-burn' + suffix)
+            const pTimelock = document.getElementById('vault-panel-timelock' + suffix)
+            const pDeadman = document.getElementById('vault-panel-deadman' + suffix)
+            if (pExpires) pExpires.style.display = (mode === 'standard' || mode === 'burn') ? '' : 'none'
+            if (pBurn) pBurn.style.display = (mode === 'burn') ? '' : 'none'
+            if (pTimelock) pTimelock.style.display = (mode === 'timelock') ? '' : 'none'
+            if (pDeadman) pDeadman.style.display = (mode === 'deadman') ? '' : 'none'
+        }
+        const $shareVaultModeSelect = document.querySelector('#share-vault-mode-select')
+        if ($shareVaultModeSelect) {
+            $shareVaultModeSelect.addEventListener('change', async () => {
+                const mode = $shareVaultModeSelect.value
+                syncVaultModeUI(mode, false)
+                try {
+                    await persistSetting({ shareMode: mode, shareBurnAfterReading: mode === 'burn' })
+                    APP_STATE.shareMode = mode
+                    APP_STATE.shareBurnAfterReading = mode === 'burn'
+                    window.showToast?.(getI18n('saved') || 'Saved')
+                } catch (err) {
+                    errHandle(err)
+                }
+            })
+        }
+        const $shareVaultModeSelectDraft = document.querySelector('#share-vault-mode-select-draft')
+        if ($shareVaultModeSelectDraft) {
+            $shareVaultModeSelectDraft.addEventListener('change', () => {
+                syncVaultModeUI($shareVaultModeSelectDraft.value, true)
+            })
+        }
+        const $shareUnlockSelect = document.querySelector('#share-unlock-select')
+        if ($shareUnlockSelect) {
+            $shareUnlockSelect.addEventListener('change', async () => {
+                const val = $shareUnlockSelect.value
+                try {
+                    await persistSetting({ shareUnlockIn: val })
+                    APP_STATE.shareUnlockIn = val
+                    window.showToast?.(getI18n('saved') || 'Saved')
+                } catch (err) {
+                    errHandle(err)
+                }
+            })
+        }
+        const $sharePulseSelect = document.querySelector('#share-pulse-select')
+        if ($sharePulseSelect) {
+            $sharePulseSelect.addEventListener('change', async () => {
+                const val = $sharePulseSelect.value
+                try {
+                    await persistSetting({ sharePulseInterval: val })
+                    APP_STATE.sharePulseInterval = val
+                    window.showToast?.(getI18n('saved') || 'Saved')
+                } catch (err) {
+                    errHandle(err)
+                }
+            })
+        }
+        const $sharePulseNowBtn = document.querySelector('#share-pulse-now-btn')
+        if ($sharePulseNowBtn) {
+            $sharePulseNowBtn.addEventListener('click', async () => {
+                $sharePulseNowBtn.disabled = true
+                try {
+                    const res = await fetch('/api/shares/' + encodeURIComponent(APP_STATE.shareId) + '/pulse', { method: 'POST' })
+                    const data = await res.json()
+                    if (data.err === 0) {
+                        window.showToast?.(getI18n('pulseSuccess') || 'Pulse successful!')
+                    } else {
+                        errHandle(data.msg)
+                    }
+                } catch (err) {
+                    errHandle(err)
+                } finally {
+                    $sharePulseNowBtn.disabled = false
+                }
+            })
+        }
+        const $sharePulseCopyBtn = document.querySelector('#share-pulse-copy-btn')
+        if ($sharePulseCopyBtn) {
+            $sharePulseCopyBtn.addEventListener('click', async () => {
+                const token = $sharePulseCopyBtn.getAttribute('data-pulse-token') || APP_STATE.sharePulseToken
+                const pulseUrl = window.location.origin + '/api/shares/' + encodeURIComponent(APP_STATE.shareId) + '/pulse?token=' + encodeURIComponent(token)
+                try {
+                    await navigator.clipboard.writeText(pulseUrl)
+                    window.showToast?.(getI18n('pulseCopied') || 'Pulse link copied!')
+                } catch (err) {
+                    window.prompt(getI18n('pulseCopyLink') || 'Copy link:', pulseUrl)
+                }
+            })
+        }
         // Share Actions (Delegated on document to support floating portal menus)
         document.addEventListener('click', async (e) => {
+            const presetBtn = e.target.closest('.vault-preset-btn');
+            if (presetBtn) {
+                e.preventDefault();
+                const presetId = presetBtn.getAttribute('data-preset-id');
+                const mode = presetBtn.getAttribute('data-mode') || 'standard';
+                const expires = presetBtn.getAttribute('data-expires') || '';
+                const unlock = presetBtn.getAttribute('data-unlock') || '';
+                const pulse = presetBtn.getAttribute('data-pulse') || '';
+
+                document.querySelectorAll('.vault-preset-btn').forEach(b => b.classList.remove('active'));
+                presetBtn.classList.add('active');
+
+                const isPublishedMenu = !presetBtn.closest('.share-menu-unpublished');
+                const modeSelect = isPublishedMenu ? document.querySelector('#share-vault-mode-select') : document.querySelector('#share-vault-mode-select-draft');
+                const expiresSelect = isPublishedMenu ? document.querySelector('#share-expires-select') : document.querySelector('#share-expires-select-draft');
+                const unlockSelect = isPublishedMenu ? document.querySelector('#share-unlock-select') : document.querySelector('#share-unlock-select-draft');
+                const pulseSelect = isPublishedMenu ? document.querySelector('#share-pulse-select') : document.querySelector('#share-pulse-select-draft');
+
+                if (modeSelect) modeSelect.value = mode;
+                if (expires && expiresSelect) expiresSelect.value = expires;
+                if (unlock && unlockSelect) unlockSelect.value = unlock;
+                if (pulse && pulseSelect) pulseSelect.value = pulse;
+
+                syncVaultModeUI(mode, !isPublishedMenu);
+
+                if (isPublishedMenu) {
+                    const settingPayload = {
+                        shareMode: mode,
+                        shareBurnAfterReading: mode === 'burn',
+                    };
+                    if (expires) settingPayload.shareExpiresIn = expires;
+                    if (unlock) settingPayload.shareUnlockIn = unlock;
+                    if (pulse) settingPayload.sharePulseInterval = pulse;
+
+                    try {
+                        await persistSetting(settingPayload);
+                        APP_STATE.shareMode = mode;
+                        APP_STATE.shareBurnAfterReading = mode === 'burn';
+                        if (expires) APP_STATE.shareExpiresIn = expires;
+                        if (unlock) APP_STATE.shareUnlockIn = unlock;
+                        if (pulse) APP_STATE.sharePulseInterval = pulse;
+                    } catch (err) {
+                        errHandle(err);
+                    }
+                }
+
+                const editArea = document.getElementById('contents');
+                if (editArea && !editArea.value.trim()) {
+                    const presetTemplates = {
+                        otp: ['# 一次性密碼 / One-Time Password', '', '- 帳號 / Username: ', '- 暫時密碼 / Password: ', '- 安全注意: 此分享僅限閱覽 1 次，閱畢即刻從伺服器永久銷毀。'].join('\\n'),
+                        crypto: ['# 加密資產遺產傳承指引 / Crypto Inheritance', '', '## 1. 錢包與保管箱資訊', '- 助記詞保管位置：', '', '## 2. 繼承人存取指示', '請依指示辦理資產繼承...'].join('\\n'),
+                        whistleblower: ['# 公共利益揭弊文件 / Whistleblower Disclosure', '', '## 核心揭露事證', '本備忘錄受亡者開關保護。若作者連續 7 天未簽到保活，本檔案將自動對外公開。', '', '## 佐證資料清單', '1. ...'].join('\\n'),
+                        launch: ['# 新產品發布公告 / Product Launch Announcement', '', '> 🔒 本文檔於倒數結束前處於時間封印狀態。', '', '## 發布內容與優惠活動', '- 正式版功能亮點：', '- 限時促銷代碼：'].join('\\n'),
+                        birthday: ['# 生日快樂！ / Happy Birthday! 🎂', '', '親愛的朋友：', '祝你生日快樂！這是一份為你提前封印的驚喜禮物。', '', '- 禮物兌換代碼 / 祝福信件：'].join('\\n'),
+                        legal: ['# 法律保全與存證紀錄 / Legal Hold Notice', '', '本通知所載內容依循保全程序存證，預計保留 30 天後自動過期下架。', '', '- 案件編號：', '- 保全事由：'].join('\\n'),
+                        scavenger: ['# 闖關尋寶 — 第 1 道線索 / Scavenger Hunt Clue #1', '', '恭喜你來到這裡！解開以下謎題即可獲得下一關座標：', '', '> 謎題：'].join('\\n'),
+                        course: ['# 第 1 單元教材與隨堂解答 / Course Content & Solutions', '', '本教材於課堂開始時自動解鎖供修課同學研讀。', '', '## 重點複習', '1. ...'].join('\\n'),
+                        backup: ['# 緊急災難復原通道 / Emergency Backup & Recovery', '', '## 救援存取金鑰', '- 備用 DNS 主控台：', '- 緊急 SSH 救援公鑰：', '- 第一線緊急應變小組聯絡電話：'].join('\\n'),
+                        secret: ['# 機密憑據傳遞 / Confidential Shared Secret', '', '\\x60\\x60\\x60env', 'API_KEY=', 'DATABASE_PASSWORD=', 'CLIENT_SECRET=', '\\x60\\x60\\x60', '', '⚠️ 本連結為一次性閱後即焚分享。'].join('\\n')
+                    };
+                    if (presetTemplates[presetId]) {
+                        editArea.value = presetTemplates[presetId];
+                        editArea.dispatchEvent(new Event('input'));
+                    }
+                }
+                const label = presetBtn.querySelector('.preset-label')?.textContent || presetId;
+                window.showToast?.((getI18n('quickPresetApplied') || 'Preset applied: ') + label);
+                return;
+            }
             const unpublishBtn = e.target.closest('.unpublish-btn');
             if (unpublishBtn) {
                 e.preventDefault();

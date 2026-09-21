@@ -30,35 +30,33 @@
   Allocates a random short slug and initializes a raw Markdown document.
 - **New Canvas**: `https://wiki.david888.com/new/canvas`
   Allocates a Canvas document whose persisted core follows JSON Canvas 1.0: text, file, link, group, and edge records. Canvas uses shared React Flow UI-style BaseNode/BaseNodeHeader/BaseNodeContent/BaseNodeFooter anatomy, visible four-sided BaseHandle connection points, and native NodeToolbar/EdgeToolbar patterns. It provides an editable title, NodeToolbar color pickers, duplicate/delete actions, Undo/Redo, box selection, multi-drag, bulk color/delete, Cmd/Ctrl+F search, SVG/PNG export, WikiLink graph generation, Camera Tour playback, responsive mobile fit view with a `0.85x` minimum initial zoom, local draft restoration with post-restore viewport refit, dark-mode styling, and bilingual starter templates, plus a flow-sized SVG edge layer, visible SVG relationship strokes, valid React Flow marker URLs, edge label, explicit arrow direction, line style, width, and color controls. Unpublished drafts remain local until publishing or published-note autosave syncs them to the cloud. Canvas assets use cache-busted `?v=3.9` URLs. The Add menu uses one fixed icon column and a shared left text baseline across Thought Nodes and Extensions. Publishing sends the current Canvas JSON and the setting route validates it. DAVID888 sticky notes use an ignorable `david888` extension. Import/export `.canvas` files from the Canvas toolbar. The Footer Import content menu remains available for Markdown, audio, Office, PDF, and URL workflows; from Canvas it follows the existing Markdown-note import behavior.
+- **New Whiteboard**: `https://wiki.david888.com/new/whiteboard`
+  Allocates an Excalidraw freeform whiteboard document for hand-drawn sketches, wireframes, and mind maps. Compatible with Obsidian Excalidraw JSON.
 - **Read & Edit Note**: `https://wiki.david888.com/{slug}`
   View or edit a note at `/{slug}`. Supports passcodes for view-locking (`vpw`) and edit-locking (`pw`).
 - **Public Share View**: `https://wiki.david888.com/share/{shareSlug}`
-  Clean, read-only public presentation view for shared notes with custom theme and reading progress.
+  Clean, read-only public presentation view for shared notes with custom theme and reading progress. Supports 4 vault lifecycle modes: Standard Expiring, Burn-After-Reading, Time-Locked Capsule, and Dead Man's Switch.
 
 ---
 
 ## 3. Agent Integration & Machine APIs (AI & REST 介面說明)
 
-### Canvas Agent Contract
+### Canvas & Whiteboard Agent Contract
 
-The native MCP endpoint provides `validate_canvas`, `write_canvas`, `read_canvas`, and `generate_canvas_from_wikilinks`. Agents should use these tools for visual diagrams, architecture maps, concept graphs, connected card relationships, and Markdown `[[WikiLink]]` graph generation. `write_canvas` and `generate_canvas_from_wikilinks` return `shareUrl`; return that URL to the human.
-
-The REST contract also accepts `POST /api/{path}` with JSON `{ "text": "<JSON.stringify(CanvasDocument)>", "editorFormat": "canvas", "share": true }`, and `GET /api/{path}` returns the stored Canvas document. The OpenAPI contract at `/openapi.json` describes the Canvas request shape.
-
-Canvas notes are valid Book Mode chapters. Add the Canvas path or share URL to a Markdown chapter list and open `/book`; the chapter loads as a read-only interactive Canvas.
-
-Resource nodes use JSON Canvas `file` records plus optional `david888.asset` metadata for `image`, `file`, `audio`, and `video` assets. Upload images through R2 with 888box fallback, and upload other attachments through the 888box fallback chain.
-
-Canvas interactions include box selection, multi-node movement, bulk color/delete, Cmd/Ctrl+F search, SVG/PNG export, WikiLink graph generation from a Markdown path, and Camera Tour playback. Agents should choose these affordances when the requested result benefits from visual structure or guided presentation.
+The native MCP endpoint provides `validate_canvas`, `write_canvas`, `read_canvas`, `generate_canvas_from_wikilinks`, `validate_whiteboard`, `write_whiteboard`, and `read_whiteboard`. Agents should use these tools for visual diagrams, architecture maps, concept graphs, connected card relationships, and Excalidraw hand-drawn sketches.
 
 ### REST API Endpoints
 - **Read Note**: `GET https://wiki.david888.com/api/{path}`
-  Returns raw note Markdown or JSON metadata.
+  Returns raw note Markdown or JSON metadata. Enforces vault status (410 for expired/burned, 423 for timelocked/deadman) for non-author requests.
 - **Write / Append Note**: `POST https://wiki.david888.com/api/{path}`
   Accepts `application/json`, `text/markdown`, or `multipart/form-data`.
-  Payload fields: `text` / `content`, `append` (boolean), `share` (boolean), `publicIndex` (boolean), `pw`, `vpw`, `theme`, `width`.
+  Payload fields: `text` / `content`, `append` (boolean), `share` (boolean), `publicIndex` (boolean), `pw`, `vpw`, `theme`, `width`, `shareMode` (`standard`, `burn`, `timelock`, `deadman`), `shareExpiresIn`, `shareBurnAfterReading`, `shareUnlockIn`, `sharePulseInterval`.
 - **Upload Image**: `POST https://wiki.david888.com/api/upload`
   Uploads an image file to R2 storage and returns the image CDN URL.
+- **Share Vault & Temporal Lifecycle Endpoints**:
+  - Pulse Heartbeat: `POST https://wiki.david888.com/api/shares/{shareId}/pulse?token={pulseToken}` (resets Dead Man's Switch)
+  - Reveal Burn Secret: `POST https://wiki.david888.com/api/shares/{shareId}/reveal` (atomically claims and destroys single-use secrets)
+  - Vault PDF Export: `GET https://wiki.david888.com/share/{shareId}/export.pdf` (requires `burn_confirm=true` on burn shares)
 - **Markdown Utilities (Stateless)**:
   - Render to HTML: `POST https://wiki.david888.com/api/markdown/render`
   - Parse HTML/URL: `POST https://wiki.david888.com/api/markdown/parse`
@@ -92,6 +90,12 @@ Canvas interactions include box selection, multi-node movement, bulk color/delet
 - **View Lock (`vpw`)**: Password required to view or read the note content.
 - **Edit Lock (`pw`)**: Password required to modify, overwrite, or delete the note.
 - **Agent Password Auth**: Passwords can be supplied via `Authorization: Bearer <pw>` header, `?pw=<pw>` query parameter, or JSON body.
+- **Share Vault Lifecycle Modes**:
+  1. `standard`: Configured with `shareExpiresIn` (`10m`, `1h`, `1d`, `7d`, `30d`, `never`). Returns 410 when expired.
+  2. `burn`: Single-use URL with interactive countdown and interstitial confirmation. Destroyed on reveal. Author reads do NOT destroy.
+  3. `timelock`: Completely sealed until future unlock timestamp (`shareUnlockIn`). Content withheld from DOM and API (returns 423 Locked).
+  4. `deadman`: Dead Man's Switch sealed until author fails to check in via heartbeat webhook (`sharePulseInterval`). Automated cron-friendly reset.
+- **10 Quick-Start Scenarios**: One-click presets for OTP, Crypto Inheritance, Whistleblower, Product Launch, Birthday Gift, Legal Hold, Scavenger Hunt, Course Content, Emergency Backup, and Shared Secret.
 
 ---
 

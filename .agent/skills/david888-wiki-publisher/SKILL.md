@@ -139,7 +139,70 @@ The native MCP endpoint exposes `validate_whiteboard`, `write_whiteboard`, and `
 - **Canvas**: Use for logic node graphs, UML, architecture flows, concept cards with connection handles, and `[[WikiLink]]` knowledge graphs.
 - **Whiteboard**: Use for freeform hand-drawn sketches, wireframes, brainstorming doodles, and sticky notes.
 
-### 2.4 Available Themes
+### 2.4 Share Vault Security Modes & Lifecycle Management (Expiration, Burn, Timelock, Deadman)
+
+David888 Wiki features an enterprise-grade **Share Vault Security System** with 4 distinct lifecycle modes, allowing agents and humans to share confidential or time-sensitive notes securely:
+
+#### 1. The 4 Vault Modes
+- **Standard & Expiration** (`share_mode: "standard"`, `expires_in: "10m" | "1h" | "1d" | "7d" | "30d"`): Public share that automatically expires and unshares after the specified duration, returning an HTTP 410 tombstone page.
+- **Burn-After-Reading** (`share_mode: "burn_after_reading"`, `burn_after_reading: true`): Self-destructing single-use note. Features a two-step confirmation reveal card protecting the secret from social media crawler bots (Discord, Slack, Twitter, Telegram). **Author access is exempt** (author previews and edits never trigger destruction). Once revealed by a visitor, the share is permanently destroyed.
+- **Time-Locked Capsule** (`share_mode: "timelock"`, `unlock_in: "1h" | "1d" | "3d" | "7d" | "30d"`): Seals content until the designated unlock timestamp. Visitors receive an HTTP 423 Locked response with dynamic live countdown cards (days, hours, minutes, seconds). The page automatically unlocks and displays when the countdown expires.
+- **Dead Man's Switch** (`share_mode: "deadman"`, `pulse_interval: "3d" | "7d" | "14d" | "30d"`): Vault remains locked and confidential as long as the author checks in before the pulse interval expires. The author can pulse by editing the note, clicking "Pulse Now", or pinging `/api/shares/<share-id>/pulse?token=<token>`. If the author misses check-ins, the vault automatically releases to the public.
+
+#### 2. The 10 Quick Start Presets
+The UI and authoring flow provide 10 quick-select scenario templates:
+1. 🛡️ **One-Time Password (`otp`)**: Burn-after-reading (`burn`), 1h expiration.
+2. ₿ **Crypto Inheritance (`crypto`)**: Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.
+3. 📢 **Whistleblower (`whistleblower`)**: Dead man's switch (`deadman`), 7d pulse, public interest disclosure proof.
+4. 🚀 **Product Launch (`launch`)**: Time-locked capsule (`timelock`), 7d unlock, launch announcement.
+5. 🎁 **Birthday Gift (`birthday`)**: Time-locked capsule (`timelock`), 1d unlock on birthday.
+6. ⚖️ **Legal Hold (`legal`)**: Standard share (`standard`), 30d retention hold.
+7. 🎯 **Scavenger Hunt (`scavenger`)**: Time-locked capsule (`timelock`), 1h clue reveal.
+8. 📅 **Course Content (`course`)**: Time-locked capsule (`timelock`), 7d scheduled release.
+9. 🛟 **Emergency Backup (`backup`)**: Dead man's switch (`deadman`), 14d backup SSH credentials.
+10. 🔑 **Shared Secret (`secret`)**: Burn-after-reading (`burn`), `.env` credential template.
+
+#### 3. Agent Usage via REST API
+```bash
+# Publish a burn-after-reading secret note
+curl -X POST "https://wiki.david888.com/api/my-secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Secret Credentials\n\nAPI_KEY=xyz123",
+    "share": true,
+    "shareMode": "burn",
+    "shareBurnAfterReading": true,
+    "shareExpiresIn": "1h"
+  }'
+
+# Publish a time-locked capsule unlocking in 7 days
+curl -X POST "https://wiki.david888.com/api/launch-announcement" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Product Launch\n\nWelcome to version 2.0!",
+    "share": true,
+    "shareMode": "timelock",
+    "shareUnlockIn": "7d"
+  }'
+
+# Publish a dead man switch with 14-day pulse check-in
+curl -X POST "https://wiki.david888.com/api/emergency-plan" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Emergency Server Directives\n\nRoot SSH Key: ...",
+    "share": true,
+    "shareMode": "deadman",
+    "sharePulseInterval": "14d"
+  }'
+```
+
+#### 4. Pulse Heartbeat API
+Authors (or automated crons) can check in to reset the dead man's switch timer:
+```bash
+curl -X POST "https://wiki.david888.com/api/shares/<share-id>/pulse?token=<pulse-token>"
+```
+
+### 2.5 Available Themes
 Choose a theme to wow the user: `ayu-light`, `bauhaus`, `botanical`, `catppuccin-latte`, `catppuccin-macchiato`, `claude-canvas`, `green-simple`, `kanagawa`, `neo-brutalism`, `newsprint`, `notion-clean`, `organic`, `playful-geometric`, `professional`, `retro`, `shopify-mint`, `sketch`, `terminal`, `tokyo-night`, `x-ai`.
 > [!IMPORTANT]
 > **CRITICAL: READ THE RESPONSE CAREFULLY!**

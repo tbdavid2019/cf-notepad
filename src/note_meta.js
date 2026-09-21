@@ -327,3 +327,79 @@ export function resolveLockedEditorFormat(metadata = {}, requestedFormat = undef
     }
     return existing || requestedFormat || 'markdown'
 }
+
+export function parseExpirationSeconds(value) {
+    if (value === null || value === undefined || value === '' || value === 'none' || value === 'never' || value === 0 || value === '0') {
+        return null
+    }
+    if (typeof value === 'number' && Number.isFinite(value)) {
+        return value > 0 ? Math.floor(value) : null
+    }
+    if (typeof value !== 'string') return null
+    const str = value.trim().toLowerCase()
+    if (!str || str === 'none' || str === 'never') return null
+
+    const match = str.match(/^(\d+)\s*(s|sec|second|seconds|m|min|minute|minutes|h|hr|hour|hours|d|day|days|w|wk|week|weeks|mo|month|months|y|yr|year|years)?$/)
+    if (!match) return null
+
+    const count = parseInt(match[1], 10)
+    if (!Number.isFinite(count) || count <= 0) return null
+
+    const unit = match[2] || 's'
+    if (unit.startsWith('s')) return count
+    if (unit.startsWith('m') && !unit.startsWith('mo')) return count * 60
+    if (unit.startsWith('h')) return count * 3600
+    if (unit.startsWith('d')) return count * 86400
+    if (unit.startsWith('w')) return count * 604800
+    if (unit.startsWith('mo')) return count * 2592000
+    if (unit.startsWith('y')) return count * 31536000
+
+    return count
+}
+
+export function isShareExpired(metadata = {}, nowUnix = Math.floor(Date.now() / 1000)) {
+    const expiresAt = Number(metadata?.shareExpiresAt)
+    return Number.isFinite(expiresAt) && expiresAt > 0 && expiresAt <= nowUnix
+}
+
+export function isShareBurned(metadata = {}) {
+    if (metadata?.burned === true || metadata?.shareBurned === true) return true
+    const burnedAt = Number(metadata?.shareBurnedAt)
+    if (Number.isFinite(burnedAt) && burnedAt > 0) return true
+    if (metadata?.shareBurnAfterReading === true && Number(metadata?.shareViewCount) >= 1) return true
+    return false
+}
+
+export function isShareTimeLocked(metadata = {}, nowUnix = Math.floor(Date.now() / 1000)) {
+    if (metadata?.shareMode !== 'timelock') return false
+    const unlockAt = Number(metadata?.shareUnlockAt)
+    return Number.isFinite(unlockAt) && unlockAt > nowUnix
+}
+
+export function isShareDeadmanLocked(metadata = {}, nowUnix = Math.floor(Date.now() / 1000)) {
+    if (metadata?.shareMode !== 'deadman') return false
+    const pulseDueAt = Number(metadata?.sharePulseDueAt)
+    return Number.isFinite(pulseDueAt) && pulseDueAt > nowUnix
+}
+
+export function formatShareRemainingTime(expiresAt, param2 = Math.floor(Date.now() / 1000), param3 = 'zh-TW') {
+    const nowUnix = typeof param2 === 'number' ? param2 : Math.floor(Date.now() / 1000)
+    const lang = typeof param2 === 'string' ? param2 : (param3 || 'zh-TW')
+    const expiresNum = Number(expiresAt)
+    if (!Number.isFinite(expiresNum) || expiresNum <= 0) return ''
+    const diff = expiresNum - nowUnix
+    if (diff <= 0) return lang === 'zh-TW' ? '已過期' : 'Expired'
+    if (diff < 60) return lang === 'zh-TW' ? `${diff} 秒` : `${diff}s`
+    if (diff < 3600) {
+        const mins = Math.ceil(diff / 60)
+        return lang === 'zh-TW' ? `${mins} 分鐘` : `${mins} min`
+    }
+    if (diff < 86400) {
+        const hrs = Math.floor(diff / 3600)
+        const mins = Math.ceil((diff % 3600) / 60)
+        return lang === 'zh-TW' ? `${hrs} 小時 ${mins} 分` : `${hrs}h ${mins}m`
+    }
+    const days = Math.floor(diff / 86400)
+    const hrs = Math.floor((diff % 86400) / 3600)
+    return lang === 'zh-TW' ? `${days} 天 ${hrs} 小時` : `${days}d ${hrs}h`
+}

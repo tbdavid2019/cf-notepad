@@ -533,10 +533,125 @@ If the server operator has enabled note history, the following endpoints are ava
 - The current implementation stores prior saved content snapshots, not every keystroke.
 - Operators can cap retained versions; this repo defaults to `10`.
 
-### 5. Browser/Editor Session Routes
+### 7. Share Vault Security Modes & Lifecycle Management (`/api/shares/...`)
+
+CF-Notepad provides an enterprise-grade cryptographic & temporal access control system with 4 distinct vault lifecycle modes, 10 quick-start scenario presets, and automated heartbeat check-ins.
+
+#### 7.1 The Four Vault Modes (`shareMode`)
+
+1. **Standard Expiring (`standard`)**:
+   - Note has a countdown expiration timer.
+   - Once expired (`shareExpiresAt <= now`), public access returns `410 Gone` and the note is marked expired.
+   - Configured with `shareExpiresIn` (e.g. `10m`, `1h`, `1d`, `7d`, `30d`, `never`).
+
+2. **Burn-After-Reading (`burn`)**:
+   - Single-use self-destructing secret link.
+   - Displays an interactive interstitial confirmation before destruction.
+   - Non-author visitors must call `POST /api/shares/:shareId/reveal` to claim and burn the note content atomically.
+   - Once burned, all subsequent requests return `410 Gone` (tombstone cached).
+   - If the note has a password (`vpw`/`pw`), password must be verified before burning.
+   - Author reads (holding author cookie or JWT) do NOT burn the note.
+
+3. **Time-Locked Capsule (`timelock`)**:
+   - Vault is completely sealed until a specified future date/time (`shareUnlockAt`).
+   - Before unlock time, public requests return `423 Locked` with a live visual countdown. Content is strictly withheld from the DOM, API, and PDF export.
+   - Configured with `shareUnlockIn` (e.g. `1h`, `1d`, `7d`, `30d`).
+
+4. **Dead Man's Switch (`deadman`)**:
+   - Heartbeat survival monitor for emergency disclosure or crypto inheritance.
+   - Vault remains sealed (`423 Locked`) as long as the author checks in before `sharePulseDueAt`.
+   - The author receives a private `sharePulseToken` (stored only in author's metadata and cookie).
+   - If the author fails to check in before the due time, the vault unlocks automatically to public readers.
+   - Configured with `sharePulseInterval` (e.g. `1d`, `7d`, `30d`).
+
+#### 7.2 Ten Quick-Start Scenario Presets
+
+| Preset Key | Mode | Duration / Interval | Scenario & Starter Template |
+| :--- | :--- | :--- | :--- |
+| `otp` | `burn` | 10 min | One-time password or temporary token. |
+| `secret` | `burn` | 1 hour | Confidential env credentials / API keys. |
+| `crypto` | `deadman` | 30 days | Crypto wallet seed phrase & inheritance instructions. |
+| `whistleblower`| `deadman` | 7 days | Public interest disclosure sealed behind active check-in. |
+| `backup` | `deadman` | 14 days | Disaster recovery credentials & emergency SSH public keys. |
+| `launch` | `timelock` | 1 day | Embargoed product launch announcement. |
+| `birthday` | `timelock` | 7 days | Sealed birthday greeting or surprise gift coupon. |
+| `scavenger` | `timelock` | 2 hours | Scavenger hunt game clue with timed release. |
+| `course` | `timelock` | 1 day | Homework solutions or curriculum revealed at class start. |
+| `legal` | `standard` | 30 days | Legal hold notice preserved for retention period. |
+
+#### 7.3 Publishing Vault Notes via REST API
+
+```bash
+# 1. Publish a burn-after-reading note
+curl -X POST "https://wiki.david888.com/api/my-secret" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Secret Credentials\n\nAPI_KEY=xyz123",
+    "share": true,
+    "shareMode": "burn",
+    "shareBurnAfterReading": true,
+    "shareExpiresIn": "1h"
+  }'
+
+# 2. Publish a time-locked capsule unlocking in 7 days
+curl -X POST "https://wiki.david888.com/api/launch-announcement" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Product Launch\n\nWelcome to version 2.0!",
+    "share": true,
+    "shareMode": "timelock",
+    "shareUnlockIn": "7d"
+  }'
+
+# 3. Publish a dead man switch with 14-day pulse check-in
+curl -X POST "https://wiki.david888.com/api/emergency-plan" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "text": "# Emergency Directives\n\nRoot SSH Key: ...",
+    "share": true,
+    "shareMode": "deadman",
+    "sharePulseInterval": "14d"
+  }'
+```
+
+#### 7.4 Pulse Heartbeat Webhook API
+
+Reset the Dead Man's Switch due date via GET or POST:
+
+```bash
+# Via POST
+curl -X POST "https://wiki.david888.com/api/shares/<shareId>/pulse?token=<pulseToken>"
+
+# Or via GET webhook (for cron services like Uptime Kuma, Cron-Job.org):
+curl "https://wiki.david888.com/api/shares/<shareId>/pulse?token=<pulseToken>"
+```
+
+Returns:
+```json
+{
+  "err": 0,
+  "msg": "Heartbeat pulse received successfully. Timer reset.",
+  "data": {
+    "shareId": "xyz123",
+    "nextPulseDueAt": 1742567890,
+    "nextPulseDueHuman": "2026-09-28 16:00:00 UTC",
+    "intervalSeconds": 604800
+  }
+}
+```
+
+#### 7.5 Reveal Burn-After-Reading Note via API
+
+```bash
+curl -X POST "https://wiki.david888.com/api/shares/<shareId>/reveal" \
+  -H "Content-Type: application/json" \
+  -d '{ "pw": "optional-note-password" }'
+```
+
+### 8. Browser/Editor Session Routes
 These routes are **not** the same as the headless API. Use them only when the agent is operating inside an authenticated browser/editor context with the note's edit session cookie.
 
-### 5.1 Persist Editor/Share Settings (`POST /:path/setting`)
+### 8.1 Persist Editor/Share Settings (`POST /:path/setting`)
 
 ```bash
 curl -X POST "https://wiki.david888.com/<path>/setting" \
@@ -544,30 +659,38 @@ curl -X POST "https://wiki.david888.com/<path>/setting" \
   -H "Cookie: auth=<editor-session-cookie>" \
   -d '{
     "theme": "retro",
-    "title": "My Canvas",
+    "title": "My Vault Document",
     "width": "1200px",
     "shareFont": "jetbrains",
     "previewDevice": "desktop",
-    "publicIndex": false
+    "publicIndex": false,
+    "shareMode": "burn",
+    "shareExpiresIn": "1h"
   }'
 ```
 
 Supported JSON fields:
-- `mode`
-- `share`
-- `theme`
-- `title`
-- `width`
-- `shareFont`
-- `previewDevice`
-- `publicIndex`
+- `mode`: Editor mode (`markdown`, `block`, `canvas`, `whiteboard`)
+- `share`: Boolean toggle for public share link
+- `shareMode`: Security vault lifecycle mode (`standard`, `burn`, `timelock`, `deadman`)
+- `shareExpiresIn`: Expiration duration (`10m`, `1h`, `1d`, `7d`, `30d`, `never`)
+- `shareBurnAfterReading`: Single-view self-destruct toggle
+- `shareUnlockIn`: Time lock delay duration (`1h`, `1d`, `7d`, `30d`)
+- `sharePulseInterval`: Heartbeat interval for Dead Man's Switch (`1d`, `7d`, `30d`)
+- `theme`: Custom preview theme name
+- `title`: Document title override
+- `width`: Preview max-width (`100%`, `960px`, `1200px`, `1440px`)
+- `shareFont`: Shared typography font
+- `previewDevice`: Preview device framing (`desktop`, `tablet`, `mobile`)
+- `publicIndex`: Inclusion in sitemap.xml
+- `autosave`: Real-time cloud sync toggle
 
 Important behavior:
 - This route requires edit-session auth, not API bearer/query password auth
 - `share: false` also clears public-index inclusion
 - If you only need content publishing, use `POST /api/<path>` instead
 
-### 5.2 Update Locks in the Editor (`POST /:path/pw`)
+### 8.2 Update Locks in the Editor (`POST /:path/pw`)
 In an authenticated editor/browser session, the UI can update locks through:
 
 ```json

@@ -63,6 +63,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 - [Markdown Note Editor](${siteOrigin}/new/markdown): Instantiate a new standard Markdown document.
 - [Canvas](${siteOrigin}/new/canvas): Instantiate a JSON Canvas 1.0 workspace with relationship edges, four-sided handles, resize controls, local draft recovery, and image/file/audio/video resource nodes. Agents may use Canvas for visual relationship maps when a diagram communicates structure more clearly than linear Markdown.
 - [Whiteboard](${siteOrigin}/new/whiteboard): Instantiate an Excalidraw freeform whiteboard workspace for hand-drawn sketches, flowcharts, UI wireframes, and sticky notes. 100% compatible with Obsidian Excalidraw and exportable to PNG/SVG.
+- [Share Vault & Temporal Secrets](${siteOrigin}/): Cryptographic and temporal lifecycle protection featuring 4 vault modes: Standard Expiring, Burn-After-Reading (single-view self-destructing secret), Time-Locked Capsule (sealed until future timestamp), and Dead Man's Switch (heartbeat check-in webhook with author pulse tokens). Includes 10 one-click scenario presets (OTP, Crypto Inheritance, Whistleblower, Product Launch, Birthday Gift, Legal Hold, Scavenger Hunt, Course Content, Emergency Backup, Shared Secret).
 - [Image OCR & Table Reconstruction](${siteOrigin}/new/markdown): Paste or drop an image to choose R2 upload, local PP-OCRv6 text recognition, or server table reconstruction via \`/api/ocr?mode=table\`; local OCR keeps the image on the device and table mode returns clean GFM through \`data.tableMarkdown\`.
 
 ## AI Agent & API Discovery
@@ -72,6 +73,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 - [Model Context Protocol (MCP)](${siteOrigin}${MCP_PATH}): Native MCP JSON-RPC 2.0 endpoint for WebMCP and AI agent tools.
 - [Canvas MCP Tools](${siteOrigin}${MCP_PATH}): Use \`validate_canvas\`, \`write_canvas\`, and \`read_canvas\` for JSON Canvas validation, publishing, and edge inspection. Canvas notes can be linked as read-only chapters in Book Mode.
 - [Whiteboard MCP Tools](${siteOrigin}${MCP_PATH}): Use \`validate_whiteboard\`, \`write_whiteboard\`, and \`read_whiteboard\` for Excalidraw whiteboard validation, hand-drawn sketch generation, and text inspection.
+- [Vault & Secret MCP Tools](${siteOrigin}${MCP_PATH}): Native MCP tools for configuring vault modes (\`standard\`, \`burn\`, \`timelock\`, \`deadman\`), setting expiration/unlock timers, and sending \`pulse_deadman_switch\` heartbeats.
 - [API Catalog](${siteOrigin}${API_CATALOG_PATH}): RFC 9727 Linkset catalog for API discovery.
 - [API Documentation](${siteOrigin}${API_DOCS_PATH}): Concise Markdown reference for the REST API.
 - [OpenAPI Specification](${siteOrigin}${OPENAPI_PATH}): Machine-readable OpenAPI 3.1.0 contract.
@@ -89,6 +91,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 
 ## 變更紀錄與更新摘要 (Changelog & Updates)
 
+- **2026-09-21**: Release Share Vault & Temporal Secrets: 4 lifecycle modes (Standard Expiring, Burn-After-Reading, Time-Locked Vault, Dead Man's Switch) with 10 scenario quick presets and heartbeat webhook API.
 - **2026-09-18**: Release Whiteboard editor powered by Excalidraw with MCP tools and full JSON persistence; Canvas resource nodes and Book Mode integration.
 - **2026-09-17**: Complete rewrite of Infinite Canvas with Ameliorate architecture.
 - **2026-04-18**: WebTalk comments integration across shared notes.
@@ -144,14 +147,18 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
 
 ### REST API Endpoints
 - **Read Note**: \`GET ${siteOrigin}/api/{path}\`
-  Returns raw note Markdown or JSON metadata.
+  Returns raw note Markdown or JSON metadata. Non-author requests enforce vault state (410 when expired/burned, 423 when timelocked/deadman).
 - **Write / Append Note**: \`POST ${siteOrigin}/api/{path}\`
   Accepts \`application/json\`, \`text/markdown\`, or \`multipart/form-data\`.
-  Payload fields: \`text\` / \`content\`, \`append\` (boolean), \`share\` (boolean), \`publicIndex\` (boolean), \`pw\`, \`vpw\`, \`theme\`, \`width\`.
+  Payload fields: \`text\` / \`content\`, \`append\` (boolean), \`share\` (boolean), \`publicIndex\` (boolean), \`pw\`, \`vpw\`, \`theme\`, \`width\`, \`shareMode\` (\`standard\`, \`burn\`, \`timelock\`, \`deadman\`), \`shareExpiresIn\`, \`shareBurnAfterReading\`, \`shareUnlockIn\`, \`sharePulseInterval\`.
   For Canvas, send the complete JSON Canvas document as a JSON-stringified \`text\` value with \`editorFormat: \"canvas\"\`; use \`GET /api/{path}\` to read it back.
   For Whiteboard, send the complete Excalidraw JSON document as a JSON-stringified \`text\` value with \`editorFormat: \"whiteboard\"\`; use \`GET /api/{path}\` to read it back.
 - **Upload Image**: \`POST ${siteOrigin}/api/upload\`
   Uploads an image file to R2 storage and returns the image CDN URL.
+- **Share Vault & Temporal Lifecycle Endpoints**:
+  - Pulse Heartbeat: \`POST ${siteOrigin}/api/shares/{shareId}/pulse?token={pulseToken}\` (resets Dead Man's Switch timer)
+  - Reveal Burn Secret: \`POST ${siteOrigin}/api/shares/{shareId}/reveal\` (atomically claims and destroys single-use secrets)
+  - Vault PDF Export: \`GET ${siteOrigin}/share/{shareId}/export.pdf\` (requires \`burn_confirm=true\` for burn shares)
 - **Markdown Utilities (Stateless)**:
   - Render to HTML: \`POST ${siteOrigin}/api/markdown/render\`
   - Parse HTML/URL: \`POST ${siteOrigin}/api/markdown/parse\`
@@ -185,6 +192,12 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
 - **View Lock (\`vpw\`)**: Password required to view or read the note content.
 - **Edit Lock (\`pw\`)**: Password required to modify, overwrite, or delete the note.
 - **Agent Password Auth**: Passwords can be supplied via \`Authorization: Bearer <pw>\` header, \`?pw=<pw>\` query parameter, or JSON body.
+- **Share Vault Lifecycle Modes**:
+  1. \`standard\`: Expiring share with countdown duration (\`shareExpiresIn\`: 10m, 1h, 1d, 7d, 30d, never). Returns 410 Gone when expired.
+  2. \`burn\`: Single-use URL with interactive countdown and interstitial confirmation. Atomically destroyed on reveal. Author reads exempt.
+  3. \`timelock\`: Completely sealed until future unlock timestamp (\`shareUnlockIn\`). Content withheld from DOM and API (returns 423 Locked).
+  4. \`deadman\`: Dead Man's Switch sealed until author fails to check in via heartbeat webhook (\`sharePulseInterval\`). Automated cron-friendly reset.
+- **10 Quick-Start Scenarios**: One-click presets for OTP, Crypto Inheritance, Whistleblower, Product Launch, Birthday Gift, Legal Hold, Scavenger Hunt, Course Content, Emergency Backup, and Shared Secret.
 
 ---
 
@@ -349,6 +362,11 @@ export function buildOpenApiDocument(origin) {
                         pw: { type: 'string', description: 'Edit password or existing edit password.' },
                         vpw: { type: 'string', description: 'View password.' },
                         editorFormat: { type: 'string', enum: ['markdown', 'block', 'canvas', 'whiteboard'], description: 'Set to canvas for JSON Canvas or whiteboard for Excalidraw documents.' },
+                        shareMode: { type: 'string', enum: ['standard', 'burn', 'timelock', 'deadman'], description: 'Security vault lifecycle mode.' },
+                        shareExpiresIn: { type: 'string', description: 'Expiration duration (e.g. 10m, 1h, 1d, 7d, 30d, never).' },
+                        shareBurnAfterReading: { type: 'boolean', description: 'Single-view self-destructing secret toggle.' },
+                        shareUnlockIn: { type: 'string', description: 'Time-locked vault delay duration (e.g. 1h, 1d, 7d, 30d).' },
+                        sharePulseInterval: { type: 'string', description: 'Dead Man Switch check-in interval (e.g. 1d, 7d, 30d).' },
                     },
                 },
                 CanvasDocument: {
@@ -628,6 +646,56 @@ export function buildOpenApiDocument(origin) {
                         '201': {
                             description: 'Created annotation thread.',
                         },
+                    },
+                },
+            },
+            '/api/shares/{shareId}/pulse': {
+                post: {
+                    summary: 'Send heartbeat check-in to reset Dead Man Switch timer',
+                    parameters: [
+                        { name: 'shareId', in: 'path', required: true, schema: { type: 'string' } },
+                        { name: 'token', in: 'query', required: true, schema: { type: 'string' } },
+                    ],
+                    responses: {
+                        '200': { description: 'Pulse received and timer reset.' },
+                        '401': { description: 'Invalid pulse token.' },
+                    },
+                },
+                get: {
+                    summary: 'Send webhook heartbeat check-in via GET',
+                    parameters: [
+                        { name: 'shareId', in: 'path', required: true, schema: { type: 'string' } },
+                        { name: 'token', in: 'query', required: true, schema: { type: 'string' } },
+                    ],
+                    responses: {
+                        '200': { description: 'Pulse received and timer reset.' },
+                        '401': { description: 'Invalid pulse token.' },
+                    },
+                },
+            },
+            '/api/shares/{shareId}/reveal': {
+                post: {
+                    summary: 'Reveal and atomically claim a burn-after-reading note',
+                    parameters: [
+                        { name: 'shareId', in: 'path', required: true, schema: { type: 'string' } },
+                    ],
+                    requestBody: {
+                        required: false,
+                        content: {
+                            'application/json': {
+                                schema: {
+                                    type: 'object',
+                                    properties: {
+                                        pw: { type: 'string', description: 'View or edit password if note is protected.' },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    responses: {
+                        '200': { description: 'Note content revealed (destroyed for subsequent visits).' },
+                        '410': { description: 'Note has already been burned and destroyed.' },
+                        '423': { description: 'Note is time-locked or dead man switch is active.' },
                     },
                 },
             },
