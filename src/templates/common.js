@@ -1362,142 +1362,142 @@ export const VAULT_PRESETS_MODAL = (lang) => {
             <p class="vault-presets-subtitle seal-modal-subtitle" data-i18n-key="subtitle">${zh ? 'Seal 與密碼同屬資產存取控制：密碼保護內容，Seal 控制何時或如何釋出。Seal 建立或解除會立即生效。' : 'Seal and password are asset access controls: password protects content, Seal controls when and how it is released. Changes take effect immediately.'}</p>
         </div>
 
-        <div class="seal-config-section">
-            <div class="seal-form-row">
-                <label for="seal-mode-select" class="seal-form-label" data-i18n-key="modeLabel">${zh ? '模式' : 'Mode'}</label>
-                <div class="seal-form-control">
-                    <select id="seal-mode-select" class="opt-select seal-mode-select" aria-label="${zh ? 'Seal 模式' : 'Seal Mode'}">
-                        <option value="none">${zh ? '無 (解除 Seal)' : 'None (Unsealed)'}</option>
-                        <option value="timelock">${zh ? '定時解鎖 (Time Lock)' : 'Time Lock'}</option>
-                        <option value="burn">${zh ? '閱後即焚 (Burn After Read)' : 'Burn After Read'}</option>
-                        <option value="deadman">${zh ? "Dead Man's Switch (亡者開關)" : "Dead Man's Switch"}</option>
-                        <option value="expires">${zh ? '保留期限 (Expiration)' : 'Expiration'}</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Timelock Parameter Row -->
-            <div class="seal-param-panel" id="seal-param-panel-timelock" style="display:none;">
+        <div class="seal-modal-body-scroll" id="seal-modal-body-scroll">
+            <div class="seal-config-section">
                 <div class="seal-form-row">
-                    <label for="seal-unlock-at" class="seal-form-label" data-i18n-key="unlockTimeLabel">${zh ? '解鎖時間' : 'Unlock Time'}</label>
+                    <label for="seal-mode-select" class="seal-form-label" data-i18n-key="modeLabel">${zh ? '模式' : 'Mode'}</label>
                     <div class="seal-form-control">
-                        <div class="seal-input-composite">
-                            <input type="datetime-local" id="seal-unlock-at" class="seal-input" step="1">
-                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速設定時間' : 'Quick time shortcuts'}">
-                                <button type="button" class="seal-chip-btn" data-time-add="1h">+1h</button>
-                                <button type="button" class="seal-chip-btn" data-time-add="1d">+1d</button>
-                                <button type="button" class="seal-chip-btn" data-time-add="3d">+3d</button>
-                                <button type="button" class="seal-chip-btn" data-time-add="7d">+7d</button>
-                                <button type="button" class="seal-chip-btn" data-time-add="30d">+30d</button>
+                        <select id="seal-mode-select" class="opt-select seal-mode-select" aria-label="${zh ? 'Seal 模式' : 'Seal Mode'}">
+                            <option value="none">${zh ? '無 (解除 Seal)' : 'None (Unsealed)'}</option>
+                            <option value="timelock">${zh ? '定時解鎖 (Time Lock)' : 'Time Lock'}</option>
+                            <option value="burn">${zh ? '閱後即焚 (Burn After Read)' : 'Burn After Read'}</option>
+                            <option value="deadman">${zh ? "Dead Man's Switch (亡者開關)" : "Dead Man's Switch"}</option>
+                            <option value="expires">${zh ? '保留期限 (Expiration)' : 'Expiration'}</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Timelock Parameter Row -->
+                <div class="seal-param-panel" id="seal-param-panel-timelock" style="display:none;">
+                    <div class="seal-form-row">
+                        <label for="seal-unlock-at" class="seal-form-label" data-i18n-key="unlockTimeLabel">${zh ? '解鎖時間' : 'Unlock Time'}</label>
+                        <div class="seal-form-control">
+                            <div class="seal-input-composite">
+                                <input type="datetime-local" id="seal-unlock-at" class="seal-input" step="1">
+                                <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速設定時間' : 'Quick time shortcuts'}">
+                                    <button type="button" class="seal-chip-btn" data-time-add="1h">+1h</button>
+                                    <button type="button" class="seal-chip-btn" data-time-add="1d">+1d</button>
+                                    <button type="button" class="seal-chip-btn" data-time-add="3d">+3d</button>
+                                    <button type="button" class="seal-chip-btn" data-time-add="7d">+7d</button>
+                                    <button type="button" class="seal-chip-btn" data-time-add="30d">+30d</button>
+                                </div>
                             </div>
+                            <small class="seal-field-hint" data-i18n-key="timelockHint">${zh ? '解鎖時間到達前訪客只能查看倒數封印頁面，時間到達時自動公開內容。' : 'Visitors see a countdown lock page until unlock time arrives, then note is released.'}</small>
                         </div>
-                        <small class="seal-field-hint" data-i18n-key="timelockHint">${zh ? '解鎖時間到達前訪客只能查看倒數封印頁面，時間到達時自動公開內容。' : 'Visitors see a countdown lock page until unlock time arrives, then note is released.'}</small>
+                    </div>
+                </div>
+
+                <!-- Burn Parameter Row -->
+                <div class="seal-param-panel" id="seal-param-panel-burn" style="display:none;">
+                    <div class="seal-form-row">
+                        <label for="seal-max-views" class="seal-form-label" data-i18n-key="maxViewsLabel">${zh ? '最大瀏覽次數' : 'Max Views'}</label>
+                        <div class="seal-form-control">
+                            <div class="seal-input-composite">
+                                <input type="number" id="seal-max-views" class="seal-input seal-number-input" min="1" max="999" value="1">
+                                <span class="seal-input-addon" data-i18n-key="viewsUnit">${zh ? '次 (預設 1 次)' : 'views (Default 1)'}</span>
+                            </div>
+                            <small class="seal-field-hint" data-i18n-key="burnHint">${zh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.'}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Dead Man's Switch Parameter Row -->
+                <div class="seal-param-panel" id="seal-param-panel-deadman" style="display:none;">
+                    <div class="seal-form-row">
+                        <label for="seal-pulse-minutes" class="seal-form-label" data-i18n-key="pulseIntervalLabel">${zh ? 'Pulse 間隔 (分鐘)' : 'Pulse Interval (Minutes)'}</label>
+                        <div class="seal-form-control">
+                            <div class="seal-input-composite">
+                                <input type="number" id="seal-pulse-minutes" class="seal-input seal-number-input" min="5" value="10080">
+                                <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速間隔' : 'Quick intervals'}">
+                                    <button type="button" class="seal-chip-btn" data-pulse-mins="1440">${zh ? '1天' : '1d'}</button>
+                                    <button type="button" class="seal-chip-btn" data-pulse-mins="4320">${zh ? '3天' : '3d'}</button>
+                                    <button type="button" class="seal-chip-btn" data-pulse-mins="10080">${zh ? '7天' : '7d'}</button>
+                                    <button type="button" class="seal-chip-btn" data-pulse-mins="43200">${zh ? '30天' : '30d'}</button>
+                                </div>
+                            </div>
+                            <div class="seal-deadman-live-box" id="seal-deadman-live-box" style="display:none;">
+                                <span id="seal-deadman-live-text" class="seal-deadman-live-text"></span>
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                                    <button type="button" id="seal-modal-pulse-btn" class="opt-button seal-pulse-btn">${zh ? '❤️ 發送 Pulse 心跳' : '❤️ Send Pulse Heartbeat'}</button>
+                                    <button type="button" id="seal-modal-pulse-copy-btn" class="opt-button" style="font-size:11px;">${zh ? '📋 複製心跳連結' : '📋 Copy Pulse URL'}</button>
+                                </div>
+                            </div>
+                            <small class="seal-field-hint" data-i18n-key="deadmanHint">${zh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.'}</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Expiration Parameter Row -->
+                <div class="seal-param-panel" id="seal-param-panel-expires" style="display:none;">
+                    <div class="seal-form-row">
+                        <label for="seal-expires-select" class="seal-form-label" data-i18n-key="expirationLabel">${zh ? '保留期限' : 'Expiration'}</label>
+                        <div class="seal-form-control">
+                            <div class="seal-input-composite">
+                                <select id="seal-expires-select" class="opt-select seal-input" aria-label="${zh ? '有效期限' : 'Expiration'}">
+                                    <option value="10m">${zh ? '10 分鐘' : '10 minutes'}</option>
+                                    <option value="1h">${zh ? '1 小時' : '1 hour'}</option>
+                                    <option value="1d">${zh ? '1 天 (24小時)' : '1 day (24 hours)'}</option>
+                                    <option value="7d">${zh ? '7 天 (1週)' : '7 days (1 week)'}</option>
+                                    <option value="30d" selected>${zh ? '30 天 (1個月)' : '30 days (1 month)'}</option>
+                                </select>
+                                <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速期限' : 'Quick expiration'}">
+                                    <button type="button" class="seal-chip-btn" data-expire-val="1h">1h</button>
+                                    <button type="button" class="seal-chip-btn" data-expire-val="1d">1d</button>
+                                    <button type="button" class="seal-chip-btn" data-expire-val="7d">7d</button>
+                                    <button type="button" class="seal-chip-btn" data-expire-val="30d">30d</button>
+                                </div>
+                            </div>
+                            <small class="seal-field-hint" data-i18n-key="expirationHint">${zh ? '超過保留期限後分享連結將自動過期下架並顯示 410 墓碑頁面。' : 'Share link automatically expires with a friendly 410 tombstone after the retention period.'}</small>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Burn Parameter Row -->
-            <div class="seal-param-panel" id="seal-param-panel-burn" style="display:none;">
-                <div class="seal-form-row">
-                    <label for="seal-max-views" class="seal-form-label" data-i18n-key="maxViewsLabel">${zh ? '最大瀏覽次數' : 'Max Views'}</label>
-                    <div class="seal-form-control">
-                        <div class="seal-input-composite">
-                            <input type="number" id="seal-max-views" class="seal-input seal-number-input" min="1" max="999" value="1">
-                            <span class="seal-input-addon" data-i18n-key="viewsUnit">${zh ? '次 (預設 1 次)' : 'views (Default 1)'}</span>
-                        </div>
-                        <small class="seal-field-hint" data-i18n-key="burnHint">${zh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.'}</small>
-                    </div>
+            <div class="seal-presets-accordion">
+                <div class="seal-presets-accordion-header">
+                    <span class="seal-presets-accordion-title" data-i18n-key="presetsSectionTitle">⚡ ${zh ? '快速情境範本 (點選自動填入 Seal 參數)' : 'Quick Scenario Presets (Auto-fills parameters)'}</span>
                 </div>
-            </div>
-
-            <!-- Dead Man's Switch Parameter Row -->
-            <div class="seal-param-panel" id="seal-param-panel-deadman" style="display:none;">
-                <div class="seal-form-row">
-                    <label for="seal-pulse-minutes" class="seal-form-label" data-i18n-key="pulseIntervalLabel">${zh ? 'Pulse 間隔 (分鐘)' : 'Pulse Interval (Minutes)'}</label>
-                    <div class="seal-form-control">
-                        <div class="seal-input-composite">
-                            <input type="number" id="seal-pulse-minutes" class="seal-input seal-number-input" min="5" value="10080">
-                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速間隔' : 'Quick intervals'}">
-                                <button type="button" class="seal-chip-btn" data-pulse-mins="1440">${zh ? '1天' : '1d'}</button>
-                                <button type="button" class="seal-chip-btn" data-pulse-mins="4320">${zh ? '3天' : '3d'}</button>
-                                <button type="button" class="seal-chip-btn" data-pulse-mins="10080">${zh ? '7天' : '7d'}</button>
-                                <button type="button" class="seal-chip-btn" data-pulse-mins="43200">${zh ? '30天' : '30d'}</button>
+                <div class="vault-presets-body">
+                    <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
+                        ${(VAULT_QUICK_PRESETS || []).map(p => {
+                            const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
+                            const badgeZh = p.mode === 'burn'
+                                ? '🔥 閱後即焚'
+                                : (p.mode === 'timelock'
+                                    ? `🔒 定時解鎖 (${p.unlockIn})`
+                                    : (p.mode === 'deadman'
+                                        ? `💓 亡者開關 (${p.pulseInterval})`
+                                        : `⏱️ 保留期限 (${p.expiresIn})`))
+                            const badgeEn = p.mode === 'burn'
+                                ? '🔥 Burn After Read'
+                                : (p.mode === 'timelock'
+                                    ? `🔒 Time-Locked (${p.unlockIn})`
+                                    : (p.mode === 'deadman'
+                                        ? `💓 Dead Man (${p.pulseInterval})`
+                                        : `⏱️ Expiration (${p.expiresIn})`))
+                            const titleText = zh ? p.labelZh : p.labelEn
+                            const descText = zh ? p.descZh : p.descEn
+                            return `
+                            <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" data-title-zh="${p.labelZh}" data-title-en="${p.labelEn}" data-desc-zh="${p.descZh}" data-desc-en="${p.descEn}" data-badge-zh="${badgeZh}" data-badge-en="${badgeEn}">
+                                <span class="preset-card-top">
+                                    <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
+                                </span>
+                                <span class="preset-card-title">${titleText}</span>
+                                <span class="preset-card-desc">${descText}</span>
                             </div>
-                        </div>
-                        <div class="seal-deadman-live-box" id="seal-deadman-live-box" style="display:none;">
-                            <span id="seal-deadman-live-text" class="seal-deadman-live-text"></span>
-                            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
-                                <button type="button" id="seal-modal-pulse-btn" class="opt-button seal-pulse-btn">${zh ? '❤️ 發送 Pulse 心跳' : '❤️ Send Pulse Heartbeat'}</button>
-                                <button type="button" id="seal-modal-pulse-copy-btn" class="opt-button" style="font-size:11px;">${zh ? '📋 複製心跳連結' : '📋 Copy Pulse URL'}</button>
-                            </div>
-                        </div>
-                        <small class="seal-field-hint" data-i18n-key="deadmanHint">${zh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.'}</small>
+                            `
+                        }).join('')}
                     </div>
-                </div>
-            </div>
-
-            <!-- Expiration Parameter Row -->
-            <div class="seal-param-panel" id="seal-param-panel-expires" style="display:none;">
-                <div class="seal-form-row">
-                    <label for="seal-expires-select" class="seal-form-label" data-i18n-key="expirationLabel">${zh ? '保留期限' : 'Expiration'}</label>
-                    <div class="seal-form-control">
-                        <div class="seal-input-composite">
-                            <select id="seal-expires-select" class="opt-select seal-input" aria-label="${zh ? '有效期限' : 'Expiration'}">
-                                <option value="10m">${zh ? '10 分鐘' : '10 minutes'}</option>
-                                <option value="1h">${zh ? '1 小時' : '1 hour'}</option>
-                                <option value="1d">${zh ? '1 天 (24小時)' : '1 day (24 hours)'}</option>
-                                <option value="7d">${zh ? '7 天 (1週)' : '7 days (1 week)'}</option>
-                                <option value="30d" selected>${zh ? '30 天 (1個月)' : '30 days (1 month)'}</option>
-                            </select>
-                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速期限' : 'Quick expiration'}">
-                                <button type="button" class="seal-chip-btn" data-expire-val="1h">1h</button>
-                                <button type="button" class="seal-chip-btn" data-expire-val="1d">1d</button>
-                                <button type="button" class="seal-chip-btn" data-expire-val="7d">7d</button>
-                                <button type="button" class="seal-chip-btn" data-expire-val="30d">30d</button>
-                            </div>
-                        </div>
-                        <small class="seal-field-hint" data-i18n-key="expirationHint">${zh ? '超過保留期限後分享連結將自動過期下架並顯示 410 墓碑頁面。' : 'Share link automatically expires with a friendly 410 tombstone after the retention period.'}</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="seal-presets-accordion">
-            <div class="seal-presets-accordion-header">
-                <span class="seal-presets-accordion-title" data-i18n-key="presetsSectionTitle">⚡ ${zh ? '快速情境範本 (點選自動填入 Seal 參數)' : 'Quick Scenario Presets (Auto-fills parameters)'}</span>
-            </div>
-            <div class="vault-presets-body">
-                <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
-                    ${(VAULT_QUICK_PRESETS || []).map(p => {
-                        const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
-                        const badgeZh = p.mode === 'burn'
-                            ? '🔥 閱後即焚'
-                            : (p.mode === 'timelock'
-                                ? `🔒 定時解鎖 (${p.unlockIn})`
-                                : (p.mode === 'deadman'
-                                    ? `💓 亡者開關 (${p.pulseInterval})`
-                                    : `⏱️ 保留期限 (${p.expiresIn})`))
-                        const badgeEn = p.mode === 'burn'
-                            ? '🔥 Burn After Read'
-                            : (p.mode === 'timelock'
-                                ? `🔒 Time-Locked (${p.unlockIn})`
-                                : (p.mode === 'deadman'
-                                    ? `💓 Dead Man (${p.pulseInterval})`
-                                    : `⏱️ Expiration (${p.expiresIn})`))
-                        const titleText = zh ? p.labelZh : p.labelEn
-                        const descText = zh ? p.descZh : p.descEn
-                        const badgeText = zh ? badgeZh : badgeEn
-                        return `
-                        <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" data-title-zh="${p.labelZh}" data-title-en="${p.labelEn}" data-desc-zh="${p.descZh}" data-desc-en="${p.descEn}" data-badge-zh="${badgeZh}" data-badge-en="${badgeEn}">
-                            <span class="preset-card-top">
-                                <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
-                                <span class="preset-card-badge mode-${p.mode}">${badgeText}</span>
-                            </span>
-                            <span class="preset-card-title">${titleText}</span>
-                            <span class="preset-card-desc">${descText}</span>
-                        </div>
-                        `
-                    }).join('')}
                 </div>
             </div>
         </div>

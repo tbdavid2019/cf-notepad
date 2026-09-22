@@ -139,7 +139,7 @@
     - **亡者開關／保活心跳 (Dead Man's Switch)**：在作者定期打卡保活期間持續維持機密封印（支援自訂分鐘數或快捷晶片 1 天、3 天、7 天、14 天、30 天等）。作者編輯存檔、在 Seal 彈窗點擊「⚡ 立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
     - **標準發布與保留期限 (Standard & Expiration)**：自訂分享過期時間（10 分鐘、1 小時、1 天、7 天、30 天或永久），結合 Cloudflare KV 原生 TTL 與 Worker 雙重檢查，到期自動下架並返回 410 友好墓碑頁。
     - **底欄獨立入口與極簡分享選單**：底欄右側提供獨立「🔒 Seal」按鈕（`#vault-presets-toolbar-btn` / `.seal-toolbar-btn`），當筆記已加蓋 Seal 時點亮青色圓點指示燈（`.seal-dot-indicator`）；分享選單徹底移除舊版冗餘之保險庫下拉選單，回歸極簡專注，僅以單列動態展示「🔒 Seal 存取控制」即時狀態。
-    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，頂部展示即時狀態徽章（未設定、定時解鎖、閱後即焚、亡者開關），支援中／英雙語切換、快捷晶片（`+1h`、`+1d` 等）以及一鍵「解除 Seal」與「建立 Seal」。
+    - **精美卡片式彈窗與三欄式網格排版 (3-Column Grid & Dedicated Scroll)**：支援電腦版三欄網格、平板雙欄與手機單欄自適應；右上角關閉鈕與雙語切換分離絕不重疊；情境卡片去除重複徽章贅詞更清爽緊湊；內建內部捲軸與固定底部操作列，所有範本均可輕鬆檢視。全數採用官方 Lucide SVG 向量圖標，頂部展示即時狀態徽章（未設定、定時解鎖、閱後即焚、亡者開關），支援中／英雙語切換、快捷晶片（`+1h`、`+1d` 等）以及一鍵「解除 Seal」與「建立 Seal」。
     - **10 款快速情境範本**：純釋出參數配置，點選自動代入最佳 Seal 模式與釋出參數，**嚴格不修改、不注入任何筆記內文**：
       1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，上限 1 次，有效 1 小時，適合傳遞臨時金鑰。
       2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，守護冷錢包與繼承指引。
@@ -593,7 +593,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
     - **Standard & Retention (`standard`)**: Optional expiration timers (`10m`, `1h`, `1d`, `7d`, `30d`, or never) enforced by Cloudflare KV native TTL and Worker runtime checks, serving a friendly 410 tombstone page upon expiration.
   - **Dedicated Seal Access Control Modal & Toolbar Dot Indicator**:
     - **Independent Toolbar Button & Clean Share Menu**: A dedicated "🔒 Seal" button (`#vault-presets-toolbar-btn` / `.seal-toolbar-btn`) sits in the footer toolbar, glowing with a teal dot indicator (`.seal-dot-indicator`) whenever a Seal is active. All obsolete legacy vault dropdowns have been eliminated from the share menu, providing a focused single-row live Seal status indicator.
-    - **Dedicated Modal & 100% Lucide Vector Icons**: Displays a responsive card grid with Lucide SVGs, live status badges (Unsealed, Timelock countdown, Burn views, Deadman heartbeat), in-modal `中` / `En` bilingual switcher, quick increment chips (`+1h`, `+1d`, etc.), and one-click "Remove Seal" and "Apply Seal" actions.
+    - **Dedicated Modal, 3-Column Grid & Dedicated Scroll**: Features an ergonomic 3-column responsive card grid on desktop, free of redundant badges for compact clarity. The top-right close button and language switcher are cleanly separated in flex flow to eliminate overlaps. All presets and parameters scroll smoothly within `.seal-modal-body-scroll` while action buttons remain pinned at the bottom. Includes live status badges, bilingual switcher, quick increment chips (`+1h`, `+1d`), and one-click "Remove Seal" and "Create Seal" controls.
     - **10 Quick Scenario Presets**: Configures optimal release parameters without ever modifying or overwriting existing note content:
       1. **One-Time Password (OTP)** (`shieldAlert`): Burn-after-reading (`burn`), 1 view max, 1h expiration.
       2. **Crypto Inheritance** (`bitcoin`): Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.

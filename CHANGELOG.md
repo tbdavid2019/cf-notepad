@@ -2,6 +2,12 @@
 
 ## [2026-09-22]
 
+- **🎨 Seal 存取控制彈窗排版與體驗優化 (Seal Modal UX Optimization: No Close Overlap, 3-Column Grid, Clean Cards & Dedicated Scroll)**：
+  - **右上角關閉鈕與雙語切換分離**：修正關閉鈕原先使用絕對定位造成與中／英切換選單重疊之問題，將關閉鈕納入頂部工具列標準彈性盒佈局（`position: static`），維持 8px 橫向間距，徹底消除遮蔽衝突。
+  - **移除卡片右上角重複贅詞**：全面移除情境卡片右上角模式徽章（如「🔥 閱後即焚」、「💓 亡者開關 (30d)」），由於卡片說明文字已清晰標註，移除後消除贅詞冗餘，卡片更清爽緊湊。
+  - **全面重構為三欄式網格排版 (3-Column Grid Layout)**：擴展彈窗最大寬度至 860px，將原本浪費縱向空間的雙欄排版改為電腦版三欄網格（`repeat(3, 1fr)`）、平板雙欄、手機單欄自適應，10 款情境範本垂直高度大幅縮減逾 40%。
+  - **獨立內部捲軸與置底固定按鈕 (Dedicated Scroll Body & Pinned Footer)**：將參數配置與情境範本收斂至 `.seal-modal-body-scroll` 容器（支援 `scrollbar-gutter: stable` 與自訂捲軸），確保任何解析度下底部操作按鈕（解除 Seal、取消、建立 Seal）均牢牢鎖定於可見範圍，所有情境卡片均可平順捲動檢視，徹底解決下方內容遭截斷無法檢視之問題。
+
 - **🔒 888box 同源「Seal 存取控制」獨立正交架構重構與舊版保險庫選單徹底清理 (Seal Access Control Architecture & Complete Elimination of Legacy Vault Dropdowns)**：
   - **資產存取控制核心哲學 (Orthogonal Access Control Philosophy)**：徹底將存取控制與內容保護職責解耦——「**密碼保護內容，Seal 控制何時或如何釋出**」。借鑒 888box (`box.david888.com/seal/`) 正交架構，無論筆記是否已設定編輯密碼或分享密碼，均可獨立加蓋或解除 Seal。建立或解除立即生效。
   - **極簡分享選單與徹底清除舊版「保險庫」冗餘 (Clean Share Menu & Legacy Vault Dropdown Removal)**：

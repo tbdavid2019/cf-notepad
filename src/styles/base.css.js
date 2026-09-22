@@ -1527,11 +1527,11 @@ html[data-ui-theme="dark"] .share-pulse-select option {
     background: var(--modal-bg, #ffffff);
     color: var(--modal-text, #2c2a29);
     border: 1px solid var(--modal-border, #e2dacd);
-    padding: 24px;
+    padding: 20px 24px;
     border-radius: 14px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32);
     z-index: 1001;
-    width: min(720px, calc(100vw - 32px));
+    width: min(860px, calc(100vw - 32px));
     max-height: min(88vh, 780px);
     box-sizing: border-box;
     display: flex;
@@ -1548,6 +1548,7 @@ html[data-ui-theme="dark"] .vault-presets-modal-content {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 8px;
+    flex-shrink: 0;
 }
 .vault-presets-header-bar .close-btn {
     position: static;
@@ -1595,11 +1596,11 @@ html[data-ui-theme="dark"] .vault-pref-lang-btn.is-active {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
 }
 .vault-presets-modal-content .close-btn {
-    position: absolute;
-    top: 14px;
-    right: 14px;
-    width: 32px;
-    height: 32px;
+    position: static;
+    top: auto;
+    right: auto;
+    width: 30px;
+    height: 30px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1607,10 +1608,11 @@ html[data-ui-theme="dark"] .vault-pref-lang-btn.is-active {
     background: transparent;
     color: var(--modal-muted, #7c7670);
     cursor: pointer;
-    font-size: 20px;
+    font-size: 22px;
+    line-height: 1;
     border-radius: 8px;
     transition: background 0.15s ease, color 0.15s ease;
-    z-index: 10;
+    flex-shrink: 0;
 }
 .vault-presets-modal-content .close-btn:hover {
     background: var(--modal-surface-hover, rgba(0, 0, 0, 0.08));
@@ -1624,8 +1626,9 @@ html[data-ui-theme="dark"] .vault-presets-modal-content .close-btn:hover {
     color: var(--modal-text, #f1f5f9);
 }
 .vault-presets-header {
-    margin-bottom: 16px;
-    padding-right: 32px;
+    margin-bottom: 12px;
+    padding-right: 0;
+    flex-shrink: 0;
 }
 .vault-presets-title {
     margin: 0 0 6px 0;
@@ -1653,16 +1656,47 @@ html[data-ui-theme="dark"] .vault-presets-title {
 html[data-ui-theme="dark"] .vault-presets-subtitle {
     color: var(--modal-muted, #94a3b8);
 }
-.vault-presets-body {
+.seal-modal-body-scroll {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
-    padding: 4px 4px 10px 2px;
-    margin: 0 -4px 0 -2px;
+    overflow-x: hidden;
+    padding-right: 6px;
+    margin-right: -4px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-gutter: stable;
+}
+.seal-modal-body-scroll::-webkit-scrollbar {
+    width: 6px;
+}
+.seal-modal-body-scroll::-webkit-scrollbar-track {
+    background: transparent;
+}
+.seal-modal-body-scroll::-webkit-scrollbar-thumb {
+    background: var(--modal-border, #cbd5e1);
+    border-radius: 4px;
+}
+.seal-modal-body-scroll::-webkit-scrollbar-thumb:hover {
+    background: var(--modal-muted, #94a3b8);
+}
+html[data-ui-theme="dark"] .seal-modal-body-scroll::-webkit-scrollbar-thumb {
+    background: #475569;
+}
+html[data-ui-theme="dark"] .seal-modal-body-scroll::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+}
+.vault-presets-body {
+    padding: 2px 2px 6px 2px;
 }
 .vault-presets-modal-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+@media (max-width: 768px) {
+    .vault-presets-modal-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
 @media (max-width: 640px) {
     .vault-presets-modal-grid {
@@ -2104,6 +2138,7 @@ html[data-ui-theme="dark"] .seal-presets-accordion-title {
     margin-top: 14px;
     padding-top: 12px;
     border-top: 1px solid var(--modal-border, #e2dacd);
+    flex-shrink: 0;
 }
 html[data-ui-theme="dark"] .seal-modal-footer {
     border-color: var(--modal-border, #334155);
