@@ -2,16 +2,21 @@
 
 ## [2026-09-22]
 
-- **🔒 888box 同源「Seal 存取控制」獨立正交架構重構 (Seal Access Control Architecture & Dedicated Modal UX)**：
+- **🔒 888box 同源「Seal 存取控制」獨立正交架構重構與舊版保險庫選單徹底清理 (Seal Access Control Architecture & Complete Elimination of Legacy Vault Dropdowns)**：
   - **資產存取控制核心哲學 (Orthogonal Access Control Philosophy)**：徹底將存取控制與內容保護職責解耦——「**密碼保護內容，Seal 控制何時或如何釋出**」。借鑒 888box (`box.david888.com/seal/`) 正交架構，無論筆記是否已設定編輯密碼或分享密碼，均可獨立加蓋或解除 Seal。建立或解除立即生效。
-  - **獨立 Seal 存取控制彈窗 (Dedicated Seal Modal)**：
-    - 將舊版範本彈窗升級為獨立的 Seal 存取控制工作台（`#vault-presets-modal` / `.seal-modal`），頂部即時展示當前筆記 Seal 狀態徽章（未設定、定時解鎖倒數中、閱後即焚觀看上限、亡者開關保活中）。
-    - 提供模式切換（`none` / `timelock` / `burn` / `deadman`），動態展開專屬參數控制面板：
+  - **極簡分享選單與徹底清除舊版「保險庫」冗餘 (Clean Share Menu & Legacy Vault Dropdown Removal)**：
+    - 徹底移除分享下拉選單（包含已發布與未發布草稿）中遺留的舊版「保險庫安全模式 (`#share-vault-mode-select`)」、「有效期限 (`#share-expires-select`)」、「閱後即焚開關 (`#burn-after-reading-btn`)」、「定時解鎖時間 (`#share-unlock-select`)」與「亡者開關週期 (`#share-pulse-select`)」冗餘選單。
+    - 分享設定選單極簡回歸專注：僅保留「公開索引」、「段落註解」與單一正交入口「🔒 Seal 存取控制（動態狀態：未設定 ➔ / 定時解鎖 ➔ / 閱後即焚 ➔ / 亡者開關 ➔ / 保留期限 ➔）」。
+    - 全面清查並正名專案所有「保險庫」用詞為「Seal 存取控制」與「Seal 封印狀態」。
+  - **獨立 Seal 存取控制工作台 (Dedicated Seal Modal Workbench)**：
+    - 將舊版範本彈窗升級為獨立的 Seal 存取控制工作台（`#vault-presets-modal` / `.seal-modal`），頂部即時展示當前筆記 Seal 狀態徽章（未設定、定時解鎖倒數中、閱後即焚觀看上限、亡者開關保活中、保留期限計時中）。
+    - 提供模式切換（`none` / `timelock` / `burn` / `deadman` / `expires`），動態展開專屬參數控制面板：
       - **定時解鎖 (Timelock)**：日期時間選擇器搭配快捷晶片按鈕（`+1h`、`+1d`、`+3d`、`+7d`、`+30d`），支援秒級與本地時間雙向同步。
       - **閱後即焚 (Burn-After-Reading)**：支援自訂觀看次數上限（`maxViews`，預設 1 次），達成閾值即永久銷毀。
-      - **亡者開關 (Dead Man's Switch)**：保活心跳週期輸入（以分鐘計）搭配快捷晶片（`1h`、`1d`、`3d`、`7d`、`30d`），並內建「⚡ 立即簽到保活 (Pulse)」按鈕與即時上次心跳時間反饋。
+      - **亡者開關 (Dead Man's Switch)**：保活心跳週期輸入（以分鐘計）搭配快捷晶片（`1h`、`1d`、`3d`、`7d`、`30d`），內建「⚡ 立即簽到保活 (Pulse)」與「📋 複製心跳連結 (Copy Pulse URL)」一鍵 Webhook 複製。
+      - **保留期限 (Expiration)**：下拉選單（`10m`, `1h`, `1d`, `7d`, `30d`）搭配快捷晶片（`1h`, `1d`, `7d`, `30d`），逾期自動下架顯示友善 410 墓碑頁面。
     - **10 款快速情境範本 (10 Quick Scenario Presets)**：在彈窗內提供 10 款快速情境卡片，點選即自動填入模式與最佳釋出參數，**嚴格不改寫、不注入任何筆記內文**（`#contents`）。
-    - **操作按鈕**：提供一鍵「解除 Seal (Remove Seal)」與「建立 Seal (Apply Seal)」，支援即時向後端 `/setting` 保存並更新狀態。
+    - **操作按鈕**：提供一鍵「解除 Seal (Remove Seal)」與「建立 Seal (Create Seal)」，支援即時向後端 `/setting` 保存並更新狀態。
   - **底部工具列與選單獨立入口 (Dedicated Toolbar Button & Menu Entry)**：
     - 底欄工具列配置專屬「🔒 Seal」獨立按鈕（`.seal-toolbar-btn`），若當前筆記已加蓋 Seal 則點亮青色小圓點指示燈（`.seal-dot-indicator`）。
     - 分享下拉選單中以單行展示當前狀態「🔒 Seal 存取控制：未設定 ➔」或「已啟用 ➔」，點擊即直達 Seal 彈窗。

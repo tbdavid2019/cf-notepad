@@ -219,7 +219,7 @@ export const ShareDeadmanLocked = data => {
                 <div class="seal-visitor-brand">David888 Wiki / Seal</div>
                 <div class="share-status-icon">🛡️</div>
                 <h2>${escapeHtml(lang === 'zh-TW' ? "Dead Man's Switch 保活中" : "Dead Man's Switch Active")}</h2>
-                <p class="share-status-desc">${escapeHtml(t.shareDeadmanDesc || (lang === 'zh-TW' ? '亡者開關保活中：作者心跳簽到正常，保險庫持續處於機密鎖定狀態。若作者失聯超期未簽到，將自動對外公開。' : 'Dead Man heartbeat active. Note remains sealed until author misses check-in.'))}</p>
+                <p class="share-status-desc">${escapeHtml(t.shareDeadmanDesc || (lang === 'zh-TW' ? '亡者開關保活中：作者心跳簽到正常，筆記持續處於 Seal 封印狀態。若作者失聯超期未簽到，將自動對外公開。' : 'Dead Man heartbeat active. Note remains sealed until author misses check-in.'))}</p>
 
                 <div class="seal-visitor-info-box">
                     <div class="seal-info-row">

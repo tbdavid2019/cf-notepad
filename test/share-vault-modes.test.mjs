@@ -196,14 +196,22 @@ test('styles/base.css.js: contains required vault countdown, interstitial, and b
     assert.match(baseCssSource, /\.preset-card-desc\s*\{[^}]*display:\s*block/)
 })
 
-test('templates/common.js: renders vault security mode options and pulse controls', () => {
-    assert.match(commonTemplateSource, /id="share-vault-mode-select"/)
-    assert.match(commonTemplateSource, /id="share-expires-select"/)
-    assert.match(commonTemplateSource, /id="burn-after-reading-btn"/)
-    assert.match(commonTemplateSource, /id="share-unlock-select"/)
-    assert.match(commonTemplateSource, /id="share-pulse-select"/)
-    assert.match(commonTemplateSource, /id="share-pulse-now-btn"/)
-    assert.match(commonTemplateSource, /id="share-pulse-copy-btn"/)
+test('templates/common.js: renders Seal access control modal, toolbar trigger, and cleans obsolete dropdowns', () => {
+    // Obsolete vault dropdowns must NOT exist in common template (share menu is clean and unified)
+    assert.doesNotMatch(commonTemplateSource, /id="share-vault-mode-select"/)
+    assert.doesNotMatch(commonTemplateSource, /id="share-expires-select"/)
+    assert.doesNotMatch(commonTemplateSource, /id="burn-after-reading-btn"/)
+    assert.doesNotMatch(commonTemplateSource, /id="share-unlock-select"/)
+    assert.doesNotMatch(commonTemplateSource, /id="share-pulse-select"/)
+
+    // Seal access control controls unified in Seal modal and menu trigger
+    assert.match(commonTemplateSource, /id="seal-mode-select"/)
+    assert.match(commonTemplateSource, /id="seal-unlock-at"/)
+    assert.match(commonTemplateSource, /id="seal-max-views"/)
+    assert.match(commonTemplateSource, /id="seal-pulse-minutes"/)
+    assert.match(commonTemplateSource, /id="seal-expires-select"/)
+    assert.match(commonTemplateSource, /id="seal-modal-pulse-btn"/)
+    assert.match(commonTemplateSource, /id="seal-modal-pulse-copy-btn"/)
     assert.match(commonTemplateSource, /id="vault-presets-toolbar-btn"/)
     assert.match(commonTemplateSource, /open-vault-presets-modal-btn/)
     assert.match(commonTemplateSource, /id="vault-presets-modal"/)
@@ -523,7 +531,7 @@ test('index.js and base.js: direct path vault enforcement and batched preset upd
     assert.match(presetClickBlock, /await persistSetting\(settingPayload\)/)
     assert.ok(!presetClickBlock.includes("modeSelect.dispatchEvent(new Event('change'))"), 'Must not dispatch separate change events that cause racing requests')
     assert.ok(!presetClickBlock.includes('editArea.value'), 'Presets must never overwrite or modify note content')
-    assert.match(presetClickBlock, /#share-vault-mode-select-draft/, 'Must update draft vault mode select')
+    assert.match(presetClickBlock, /#seal-mode-select/, 'Must update seal mode select')
 })
 
 test('templates/common.js & base.js: VAULT_PRESETS_MODAL provides bilingual toggle and preserves note text', async () => {

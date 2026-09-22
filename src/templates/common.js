@@ -633,66 +633,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
                                             </div>
                                             ${VAULT_PRESETS_RENDER(lang)}
-                                            <div class="dropdown-item-control">
-                                                <label for="share-vault-mode-select">${t.shareVaultMode || (lang === 'zh-TW' ? '保險庫安全模式' : 'Vault Security Mode')}</label>
-                                                <select id="share-vault-mode-select" class="opt-select share-vault-mode-select" aria-label="${t.shareVaultMode || (lang === 'zh-TW' ? '保險庫安全模式' : 'Vault Security Mode')}">
-                                                    <option value="standard" ${effectiveShareMode === 'standard' ? 'selected' : ''}>${t.shareModeStandard || (lang === 'zh-TW' ? '標準發布' : 'Standard Public')}</option>
-                                                    <option value="burn" ${effectiveShareMode === 'burn' ? 'selected' : ''}>${t.shareModeBurn || (lang === 'zh-TW' ? '閱後即焚' : 'Burn After Read')}</option>
-                                                    <option value="timelock" ${effectiveShareMode === 'timelock' ? 'selected' : ''}>${t.shareModeTimeLock || (lang === 'zh-TW' ? '定時解鎖 (時間膠囊)' : 'Time-Locked Capsule')}</option>
-                                                    <option value="deadman" ${effectiveShareMode === 'deadman' ? 'selected' : ''}>${t.shareModeDeadman || (lang === 'zh-TW' ? "亡者開關 (保活心跳)" : "Dead Man's Switch")}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-expires" id="vault-panel-expires" style="${(effectiveShareMode === 'standard' || effectiveShareMode === 'burn') ? '' : 'display:none;'}">
-                                                <label for="share-expires-select">${t.shareExpiration || (lang === 'zh-TW' ? '有效期限' : 'Expiration')}</label>
-                                                <select id="share-expires-select" class="opt-select share-expires-select" aria-label="${t.shareExpiration || (lang === 'zh-TW' ? '有效期限' : 'Expiration')}">
-                                                    <option value="none" ${shareExpiresIn === 'none' || !shareExpiresIn ? 'selected' : ''}>${t.shareExpirationNever || (lang === 'zh-TW' ? '永久有效（預設）' : 'Never (Default)')}</option>
-                                                    <option value="10m" ${shareExpiresIn === '10m' ? 'selected' : ''}>${t.shareExpiration10m || (lang === 'zh-TW' ? '10 分鐘' : '10 minutes')}</option>
-                                                    <option value="1h" ${shareExpiresIn === '1h' ? 'selected' : ''}>${t.shareExpiration1h || (lang === 'zh-TW' ? '1 小時' : '1 hour')}</option>
-                                                    <option value="1d" ${shareExpiresIn === '1d' ? 'selected' : ''}>${t.shareExpiration1d || (lang === 'zh-TW' ? '1 天 (24小時)' : '1 day (24 hours)')}</option>
-                                                    <option value="7d" ${shareExpiresIn === '7d' ? 'selected' : ''}>${t.shareExpiration7d || (lang === 'zh-TW' ? '7 天 (1週)' : '7 days (1 week)')}</option>
-                                                    <option value="30d" ${shareExpiresIn === '30d' ? 'selected' : ''}>${t.shareExpiration30d || (lang === 'zh-TW' ? '30 天 (1個月)' : '30 days (1 month)')}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-toggle vault-panel-burn" id="vault-panel-burn" style="${effectiveShareMode === 'burn' ? '' : 'display:none;'}">
-                                                <div class="dropdown-item-label-group">
-                                                    <span>${t.burnAfterReading || (lang === 'zh-TW' ? '閱後即焚' : 'Burn After Read')}</span>
-                                                    <small class="dropdown-item-hint">${t.burnAfterReadingHint || (lang === 'zh-TW' ? '外部讀取一次即自動銷毀' : 'Self-destructs after 1 external read')}</small>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    id="burn-after-reading-btn"
-                                                    class="opt-button burn-after-reading-btn ${shareBurnAfterReading === true || effectiveShareMode === 'burn' ? 'opt-button-accent' : ''}"
-                                                    data-burn-after-reading="${shareBurnAfterReading === true || effectiveShareMode === 'burn' ? 'true' : 'false'}"
-                                                    aria-pressed="${shareBurnAfterReading === true || effectiveShareMode === 'burn' ? 'true' : 'false'}"
-                                                >${(shareBurnAfterReading === true || effectiveShareMode === 'burn') ? (t.burnAfterReadingOn || (lang === 'zh-TW' ? '已開啟' : 'On')) : (t.burnAfterReadingOff || (lang === 'zh-TW' ? '未開啟' : 'Off'))}</button>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-timelock" id="vault-panel-timelock" style="${effectiveShareMode === 'timelock' ? '' : 'display:none;'}">
-                                                <label for="share-unlock-select">${t.shareUnlockIn || (lang === 'zh-TW' ? '解鎖時間' : 'Unlock In')}</label>
-                                                <select id="share-unlock-select" class="opt-select share-unlock-select" aria-label="${t.shareUnlockIn || (lang === 'zh-TW' ? '解鎖時間' : 'Unlock In')}">
-                                                    <option value="1h" ${shareUnlockIn === '1h' ? 'selected' : ''}>${t.shareUnlockIn1h || (lang === 'zh-TW' ? '1 小時後' : '1 hour later')}</option>
-                                                    <option value="1d" ${shareUnlockIn === '1d' || !shareUnlockIn ? 'selected' : ''}>${t.shareUnlockIn1d || (lang === 'zh-TW' ? '1 天後' : '1 day later')}</option>
-                                                    <option value="3d" ${shareUnlockIn === '3d' ? 'selected' : ''}>${t.shareUnlockIn3d || (lang === 'zh-TW' ? '3 天後' : '3 days later')}</option>
-                                                    <option value="7d" ${shareUnlockIn === '7d' ? 'selected' : ''}>${t.shareUnlockIn7d || (lang === 'zh-TW' ? '7 天後 (1週)' : '7 days later')}</option>
-                                                    <option value="30d" ${shareUnlockIn === '30d' ? 'selected' : ''}>${t.shareUnlockIn30d || (lang === 'zh-TW' ? '30 天後 (1個月)' : '30 days later')}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-deadman" id="vault-panel-deadman" style="${effectiveShareMode === 'deadman' ? '' : 'display:none;'}">
-                                                <label for="share-pulse-select">${t.pulseInterval || (lang === 'zh-TW' ? '簽到保活週期' : 'Pulse Interval')}</label>
-                                                <select id="share-pulse-select" class="opt-select share-pulse-select" aria-label="${t.pulseInterval || (lang === 'zh-TW' ? '簽到保活週期' : 'Pulse Interval')}">
-                                                    <option value="3d" ${sharePulseInterval === 259200 ? 'selected' : ''}>${t.pulseInterval3d || (lang === 'zh-TW' ? '3 天' : '3 days')}</option>
-                                                    <option value="7d" ${sharePulseInterval === 604800 || !sharePulseInterval ? 'selected' : ''}>${t.pulseInterval7d || (lang === 'zh-TW' ? '7 天 (1週)' : '7 days (1 week)')}</option>
-                                                    <option value="14d" ${sharePulseInterval === 1209600 ? 'selected' : ''}>${t.pulseInterval14d || (lang === 'zh-TW' ? '14 天 (2週)' : '14 days (2 weeks)')}</option>
-                                                    <option value="30d" ${sharePulseInterval === 2592000 ? 'selected' : ''}>${t.pulseInterval30d || (lang === 'zh-TW' ? '30 天 (1個月)' : '30 days (1 month)')}</option>
-                                                </select>
-                                                <div style="display:flex;flex-direction:column;gap:6px;margin-top:8px;">
-                                                    <button type="button" id="share-pulse-now-btn" class="opt-button opt-button-accent" style="width:100%;font-size:12px;height:30px;">
-                                                        💓 ${t.pulseNowBtn || (lang === 'zh-TW' ? '立即簽到保活 (Pulse)' : 'Pulse Now')}
-                                                    </button>
-                                                    <button type="button" id="share-pulse-copy-btn" class="opt-button" style="width:100%;font-size:12px;height:30px;" title="${t.pulseCopyLink || (lang === 'zh-TW' ? '複製作者專用保活連結' : 'Copy Private Pulse Link')}" data-pulse-token="${sharePulseToken || ''}">
-                                                        🔗 ${t.pulseCopyLink || (lang === 'zh-TW' ? '複製專用保活連結' : 'Copy Pulse Link')}
-                                                    </button>
-                                                </div>
-                                            </div>
                                         </div>
                                         <div class="dropdown-group-card dropdown-group-danger">
                                             <button type="button" class="dropdown-item dropdown-danger-item unpublish-btn" title="${unpublishTitle}">
@@ -729,58 +669,6 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                                                 >${annotationsEnabled === true ? t.annotationsOn : t.annotationsOff}</button>
                                             </div>
                                             ${VAULT_PRESETS_RENDER(lang)}
-                                            <div class="dropdown-item-control">
-                                                <label for="share-vault-mode-select-draft">${t.shareVaultMode || (lang === 'zh-TW' ? '保險庫安全模式' : 'Vault Security Mode')}</label>
-                                                <select id="share-vault-mode-select-draft" class="opt-select share-vault-mode-select" aria-label="${t.shareVaultMode || (lang === 'zh-TW' ? '保險庫安全模式' : 'Vault Security Mode')}">
-                                                    <option value="standard" selected>${t.shareModeStandard || (lang === 'zh-TW' ? '標準發布' : 'Standard Public')}</option>
-                                                    <option value="burn">${t.shareModeBurn || (lang === 'zh-TW' ? '閱後即焚' : 'Burn After Read')}</option>
-                                                    <option value="timelock">${t.shareModeTimeLock || (lang === 'zh-TW' ? '定時解鎖 (時間膠囊)' : 'Time-Locked Capsule')}</option>
-                                                    <option value="deadman">${t.shareModeDeadman || (lang === 'zh-TW' ? "亡者開關 (保活心跳)" : "Dead Man's Switch")}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-expires" id="vault-panel-expires-draft">
-                                                <label for="share-expires-select-draft">${t.shareExpiration || (lang === 'zh-TW' ? '有效期限' : 'Expiration')}</label>
-                                                <select id="share-expires-select-draft" class="opt-select share-expires-select" aria-label="${t.shareExpiration || (lang === 'zh-TW' ? '有效期限' : 'Expiration')}">
-                                                    <option value="none" selected>${t.shareExpirationNever || (lang === 'zh-TW' ? '永久有效（預設）' : 'Never (Default)')}</option>
-                                                    <option value="10m">${t.shareExpiration10m || (lang === 'zh-TW' ? '10 分鐘' : '10 minutes')}</option>
-                                                    <option value="1h">${t.shareExpiration1h || (lang === 'zh-TW' ? '1 小時' : '1 hour')}</option>
-                                                    <option value="1d">${t.shareExpiration1d || (lang === 'zh-TW' ? '1 天 (24小時)' : '1 day (24 hours)')}</option>
-                                                    <option value="7d">${t.shareExpiration7d || (lang === 'zh-TW' ? '7 天 (1週)' : '7 days (1 week)')}</option>
-                                                    <option value="30d">${t.shareExpiration30d || (lang === 'zh-TW' ? '30 天 (1個月)' : '30 days (1 month)')}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-toggle vault-panel-burn" id="vault-panel-burn-draft" style="display:none;">
-                                                <div class="dropdown-item-label-group">
-                                                    <span>${t.burnAfterReading || (lang === 'zh-TW' ? '閱後即焚' : 'Burn After Read')}</span>
-                                                    <small class="dropdown-item-hint">${t.burnAfterReadingHint || (lang === 'zh-TW' ? '外部讀取一次即自動銷毀' : 'Self-destructs after 1 external read')}</small>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    id="burn-after-reading-btn-draft"
-                                                    class="opt-button burn-after-reading-btn"
-                                                    data-burn-after-reading="false"
-                                                    aria-pressed="false"
-                                                >${t.burnAfterReadingOff || (lang === 'zh-TW' ? '未開啟' : 'Off')}</button>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-timelock" id="vault-panel-timelock-draft" style="display:none;">
-                                                <label for="share-unlock-select-draft">${t.shareUnlockIn || (lang === 'zh-TW' ? '解鎖時間' : 'Unlock In')}</label>
-                                                <select id="share-unlock-select-draft" class="opt-select share-unlock-select" aria-label="${t.shareUnlockIn || (lang === 'zh-TW' ? '解鎖時間' : 'Unlock In')}">
-                                                    <option value="1h">${t.shareUnlockIn1h || (lang === 'zh-TW' ? '1 小時後' : '1 hour later')}</option>
-                                                    <option value="1d" selected>${t.shareUnlockIn1d || (lang === 'zh-TW' ? '1 天後' : '1 day later')}</option>
-                                                    <option value="3d">${t.shareUnlockIn3d || (lang === 'zh-TW' ? '3 天後' : '3 days later')}</option>
-                                                    <option value="7d">${t.shareUnlockIn7d || (lang === 'zh-TW' ? '7 天後 (1週)' : '7 days later')}</option>
-                                                    <option value="30d">${t.shareUnlockIn30d || (lang === 'zh-TW' ? '30 天後 (1個月)' : '30 days later')}</option>
-                                                </select>
-                                            </div>
-                                            <div class="dropdown-item-control vault-panel-deadman" id="vault-panel-deadman-draft" style="display:none;">
-                                                <label for="share-pulse-select-draft">${t.pulseInterval || (lang === 'zh-TW' ? '簽到保活週期' : 'Pulse Interval')}</label>
-                                                <select id="share-pulse-select-draft" class="opt-select share-pulse-select" aria-label="${t.pulseInterval || (lang === 'zh-TW' ? '簽到保活週期' : 'Pulse Interval')}">
-                                                    <option value="3d">${t.pulseInterval3d || (lang === 'zh-TW' ? '3 天' : '3 days')}</option>
-                                                    <option value="7d" selected>${t.pulseInterval7d || (lang === 'zh-TW' ? '7 天 (1週)' : '7 days (1 week)')}</option>
-                                                    <option value="14d">${t.pulseInterval14d || (lang === 'zh-TW' ? '14 天 (2週)' : '14 days (2 weeks)')}</option>
-                                                    <option value="30d">${t.pulseInterval30d || (lang === 'zh-TW' ? '30 天 (1個月)' : '30 days (1 month)')}</option>
-                                                </select>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1483,6 +1371,7 @@ export const VAULT_PRESETS_MODAL = (lang) => {
                         <option value="timelock">${zh ? '定時解鎖 (Time Lock)' : 'Time Lock'}</option>
                         <option value="burn">${zh ? '閱後即焚 (Burn After Read)' : 'Burn After Read'}</option>
                         <option value="deadman">${zh ? "Dead Man's Switch (亡者開關)" : "Dead Man's Switch"}</option>
+                        <option value="expires">${zh ? '保留期限 (Expiration)' : 'Expiration'}</option>
                     </select>
                 </div>
             </div>
@@ -1537,9 +1426,37 @@ export const VAULT_PRESETS_MODAL = (lang) => {
                         </div>
                         <div class="seal-deadman-live-box" id="seal-deadman-live-box" style="display:none;">
                             <span id="seal-deadman-live-text" class="seal-deadman-live-text"></span>
-                            <button type="button" id="seal-modal-pulse-btn" class="opt-button seal-pulse-btn">${zh ? '❤️ 發送 Pulse 心跳' : '❤️ Send Pulse Heartbeat'}</button>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                                <button type="button" id="seal-modal-pulse-btn" class="opt-button seal-pulse-btn">${zh ? '❤️ 發送 Pulse 心跳' : '❤️ Send Pulse Heartbeat'}</button>
+                                <button type="button" id="seal-modal-pulse-copy-btn" class="opt-button" style="font-size:11px;">${zh ? '📋 複製心跳連結' : '📋 Copy Pulse URL'}</button>
+                            </div>
                         </div>
                         <small class="seal-field-hint" data-i18n-key="deadmanHint">${zh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.'}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Expiration Parameter Row -->
+            <div class="seal-param-panel" id="seal-param-panel-expires" style="display:none;">
+                <div class="seal-form-row">
+                    <label for="seal-expires-select" class="seal-form-label" data-i18n-key="expirationLabel">${zh ? '保留期限' : 'Expiration'}</label>
+                    <div class="seal-form-control">
+                        <div class="seal-input-composite">
+                            <select id="seal-expires-select" class="opt-select seal-input" aria-label="${zh ? '有效期限' : 'Expiration'}">
+                                <option value="10m">${zh ? '10 分鐘' : '10 minutes'}</option>
+                                <option value="1h">${zh ? '1 小時' : '1 hour'}</option>
+                                <option value="1d">${zh ? '1 天 (24小時)' : '1 day (24 hours)'}</option>
+                                <option value="7d">${zh ? '7 天 (1週)' : '7 days (1 week)'}</option>
+                                <option value="30d" selected>${zh ? '30 天 (1個月)' : '30 days (1 month)'}</option>
+                            </select>
+                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速期限' : 'Quick expiration'}">
+                                <button type="button" class="seal-chip-btn" data-expire-val="1h">1h</button>
+                                <button type="button" class="seal-chip-btn" data-expire-val="1d">1d</button>
+                                <button type="button" class="seal-chip-btn" data-expire-val="7d">7d</button>
+                                <button type="button" class="seal-chip-btn" data-expire-val="30d">30d</button>
+                            </div>
+                        </div>
+                        <small class="seal-field-hint" data-i18n-key="expirationHint">${zh ? '超過保留期限後分享連結將自動過期下架並顯示 410 墓碑頁面。' : 'Share link automatically expires with a friendly 410 tombstone after the retention period.'}</small>
                     </div>
                 </div>
             </div>

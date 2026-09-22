@@ -135,7 +135,7 @@ test('clicking select elements, labels, or toggles inside dropdown does not clos
                 <button class="dropdown-trigger" id="share-menu-btn" aria-expanded="false">Share</button>
                 <div class="dropdown-menu share-dropdown-menu">
                     <div class="dropdown-item-control">
-                        <label for="share-vault-mode-select">保險庫安全模式</label>
+                        <label for="share-vault-mode-select">Seal 存取控制</label>
                         <select id="share-vault-mode-select" class="opt-select share-vault-mode-select">
                             <option value="standard" selected>標準發布</option>
                             <option value="burn">閱後即焚</option>

@@ -386,7 +386,7 @@ ${getMarkdownCss()}
                         ` : ''}
                         ${isSharePage && ext.deadmanReleased ? `
                             <div class="share-deadman-released-banner">
-                                <span>⚠️ ${lang === 'zh-TW' ? '亡者開關已觸發解鎖：作者超期未簽到保活，機密保險庫已自動向公眾解鎖。' : 'Dead Man\'s Switch Triggered: The author missed the check-in deadline. Vault auto-released.'}</span>
+                                <span>⚠️ ${lang === 'zh-TW' ? '亡者開關已觸發解鎖：作者超期未簽到保活，筆記已自動解除 Seal 並向公眾公開。' : 'Dead Man\'s Switch Triggered: The author missed the check-in deadline. Note unsealed and released to public.'}</span>
                             </div>
                         ` : ''}
                         ${isSharePage && ext.burnActiveNotice ? `
@@ -5208,6 +5208,8 @@ ${getMarkdownCss()}
             if (maxViewsLabel) maxViewsLabel.textContent = isZh ? '最大瀏覽次數' : 'Max Views';
             const pulseIntervalLabel = modal.querySelector('[data-i18n-key="pulseIntervalLabel"]');
             if (pulseIntervalLabel) pulseIntervalLabel.textContent = isZh ? 'Pulse 間隔 (分鐘)' : 'Pulse Interval (Minutes)';
+            const expirationLabel = modal.querySelector('[data-i18n-key="expirationLabel"]');
+            if (expirationLabel) expirationLabel.textContent = isZh ? '保留期限' : 'Expiration';
             const viewsUnit = modal.querySelector('[data-i18n-key="viewsUnit"]');
             if (viewsUnit) viewsUnit.textContent = isZh ? '次 (預設 1 次)' : 'views (Default 1)';
             const timelockHint = modal.querySelector('[data-i18n-key="timelockHint"]');
@@ -5216,6 +5218,8 @@ ${getMarkdownCss()}
             if (burnHint) burnHint.textContent = isZh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.';
             const deadmanHint = modal.querySelector('[data-i18n-key="deadmanHint"]');
             if (deadmanHint) deadmanHint.textContent = isZh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.';
+            const expirationHint = modal.querySelector('[data-i18n-key="expirationHint"]');
+            if (expirationHint) expirationHint.textContent = isZh ? '超過保留期限後分享連結將自動過期下架並顯示 410 墓碑頁面。' : 'Share link automatically expires with a friendly 410 tombstone after the retention period.';
             const presetsSectionTitle = modal.querySelector('[data-i18n-key="presetsSectionTitle"]');
             if (presetsSectionTitle) presetsSectionTitle.textContent = isZh ? '⚡ 快速情境範本 (點選自動填入 Seal 參數)' : '⚡ Quick Scenario Presets (Auto-fills parameters)';
             const removeBtn = modal.querySelector('#seal-remove-btn');
@@ -5248,14 +5252,26 @@ ${getMarkdownCss()}
             const dotIndicatorBlock = document.getElementById('seal-dot-indicator-block');
             const menuStatusPill = document.getElementById('share-menu-seal-status');
 
-            const currentMode = APP_STATE.sealMode || (APP_STATE.shareBurnAfterReading ? 'burn' : (APP_STATE.shareUnlockAt ? 'timelock' : (APP_STATE.sharePulseDueAt ? 'deadman' : (APP_STATE.shareMode !== 'standard' ? APP_STATE.shareMode : 'none')))) || 'none';
+            const currentMode = APP_STATE.sealMode || (APP_STATE.shareBurnAfterReading ? 'burn' : (APP_STATE.shareUnlockAt ? 'timelock' : (APP_STATE.sharePulseDueAt ? 'deadman' : (APP_STATE.shareExpiresIn && APP_STATE.shareExpiresIn !== 'none' ? 'expires' : (APP_STATE.shareMode !== 'standard' ? APP_STATE.shareMode : 'none'))))) || 'none';
             const isSealed = currentMode && currentMode !== 'none' && currentMode !== 'standard';
 
             if (dotIndicator) dotIndicator.style.display = isSealed ? 'block' : 'none';
             if (dotIndicatorBlock) dotIndicatorBlock.style.display = isSealed ? 'block' : 'none';
             if (menuStatusPill) {
                 menuStatusPill.classList.toggle('is-sealed', isSealed);
-                menuStatusPill.textContent = isSealed ? (isZh ? '已封印 ➔' : 'Sealed ➔') : (isZh ? '未設定 ➔' : 'Unsealed ➔');
+                if (!isSealed) {
+                    menuStatusPill.textContent = isZh ? '未設定 ➔' : 'Unsealed ➔';
+                } else if (currentMode === 'timelock') {
+                    menuStatusPill.textContent = isZh ? '定時解鎖 ➔' : 'Time Lock ➔';
+                } else if (currentMode === 'burn') {
+                    menuStatusPill.textContent = isZh ? '閱後即焚 ➔' : 'Burn ➔';
+                } else if (currentMode === 'deadman') {
+                    menuStatusPill.textContent = isZh ? '亡者開關 ➔' : 'Dead Man ➔';
+                } else if (currentMode === 'expires') {
+                    menuStatusPill.textContent = isZh ? '保留期限 ➔' : 'Expiration ➔';
+                } else {
+                    menuStatusPill.textContent = isZh ? '已封印 ➔' : 'Sealed ➔';
+                }
             }
 
             if (!modal) return;
@@ -5270,9 +5286,11 @@ ${getMarkdownCss()}
             const panelTimelock = modal.querySelector('#seal-param-panel-timelock');
             const panelBurn = modal.querySelector('#seal-param-panel-burn');
             const panelDeadman = modal.querySelector('#seal-param-panel-deadman');
+            const panelExpires = modal.querySelector('#seal-param-panel-expires');
             if (panelTimelock) panelTimelock.style.display = activeMode === 'timelock' ? 'block' : 'none';
             if (panelBurn) panelBurn.style.display = activeMode === 'burn' ? 'block' : 'none';
             if (panelDeadman) panelDeadman.style.display = activeMode === 'deadman' ? 'block' : 'none';
+            if (panelExpires) panelExpires.style.display = activeMode === 'expires' ? 'block' : 'none';
 
             // Status badge text
             if (badge) {
@@ -5283,6 +5301,7 @@ ${getMarkdownCss()}
                     if (currentMode === 'timelock') modeText += isZh ? ' (定時解鎖)' : ' (Time Lock)';
                     else if (currentMode === 'burn') modeText += isZh ? ' (閱後即焚)' : ' (Burn After Read)';
                     else if (currentMode === 'deadman') modeText += isZh ? " (Dead Man's Switch)" : " (Dead Man's Switch)";
+                    else if (currentMode === 'expires') modeText += isZh ? " (保留期限)" : " (Expiration)";
                     badge.textContent = modeText;
                 } else {
                     badge.classList.add('badge-unsealed');
@@ -5334,6 +5353,11 @@ ${getMarkdownCss()}
                         liveBox.style.display = 'none';
                     }
                 }
+            } else if (activeMode === 'expires') {
+                const expiresInput = modal.querySelector('#seal-expires-select');
+                if (expiresInput && APP_STATE.shareExpiresIn && APP_STATE.shareExpiresIn !== 'none') {
+                    expiresInput.value = APP_STATE.shareExpiresIn;
+                }
             }
         };
 
@@ -5376,6 +5400,14 @@ ${getMarkdownCss()}
                 if (input && mins) input.value = mins;
                 return;
             }
+            const expireChip = e.target.closest('[data-expire-val]');
+            if (expireChip) {
+                e.preventDefault();
+                const exp = expireChip.getAttribute('data-expire-val');
+                const input = document.getElementById('seal-expires-select');
+                if (input && exp) input.value = exp;
+                return;
+            }
             const modalPulseBtn = e.target.closest('#seal-modal-pulse-btn');
             if (modalPulseBtn) {
                 e.preventDefault();
@@ -5397,6 +5429,24 @@ ${getMarkdownCss()}
                 }
                 return;
             }
+            const modalPulseCopyBtn = e.target.closest('#seal-modal-pulse-copy-btn');
+            if (modalPulseCopyBtn) {
+                e.preventDefault();
+                const isZh = APP_STATE.lang === 'zh-TW';
+                if (!APP_STATE.shareId) {
+                    window.showToast?.(isZh ? '筆記尚未發布，無法取得心跳連結' : 'Note not yet published');
+                    return;
+                }
+                const token = APP_STATE.sharePulseToken || '';
+                const pulseUrl = window.location.origin + '/api/shares/' + encodeURIComponent(APP_STATE.shareId) + '/pulse?token=' + encodeURIComponent(token);
+                try {
+                    await navigator.clipboard.writeText(pulseUrl);
+                    window.showToast?.(isZh ? '📋 心跳 Webhook 連結已複製！' : '📋 Pulse Webhook URL copied!');
+                } catch (err) {
+                    window.prompt(isZh ? '請複製心跳連結：' : 'Copy pulse link:', pulseUrl);
+                }
+                return;
+            }
             const saveSealBtn = e.target.closest('#seal-save-btn');
             if (saveSealBtn) {
                 e.preventDefault();
@@ -5409,6 +5459,7 @@ ${getMarkdownCss()}
                     settingPayload.removeSeal = true;
                     settingPayload.sealMode = 'none';
                     settingPayload.shareMode = 'standard';
+                    settingPayload.shareExpiresIn = 'none';
                 } else if (mode === 'timelock') {
                     const unlockVal = document.getElementById('seal-unlock-at')?.value;
                     if (!unlockVal) {
@@ -5429,6 +5480,11 @@ ${getMarkdownCss()}
                     settingPayload.sealMode = 'deadman';
                     settingPayload.shareMode = 'deadman';
                     settingPayload.sealPulseMinutes = mins;
+                } else if (mode === 'expires') {
+                    const expVal = document.getElementById('seal-expires-select')?.value || '30d';
+                    settingPayload.sealMode = 'expires';
+                    settingPayload.shareMode = 'standard';
+                    settingPayload.shareExpiresIn = expVal;
                 }
 
                 try {
@@ -5440,6 +5496,7 @@ ${getMarkdownCss()}
                         APP_STATE.shareBurnAfterReading = false;
                         APP_STATE.shareUnlockAt = null;
                         APP_STATE.sharePulseDueAt = null;
+                        APP_STATE.shareExpiresIn = 'none';
                         delete APP_STATE.shareMaxViews;
                     } else if (mode === 'timelock') {
                         APP_STATE.sealMode = 'timelock';
@@ -5458,6 +5515,13 @@ ${getMarkdownCss()}
                         APP_STATE.shareBurnAfterReading = false;
                         APP_STATE.sharePulseInterval = (settingPayload.sealPulseMinutes || 10080) * 60;
                         APP_STATE.sharePulseDueAt = Math.floor(Date.now() / 1000) + APP_STATE.sharePulseInterval;
+                    } else if (mode === 'expires') {
+                        APP_STATE.sealMode = 'expires';
+                        APP_STATE.shareMode = 'standard';
+                        APP_STATE.shareBurnAfterReading = false;
+                        APP_STATE.shareUnlockAt = null;
+                        APP_STATE.sharePulseDueAt = null;
+                        APP_STATE.shareExpiresIn = settingPayload.shareExpiresIn;
                     }
                     syncSealModalState();
                     if (modal) closeModal(modal);
@@ -5476,12 +5540,13 @@ ${getMarkdownCss()}
                 const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
                 try {
                     removeSealBtn.disabled = true;
-                    await persistSetting({ removeSeal: true, sealMode: 'none', shareMode: 'standard' });
+                    await persistSetting({ removeSeal: true, sealMode: 'none', shareMode: 'standard', shareExpiresIn: 'none' });
                     APP_STATE.sealMode = 'none';
                     APP_STATE.shareMode = 'standard';
                     APP_STATE.shareBurnAfterReading = false;
                     APP_STATE.shareUnlockAt = null;
                     APP_STATE.sharePulseDueAt = null;
+                    APP_STATE.shareExpiresIn = 'none';
                     delete APP_STATE.shareMaxViews;
                     syncSealModalState();
                     if (modal) closeModal(modal);
@@ -5511,9 +5576,14 @@ ${getMarkdownCss()}
             if (presetBtn) {
                 e.preventDefault();
                 const presetId = presetBtn.getAttribute('data-preset-id');
-                const mode = presetBtn.getAttribute('data-mode') || 'standard';
+                let mode = presetBtn.getAttribute('data-mode') || 'standard';
+                const expires = presetBtn.getAttribute('data-expires') || '';
                 const unlock = presetBtn.getAttribute('data-unlock') || '';
                 const pulse = presetBtn.getAttribute('data-pulse') || '';
+
+                if (mode === 'standard' && expires) {
+                    mode = 'expires';
+                }
 
                 document.querySelectorAll('.vault-preset-btn').forEach(b => b.classList.remove('active'));
                 presetBtn.classList.add('active');
@@ -5543,44 +5613,24 @@ ${getMarkdownCss()}
                     else if (pulse === '30d') mins = 43200;
                     const pulseInput = document.getElementById('seal-pulse-minutes');
                     if (pulseInput) pulseInput.value = mins;
+                } else if (mode === 'expires') {
+                    const expiresInput = document.getElementById('seal-expires-select');
+                    if (expiresInput && expires) expiresInput.value = expires;
                 }
 
-                // 1. Update BOTH published and draft dropdown selects so parameters are consistently applied
-                document.querySelectorAll('#share-vault-mode-select, #share-vault-mode-select-draft').forEach(sel => {
-                    sel.value = mode;
-                });
-                if (unlock) {
-                    document.querySelectorAll('#share-unlock-select, #share-unlock-select-draft').forEach(sel => {
-                        sel.value = unlock;
-                    });
-                }
-                if (pulse) {
-                    document.querySelectorAll('#share-pulse-select, #share-pulse-select-draft').forEach(sel => {
-                        sel.value = pulse;
-                    });
-                }
-
-                // 2. Synchronize burn button states
-                const isBurn = mode === 'burn';
-                document.querySelectorAll('#burn-after-reading-btn, #burn-after-reading-btn-draft').forEach(btn => {
-                    btn.setAttribute('data-burn-after-reading', isBurn ? 'true' : 'false');
-                    btn.setAttribute('aria-pressed', isBurn ? 'true' : 'false');
-                    btn.classList.toggle('opt-button-accent', isBurn);
-                    btn.textContent = isBurn ? (getI18n('burnAfterReadingOn') || 'On') : (getI18n('burnAfterReadingOff') || 'Off');
-                });
-
-                // 3. Synchronize UI panels for both published and draft views
-                syncVaultModeUI(mode, false);
-                syncVaultModeUI(mode, true);
+                // Update seal modal UI
                 syncSealModalState();
 
-                // 4. If note is already published, persist settings to server immediately
+                // If note is already published, persist settings to server immediately
                 const isPublished = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId);
                 if (isPublished) {
+                    const isBurn = mode === 'burn';
                     const settingPayload = {
-                        shareMode: mode,
+                        sealMode: mode === 'expires' ? 'expires' : (mode === 'standard' ? 'none' : mode),
+                        shareMode: (mode === 'expires' || mode === 'standard') ? 'standard' : mode,
                         shareBurnAfterReading: isBurn,
                     };
+                    if (mode === 'expires' && expires) settingPayload.shareExpiresIn = expires;
                     if (unlock) settingPayload.shareUnlockIn = unlock;
                     if (pulse) settingPayload.sharePulseInterval = pulse;
                     try {
@@ -5590,7 +5640,7 @@ ${getMarkdownCss()}
                     }
                 }
 
-                // 5. Bilingual Toast Feedback - parameter filled without modifying note content
+                // Bilingual Toast Feedback - parameter filled without modifying note content
                 const modal = document.getElementById('vault-presets-modal');
                 const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
                 const label = (isZh ? presetBtn.getAttribute('data-title-zh') : presetBtn.getAttribute('data-title-en'))
