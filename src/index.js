@@ -4051,7 +4051,11 @@ router.post('/:path/setting', async request => {
     try {
         if (request.headers.get('Content-Type') === 'application/json') {
             const cookie = Cookies.parse(request.headers.get('Cookie') || '')
-            const { mode, shareMode, shareExpiresIn, shareBurnAfterReading, shareUnlockIn, sharePulseInterval, shareMaxViews } = await request.clone().json().catch(() => ({}))
+            const {
+                mode, shareMode, shareExpiresIn, shareBurnAfterReading,
+                shareUnlockIn, shareUnlockAt, sharePulseInterval, sharePulseMinutes,
+                shareMaxViews, removeSeal, sealMode, sealUnlockAt, sealMaxViews, sealPulseMinutes,
+            } = await request.clone().json().catch(() => ({}))
             const { share, theme, title, width, shareFont, publicIndex, content, autosave, annotationsEnabled } = await request.json()
 
             const { value, metadata } = await queryNote(path)
@@ -4103,14 +4107,24 @@ router.post('/:path/setting', async request => {
                         ...mode !== undefined && { mode },
                     }
 
-                    if (shareMode !== undefined) {
-                        nextMetadata.shareMode = shareMode
-                        if (shareMode === 'burn') {
+                    const effectiveMode = sealMode !== undefined ? sealMode : shareMode
+                    if (removeSeal === true || effectiveMode === 'none') {
+                        nextMetadata.shareMode = 'standard'
+                        nextMetadata.shareBurnAfterReading = false
+                        delete nextMetadata.shareBurnedAt
+                        delete nextMetadata.shareUnlockAt
+                        delete nextMetadata.shareUnlockIn
+                        delete nextMetadata.sharePulseDueAt
+                        delete nextMetadata.sharePulseInterval
+                        delete nextMetadata.shareMaxViews
+                    } else if (effectiveMode !== undefined) {
+                        nextMetadata.shareMode = effectiveMode
+                        if (effectiveMode === 'burn') {
                             nextMetadata.shareBurnAfterReading = true
                         } else {
                             nextMetadata.shareBurnAfterReading = false
                             delete nextMetadata.shareBurnedAt
-                            if (shareMode === 'standard') {
+                            if (effectiveMode === 'standard') {
                                 delete nextMetadata.shareUnlockAt
                                 delete nextMetadata.shareUnlockIn
                                 delete nextMetadata.sharePulseDueAt
@@ -4141,14 +4155,39 @@ router.post('/:path/setting', async request => {
                         nextMetadata.shareBurnAfterReading = shareBurnAfterReading === true
                     }
 
-                    if (shareUnlockIn !== undefined || (nextMetadata.shareMode === 'timelock' && !nextMetadata.shareUnlockAt)) {
+                    const effectiveUnlockAt = sealUnlockAt !== undefined ? sealUnlockAt : shareUnlockAt
+                    if (effectiveUnlockAt !== undefined && effectiveUnlockAt !== null && effectiveUnlockAt !== '') {
+                        let targetSec = 0
+                        if (typeof effectiveUnlockAt === 'number' && effectiveUnlockAt > 0) {
+                            targetSec = effectiveUnlockAt > 1e11 ? Math.floor(effectiveUnlockAt / 1000) : effectiveUnlockAt
+                        } else if (typeof effectiveUnlockAt === 'string' && effectiveUnlockAt.trim()) {
+                            const parsed = dayjs(effectiveUnlockAt)
+                            if (parsed.isValid()) targetSec = parsed.unix()
+                        }
+                        if (targetSec > 0) {
+                            nextMetadata.shareUnlockAt = targetSec
+                            nextMetadata.shareUnlockIn = `${Math.max(1, Math.round((targetSec - dayjs().unix()) / 60))}m`
+                        }
+                    } else if (shareUnlockIn !== undefined || (nextMetadata.shareMode === 'timelock' && !nextMetadata.shareUnlockAt)) {
                         const effectiveUnlockIn = shareUnlockIn || nextMetadata.shareUnlockIn || '1d'
                         const unlockSec = parseExpirationSeconds(effectiveUnlockIn) || 86400
                         nextMetadata.shareUnlockIn = effectiveUnlockIn
                         nextMetadata.shareUnlockAt = dayjs().unix() + unlockSec
                     }
 
-                    if (sharePulseInterval !== undefined || (nextMetadata.shareMode === 'deadman' && !nextMetadata.sharePulseDueAt)) {
+                    const effectivePulseMins = sealPulseMinutes !== undefined ? sealPulseMinutes : sharePulseMinutes
+                    if (effectivePulseMins !== undefined && effectivePulseMins !== null && effectivePulseMins !== '') {
+                        const mins = parseInt(effectivePulseMins, 10)
+                        if (Number.isFinite(mins) && mins > 0) {
+                            const pulseSec = mins * 60
+                            nextMetadata.sharePulseInterval = pulseSec
+                            nextMetadata.sharePulseDueAt = dayjs().unix() + pulseSec
+                            nextMetadata.shareLastPulseAt = dayjs().unix()
+                            if (!nextMetadata.sharePulseToken) {
+                                nextMetadata.sharePulseToken = (await MD5(path + dayjs().unix() + 'pulse')).substring(0, 24)
+                            }
+                        }
+                    } else if (sharePulseInterval !== undefined || (nextMetadata.shareMode === 'deadman' && !nextMetadata.sharePulseDueAt)) {
                         const effectivePulse = sharePulseInterval || nextMetadata.sharePulseInterval || '7d'
                         const pulseSec = parseExpirationSeconds(effectivePulse) || 7 * 86400
                         nextMetadata.sharePulseInterval = pulseSec
@@ -4159,8 +4198,9 @@ router.post('/:path/setting', async request => {
                         }
                     }
 
-                    if (shareMaxViews !== undefined) {
-                        const maxV = parseInt(shareMaxViews, 10)
+                    const effectiveMaxViews = sealMaxViews !== undefined ? sealMaxViews : shareMaxViews
+                    if (effectiveMaxViews !== undefined) {
+                        const maxV = parseInt(effectiveMaxViews, 10)
                         if (Number.isFinite(maxV) && maxV > 0) nextMetadata.shareMaxViews = maxV
                     }
 

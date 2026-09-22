@@ -1,5 +1,29 @@
 # Changelog
 
+## [2026-09-22]
+
+- **🔒 888box 同源「Seal 存取控制」獨立正交架構重構 (Seal Access Control Architecture & Dedicated Modal UX)**：
+  - **資產存取控制核心哲學 (Orthogonal Access Control Philosophy)**：徹底將存取控制與內容保護職責解耦——「**密碼保護內容，Seal 控制何時或如何釋出**」。借鑒 888box (`box.david888.com/seal/`) 正交架構，無論筆記是否已設定編輯密碼或分享密碼，均可獨立加蓋或解除 Seal。建立或解除立即生效。
+  - **獨立 Seal 存取控制彈窗 (Dedicated Seal Modal)**：
+    - 將舊版範本彈窗升級為獨立的 Seal 存取控制工作台（`#vault-presets-modal` / `.seal-modal`），頂部即時展示當前筆記 Seal 狀態徽章（未設定、定時解鎖倒數中、閱後即焚觀看上限、亡者開關保活中）。
+    - 提供模式切換（`none` / `timelock` / `burn` / `deadman`），動態展開專屬參數控制面板：
+      - **定時解鎖 (Timelock)**：日期時間選擇器搭配快捷晶片按鈕（`+1h`、`+1d`、`+3d`、`+7d`、`+30d`），支援秒級與本地時間雙向同步。
+      - **閱後即焚 (Burn-After-Reading)**：支援自訂觀看次數上限（`maxViews`，預設 1 次），達成閾值即永久銷毀。
+      - **亡者開關 (Dead Man's Switch)**：保活心跳週期輸入（以分鐘計）搭配快捷晶片（`1h`、`1d`、`3d`、`7d`、`30d`），並內建「⚡ 立即簽到保活 (Pulse)」按鈕與即時上次心跳時間反饋。
+    - **10 款快速情境範本 (10 Quick Scenario Presets)**：在彈窗內提供 10 款快速情境卡片，點選即自動填入模式與最佳釋出參數，**嚴格不改寫、不注入任何筆記內文**（`#contents`）。
+    - **操作按鈕**：提供一鍵「解除 Seal (Remove Seal)」與「建立 Seal (Apply Seal)」，支援即時向後端 `/setting` 保存並更新狀態。
+  - **底部工具列與選單獨立入口 (Dedicated Toolbar Button & Menu Entry)**：
+    - 底欄工具列配置專屬「🔒 Seal」獨立按鈕（`.seal-toolbar-btn`），若當前筆記已加蓋 Seal 則點亮青色小圓點指示燈（`.seal-dot-indicator`）。
+    - 分享下拉選單中以單行展示當前狀態「🔒 Seal 存取控制：未設定 ➔」或「已啟用 ➔」，點擊即直達 Seal 彈窗。
+  - **訪客封印鎖定頁面視覺品牌重構 (Visitor Lock Page Branding & Live Countdown)**：
+    - 全面重構 `ShareTimeLocked`、`ShareDeadmanLocked`、`ShareBurned`、`ShareExpired` 頁面，採用深石板色高質感卡片，頂部顯著展示 `David888 Wiki / Seal` 與當前封印狀態徽章。
+    - 清楚標記受保護筆記標題、檔案大小與解封條件；定時解鎖提供即時跳動的日、時、分、秒倒數計時器（`#tl-days`, `#tl-hours`, `#tl-mins`, `#tl-secs`）與文字敘述（`#tl-sentence`）。
+  - **響應式排版與 20 款深淺主題適配 (RWD & Full Theme Compatibility)**：
+    - 電腦版採用兩欄網格、手機版 (`<= 640px`) 自動切換為單欄垂直佈局。
+    - 彈窗與卡片採用非透明實心材質，100% 適配 20 種 CSS 主題之深色與淺色模式，高對比度且消除文字重疊。
+  - **Codex 專案代碼審查核准 (Codex Code Review Approved)**：
+    - 通過獨立 Codex 子代理人在架構正交性、內文保護零覆蓋、雙語動態支援、RWD/CSS 與客戶端腳本跳脫等 5 大維度的嚴格審查與核准。
+
 ## [2026-09-21]
 
 - **🛡️ 安全情境範本庫深度修復：純安全發布參數配置、動態雙語切換與下拉選單原生互動修正 (Vault Presets Pure Security Config, Bilingual Switcher & Select Fix)**：

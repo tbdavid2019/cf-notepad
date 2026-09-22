@@ -5176,18 +5176,51 @@ ${getMarkdownCss()}
                 }
             }
         });
+        const toLocalDatetimeValue = (dateObj) => {
+            if (!(dateObj instanceof Date) || isNaN(dateObj.getTime())) return '';
+            const pad = (n) => String(n).padStart(2, '0');
+            const y = dateObj.getFullYear();
+            const m = pad(dateObj.getMonth() + 1);
+            const d = pad(dateObj.getDate());
+            const h = pad(dateObj.getHours());
+            const min = pad(dateObj.getMinutes());
+            const s = pad(dateObj.getSeconds());
+            return y + '-' + m + '-' + d + 'T' + h + ':' + min + ':' + s;
+        };
+
         const updateVaultModalLanguage = (targetLang) => {
             const isZh = targetLang === 'zh-TW';
             const modal = document.getElementById('vault-presets-modal');
             if (!modal) return;
             const titleSpan = modal.querySelector('.vault-presets-title [data-i18n-key="title"]');
-            if (titleSpan) titleSpan.textContent = isZh ? '安全情境範本庫' : 'Security Scenario Presets';
+            if (titleSpan) titleSpan.textContent = isZh ? 'Seal 存取控制' : 'Seal Access Control';
             const subtitle = modal.querySelector('.vault-presets-subtitle');
-            if (subtitle) subtitle.textContent = isZh ? '一鍵快速套用 10 大安全發布情境，自動配置保險庫模式、解鎖倒數、有效期限或心跳保活週期。' : 'One-click quick presets for 10 security scenarios. Automatically configures vault mode, unlock timer, expiration, or heartbeat pulse.';
+            if (subtitle) subtitle.textContent = isZh ? 'Seal 與密碼同屬資產存取控制：密碼保護內容，Seal 控制何時或如何釋出。Seal 建立或解除會立即生效。' : 'Seal and password are asset access controls: password protects content, Seal controls when and how it is released. Changes take effect immediately.';
             const tip = modal.querySelector('.vault-presets-tip');
-            if (tip) tip.textContent = isZh ? '💡 點選任一情境即可即時配置安全發布參數，不會影響現有筆記內容。' : '💡 Click any scenario to configure security sharing settings without affecting existing note content.';
+            if (tip) tip.textContent = isZh ? '💡 點選任一情境範本僅會自動填入 Seal 參數，不會影響現有筆記內容。' : '💡 Presets auto-fill Seal parameters only without affecting existing note content.';
             const cancelBtn = modal.querySelector('#vault-presets-cancel-btn');
             if (cancelBtn) cancelBtn.textContent = isZh ? '取消' : 'Cancel';
+            const modeLabel = modal.querySelector('[data-i18n-key="modeLabel"]');
+            if (modeLabel) modeLabel.textContent = isZh ? '模式' : 'Mode';
+            const unlockTimeLabel = modal.querySelector('[data-i18n-key="unlockTimeLabel"]');
+            if (unlockTimeLabel) unlockTimeLabel.textContent = isZh ? '解鎖時間' : 'Unlock Time';
+            const maxViewsLabel = modal.querySelector('[data-i18n-key="maxViewsLabel"]');
+            if (maxViewsLabel) maxViewsLabel.textContent = isZh ? '最大瀏覽次數' : 'Max Views';
+            const pulseIntervalLabel = modal.querySelector('[data-i18n-key="pulseIntervalLabel"]');
+            if (pulseIntervalLabel) pulseIntervalLabel.textContent = isZh ? 'Pulse 間隔 (分鐘)' : 'Pulse Interval (Minutes)';
+            const viewsUnit = modal.querySelector('[data-i18n-key="viewsUnit"]');
+            if (viewsUnit) viewsUnit.textContent = isZh ? '次 (預設 1 次)' : 'views (Default 1)';
+            const timelockHint = modal.querySelector('[data-i18n-key="timelockHint"]');
+            if (timelockHint) timelockHint.textContent = isZh ? '解鎖時間到達前訪客只能查看倒數封印頁面，時間到達時自動公開內容。' : 'Visitors see a countdown lock page until unlock time arrives, then note is released.';
+            const burnHint = modal.querySelector('[data-i18n-key="burnHint"]');
+            if (burnHint) burnHint.textContent = isZh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.';
+            const deadmanHint = modal.querySelector('[data-i18n-key="deadmanHint"]');
+            if (deadmanHint) deadmanHint.textContent = isZh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.';
+            const presetsSectionTitle = modal.querySelector('[data-i18n-key="presetsSectionTitle"]');
+            if (presetsSectionTitle) presetsSectionTitle.textContent = isZh ? '⚡ 快速情境範本 (點選自動填入 Seal 參數)' : '⚡ Quick Scenario Presets (Auto-fills parameters)';
+            const removeBtn = modal.querySelector('#seal-remove-btn');
+            if (removeBtn) removeBtn.textContent = isZh ? '解除 Seal' : 'Remove Seal';
+
             modal.querySelectorAll('.vault-pref-lang-btn').forEach(btn => {
                 const active = btn.getAttribute('data-vault-lang') === targetLang;
                 btn.classList.toggle('is-active', active);
@@ -5201,7 +5234,116 @@ ${getMarkdownCss()}
                 if (desc) desc.textContent = (isZh ? card.getAttribute('data-desc-zh') : card.getAttribute('data-desc-en')) || desc.textContent;
                 if (badge) badge.textContent = (isZh ? card.getAttribute('data-badge-zh') : card.getAttribute('data-badge-en')) || badge.textContent;
             });
+            syncSealModalState();
         };
+
+        const syncSealModalState = () => {
+            const modal = document.getElementById('vault-presets-modal');
+            const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
+            const modeSelect = modal ? modal.querySelector('#seal-mode-select') : document.getElementById('seal-mode-select');
+            const badge = modal ? modal.querySelector('#seal-status-badge') : document.getElementById('seal-status-badge');
+            const removeBtn = modal ? modal.querySelector('#seal-remove-btn') : document.getElementById('seal-remove-btn');
+            const saveBtn = modal ? modal.querySelector('#seal-save-btn') : document.getElementById('seal-save-btn');
+            const dotIndicator = document.getElementById('seal-dot-indicator');
+            const dotIndicatorBlock = document.getElementById('seal-dot-indicator-block');
+            const menuStatusPill = document.getElementById('share-menu-seal-status');
+
+            const currentMode = APP_STATE.sealMode || (APP_STATE.shareBurnAfterReading ? 'burn' : (APP_STATE.shareUnlockAt ? 'timelock' : (APP_STATE.sharePulseDueAt ? 'deadman' : (APP_STATE.shareMode !== 'standard' ? APP_STATE.shareMode : 'none')))) || 'none';
+            const isSealed = currentMode && currentMode !== 'none' && currentMode !== 'standard';
+
+            if (dotIndicator) dotIndicator.style.display = isSealed ? 'block' : 'none';
+            if (dotIndicatorBlock) dotIndicatorBlock.style.display = isSealed ? 'block' : 'none';
+            if (menuStatusPill) {
+                menuStatusPill.classList.toggle('is-sealed', isSealed);
+                menuStatusPill.textContent = isSealed ? (isZh ? '已封印 ➔' : 'Sealed ➔') : (isZh ? '未設定 ➔' : 'Unsealed ➔');
+            }
+
+            if (!modal) return;
+
+            if (modeSelect && (!modeSelect.value || modeSelect.value === 'none' || modeSelect.value === currentMode)) {
+                modeSelect.value = isSealed ? currentMode : 'none';
+            }
+
+            const activeMode = modeSelect ? modeSelect.value : currentMode;
+
+            // Panel visibility
+            const panelTimelock = modal.querySelector('#seal-param-panel-timelock');
+            const panelBurn = modal.querySelector('#seal-param-panel-burn');
+            const panelDeadman = modal.querySelector('#seal-param-panel-deadman');
+            if (panelTimelock) panelTimelock.style.display = activeMode === 'timelock' ? 'block' : 'none';
+            if (panelBurn) panelBurn.style.display = activeMode === 'burn' ? 'block' : 'none';
+            if (panelDeadman) panelDeadman.style.display = activeMode === 'deadman' ? 'block' : 'none';
+
+            // Status badge text
+            if (badge) {
+                badge.classList.remove('badge-unsealed', 'badge-sealed');
+                if (isSealed) {
+                    badge.classList.add('badge-sealed');
+                    let modeText = isZh ? '已封印' : 'Sealed';
+                    if (currentMode === 'timelock') modeText += isZh ? ' (定時解鎖)' : ' (Time Lock)';
+                    else if (currentMode === 'burn') modeText += isZh ? ' (閱後即焚)' : ' (Burn After Read)';
+                    else if (currentMode === 'deadman') modeText += isZh ? " (Dead Man's Switch)" : " (Dead Man's Switch)";
+                    badge.textContent = modeText;
+                } else {
+                    badge.classList.add('badge-unsealed');
+                    badge.textContent = isZh ? '未設定' : 'Unsealed';
+                }
+            }
+
+            if (removeBtn) {
+                removeBtn.style.display = isSealed ? 'inline-flex' : 'none';
+            }
+            if (saveBtn) {
+                saveBtn.textContent = isSealed ? (isZh ? '更新 Seal' : 'Update Seal') : (isZh ? '建立 Seal' : 'Create Seal');
+            }
+
+            // Populate form values if empty
+            if (activeMode === 'timelock') {
+                const unlockInput = modal.querySelector('#seal-unlock-at');
+                if (unlockInput && !unlockInput.value) {
+                    if (APP_STATE.shareUnlockAt) {
+                        unlockInput.value = toLocalDatetimeValue(new Date(APP_STATE.shareUnlockAt * 1000));
+                    } else {
+                        unlockInput.value = toLocalDatetimeValue(new Date(Date.now() + 86400 * 1000));
+                    }
+                }
+            } else if (activeMode === 'burn') {
+                const maxViewsInput = modal.querySelector('#seal-max-views');
+                if (maxViewsInput && !maxViewsInput.value) {
+                    maxViewsInput.value = APP_STATE.shareMaxViews || 1;
+                }
+            } else if (activeMode === 'deadman') {
+                const pulseInput = modal.querySelector('#seal-pulse-minutes');
+                if (pulseInput && (!pulseInput.value || pulseInput.value === '10080')) {
+                    const mins = Math.round((APP_STATE.sharePulseInterval || 604800) / 60);
+                    pulseInput.value = mins || 10080;
+                }
+                const liveBox = modal.querySelector('#seal-deadman-live-box');
+                const liveText = modal.querySelector('#seal-deadman-live-text');
+                if (liveBox && liveText) {
+                    if (APP_STATE.sharePulseDueAt) {
+                        liveBox.style.display = 'flex';
+                        const diffSec = Math.max(0, APP_STATE.sharePulseDueAt - Math.floor(Date.now() / 1000));
+                        const d = Math.floor(diffSec / 86400);
+                        const h = Math.floor((diffSec % 86400) / 3600);
+                        const m = Math.floor((diffSec % 3600) / 60);
+                        liveText.textContent = isZh
+                            ? ('保活有效中：剩餘 ' + d + ' 天 ' + h + ' 小時 ' + m + ' 分')
+                            : ('Active heartbeat: ' + d + 'd ' + h + 'h ' + m + 'm remaining');
+                    } else {
+                        liveBox.style.display = 'none';
+                    }
+                }
+            }
+        };
+
+        setTimeout(syncSealModalState, 50);
+
+        document.addEventListener('change', (e) => {
+            if (e.target && e.target.id === 'seal-mode-select') {
+                syncSealModalState();
+            }
+        });
 
         document.addEventListener('click', async (e) => {
             const vaultLangBtn = e.target.closest('.vault-pref-lang-btn');
@@ -5209,6 +5351,146 @@ ${getMarkdownCss()}
                 e.preventDefault();
                 const targetLang = vaultLangBtn.getAttribute('data-vault-lang') || 'zh-TW';
                 updateVaultModalLanguage(targetLang);
+                return;
+            }
+            const timeChip = e.target.closest('[data-time-add]');
+            if (timeChip) {
+                e.preventDefault();
+                const addStr = timeChip.getAttribute('data-time-add');
+                let addMs = 3600 * 1000;
+                if (addStr === '1h') addMs = 3600 * 1000;
+                else if (addStr === '1d') addMs = 86400 * 1000;
+                else if (addStr === '3d') addMs = 3 * 86400 * 1000;
+                else if (addStr === '7d') addMs = 7 * 86400 * 1000;
+                else if (addStr === '30d') addMs = 30 * 86400 * 1000;
+                const targetDate = new Date(Date.now() + addMs);
+                const input = document.getElementById('seal-unlock-at');
+                if (input) input.value = toLocalDatetimeValue(targetDate);
+                return;
+            }
+            const pulseChip = e.target.closest('[data-pulse-mins]');
+            if (pulseChip) {
+                e.preventDefault();
+                const mins = pulseChip.getAttribute('data-pulse-mins');
+                const input = document.getElementById('seal-pulse-minutes');
+                if (input && mins) input.value = mins;
+                return;
+            }
+            const modalPulseBtn = e.target.closest('#seal-modal-pulse-btn');
+            if (modalPulseBtn) {
+                e.preventDefault();
+                const isZh = APP_STATE.lang === 'zh-TW';
+                if (!APP_STATE.shareId) {
+                    window.showToast?.(isZh ? '筆記尚未發布，無法發送心跳' : 'Note not yet published');
+                    return;
+                }
+                try {
+                    modalPulseBtn.disabled = true;
+                    await fetchJson('/api/shares/' + encodeURIComponent(APP_STATE.shareId) + '/pulse', { method: 'POST' });
+                    APP_STATE.sharePulseDueAt = Math.floor(Date.now() / 1000) + (APP_STATE.sharePulseInterval || 604800);
+                    syncSealModalState();
+                    window.showToast?.(isZh ? '❤️ Pulse 心跳發送成功！' : '❤️ Pulse heartbeat sent!');
+                } catch (err) {
+                    errHandle(err);
+                } finally {
+                    modalPulseBtn.disabled = false;
+                }
+                return;
+            }
+            const saveSealBtn = e.target.closest('#seal-save-btn');
+            if (saveSealBtn) {
+                e.preventDefault();
+                const modal = document.getElementById('vault-presets-modal');
+                const mode = document.getElementById('seal-mode-select')?.value || 'none';
+                const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
+
+                const settingPayload = {};
+                if (mode === 'none') {
+                    settingPayload.removeSeal = true;
+                    settingPayload.sealMode = 'none';
+                    settingPayload.shareMode = 'standard';
+                } else if (mode === 'timelock') {
+                    const unlockVal = document.getElementById('seal-unlock-at')?.value;
+                    if (!unlockVal) {
+                        window.showToast?.(isZh ? '請選擇解鎖時間' : 'Please specify an unlock time');
+                        return;
+                    }
+                    settingPayload.sealMode = 'timelock';
+                    settingPayload.shareMode = 'timelock';
+                    settingPayload.sealUnlockAt = unlockVal;
+                } else if (mode === 'burn') {
+                    const views = parseInt(document.getElementById('seal-max-views')?.value, 10) || 1;
+                    settingPayload.sealMode = 'burn';
+                    settingPayload.shareMode = 'burn';
+                    settingPayload.sealMaxViews = views;
+                    settingPayload.shareBurnAfterReading = true;
+                } else if (mode === 'deadman') {
+                    const mins = parseInt(document.getElementById('seal-pulse-minutes')?.value, 10) || 10080;
+                    settingPayload.sealMode = 'deadman';
+                    settingPayload.shareMode = 'deadman';
+                    settingPayload.sealPulseMinutes = mins;
+                }
+
+                try {
+                    saveSealBtn.disabled = true;
+                    await persistSetting(settingPayload);
+                    if (mode === 'none') {
+                        APP_STATE.sealMode = 'none';
+                        APP_STATE.shareMode = 'standard';
+                        APP_STATE.shareBurnAfterReading = false;
+                        APP_STATE.shareUnlockAt = null;
+                        APP_STATE.sharePulseDueAt = null;
+                        delete APP_STATE.shareMaxViews;
+                    } else if (mode === 'timelock') {
+                        APP_STATE.sealMode = 'timelock';
+                        APP_STATE.shareMode = 'timelock';
+                        APP_STATE.shareBurnAfterReading = false;
+                        const parsedSec = Math.floor(new Date(document.getElementById('seal-unlock-at')?.value).getTime() / 1000);
+                        if (parsedSec > 0) APP_STATE.shareUnlockAt = parsedSec;
+                    } else if (mode === 'burn') {
+                        APP_STATE.sealMode = 'burn';
+                        APP_STATE.shareMode = 'burn';
+                        APP_STATE.shareBurnAfterReading = true;
+                        APP_STATE.shareMaxViews = settingPayload.sealMaxViews;
+                    } else if (mode === 'deadman') {
+                        APP_STATE.sealMode = 'deadman';
+                        APP_STATE.shareMode = 'deadman';
+                        APP_STATE.shareBurnAfterReading = false;
+                        APP_STATE.sharePulseInterval = (settingPayload.sealPulseMinutes || 10080) * 60;
+                        APP_STATE.sharePulseDueAt = Math.floor(Date.now() / 1000) + APP_STATE.sharePulseInterval;
+                    }
+                    syncSealModalState();
+                    if (modal) closeModal(modal);
+                    window.showToast?.(isZh ? '已成功儲存 Seal 存取控制！' : 'Seal access control saved successfully!');
+                } catch (err) {
+                    errHandle(err);
+                } finally {
+                    saveSealBtn.disabled = false;
+                }
+                return;
+            }
+            const removeSealBtn = e.target.closest('#seal-remove-btn');
+            if (removeSealBtn) {
+                e.preventDefault();
+                const modal = document.getElementById('vault-presets-modal');
+                const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
+                try {
+                    removeSealBtn.disabled = true;
+                    await persistSetting({ removeSeal: true, sealMode: 'none', shareMode: 'standard' });
+                    APP_STATE.sealMode = 'none';
+                    APP_STATE.shareMode = 'standard';
+                    APP_STATE.shareBurnAfterReading = false;
+                    APP_STATE.shareUnlockAt = null;
+                    APP_STATE.sharePulseDueAt = null;
+                    delete APP_STATE.shareMaxViews;
+                    syncSealModalState();
+                    if (modal) closeModal(modal);
+                    window.showToast?.(isZh ? '已解除 Seal 存取控制' : 'Seal access control removed');
+                } catch (err) {
+                    errHandle(err);
+                } finally {
+                    removeSealBtn.disabled = false;
+                }
                 return;
             }
             const openPresetsBtn = e.target.closest('#vault-presets-toolbar-btn, .vault-presets-toolbar-btn, #open-vault-presets-modal-btn, .open-vault-presets-modal-btn');
@@ -5219,7 +5501,8 @@ ${getMarkdownCss()}
                     if (typeof updateVaultModalLanguage === 'function') {
                         updateVaultModalLanguage(APP_STATE.lang || 'zh-TW');
                     }
-                    const firstOption = modal.querySelector('.vault-preset-btn');
+                    syncSealModalState();
+                    const firstOption = modal.querySelector('.seal-mode-select') || modal.querySelector('.vault-preset-btn');
                     openModal(modal, { initialFocus: firstOption || openPresetsBtn, trigger: openPresetsBtn });
                 }
                 return;
@@ -5229,22 +5512,43 @@ ${getMarkdownCss()}
                 e.preventDefault();
                 const presetId = presetBtn.getAttribute('data-preset-id');
                 const mode = presetBtn.getAttribute('data-mode') || 'standard';
-                const expires = presetBtn.getAttribute('data-expires') || '';
                 const unlock = presetBtn.getAttribute('data-unlock') || '';
                 const pulse = presetBtn.getAttribute('data-pulse') || '';
 
                 document.querySelectorAll('.vault-preset-btn').forEach(b => b.classList.remove('active'));
                 presetBtn.classList.add('active');
 
+                const modeSelect = document.getElementById('seal-mode-select');
+                if (modeSelect) {
+                    modeSelect.value = (mode === 'standard' ? 'none' : mode);
+                }
+
+                if (mode === 'timelock') {
+                    let unlockMs = 86400 * 1000;
+                    if (unlock === '1h') unlockMs = 3600 * 1000;
+                    else if (unlock === '1d') unlockMs = 86400 * 1000;
+                    else if (unlock === '3d') unlockMs = 3 * 86400 * 1000;
+                    else if (unlock === '7d') unlockMs = 7 * 86400 * 1000;
+                    else if (unlock === '30d') unlockMs = 30 * 86400 * 1000;
+                    const unlockInput = document.getElementById('seal-unlock-at');
+                    if (unlockInput) unlockInput.value = toLocalDatetimeValue(new Date(Date.now() + unlockMs));
+                } else if (mode === 'burn') {
+                    const maxViewsInput = document.getElementById('seal-max-views');
+                    if (maxViewsInput) maxViewsInput.value = 1;
+                } else if (mode === 'deadman') {
+                    let mins = 10080;
+                    if (pulse === '3d') mins = 4320;
+                    else if (pulse === '7d') mins = 10080;
+                    else if (pulse === '14d') mins = 20160;
+                    else if (pulse === '30d') mins = 43200;
+                    const pulseInput = document.getElementById('seal-pulse-minutes');
+                    if (pulseInput) pulseInput.value = mins;
+                }
+
                 // 1. Update BOTH published and draft dropdown selects so parameters are consistently applied
                 document.querySelectorAll('#share-vault-mode-select, #share-vault-mode-select-draft').forEach(sel => {
                     sel.value = mode;
                 });
-                if (expires) {
-                    document.querySelectorAll('#share-expires-select, #share-expires-select-draft').forEach(sel => {
-                        sel.value = expires;
-                    });
-                }
                 if (unlock) {
                     document.querySelectorAll('#share-unlock-select, #share-unlock-select-draft').forEach(sel => {
                         sel.value = unlock;
@@ -5268,25 +5572,17 @@ ${getMarkdownCss()}
                 // 3. Synchronize UI panels for both published and draft views
                 syncVaultModeUI(mode, false);
                 syncVaultModeUI(mode, true);
+                syncSealModalState();
 
-                // 4. Update APP_STATE
-                APP_STATE.shareMode = mode;
-                APP_STATE.shareBurnAfterReading = isBurn;
-                if (expires) APP_STATE.shareExpiresIn = expires;
-                if (unlock) APP_STATE.shareUnlockIn = unlock;
-                if (pulse) APP_STATE.sharePulseInterval = pulse;
-
-                // 5. If note is already published, persist settings to server immediately
+                // 4. If note is already published, persist settings to server immediately
                 const isPublished = APP_STATE.isPublished === true && Boolean(APP_STATE.shareId);
                 if (isPublished) {
                     const settingPayload = {
                         shareMode: mode,
                         shareBurnAfterReading: isBurn,
                     };
-                    if (expires) settingPayload.shareExpiresIn = expires;
                     if (unlock) settingPayload.shareUnlockIn = unlock;
                     if (pulse) settingPayload.sharePulseInterval = pulse;
-
                     try {
                         await persistSetting(settingPayload);
                     } catch (err) {
@@ -5294,17 +5590,14 @@ ${getMarkdownCss()}
                     }
                 }
 
-                // Close presets modal
-                const vaultModal = document.getElementById('vault-presets-modal');
-                if (vaultModal) closeModal(vaultModal);
-
-                // Bilingual Toast Feedback
-                const isZh = APP_STATE.lang === 'zh-TW';
+                // 5. Bilingual Toast Feedback - parameter filled without modifying note content
+                const modal = document.getElementById('vault-presets-modal');
+                const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
                 const label = (isZh ? presetBtn.getAttribute('data-title-zh') : presetBtn.getAttribute('data-title-en'))
                     || presetBtn.querySelector('.preset-card-title')?.textContent?.trim()
                     || presetBtn.querySelector('.preset-label')?.textContent?.trim()
                     || presetId;
-                const toastPrefix = getI18n('quickPresetApplied') || (isZh ? '已套用情境範本：' : 'Preset applied: ');
+                const toastPrefix = getI18n('quickPresetApplied') || (isZh ? '已帶入情境範本參數：' : 'Preset parameters loaded: ');
                 window.showToast?.(toastPrefix + label);
                 return;
             }

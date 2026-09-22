@@ -553,5 +553,49 @@ test('templates/common.js & base.js: VAULT_PRESETS_MODAL provides bilingual togg
     assert.match(baseSource, /vault-pref-lang-btn/)
 })
 
+test('templates/common.js & base.js & index.js: Seal Access Control integrates orthogonal asset release controls', async () => {
+    const { VAULT_PRESETS_MODAL } = await import('../src/templates/common.js')
+    const zhModal = VAULT_PRESETS_MODAL('zh-TW')
+    const enModal = VAULT_PRESETS_MODAL('en-US')
+
+    // 1. Philosophy subtitle matches 888box definition
+    assert.match(zhModal, /Seal 與密碼同屬資產存取控制：密碼保護內容，Seal 控制何時或如何釋出/)
+    assert.match(enModal, /Seal and password are asset access controls: password protects content, Seal controls when and how it is released/)
+
+    // 2. Seal form elements
+    assert.match(zhModal, /id="seal-mode-select"/)
+    assert.match(zhModal, /id="seal-unlock-at"/)
+    assert.match(zhModal, /id="seal-max-views"/)
+    assert.match(zhModal, /id="seal-pulse-minutes"/)
+    assert.match(zhModal, /id="seal-status-badge"/)
+    assert.match(zhModal, /id="seal-save-btn"/)
+    assert.match(zhModal, /id="seal-remove-btn"/)
+
+    // 3. Quick chips for time and pulse
+    assert.match(zhModal, /data-time-add="1h"/)
+    assert.match(zhModal, /data-time-add="7d"/)
+    assert.match(zhModal, /data-pulse-mins="10080"/)
+
+    // 4. Setting endpoint handles seal attributes and removeSeal
+    const fs = await import('fs')
+    const indexSource = fs.readFileSync('src/index.js', 'utf-8')
+    assert.match(indexSource, /removeSeal/)
+    assert.match(indexSource, /sealMode/)
+    assert.match(indexSource, /sealUnlockAt/)
+    assert.match(indexSource, /sealMaxViews/)
+    assert.match(indexSource, /sealPulseMinutes/)
+
+    // 5. Visitor page renders Seal branding
+    const { ShareTimeLocked, ShareDeadmanLocked } = await import('../src/templates/pages.js')
+    const lockedPage = ShareTimeLocked({ lang: 'zh-TW', title: 'Test Note', ext: { shareUnlockAt: 1800000000 } })
+    assert.match(lockedPage, /David888 Wiki \/ Seal/)
+    assert.match(lockedPage, /Seal 尚未解鎖/)
+    assert.match(lockedPage, /class="seal-visitor-info-box"/)
+
+    const deadmanPage = ShareDeadmanLocked({ lang: 'zh-TW', title: 'Test Note', ext: { sharePulseDueAt: 1800000000 } })
+    assert.match(deadmanPage, /David888 Wiki \/ Seal/)
+    assert.match(deadmanPage, /Dead Man/)
+})
+
 
 

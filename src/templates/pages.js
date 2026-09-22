@@ -2,6 +2,7 @@
  * src/templates/pages.js
  * NeedPasswd and Page404 template functions
  */
+import dayjs from 'dayjs'
 import { SUPPORTED_LANG } from '../constant.js'
 import { HTML } from './base.js'
 import { EDITOR_PREFERENCE_MODAL } from './common.js'
@@ -21,14 +22,26 @@ export const ShareExpired = data => {
     const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
     const isAuthor = data?.ext?.isAuthor === true
     const editUrl = data?.path ? `/${data.path}` : '/'
+    const noteIdentifier = data?.title || data?.path || data?.shareId || (lang === 'zh-TW' ? '機密筆記' : 'Confidential Note')
     return HTML({
         ...data,
         title: t.shareExpiredTitle || 'Share Expired',
         tips: `
             <div class="share-status-page share-expired-page">
+                <div class="seal-visitor-brand">David888 Wiki / Seal</div>
                 <div class="share-status-icon">⏳</div>
                 <h2>${escapeHtml(t.shareExpiredTitle || '分享已過期')}</h2>
                 <p class="share-status-desc">${escapeHtml(t.shareExpiredDesc || '此分享連結的有效期限已截止，無法再進行存取。')}</p>
+                <div class="seal-visitor-info-box">
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '筆記' : 'Note'}</span>
+                        <span class="seal-info-value">#${escapeHtml(noteIdentifier)}</span>
+                    </div>
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '狀態' : 'Status'}</span>
+                        <span class="seal-info-value">${lang === 'zh-TW' ? '已過期 (Expired)' : 'Expired'}</span>
+                    </div>
+                </div>
                 ${isAuthor ? `
                     <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，可返回編輯頁面重新發布分享連結。' : 'You are the author of this note. You can return to the editor to republish.'}</p>
                     <div class="share-status-actions">
@@ -36,7 +49,7 @@ export const ShareExpired = data => {
                     </div>
                 ` : `
                     <div class="share-status-actions">
-                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回 David888 Wiki' : 'Return to David888 Wiki'}</a>
                     </div>
                 `}
             </div>
@@ -49,14 +62,26 @@ export const ShareBurned = data => {
     const t = SUPPORTED_LANG[lang] || SUPPORTED_LANG['zh-TW']
     const isAuthor = data?.ext?.isAuthor === true
     const editUrl = data?.path ? `/${data.path}` : '/'
+    const noteIdentifier = data?.title || data?.path || data?.shareId || (lang === 'zh-TW' ? '機密筆記' : 'Confidential Note')
     return HTML({
         ...data,
         title: t.shareBurnedTitle || 'Share Destroyed',
         tips: `
             <div class="share-status-page share-burned-page">
+                <div class="seal-visitor-brand">David888 Wiki / Seal</div>
                 <div class="share-status-icon">🔥</div>
-                <h2>${escapeHtml(t.shareBurnedTitle || '分享已銷毀')}</h2>
-                <p class="share-status-desc">${escapeHtml(t.shareBurnedDesc || '此分享為「閱後即焚」機密內容，已被他人讀取並永久銷毀。')}</p>
+                <h2>${escapeHtml(t.shareBurnedTitle || (lang === 'zh-TW' ? '分享已銷毀' : 'Share Destroyed'))}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareBurnedDesc || (lang === 'zh-TW' ? '此分享為「閱後即焚」機密內容，已被他人讀取並永久銷毀。' : 'This share was set to burn after reading and has been permanently destroyed.'))}</p>
+                <div class="seal-visitor-info-box">
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '筆記' : 'Note'}</span>
+                        <span class="seal-info-value">#${escapeHtml(noteIdentifier)}</span>
+                    </div>
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '狀態' : 'Status'}</span>
+                        <span class="seal-info-value">${lang === 'zh-TW' ? '閱後即焚已銷毀' : 'Burned & Destroyed'}</span>
+                    </div>
+                </div>
                 ${isAuthor ? `
                     <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，該分享連結已按閱後即焚規則自動註銷，原始筆記仍安全保存在您的 Wiki 中。' : 'You are the author of this note. The share link was destroyed per burn-after-reading rules. The original note remains safe in your Wiki.'}</p>
                     <div class="share-status-actions">
@@ -64,7 +89,7 @@ export const ShareBurned = data => {
                     </div>
                 ` : `
                     <div class="share-status-actions">
-                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回 David888 Wiki' : 'Return to David888 Wiki'}</a>
                     </div>
                 `}
             </div>
@@ -78,14 +103,35 @@ export const ShareTimeLocked = data => {
     const isAuthor = data?.ext?.isAuthor === true
     const unlockAt = Number(data?.ext?.shareUnlockAt) || 0
     const editUrl = data?.path ? `/${data.path}` : '/'
+    const formattedUnlockTime = unlockAt ? dayjs(unlockAt * 1000).format('YYYY-MM-DD HH:mm:ss') : ''
+    const noteIdentifier = data?.title || data?.path || data?.shareId || (lang === 'zh-TW' ? '機密筆記' : 'Confidential Note')
     return HTML({
         ...data,
         title: t.shareTimeLockedTitle || 'Time-Locked Capsule',
         tips: `
             <div class="share-status-page share-timelock-page">
-                <div class="share-status-icon">⏳</div>
-                <h2>${escapeHtml(t.shareTimeLockedTitle || '時間膠囊封印中')}</h2>
-                <p class="share-status-desc">${escapeHtml(t.shareTimeLockedDesc || '此筆記已封印鎖定，將於預定解鎖時間到達後自動公開。')}</p>
+                <div class="seal-visitor-brand">David888 Wiki / Seal</div>
+                <div class="share-status-icon">🔒</div>
+                <h2>${escapeHtml(lang === 'zh-TW' ? 'Seal 尚未解鎖' : 'Seal Not Yet Released')}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareTimeLockedDesc || (lang === 'zh-TW' ? '時間膠囊封印中：此筆記已封印鎖定，將於預定解鎖時間到達後自動公開。' : 'Time capsule sealed: this note is locked and will automatically unlock at scheduled time.'))}</p>
+
+                <div class="seal-visitor-info-box">
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '筆記' : 'Note'}</span>
+                        <span class="seal-info-value">#${escapeHtml(noteIdentifier)}</span>
+                    </div>
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '模式' : 'Mode'}</span>
+                        <span class="seal-info-value">${lang === 'zh-TW' ? '定時解鎖 (Time Lock)' : 'Time Lock'}</span>
+                    </div>
+                    ${formattedUnlockTime ? `
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '解鎖時間' : 'Unlock Time'}</span>
+                        <span class="seal-info-value">${escapeHtml(formattedUnlockTime)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
                 <div class="share-countdown-wrapper" data-target-timestamp="${unlockAt}">
                     <div class="countdown-card">
                         <span class="countdown-val" id="tl-days">00</span>
@@ -104,6 +150,7 @@ export const ShareTimeLocked = data => {
                         <span class="countdown-lbl">${lang === 'zh-TW' ? '秒' : 'Secs'}</span>
                     </div>
                 </div>
+                <div class="seal-countdown-sentence" id="tl-sentence"></div>
                 <div class="share-countdown-notice">${lang === 'zh-TW' ? '倒數歸零時頁面將自動重整解鎖' : 'This page will automatically refresh and reveal when time is reached.'}</div>
                 ${isAuthor ? `
                     <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，可隨時返回編輯頁面調整解鎖時間或取消封印。' : 'You are the author of this note. You can return to editor to adjust unlock time.'}</p>
@@ -112,7 +159,7 @@ export const ShareTimeLocked = data => {
                     </div>
                 ` : `
                     <div class="share-status-actions">
-                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回 David888 Wiki' : 'Return to David888 Wiki'}</a>
                     </div>
                 `}
             </div>
@@ -120,6 +167,7 @@ export const ShareTimeLocked = data => {
                 (function() {
                     var wrap = document.querySelector('.share-countdown-wrapper');
                     var target = wrap ? Number(wrap.getAttribute('data-target-timestamp')) : 0;
+                    var isZh = ${lang === 'zh-TW' ? 'true' : 'false'};
                     function update() {
                         var now = Math.floor(Date.now() / 1000);
                         var diff = target - now;
@@ -135,10 +183,16 @@ export const ShareTimeLocked = data => {
                         var eh = document.getElementById('tl-hours');
                         var em = document.getElementById('tl-mins');
                         var es = document.getElementById('tl-secs');
+                        var sent = document.getElementById('tl-sentence');
                         if (ed) ed.textContent = d < 10 ? '0' + d : d;
                         if (eh) eh.textContent = h < 10 ? '0' + h : h;
                         if (em) em.textContent = m < 10 ? '0' + m : m;
                         if (es) es.textContent = s < 10 ? '0' + s : s;
+                        if (sent) {
+                            sent.textContent = isZh
+                                ? (d + ' 天 ' + h + ' 小時 ' + m + ' 分 ' + s + ' 秒')
+                                : (d + 'd ' + h + 'h ' + m + 'm ' + s + 's');
+                        }
                     }
                     update();
                     setInterval(update, 1000);
@@ -155,14 +209,35 @@ export const ShareDeadmanLocked = data => {
     const pulseDueAt = Number(data?.ext?.sharePulseDueAt) || 0
     const editUrl = data?.path ? `/${data.path}` : '/'
     const shareId = data?.shareId
+    const formattedPulseDue = pulseDueAt ? dayjs(pulseDueAt * 1000).format('YYYY-MM-DD HH:mm:ss') : ''
+    const noteIdentifier = data?.title || data?.path || data?.shareId || (lang === 'zh-TW' ? '機密筆記' : 'Confidential Note')
     return HTML({
         ...data,
         title: t.shareDeadmanTitle || "Dead Man's Switch Active",
         tips: `
             <div class="share-status-page share-deadman-page">
+                <div class="seal-visitor-brand">David888 Wiki / Seal</div>
                 <div class="share-status-icon">🛡️</div>
-                <h2>${escapeHtml(t.shareDeadmanTitle || '亡者開關保活中')}</h2>
-                <p class="share-status-desc">${escapeHtml(t.shareDeadmanDesc || '作者心跳簽到正常，保險庫持續處於機密鎖定狀態。若作者失聯超期未簽到，將自動對外公開。')}</p>
+                <h2>${escapeHtml(lang === 'zh-TW' ? "Dead Man's Switch 保活中" : "Dead Man's Switch Active")}</h2>
+                <p class="share-status-desc">${escapeHtml(t.shareDeadmanDesc || (lang === 'zh-TW' ? '亡者開關保活中：作者心跳簽到正常，保險庫持續處於機密鎖定狀態。若作者失聯超期未簽到，將自動對外公開。' : 'Dead Man heartbeat active. Note remains sealed until author misses check-in.'))}</p>
+
+                <div class="seal-visitor-info-box">
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '筆記' : 'Note'}</span>
+                        <span class="seal-info-value">#${escapeHtml(noteIdentifier)}</span>
+                    </div>
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '模式' : 'Mode'}</span>
+                        <span class="seal-info-value">${lang === 'zh-TW' ? "Dead Man's Switch (亡者開關)" : "Dead Man's Switch"}</span>
+                    </div>
+                    ${formattedPulseDue ? `
+                    <div class="seal-info-row">
+                        <span class="seal-info-label">${lang === 'zh-TW' ? '下次簽到截止' : 'Pulse Deadline'}</span>
+                        <span class="seal-info-value">${escapeHtml(formattedPulseDue)}</span>
+                    </div>
+                    ` : ''}
+                </div>
+
                 <div class="share-countdown-wrapper" data-target-timestamp="${pulseDueAt}">
                     <div class="countdown-card">
                         <span class="countdown-val" id="dm-days">00</span>
@@ -181,6 +256,7 @@ export const ShareDeadmanLocked = data => {
                         <span class="countdown-lbl">${lang === 'zh-TW' ? '秒' : 'Secs'}</span>
                     </div>
                 </div>
+                <div class="seal-countdown-sentence" id="dm-sentence"></div>
                 <div class="share-countdown-notice">${lang === 'zh-TW' ? '距離下次簽到截止尚有如上時間；若逾期未簽到，內容將自動解鎖' : 'Next check-in deadline shown above. If the author misses check-in, content unlocks.'}</div>
                 ${isAuthor ? `
                     <p class="share-status-author-hint">${lang === 'zh-TW' ? '您是此筆記的作者，保活狀態一切正常。您可點擊立即簽到以延長截止時間。' : 'You are the author. Heartbeat active. You can pulse now to extend deadline.'}</p>
@@ -190,7 +266,7 @@ export const ShareDeadmanLocked = data => {
                     </div>
                 ` : `
                     <div class="share-status-actions">
-                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回首頁' : 'Return Home'}</a>
+                        <a href="/" class="opt-button">${lang === 'zh-TW' ? '返回 David888 Wiki' : 'Return to David888 Wiki'}</a>
                     </div>
                 `}
             </div>
@@ -198,6 +274,7 @@ export const ShareDeadmanLocked = data => {
                 (function() {
                     var wrap = document.querySelector('.share-countdown-wrapper');
                     var target = wrap ? Number(wrap.getAttribute('data-target-timestamp')) : 0;
+                    var isZh = ${lang === 'zh-TW' ? 'true' : 'false'};
                     function update() {
                         var now = Math.floor(Date.now() / 1000);
                         var diff = target - now;
@@ -213,10 +290,16 @@ export const ShareDeadmanLocked = data => {
                         var eh = document.getElementById('dm-hours');
                         var em = document.getElementById('dm-mins');
                         var es = document.getElementById('dm-secs');
+                        var sent = document.getElementById('dm-sentence');
                         if (ed) ed.textContent = d < 10 ? '0' + d : d;
                         if (eh) eh.textContent = h < 10 ? '0' + h : h;
                         if (em) em.textContent = m < 10 ? '0' + m : m;
                         if (es) es.textContent = s < 10 ? '0' + s : s;
+                        if (sent) {
+                            sent.textContent = isZh
+                                ? (d + ' 天 ' + h + ' 小時 ' + m + ' 分 ' + s + ' 秒')
+                                : (d + 'd ' + h + 'h ' + m + 'm ' + s + 's');
+                        }
                     }
                     update();
                     setInterval(update, 1000);

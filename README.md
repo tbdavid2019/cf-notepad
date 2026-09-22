@@ -131,17 +131,19 @@
 - **⚡ 即時動態標題同步 (Real-time Dynamic Title Sync)**：在編輯器內輸入或修改 `# 標題` 時，瀏覽器分頁標籤（`<title>`）與全域應用狀態即時同步更新，無需重新整理頁面。同時強化後端標題提取器，優先抓取 `# Title` 並自動跳過前置 `[TOC]`、提示區塊與寒暄前綴。
 - **卡片化分組發布與分享選單 (Card-Grouped Share Menu)**：點擊底部分享按鈕彈出的浮動選單全面採用結構化卡片分組（`.dropdown-group-card`），明確劃分「檢視閱讀模式」（打開分享頁面、簡報模式、書本模式）、「快速複製連結」（複製分享網址、簡報網址、書本網址）、「分享設定」（公開索引、段落註解開關）與「取消發布」。每一條目皆具備統一的呼吸間距、清晰的標題與補充目的地說明，避免標題和副標題重複；Edit、Share、Block Edit 的 New／Export／Copy／Theme／Width 選單共用完整對齊的 hover/focus 表面，並支援長選單依視窗高度滾動，100% 完美相容 20 款深淺主題。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
-- **🔐 分享保險庫安全模式與快速情境範本 (Share Vault Security Modes, 10 Quick Start Presets & Security Hardening)**：
-  - **4 種進階發布與機密生命週期模式**：
-    - **標準發布與有效期限 (Standard & Expiration)**：自訂分享過期時間（10 分鐘、1 小時、1 天、7 天、30 天或永久），結合 Cloudflare KV 原生 TTL 與 Worker 雙重檢查，到期自動下架並返回 410 友好墓碑頁。
-    - **閱後即焚 (Burn-After-Reading / Single-Use Ephemeral)**：訪客單次閱讀即自動從伺服器永久銷毀。內建**兩階段確認揭示卡 (Two-Step Interstitial Reveal)**，徹底阻擋通訊軟體爬蟲抓取摘要時意外燒毀連結；**嚴格實作作者存取豁免（作者編輯、存檔或預覽永不計次、永不焚毀）**；銷毀後永久返回 410 墓碑頁。
-    - **定時解鎖／時間膠囊 (Time-Locked Capsule)**：封印機密內容至指定時間解鎖（1 小時、1 天、3 天、7 天、30 天後）。訪客檢視時返回 423 狀態碼並顯示動態即時倒數計時卡（日、時、分、秒），歸零時自動重新整理公開；作者享有專屬預覽橫幅與即時編輯調整權限。
-    - **亡者開關／保活心跳 (Dead Man's Switch)**：保險庫在作者定期打卡保活期間持續維持機密封印（3 天、7 天、14 天、30 天週期）。作者編輯存檔、點擊「立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
-  - **⚡ 10 款安全情境範本獨立按鈕與 Lucide 彈窗庫 (10 Quick Start Presets Modal & Toolbar Button)**：
-    - **獨立工具列按鈕**：底欄右側提供獨立「範本 (Presets)」按鈕（`#vault-presets-toolbar-btn`），並在分享選單中保留單列「✨ 瀏覽 10 款安全情境範本」捷徑，點擊開啟專屬彈窗，不再擁擠。
-    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，點擊卡片一鍵套用最佳保險庫模式與到期週期。純安全發布參數配置，絕不修改或覆蓋現有筆記內文，並支援彈窗頂部中／英雙語即時切換：
-      1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，有效 1 小時，適合傳遞臨時金鑰。
-      2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，預填冷錢包與繼承指引。
+- **🔒 Seal 存取控制與 10 款快速情境範本 (Seal Access Control, 10 Quick Start Presets & Security Hardening)**：
+  - **正交存取控制核心哲學 (Orthogonal Access Control Philosophy)**：借鑒 888box (`box.david888.com/seal/`) 架構，將內容機密性與釋出生命週期徹底解耦——「**密碼保護內容，Seal 控制何時或如何釋出**」。無論筆記是否已設定編輯密碼或閱讀密碼，均可獨立加蓋或解除 Seal；建立或解除立即生效。
+  - **4 種進階釋出控制模式**：
+    - **定時解鎖／時間膠囊 (Time-Locked Capsule)**：封印機密內容至指定日期時間釋出。訪客檢視時返回 423 狀態碼並顯示 `David888 Wiki / Seal` 深色品牌卡片與即時跳動倒數計時器（日、時、分、秒）；作者享有專屬預覽橫幅與提前解封調整權限。
+    - **閱後即焚 (Burn-After-Reading / Ephemeral)**：訪客檢視達到自訂上限次數（預設 1 次，可自訂任意次數）後即自動從伺服器永久銷毀。內建**兩階段確認揭示卡 (Two-Step Interstitial Reveal)**，徹底阻擋通訊軟體爬蟲抓取摘要時意外燒毀連結；**嚴格實作作者存取豁免（作者編輯、存檔或預覽永不計次、永不焚毀）**；銷毀後永久返回 410 墓碑頁。
+    - **亡者開關／保活心跳 (Dead Man's Switch)**：在作者定期打卡保活期間持續維持機密封印（支援自訂分鐘數或快捷晶片 1 天、3 天、7 天、14 天、30 天等）。作者編輯存檔、在 Seal 彈窗點擊「⚡ 立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
+    - **標準發布與保留期限 (Standard & Expiration)**：自訂分享過期時間（10 分鐘、1 小時、1 天、7 天、30 天或永久），結合 Cloudflare KV 原生 TTL 與 Worker 雙重檢查，到期自動下架並返回 410 友好墓碑頁。
+  - **獨立 Seal 存取控制工作台與底欄狀態指示燈 (Dedicated Seal Modal & Dot Indicator)**：
+    - **底欄獨立入口**：底欄右側提供獨立「🔒 Seal」按鈕（`#vault-presets-toolbar-btn` / `.seal-toolbar-btn`），當筆記已加蓋 Seal 時點亮青色圓點指示燈（`.seal-dot-indicator`）；分享選單中亦同步提供「🔒 Seal 存取控制」單列即時狀態。
+    - **精美卡片式彈窗與 100% Lucide 向量圖標**：全數採用官方 Lucide SVG 向量圖標，頂部展示即時狀態徽章（未設定、定時解鎖、閱後即焚、亡者開關），支援中／英雙語切換、快捷晶片（`+1h`、`+1d` 等）以及一鍵「解除 Seal」與「建立 Seal」。
+    - **10 款快速情境範本**：純釋出參數配置，點選自動代入最佳 Seal 模式與釋出參數，**嚴格不修改、不注入任何筆記內文**：
+      1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，上限 1 次，有效 1 小時，適合傳遞臨時金鑰。
+      2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，守護冷錢包與繼承指引。
       3. **吹哨揭弊保護 (Whistleblower)** (`megaphone`)：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
       4. **產品發布解鎖 (Product Launch)** (`rocket`)：時間膠囊 (`timelock`)，7 天後解鎖正式公告與促銷代碼。
       5. **生日驚喜禮物 (Birthday Gift)** (`gift`)：時間膠囊 (`timelock`)，1 天後 (生日當天) 揭曉驚喜兌換券。
@@ -150,9 +152,11 @@
       8. **課程定時教材 (Course Content)** (`graduationCap`)：時間膠囊 (`timelock`)，7 天後隨課堂進度定時解鎖講義與作業解答。
       9. **緊急災備通道 (Emergency Backup)** (`lifeBuoy`)：亡者開關 (`deadman`)，14 天無簽到自動釋出應急救援 SSH 與主控台存取。
       10. **機密金鑰分享 (Shared Secret)** (`key`)：閱後即焚 (`burn`)，適合安全傳送 `.env` API Key 與連線密鑰。
-  - **🛡️ 嚴格安全防護 (Security Hardened)**：防範雙重揭密的高併發原子鎖標記、強制閱讀密碼校驗、PDF 匯出銷毀保護、預覽過渡頁不洩漏任何機密內文、動態 UUID 隔離密鑰。
-  - **全格式通用支援**：通用於 Markdown 文章、Block 筆記、Canvas 畫布、Whiteboard 白板與簡報／PDF 匯出，全格式均受保險庫生命週期管線防護。
-  - **WebMCP / REST API 完整支援**：`write_note`、`write_canvas`、`write_whiteboard` 原生支援 `share_mode`、`expires_in`、`burn_after_reading`、`unlock_in`、`pulse_interval` 參數，自動生成 pulse webhook 與到期資訊。
+  - **🛡️ 訪客鎖定頁品牌升級與嚴格安全防護 (Visitor Seal Lock Pages & Security Hardening)**：
+    - 訪客封印頁採用 `David888 Wiki / Seal` 品牌深石板色高質感卡片，呈現受保護資產資訊與即時跳動的日、時、分、秒倒數計時器。
+    - 實作防範雙重揭密的高併發原子鎖標記、強制閱讀密碼校驗、PDF 匯出銷毀保護、預覽過渡頁不洩漏任何機密內文、動態 UUID 隔離密鑰。
+  - **全格式通用支援**：通用於 Markdown 文章、Block 筆記、Canvas 畫布、Whiteboard 白板與簡報／PDF 匯出，全格式均受 Seal 存取控制生命週期管線防護。
+  - **WebMCP / REST API 完整支援**：`write_note`、`write_canvas`、`write_whiteboard` 原生支援 `seal_mode`、`seal_unlock_at`、`seal_max_views`、`seal_pulse_minutes` 參數，自動生成 pulse webhook 與到期資訊。
 
     ┌──────────────────────────────────────┬───────────────────────────────────┬─────────────────────────────────┐
     │ 1. 操作區 (Publish / Read Actions)   │ 2. 外觀設定區 (Appearance)        │ 3. 系統與開發者資訊區 (Info)    │
@@ -555,25 +559,6 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Split Welcome View & Parallel Typewriter Effect**: A fresh Markdown note presents Stray Birds poetry on the left editor pane and randomly selected writing tips on the right preview pane (`#preview-welcome`) with synchronized, parallel typewriter animations, disappearing seamlessly as soon as the author begins typing.
 - **Accessible Dialogs**: Editor dialogs use proper dialog semantics, trap Tab focus, restore focus to their trigger when closed, and support Escape. The interface also honors the system `prefers-reduced-motion` setting.
 - **Card-Grouped Share & Publish Menu**: The floating share menu triggered by the globe icon in the footer is structured into clear, card-grouped sections (`.dropdown-group-card`) distinguishing View Modes (Share page, Presentation, Book mode), Quick Copy URLs, Share Settings (Public Index, Paragraph Annotations), and Unpublish, with consistent vertical rhythm, concise destination subtitles that do not repeat the action title, full-row aligned hover/focus surfaces across Edit, Share, and Block Edit menus, viewport-aware scrolling for long menus, and complete dark/light theme support.
-- **🔐 Share Vault Security Modes (Expiration, Burn-After-Reading, Time-Locked Capsule & Dead Man's Switch)**:
-  - **4 Advanced Publishing & Ephemeral Lifecycle Modes**:
-    - **Standard & Expiration**: Configure custom expiration timers (`10m`, `1h`, `1d`, `7d`, `30d`, or never). Enforces Cloudflare KV native TTL with dual Worker validation, auto-expiring shares with a friendly 410 tombstone page.
-    - **Burn-After-Reading (Single-Use Ephemeral)**: Self-destructs from the server immediately after first visitor read. Features a **Two-Step Interstitial Reveal Card** that prevents crawler preview bots (LINE, Discord, Telegram, Twitter) from accidentally burning links; **Author reads are strictly exempt (saving, editing, or viewing as author never burns the link)**; returns 410 Gone tombstone once destroyed.
-    - **Time-Locked Capsule**: Cryptographically seals confidential notes until a designated unlock time (`1h`, `1d`, `3d`, `7d`, `30d`). Visitors receive HTTP 423 Locked with a live dynamic ticking countdown clock (Days, Hours, Minutes, Seconds) that auto-reloads upon reaching zero; author has full preview access with status banners.
-    - **Dead Man's Switch**: Vault remains sealed while the author checks in within the pulse interval (`3d`, `7d`, `14d`, `30d`). Author saves, clicks "Pulse Now", or hits the private webhook (`/api/shares/:id/pulse?token=...`) to refresh heartbeat; if the author misses the deadline, the vault automatically releases to the public.
-  - **⚡ 10 One-Click Quick Start Presets**: Built-in one-click preset buttons in the share menu automatically configure the optimal vault mode, duration, and insert a structured template into empty notes:
-    1. 🛡️ **One-Time Password (OTP)**: Burn-after-reading (`burn`), 10 min / 1 hour validity, ideal for sharing temporary passwords and tokens.
-    2. ₿ **Crypto Inheritance**: Dead Man's Switch (`deadman`), 30-day heartbeat, prefilled with cold wallet and heir instructions.
-    3. 📢 **Whistleblower Disclosure**: Dead Man's Switch (`deadman`), 7-day heartbeat, auto-releases public interest evidence upon author absence.
-    4. 🚀 **Product Launch**: Time-Locked Capsule (`timelock`), unlocks in 7 days with embargoed announcement and promo codes.
-    5. 🎁 **Birthday Gift**: Time-Locked Capsule (`timelock`), unlocks on birthday with surprise coupon and greeting.
-    6. ⚖️ **Legal Hold Notice**: Standard share (`standard`), auto-expires in 30 days for evidentiary retention.
-    7. 🎯 **Scavenger Hunt**: Time-Locked Capsule (`timelock`), unlocks next puzzle clue in 2 hours.
-    8. 📅 **Course Content & Solutions**: Time-Locked Capsule (`timelock`), unlocks lecture notes or solutions at class start.
-    9. 🛟 **Emergency Backup & Recovery**: Dead Man's Switch (`deadman`), 14-day heartbeat releasing emergency SSH keys and recovery procedures.
-    10. 🔑 **Confidential Shared Secret**: Burn-after-reading (`burn`), ideal for transmitting `.env` credentials and database secrets.
-  - **Universal Format Compatibility**: Fully protects Markdown notes, Block editor documents, Ameliorate JSON Canvas maps, Excalidraw whiteboards, and presentation/PDF exports.
-  - **Native WebMCP & REST API Support**: `write_note`, `write_canvas`, and `write_whiteboard` accept `share_mode`, `expires_in`, `burn_after_reading`, `unlock_in`, and `pulse_interval` parameters, returning share URLs, expiration metadata, and private pulse webhooks.
 - **Real-Time Dynamic Document Title Sync**: Typing or editing `# Heading` in the editor instantly updates the browser tab `<title>` and application state in real time without requiring a page reload. Server-side title extraction has also been hardened to prioritize H1 headings while automatically ignoring TOC directives, alert blocks, and conversational AI preambles.
 - **Browser-side Multi-format Document Import**: The Markdown editor's Footer Import button and `+ New` menu accept Markdown, Word, PowerPoint, Excel, OpenDocument, RTF, EPUB, CSV, and text-based PDFs, then convert them to Markdown in the browser. Existing content can be inserted at the cursor, replaced, or left untouched by cancelling; cancelling does not load or run the converter. Conversion uses same-origin, version-locked WebAssembly static assets, so document bytes never upload to the Wiki server.
 - **CLI Conversion and Publishing**: [`scripts/doc2wiki.sh`](./scripts/doc2wiki.sh) converts a local document and publishes the Markdown to a specified Wiki path. It defaults to private, requires explicit `true` to publish, and prints only the shareable `shareUrl`.
@@ -600,16 +585,18 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **📐 Adaptive &amp; Compact Line Numbers Gutter with Auto-Wrap Sync**: Dynamic digit-based gutter auto-sizing (~26px for 1-99 lines, smoothly expanding for hundreds/thousands of lines) with subtle 13px typography and pixel-perfect line-height matching; features **Mirror DOM Line Height Sync** to accurately measure and match soft-wrapped long paragraphs with real-time recalculation on resize and layout adjustments.
 - **🎨 Unified Modal Dialog Architecture &amp; Full Dark Mode**: All popup dialogs (`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`) adhere to a standardized Design System powered by `--modal-*` CSS variables across 20 dark and light themes, featuring global Escape-to-close, Tab focus traps, `data-modal-close` delegation, and accessible close buttons.
 - **Unified Publishing &amp; Status Strip**: One dialog controls Publish, Autosave, and Public Index; all three default on and the confirmed choices are remembered on this device. After publishing, the Edit preview shows the Share URL, index state, retained versions, unique views, and last-saved time; dark UI mode uses a consistent high-contrast cool palette, with teal-blue, blue, indigo, and violet-blue distinguishing publish, layout, font, and language actions.
-- **🔐 Share Vault Security Modes & 10 Quick Start Presets**:
-  - **4 Advanced Publishing & Lifecycle Modes**:
-    - **Standard & Expiration**: Configure auto-expiration (`10m`, `1h`, `1d`, `7d`, `30d`, or never) enforced by Cloudflare KV native TTL and Worker runtime checks, serving a friendly 410 tombstone page upon expiration.
-    - **Burn-After-Reading (Single-Use Ephemeral)**: Permanently self-destructs after a single external reading. Features a **Two-Step Interstitial Reveal Card** that protects links from automated crawlers/unfurl bots (Discord, Slack, LINE, Twitter, Telegram) while granting **strict author exemptions (author edits and previews never trigger a burn)**.
-    - **Time-Locked Capsule**: Cryptographically seals confidential content until a designated unlock time (`1h`, `1d`, `3d`, `7d`, `30d`). Unauthenticated visitors receive a 423 Locked status with live countdown cards (days, hours, minutes, seconds) that auto-reload upon unlocking; authors retain full live preview and unlock controls.
-    - **Dead Man's Switch**: Vault remains sealed as long as the author periodically checks in (`3d`, `7d`, `14d`, `30d` pulse intervals). Heartbeats are refreshed via note edits, one-click "Pulse Now" in the editor, or a private webhook (`/api/shares/:id/pulse?token=...`). If the author misses check-ins, the vault automatically releases to the public.
-  - **⚡ 10 Quick Start Security Scenario Presets Modal & Toolbar Button**:
-    - **Independent Toolbar Button**: A dedicated "Presets" button (`#vault-presets-toolbar-btn`) sits in the editor footer toolbar, alongside a clean single-row shortcut in the share menu, providing an uncluttered entry point.
-    - **Dedicated Scenario Presets Modal & 100% Lucide Icons**: Displays a responsive card grid with pure Lucide vector SVGs, badges (`burn`, `timelock`, `deadman`, `standard`), titles, and descriptions. Features an in-modal `中` / `En` bilingual switcher for instantaneous language toggling. Strictly configures vault security sharing parameters without ever modifying or overwriting existing note content:
-      1. **One-Time Password (OTP)** (`shieldAlert`): Burn-after-reading (`burn`), 1h expiration.
+- **🔒 Seal Access Control & 10 Quick Start Scenario Presets (Orthogonal Architecture & Hardening)**:
+  - **Orthogonal Access Control Philosophy**: Inspired by the 888box (`box.david888.com/seal/`) model, access control is strictly separated from password protection: **"Password protects confidential content; Seal controls when and how it is released."** Whether a note has an edit password or reader password, it can independently have a Seal attached or removed, taking effect immediately.
+  - **4 Advanced Release Control Modes**:
+    - **Time-Locked Capsule (`timelock`)**: Cryptographically seals confidential content until a designated date and time. Visitors receive an HTTP 423 Locked response with the branded `David888 Wiki / Seal` slate card and a live dynamic ticking countdown (Days, Hours, Minutes, Seconds); authors retain preview banners and premature unseal controls.
+    - **Burn-After-Reading (`burn`)**: Ephemerally self-destructs after reaching a custom view count threshold (`maxViews`, default 1). Features a **Two-Step Interstitial Reveal Card** preventing chat preview bots from accidentally burning links, with **strict author exemptions (author edits and previews never trigger a burn)**; serves 410 Gone tombstone once burned.
+    - **Dead Man's Switch (`deadman`)**: Keeps confidential notes sealed while the author checks in within the configured pulse interval (custom minutes or shortcut chips for 1d, 3d, 7d, 14d, 30d). Heartbeats are refreshed via note edits, one-click "⚡ Pulse Now" in the Seal modal, or a private webhook (`/api/shares/:id/pulse?token=...`). If the author misses check-ins, the vault automatically releases to the public.
+    - **Standard & Retention (`standard`)**: Optional expiration timers (`10m`, `1h`, `1d`, `7d`, `30d`, or never) enforced by Cloudflare KV native TTL and Worker runtime checks, serving a friendly 410 tombstone page upon expiration.
+  - **Dedicated Seal Access Control Modal & Toolbar Dot Indicator**:
+    - **Independent Toolbar Button**: A dedicated "🔒 Seal" button (`#vault-presets-toolbar-btn` / `.seal-toolbar-btn`) sits in the footer toolbar, glowing with a teal dot indicator (`.seal-dot-indicator`) whenever a Seal is active. The share dropdown menu also displays a single-row live Seal status indicator.
+    - **Dedicated Modal & 100% Lucide Vector Icons**: Displays a responsive card grid with Lucide SVGs, live status badges (Unsealed, Timelock countdown, Burn views, Deadman heartbeat), in-modal `中` / `En` bilingual switcher, quick increment chips (`+1h`, `+1d`, etc.), and one-click "Remove Seal" and "Apply Seal" actions.
+    - **10 Quick Scenario Presets**: Configures optimal release parameters without ever modifying or overwriting existing note content:
+      1. **One-Time Password (OTP)** (`shieldAlert`): Burn-after-reading (`burn`), 1 view max, 1h expiration.
       2. **Crypto Inheritance** (`bitcoin`): Dead man's switch (`deadman`), 30d pulse, cold wallet seed phrase guide.
       3. **Whistleblower** (`megaphone`): Dead man's switch (`deadman`), 7d pulse, public interest disclosure proof.
       4. **Product Launch** (`rocket`): Time-locked capsule (`timelock`), 7d unlock, launch announcement and coupon.
@@ -619,8 +606,11 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
       8. **Course Content** (`graduationCap`): Time-locked capsule (`timelock`), 7d scheduled curriculum and solution release.
       9. **Emergency Backup** (`lifeBuoy`): Dead man's switch (`deadman`), 14d backup SSH credentials.
       10. **Shared Secret** (`key`): Burn-after-reading (`burn`), `.env` credential template.
-  - **🛡️ Security Hardened**: Concurrent atomic burn claiming, mandatory password verification on reveal, explicit confirmation (`?burn_confirm=true`) for PDF exports on burn notes, zero secret leaks in interstitial DOM, and dynamic runtime ephemeral secrets.
+  - **🛡️ Visitor Lock Page Branding & Security Hardening**:
+    - Branded `David888 Wiki / Seal` high-contrast card display on locked visitor pages with live ticking countdowns.
+    - Concurrent atomic burn claiming, mandatory password verification on reveal, explicit confirmation (`?burn_confirm=true`) for PDF exports on burn notes, zero secret leaks in interstitial DOM, and dynamic runtime ephemeral secrets.
   - **Universal Format Compatibility**: Supported seamlessly across Markdown, BlockNote, JSON Canvas, Excalidraw Whiteboard, and presentation/PDF exports.
+  - **Native WebMCP & REST API Support**: `write_note`, `write_canvas`, and `write_whiteboard` accept `seal_mode`, `seal_unlock_at`, `seal_max_views`, and `seal_pulse_minutes` parameters, returning share URLs, expiration metadata, and private pulse webhooks.
 - **⚡ PWA Offline Workstation, Background Sync & Media Caching (`/_pwa-offline`)**:
   - **Full-Featured Markdown Workspace**: Standalone offline application supporting Edit, Split, and Preview view modes, 5 customizable color themes (Dark, Light, Tokyo Night, Dracula, Nord), live sidebar note search, draft management, and one-click JSON backup & restore.
   - **Visual 3-Way Conflict Diff Modal**: Protects offline edits from remote cloud overwrites with side-by-side Diff comparison (Local vs Remote) and 3 resolution actions: Keep Local, Adopt Remote, or Save as Conflict Copy.

@@ -10,9 +10,12 @@ const getLangText = lang => SUPPORTED_LANG[lang] || SUPPORTED_LANG['en-US']
 
 const VAULT_PRESETS_RENDER = (lang) => `
     <div class="dropdown-item-control vault-preset-menu-row">
-        <button type="button" class="opt-button open-vault-presets-modal-btn" id="open-vault-presets-modal-btn" style="width:100%; display:flex; align-items:center; justify-content:center; gap:8px; height:34px; font-weight:500; font-size:12px;" title="${lang === 'zh-TW' ? '快速情境範本 (10 種情境)' : 'Quick Scenario Presets (10)'}">
-            ${SVG_ICONS.shieldCheck}
-            <span>${lang === 'zh-TW' ? '安全情境範本 (10 種)...' : 'Scenario Presets (10)...'}</span>
+        <button type="button" class="opt-button open-vault-presets-modal-btn seal-menu-trigger-btn" id="open-vault-presets-modal-btn" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; height:34px; font-weight:500; font-size:12px; padding:0 10px;" title="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}">
+            <span style="display:inline-flex; align-items:center; gap:6px;">
+                ${SVG_ICONS.lock || SVG_ICONS.shieldCheck}
+                <strong>${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access'}</strong>
+            </span>
+            <span id="share-menu-seal-status" class="seal-status-pill">${lang === 'zh-TW' ? '未設定 ➔' : 'Unsealed ➔'}</span>
         </button>
     </div>
 `
@@ -41,6 +44,8 @@ const THEME_OPTION_LABELS = {
 }
 
 export const SVG_ICONS = {
+    lock: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>`,
+    lockOpen: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 9.9-1"></path></svg>`,
     canvas: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"></rect><rect x="14" y="14" width="7" height="7" rx="1.5"></rect><rect x="14" y="3" width="7" height="7" rx="1.5"></rect><path d="M10 6.5h4"></path><path d="M6.5 10v4"></path><path d="M17.5 10v4"></path><circle cx="6.5" cy="17.5" r="3.5"></circle></svg>`,
     whiteboard: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line><path d="M7 11l3 3 7-7"></path></svg>`,
     settings: `<svg class="svg-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>`,
@@ -834,9 +839,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             ${SVG_ICONS.quote}
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '引用' : 'Cite'}</span>
                         </button>
-                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
-                            <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
+                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn seal-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}" title="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}" aria-label="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}">
+                            <span class="share-button-icon">${SVG_ICONS.lock || SVG_ICONS.shieldCheck}</span>
+                            <span class="toolbar-button-label">Seal</span>
+                            <span class="seal-dot-indicator" id="seal-dot-indicator-block" style="display:none;"></span>
                         </button>
                         ` : ''}
                         ${!isBlockEditor ? `
@@ -854,9 +860,10 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
                             <span class="math-icon-badge" aria-hidden="true" style="font-weight:700;font-style:italic;font-family:serif;font-size:15px;line-height:1;">fx</span>
                             <span class="toolbar-button-label">${lang === 'zh-TW' ? '公式' : 'Math'}</span>
                         </button>
-                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" title="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}" aria-label="${lang === 'zh-TW' ? '快速情境範本 (10 種)' : 'Scenario Presets (10)'}">
-                            <span class="share-button-icon">${SVG_ICONS.shieldCheck}</span>
-                            <span class="toolbar-button-label">${lang === 'zh-TW' ? '範本' : 'Presets'}</span>
+                        <button type="button" id="vault-presets-toolbar-btn" class="toolbar-icon-button vault-presets-toolbar-btn seal-toolbar-btn" data-tooltip="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}" title="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}" aria-label="${lang === 'zh-TW' ? 'Seal 存取控制' : 'Seal Access Control'}">
+                            <span class="share-button-icon">${SVG_ICONS.lock || SVG_ICONS.shieldCheck}</span>
+                            <span class="toolbar-button-label">Seal</span>
+                            <span class="seal-dot-indicator" id="seal-dot-indicator" style="display:none;"></span>
                         </button>
                         <div class="footer-view-settings-group" aria-label="${lang === 'zh-TW' ? '編輯器視圖設定' : 'Editor view settings'}">
                             <div class="footer-preview-group footer-control-group">
@@ -1445,59 +1452,148 @@ export const VAULT_PRESETS_MODAL = (lang) => {
     const zh = lang === 'zh-TW'
     const closeLabel = zh ? '關閉' : 'Close'
     return `
-<div id="vault-presets-modal" class="modal vault-presets-modal" role="dialog" aria-modal="true" aria-labelledby="vault-presets-title" aria-hidden="true" style="display:none;">
+<div id="vault-presets-modal" class="modal vault-presets-modal seal-modal" role="dialog" aria-modal="true" aria-labelledby="vault-presets-title" aria-hidden="true" style="display:none;">
     <div class="modal-mask" id="vault-presets-mask" data-modal-close></div>
-    <div class="vault-presets-modal-content">
-        <div class="vault-presets-header-bar">
-            <div class="vault-presets-lang-group" role="group" aria-label="${zh ? '切換語言 / Switch language' : 'Switch language / 切換語言'}">
-                <button type="button" class="vault-pref-lang-btn ${zh ? 'is-active' : ''}" data-vault-lang="zh-TW" title="繁體中文">中</button>
-                <button type="button" class="vault-pref-lang-btn ${!zh ? 'is-active' : ''}" data-vault-lang="en-US" title="English">En</button>
+    <div class="vault-presets-modal-content seal-modal-content">
+        <div class="vault-presets-header-bar seal-modal-header-bar">
+            <div class="seal-header-badge-wrap">
+                <span id="seal-status-badge" class="seal-status-badge badge-unsealed" data-status="unsealed">${zh ? '未設定' : 'Unsealed'}</span>
             </div>
-            <button type="button" class="close-btn" id="vault-presets-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
+            <div class="seal-header-right-actions">
+                <div class="vault-presets-lang-group" role="group" aria-label="${zh ? '切換語言 / Switch language' : 'Switch language / 切換語言'}">
+                    <button type="button" class="vault-pref-lang-btn ${zh ? 'is-active' : ''}" data-vault-lang="zh-TW" title="繁體中文">中</button>
+                    <button type="button" class="vault-pref-lang-btn ${!zh ? 'is-active' : ''}" data-vault-lang="en-US" title="English">En</button>
+                </div>
+                <button type="button" class="close-btn" id="vault-presets-close-btn" data-modal-close aria-label="${closeLabel}">×</button>
+            </div>
         </div>
-        <div class="vault-presets-header">
-            <h3 id="vault-presets-title" class="vault-presets-title">
-                ${SVG_ICONS.shieldCheck} <span data-i18n-key="title">${zh ? '安全情境範本庫' : 'Security Scenario Presets'}</span>
+        <div class="vault-presets-header seal-modal-header">
+            <h3 id="vault-presets-title" class="vault-presets-title seal-modal-title">
+                ${SVG_ICONS.lock || SVG_ICONS.shieldCheck} <span data-i18n-key="title">${zh ? 'Seal 存取控制' : 'Seal Access Control'}</span>
             </h3>
-            <p class="vault-presets-subtitle" data-i18n-key="subtitle">${zh ? '一鍵快速套用 10 大安全發布情境，自動配置保險庫模式、解鎖倒數、有效期限或心跳保活週期。' : 'One-click quick presets for 10 security scenarios. Automatically configures vault mode, unlock timer, expiration, or heartbeat pulse.'}</p>
+            <p class="vault-presets-subtitle seal-modal-subtitle" data-i18n-key="subtitle">${zh ? 'Seal 與密碼同屬資產存取控制：密碼保護內容，Seal 控制何時或如何釋出。Seal 建立或解除會立即生效。' : 'Seal and password are asset access controls: password protects content, Seal controls when and how it is released. Changes take effect immediately.'}</p>
         </div>
-        <div class="vault-presets-body">
-            <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
-                ${(VAULT_QUICK_PRESETS || []).map(p => {
-                    const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
-                    const badgeZh = p.mode === 'burn'
-                        ? '🔥 閱後即焚'
-                        : (p.mode === 'timelock'
-                            ? `🔒 定時解鎖 (${p.unlockIn})`
-                            : (p.mode === 'deadman'
-                                ? `💓 亡者開關 (${p.pulseInterval})`
-                                : `⏱️ 保留期限 (${p.expiresIn})`))
-                    const badgeEn = p.mode === 'burn'
-                        ? '🔥 Burn After Read'
-                        : (p.mode === 'timelock'
-                            ? `🔒 Time-Locked (${p.unlockIn})`
-                            : (p.mode === 'deadman'
-                                ? `💓 Dead Man (${p.pulseInterval})`
-                                : `⏱️ Expiration (${p.expiresIn})`))
-                    const titleText = zh ? p.labelZh : p.labelEn
-                    const descText = zh ? p.descZh : p.descEn
-                    const badgeText = zh ? badgeZh : badgeEn
-                    return `
-                    <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" data-title-zh="${p.labelZh}" data-title-en="${p.labelEn}" data-desc-zh="${p.descZh}" data-desc-en="${p.descEn}" data-badge-zh="${badgeZh}" data-badge-en="${badgeEn}">
-                        <span class="preset-card-top">
-                            <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
-                            <span class="preset-card-badge mode-${p.mode}">${badgeText}</span>
-                        </span>
-                        <span class="preset-card-title">${titleText}</span>
-                        <span class="preset-card-desc">${descText}</span>
+
+        <div class="seal-config-section">
+            <div class="seal-form-row">
+                <label for="seal-mode-select" class="seal-form-label" data-i18n-key="modeLabel">${zh ? '模式' : 'Mode'}</label>
+                <div class="seal-form-control">
+                    <select id="seal-mode-select" class="opt-select seal-mode-select" aria-label="${zh ? 'Seal 模式' : 'Seal Mode'}">
+                        <option value="none">${zh ? '無 (解除 Seal)' : 'None (Unsealed)'}</option>
+                        <option value="timelock">${zh ? '定時解鎖 (Time Lock)' : 'Time Lock'}</option>
+                        <option value="burn">${zh ? '閱後即焚 (Burn After Read)' : 'Burn After Read'}</option>
+                        <option value="deadman">${zh ? "Dead Man's Switch (亡者開關)" : "Dead Man's Switch"}</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Timelock Parameter Row -->
+            <div class="seal-param-panel" id="seal-param-panel-timelock" style="display:none;">
+                <div class="seal-form-row">
+                    <label for="seal-unlock-at" class="seal-form-label" data-i18n-key="unlockTimeLabel">${zh ? '解鎖時間' : 'Unlock Time'}</label>
+                    <div class="seal-form-control">
+                        <div class="seal-input-composite">
+                            <input type="datetime-local" id="seal-unlock-at" class="seal-input" step="1">
+                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速設定時間' : 'Quick time shortcuts'}">
+                                <button type="button" class="seal-chip-btn" data-time-add="1h">+1h</button>
+                                <button type="button" class="seal-chip-btn" data-time-add="1d">+1d</button>
+                                <button type="button" class="seal-chip-btn" data-time-add="3d">+3d</button>
+                                <button type="button" class="seal-chip-btn" data-time-add="7d">+7d</button>
+                                <button type="button" class="seal-chip-btn" data-time-add="30d">+30d</button>
+                            </div>
+                        </div>
+                        <small class="seal-field-hint" data-i18n-key="timelockHint">${zh ? '解鎖時間到達前訪客只能查看倒數封印頁面，時間到達時自動公開內容。' : 'Visitors see a countdown lock page until unlock time arrives, then note is released.'}</small>
                     </div>
-                    `
-                }).join('')}
+                </div>
+            </div>
+
+            <!-- Burn Parameter Row -->
+            <div class="seal-param-panel" id="seal-param-panel-burn" style="display:none;">
+                <div class="seal-form-row">
+                    <label for="seal-max-views" class="seal-form-label" data-i18n-key="maxViewsLabel">${zh ? '最大瀏覽次數' : 'Max Views'}</label>
+                    <div class="seal-form-control">
+                        <div class="seal-input-composite">
+                            <input type="number" id="seal-max-views" class="seal-input seal-number-input" min="1" max="999" value="1">
+                            <span class="seal-input-addon" data-i18n-key="viewsUnit">${zh ? '次 (預設 1 次)' : 'views (Default 1)'}</span>
+                        </div>
+                        <small class="seal-field-hint" data-i18n-key="burnHint">${zh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.'}</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dead Man's Switch Parameter Row -->
+            <div class="seal-param-panel" id="seal-param-panel-deadman" style="display:none;">
+                <div class="seal-form-row">
+                    <label for="seal-pulse-minutes" class="seal-form-label" data-i18n-key="pulseIntervalLabel">${zh ? 'Pulse 間隔 (分鐘)' : 'Pulse Interval (Minutes)'}</label>
+                    <div class="seal-form-control">
+                        <div class="seal-input-composite">
+                            <input type="number" id="seal-pulse-minutes" class="seal-input seal-number-input" min="5" value="10080">
+                            <div class="seal-quick-chips" role="group" aria-label="${zh ? '快速間隔' : 'Quick intervals'}">
+                                <button type="button" class="seal-chip-btn" data-pulse-mins="1440">${zh ? '1天' : '1d'}</button>
+                                <button type="button" class="seal-chip-btn" data-pulse-mins="4320">${zh ? '3天' : '3d'}</button>
+                                <button type="button" class="seal-chip-btn" data-pulse-mins="10080">${zh ? '7天' : '7d'}</button>
+                                <button type="button" class="seal-chip-btn" data-pulse-mins="43200">${zh ? '30天' : '30d'}</button>
+                            </div>
+                        </div>
+                        <div class="seal-deadman-live-box" id="seal-deadman-live-box" style="display:none;">
+                            <span id="seal-deadman-live-text" class="seal-deadman-live-text"></span>
+                            <button type="button" id="seal-modal-pulse-btn" class="opt-button seal-pulse-btn">${zh ? '❤️ 發送 Pulse 心跳' : '❤️ Send Pulse Heartbeat'}</button>
+                        </div>
+                        <small class="seal-field-hint" data-i18n-key="deadmanHint">${zh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.'}</small>
+                    </div>
+                </div>
             </div>
         </div>
-        <div class="vault-presets-footer">
-            <span class="vault-presets-tip" data-i18n-key="tip">${zh ? '💡 點選任一情境即可即時配置安全發布參數，不會影響現有筆記內容。' : '💡 Click any scenario to configure security sharing settings without affecting existing note content.'}</span>
-            <button type="button" class="opt-button" id="vault-presets-cancel-btn" data-modal-close data-i18n-key="cancel">${zh ? '取消' : 'Cancel'}</button>
+
+        <div class="seal-presets-accordion">
+            <div class="seal-presets-accordion-header">
+                <span class="seal-presets-accordion-title" data-i18n-key="presetsSectionTitle">⚡ ${zh ? '快速情境範本 (點選自動填入 Seal 參數)' : 'Quick Scenario Presets (Auto-fills parameters)'}</span>
+            </div>
+            <div class="vault-presets-body">
+                <div class="vault-presets-modal-grid" role="group" aria-label="${zh ? '安全情境範本' : 'Security Scenario Presets'}">
+                    ${(VAULT_QUICK_PRESETS || []).map(p => {
+                        const iconSvg = SVG_ICONS[p.iconName] || SVG_ICONS.shieldCheck
+                        const badgeZh = p.mode === 'burn'
+                            ? '🔥 閱後即焚'
+                            : (p.mode === 'timelock'
+                                ? `🔒 定時解鎖 (${p.unlockIn})`
+                                : (p.mode === 'deadman'
+                                    ? `💓 亡者開關 (${p.pulseInterval})`
+                                    : `⏱️ 保留期限 (${p.expiresIn})`))
+                        const badgeEn = p.mode === 'burn'
+                            ? '🔥 Burn After Read'
+                            : (p.mode === 'timelock'
+                                ? `🔒 Time-Locked (${p.unlockIn})`
+                                : (p.mode === 'deadman'
+                                    ? `💓 Dead Man (${p.pulseInterval})`
+                                    : `⏱️ Expiration (${p.expiresIn})`))
+                        const titleText = zh ? p.labelZh : p.labelEn
+                        const descText = zh ? p.descZh : p.descEn
+                        const badgeText = zh ? badgeZh : badgeEn
+                        return `
+                        <div role="button" tabindex="0" class="vault-preset-card vault-preset-btn" data-preset-id="${p.id}" data-mode="${p.mode}" data-expires="${p.expiresIn || ''}" data-unlock="${p.unlockIn || ''}" data-pulse="${p.pulseInterval || ''}" data-title-zh="${p.labelZh}" data-title-en="${p.labelEn}" data-desc-zh="${p.descZh}" data-desc-en="${p.descEn}" data-badge-zh="${badgeZh}" data-badge-en="${badgeEn}">
+                            <span class="preset-card-top">
+                                <span class="preset-card-icon mode-${p.mode}" aria-hidden="true">${iconSvg}</span>
+                                <span class="preset-card-badge mode-${p.mode}">${badgeText}</span>
+                            </span>
+                            <span class="preset-card-title">${titleText}</span>
+                            <span class="preset-card-desc">${descText}</span>
+                        </div>
+                        `
+                    }).join('')}
+                </div>
+            </div>
+        </div>
+
+        <div class="vault-presets-footer seal-modal-footer">
+            <div class="seal-footer-left">
+                <button type="button" id="seal-remove-btn" class="opt-button opt-button-danger" style="display:none;" data-i18n-key="removeSeal">${zh ? '解除 Seal' : 'Remove Seal'}</button>
+                <span class="vault-presets-tip" data-i18n-key="tip">${zh ? '💡 點選任一情境範本僅會自動填入 Seal 參數，不會影響現有筆記內容。' : '💡 Presets auto-fill Seal parameters only without affecting existing note content.'}</span>
+            </div>
+            <div class="seal-footer-right">
+                <button type="button" class="opt-button" id="vault-presets-cancel-btn" data-modal-close data-i18n-key="cancel">${zh ? '取消' : 'Cancel'}</button>
+                <button type="button" class="opt-button opt-button-accent" id="seal-save-btn" data-i18n-key="saveSeal">${zh ? '建立 Seal' : 'Create Seal'}</button>
+            </div>
         </div>
     </div>
 </div>`

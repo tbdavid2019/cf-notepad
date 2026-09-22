@@ -366,7 +366,8 @@ export function isShareBurned(metadata = {}) {
     if (metadata?.burned === true || metadata?.shareBurned === true) return true
     const burnedAt = Number(metadata?.shareBurnedAt)
     if (Number.isFinite(burnedAt) && burnedAt > 0) return true
-    if (metadata?.shareBurnAfterReading === true && Number(metadata?.shareViewCount) >= 1) return true
+    const maxViews = Math.max(1, parseInt(metadata?.shareMaxViews || metadata?.sealMaxViews, 10) || 1)
+    if (metadata?.shareBurnAfterReading === true && Number(metadata?.shareViewCount) >= maxViews) return true
     return false
 }
 
