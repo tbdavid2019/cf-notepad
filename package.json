@@ -2,7 +2,7 @@
   "name": "888wiki",
   "version": "1.0.0",
   "author": "DAVID888 <tbdavid2019>",
-  "license": "MIT",
+  "license": "AGPL-3.0",
   "devDependencies": {
     "esbuild": "^0.28.1",
     "wrangler": "^4.134.0"

@@ -2,6 +2,9 @@
 
 ## [2026-09-23]
 
+- **🚀 投稿導向首頁與特色呈現 (Submission-Ready Product Positioning)**：首頁改以「擷取 → 整理 → 釋出」呈現價值，直接列出即時錄音、逐字稿／智慧排版、檔案／網頁匯入、四種編輯模式及 Seal 十種安全釋出情境；中英文使用指南補齊每個選單項目與情境範本的實際效果。
+- **🔒 修正閱後即焚 Seal 範本未套用到期時間**：一次性密碼與機密金鑰範本現在會同時保存瀏覽上限與各自到期時間（1 小時／1 天），避免範本顯示期限卻只套用閱後即焚規則；新增回歸測試覆蓋 preset 設定與儲存流程。
+- **📜 修正公開授權標示**：README 與 npm 專案中繼資料統一標示 LICENSE 實際使用的 `AGPL-3.0`，供收錄清單自動稽核讀取正確資訊。
 - **📚 補齊模式操作、Seal 與完整部署參數文件 (Editor Guides, Seal Workflow & Full Deployment Configuration)**：首頁新增 Markdown、Block、Canvas、Whiteboard 與 Seal 的產品特色；加入中英文逐步使用指南，說明四種編輯模式、發布及 Seal 釋出流程。安裝文件完整列出所有 Wrangler 預設變數、KV/D1/R2 綁定與選填整合參數，並補上必填 Secrets 的安全產生方式；公開部署預設關閉 WebTalk，避免新站沿用其他站台的服務設定。
 - **📚 重整中英文專案文件並移除舊產品名稱 (English-First Documentation & Brand Cleanup)**：將根目錄 `README.md` 改為英文優先的精簡推廣頁，新增獨立繁中首頁 `README.zh-TW.md`、中英文安裝指南與完整功能詳情文件；更新紀錄維持獨立於 README。移除首頁與安裝文件中的舊產品名稱，並保留原有中英文功能說明於獨立文件。
 - **🚀 新增 Cloudflare 一鍵部署並更新專案名稱 (Cloudflare One-Click Deploy & Repository Rename)**：將 GitHub repository 更名為 `tbdavid2019/888wiki`，README 中英文部署章節新增 Cloudflare 官方 Deploy Button；Cloudflare 可依 `wrangler.toml` 自動建立 KV、D1、R2，並於部署時初始化 D1 歷史、統計與註解資料表。加入部署機密欄位說明，移除 Wrangler 設定內的帳號資源 ID 與明文機密預設值，並為複製部署提供安全通用的資源範本。

@@ -16,6 +16,20 @@ Markdown supports GFM, math, Mermaid and Graphviz diagrams, ECharts, citations a
 
 For audio, choose transcript import or smart formatting. The transcript can include timestamps. You can also record from the toolbar; review participant consent before recording.
 
+### Capture audio, files, and web pages
+
+Open **+ New → Import content** to use the capture options shown in the menu:
+
+| Menu item | Result |
+| --- | --- |
+| **Live voice recording** | Records WebM audio, uploads it to the configured 888box attachment service, and inserts a player with the transcript. Recordings are limited to 25 MB; confirm participant consent first. |
+| **Import audio (Transcript)** | Transcribes an audio file and adds the timestamped transcript to the note. |
+| **Import audio (Smart format)** | Transcribes the audio, then uses the configured AI provider to organize the transcript into readable Markdown. |
+| **Import file (creates a Markdown note)** | Imports Markdown, text, Office/OpenDocument files, CSV, RTF, EPUB, and supported PDFs. Supported document conversion runs in the browser. |
+| **Import website (creates a Markdown note)** | Enter a publicly accessible URL to extract its title and article content as Markdown. |
+
+When importing into a note that already has content, choose **Insert at Cursor** or **Replace All**. In Block mode the menu changes to **Import content (Blocks)**, and the imported text becomes editable blocks. Dragging a file onto the editor also offers an attachment upload option; images can be uploaded to R2.
+
 ## 3. Build a Block document
 
 Create a [Block note](https://wiki.david888.com/new/block). Click the inline **+** to add a block, type `/` to search block types, and drag a block handle to reorder content. Use the floating formatting toolbar to style selected text.
@@ -58,7 +72,22 @@ Seal is configured independently from reader and edit passwords. In the editor, 
 | **Dead Man's Switch** | The note stays sealed while you check in on schedule; it is released if the interval passes without a pulse. | Set the interval in minutes. Send a pulse in the Seal dialog or use its private pulse URL. Saving an edit also refreshes the pulse. |
 | **Expiration** | The share expires and is removed when its retention period ends. | Choose `10m`, `1h`, `1d`, `7d`, or `30d`. |
 
-The Seal dialog includes ten scenario presets for common cases such as a one-time password, scheduled announcement, course release, and emergency backup. A preset fills Seal settings only; it does not edit the note body. Review the selected mode, dates, and limits before creating the Seal.
+The Seal dialog includes ten presets. Each one fills in the release rule; it does not edit the note body.
+
+| Preset | Rule filled in |
+| --- | --- |
+| **One-Time Password** | Burn after 1 view; 1-hour expiration. |
+| **Crypto Inheritance** | Dead Man's Switch; 30-day pulse interval. |
+| **Whistleblower** | Dead Man's Switch; 7-day pulse interval. |
+| **Product Launch** | Time Lock; unlock in 7 days. |
+| **Birthday Gift** | Time Lock; unlock in 1 day. |
+| **Legal Hold** | Share expires in 30 days. |
+| **Scavenger Hunt** | Time Lock; unlock in 1 hour. |
+| **Course Content** | Time Lock; unlock in 7 days. |
+| **Emergency Backup** | Dead Man's Switch; 14-day pulse interval. |
+| **Shared Secret** | Burn after 1 view; 1-day expiration. |
+
+Review the selected mode, date, view limit, and pulse interval before creating the Seal.
 
 ## 8. Keep writing offline
 
