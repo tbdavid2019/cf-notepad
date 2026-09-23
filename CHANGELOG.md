@@ -2,6 +2,7 @@
 
 ## [2026-09-23]
 
+- **📚 重整中英文專案文件並移除舊產品名稱 (English-First Documentation & Brand Cleanup)**：將根目錄 `README.md` 改為英文優先的精簡推廣頁，新增獨立繁中首頁 `README.zh-TW.md`、中英文安裝指南與完整功能詳情文件；更新紀錄維持獨立於 README。移除首頁與安裝文件中的舊產品名稱，並保留原有中英文功能說明於獨立文件。
 - **🚀 新增 Cloudflare 一鍵部署並更新專案名稱 (Cloudflare One-Click Deploy & Repository Rename)**：將 GitHub repository 更名為 `tbdavid2019/888wiki`，README 中英文部署章節新增 Cloudflare 官方 Deploy Button；Cloudflare 可依 `wrangler.toml` 自動建立 KV、D1、R2，並於部署時初始化 D1 歷史、統計與註解資料表。加入部署機密欄位說明，移除 Wrangler 設定內的帳號資源 ID 與明文機密預設值，並為複製部署提供安全通用的資源範本。
 
 ## [2026-09-22]
