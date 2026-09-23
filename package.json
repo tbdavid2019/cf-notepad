@@ -1,5 +1,5 @@
 {
-  "name": "cf-notepad",
+  "name": "888wiki",
   "version": "1.0.0",
   "author": "DAVID888 <tbdavid2019>",
   "license": "MIT",
@@ -8,6 +8,22 @@
     "wrangler": "^4.134.0"
   },
   "private": true,
+  "cloudflare": {
+    "bindings": {
+      "SCN_SALT": {
+        "description": "Generate a unique random string for password hashing (for example, `openssl rand -hex 32`)."
+      },
+      "SCN_SECRET": {
+        "description": "Generate a unique random secret for signing sessions and tokens (for example, `openssl rand -hex 32`)."
+      },
+      "SCN_ADMIN_PW": {
+        "description": "Choose a strong password for the admin dashboard. The admin route is configured separately with SCN_ADMIN_PATH."
+      },
+      "GROQ_API_KEY": {
+        "description": "Optional. Add a Groq API key to enable hosted AI transcription and writing features."
+      }
+    }
+  },
   "scripts": {
     "build:block-editor": "node scripts/build-block-editor.mjs",
     "build:canvas-editor": "node scripts/build-canvas-editor.mjs",
@@ -19,7 +35,8 @@
     "predev": "npm run prepare:skill-doc",
     "dev": "wrangler dev",
     "predeploy": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:whiteboard-editor && npm run build:ocr",
-    "deploy": "wrangler deploy",
+    "deploy": "npm run db:init && wrangler deploy",
+    "db:init": "wrangler d1 execute NOTE_HISTORY_DB --remote --file=./schema/note_history.sql && wrangler d1 execute NOTE_HISTORY_DB --remote --file=./schema/note_stats.sql && wrangler d1 execute NOTE_HISTORY_DB --remote --file=./schema/note_annotations.sql",
     "prepublish": "npm run prepare:skill-doc",
     "publish": "wrangler deploy",
     "pretest": "npm run prepare:skill-doc && npm run build:block-editor && npm run build:canvas-editor && npm run build:whiteboard-editor && npm run build:ocr",

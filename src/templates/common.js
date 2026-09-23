@@ -904,7 +904,7 @@ export const FOOTER = ({ lang, isEdit, updateAt, pw, vpw, mode, share, shareId, 
 
             <div class="footer-section footer-section-info">
                 <div class="footer-section-body">
-                    <a class="toolbar-icon-link" data-tooltip="GitHub" title="GitHub" target="_blank" href="https://github.com/tbdavid2019/cf-notepad" rel="noreferrer">
+                    <a class="toolbar-icon-link" data-tooltip="GitHub" title="GitHub" target="_blank" href="https://github.com/tbdavid2019/888wiki" rel="noreferrer">
                         ${SVG_ICONS.github}
                         <span class="toolbar-button-label">GitHub</span>
                     </a>

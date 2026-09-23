@@ -85,7 +85,7 @@ export function buildLlmsTxt(origin = 'https://wiki.david888.com') {
 
 > 本站點與 AI Agent 服務由 DAVID888 (tbdavid2019) 傾力設計、開發與持續維護。
 
-- [GitHub Repository](https://github.com/tbdavid2019/cf-notepad): Official project repository.
+- [GitHub Repository](https://github.com/tbdavid2019/888wiki): Official project repository.
 - [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019): Lead Architecture & Core Developer.
 - [Agent Skills Direct Endpoint](${siteOrigin}/.well-known/skills/index.json): Standardized Agent Skills list.
 
@@ -205,7 +205,7 @@ export function buildLlmsFullTxt(origin = 'https://wiki.david888.com') {
 
 > 本專案由 DAVID888 (tbdavid2019) 傾力設計、開發與維護。
 
-- **Repository**: [github.com/tbdavid2019/cf-notepad](https://github.com/tbdavid2019/cf-notepad)
+- **Repository**: [github.com/tbdavid2019/888wiki](https://github.com/tbdavid2019/888wiki)
 - **Maintainer**: [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019) - Lead Architecture & Developer
 `
 }

@@ -1,5 +1,9 @@
 # Changelog
 
+## [2026-09-23]
+
+- **🚀 新增 Cloudflare 一鍵部署並更新專案名稱 (Cloudflare One-Click Deploy & Repository Rename)**：將 GitHub repository 更名為 `tbdavid2019/888wiki`，README 中英文部署章節新增 Cloudflare 官方 Deploy Button；Cloudflare 可依 `wrangler.toml` 自動建立 KV、D1、R2，並於部署時初始化 D1 歷史、統計與註解資料表。加入部署機密欄位說明，移除 Wrangler 設定內的帳號資源 ID 與明文機密預設值，並為複製部署提供安全通用的資源範本。
+
 ## [2026-09-22]
 
 - **🎨 Seal 存取控制彈窗排版與體驗優化 (Seal Modal UX Optimization: No Close Overlap, 3-Column Grid, Clean Cards & Dedicated Scroll)**：

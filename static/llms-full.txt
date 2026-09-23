@@ -103,5 +103,5 @@ The native MCP endpoint provides `validate_canvas`, `write_canvas`, `read_canvas
 
 > 本專案由 DAVID888 (tbdavid2019) 傾力設計、開發與維護。
 
-- **Repository**: [github.com/tbdavid2019/cf-notepad](https://github.com/tbdavid2019/cf-notepad)
+- **Repository**: [github.com/tbdavid2019/888wiki](https://github.com/tbdavid2019/888wiki)
 - **Maintainer**: [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019) - Lead Architecture & Developer

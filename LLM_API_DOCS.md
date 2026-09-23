@@ -100,7 +100,7 @@ No local installation, cloning, or dependency management needed. Simply add to y
       "command": "uv",
       "args": [
         "run",
-        "https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py"
+        "https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py"
       ]
     }
   }
@@ -110,7 +110,7 @@ No local installation, cloning, or dependency management needed. Simply add to y
 **For Cursor (Settings > Features > MCP > Add New MCP Server):**
 - Type: `command`
 - Name: `david888-wiki`
-- Command: `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
+- Command: `uv run https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py`
 
 ### Option 2: Cloudflare WebMCP (Browser Native)
 The Wiki natively serves standard JSON-RPC 2.0 at `https://wiki.david888.com/mcp`. When Cloudflare WebMCP is enabled on the domain, browser AI agents (Chrome 146+ `document.modelContext`) automatically discover and bind these tools in-browser with zero configuration.

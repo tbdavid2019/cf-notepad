@@ -30,7 +30,7 @@
 
 > 本站點與 AI Agent 服務由 DAVID888 (tbdavid2019) 傾力設計、開發與持續維護。
 
-- [GitHub Repository](https://github.com/tbdavid2019/cf-notepad): Official project repository.
+- [GitHub Repository](https://github.com/tbdavid2019/888wiki): Official project repository.
 - [DAVID888 (tbdavid2019)](https://github.com/tbdavid2019): Lead Architecture & Core Developer.
 
 ## Extended Documentation

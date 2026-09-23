@@ -7,7 +7,7 @@ LLMs and external tools **do not** need to clone this repository, download scrip
 
 Since `uv` natively supports executing remote Python scripts safely from URLs (PEP 723), all an AI agent needs to do is run:
 ```bash
-uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py
+uv run https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py
 ```
 
 That's it! `uv` will instantly fetch the logic, build an invisible temporary environment, and connect the LLM to your Wiki. No `package.json`, no `pip install`. It just works.
@@ -24,7 +24,7 @@ Here is exactly what to paste into various AI tools so they can use your Wiki as
 3. Set the Type to **command**.
 4. Set the Name to **david888-wiki**.
 5. Set the Command to exactly: 
-   `uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py`
+   `uv run https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py`
 
 ### 2. Claude Desktop
 Edit your `claude_desktop_config.json` file:
@@ -38,7 +38,7 @@ Edit your `claude_desktop_config.json` file:
       "command": "uv",
       "args": [
         "run",
-        "https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py"
+        "https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py"
       ]
     }
   }
@@ -48,7 +48,7 @@ Edit your `claude_desktop_config.json` file:
 ### 3. OpenClaw / Custom Agents
 For an autonomous agent written in Node.js, Python, or Go, simply spawn the client process pointing to the URL:
 ```bash
-uv run https://raw.githubusercontent.com/tbdavid2019/cf-notepad/main/mcp/server.py
+uv run https://raw.githubusercontent.com/tbdavid2019/888wiki/main/mcp/server.py
 ```
 
 ### 4. Cloudflare WebMCP & Direct HTTP Endpoint

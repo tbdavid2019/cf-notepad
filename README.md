@@ -391,6 +391,14 @@
 
 ## 🛠️ 部署教學
 
+### 一鍵部署到 Cloudflare（推薦）
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tbdavid2019/888wiki)
+
+點擊按鈕後，登入 GitHub 與 Cloudflare，選擇要建立的 GitHub 專案名稱及 Worker 名稱，再啟動部署。Cloudflare 會將專案複製到你的 GitHub 帳號、建立 Workers Builds，並依 `wrangler.toml` 自動建立 KV、D1、R2 資源。D1 的筆記歷史、瀏覽統計與段落註解資料表會在部署時初始化。
+
+部署精靈會引導設定以下機密值：`SCN_SALT`、`SCN_SECRET`、`SCN_ADMIN_PW`。請為每個部署產生新的隨機值；`GROQ_API_KEY` 可選填，用於啟用 Groq AI 功能。部署完成後，使用 `SCN_ADMIN_PATH`（預設 `/admin`）與設定的管理員密碼登入後台。圖片會先由 Worker 提供存取；如需自訂圖片網域，可在部署後設定 `SCN_R2_DOMAIN`。
+
 ### 前置準備
 
 - Node.js 與 npm
@@ -421,13 +429,13 @@ wrangler d1 execute cloud-notepad-history --file=./schema/note_history.sql
 
 ### 4. 設定環境密鑰 (Secrets)
 
-透過 `wrangler secret put <變數名稱>` 或網頁後台設定：
+透過 Cloudflare 部署精靈或 Worker 後台設定以下 Secrets：
 
 - `GROQ_API_KEY`: Groq API 金鑰（**推薦設定**，驅動極速 STT 語音轉逐字稿 `whisper-large-v3`，可於 [Groq Console](https://console.groq.com/) 免費取得）
-- `SCN_SALT`: 加鹽 UUID
-- `SCN_SECRET`: JWT 密鑰
-- `SCN_ADMIN_PATH`: 超級管理員後台路徑 (如 `/admin333`)
+- `SCN_SALT`: 密碼雜湊用隨機密鑰
+- `SCN_SECRET`: 工作階段與權杖簽署用隨機密鑰
 - `SCN_ADMIN_PW`: 管理員密碼
+- `SCN_ADMIN_PATH`: 超級管理員後台路徑 (一般變數，預設 `/admin`)
 - `SCN_SLUG_LENGTH`: 隨機網址長度 (預設 `4`)
 - `SCN_ENABLE_NOTE_HISTORY`: 設為 `"1"` 啟用 D1 版本紀錄
 
@@ -794,6 +802,14 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 
 ## 🛠️ Deployment Guide
 
+### One-click deploy to Cloudflare (recommended)
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tbdavid2019/888wiki)
+
+Click the button, sign in to GitHub and Cloudflare, choose your new GitHub repository and Worker names, then start deployment. Cloudflare copies the project to your GitHub account, configures Workers Builds, and provisions the KV, D1, and R2 resources declared in `wrangler.toml`. The D1 tables for note history, view statistics, and paragraph annotations are initialized during deployment.
+
+The setup flow guides you through these secret values: `SCN_SALT`, `SCN_SECRET`, and `SCN_ADMIN_PW`. Generate unique random values for each deployment. `GROQ_API_KEY` is optional and enables Groq AI features. After deployment, open the admin dashboard at `SCN_ADMIN_PATH` (default: `/admin`) and sign in with your admin password. Images are served through the Worker by default; set `SCN_R2_DOMAIN` after deployment if you want to use a custom image domain.
+
 ### Prerequisites
 
 - Node.js and npm installed
@@ -824,12 +840,12 @@ Create an R2 Bucket in Cloudflare and enable public domain access. Set `bucket_n
 
 ### 4. Set Environment Secrets
 
-Set secrets via `wrangler secret put <VAR>`:
+Set these secrets in the Cloudflare deployment flow or Worker dashboard:
 
-- `SCN_SALT`: Password hashing salt UUID
-- `SCN_SECRET`: JWT encryption secret
-- `SCN_ADMIN_PATH`: Admin dashboard path (e.g., `/admin333`)
+- `SCN_SALT`: Random key used for password hashing
+- `SCN_SECRET`: Random key used to sign sessions and tokens
 - `SCN_ADMIN_PW`: Admin dashboard password
+- `SCN_ADMIN_PATH`: Admin dashboard path as a regular variable (default: `/admin`)
 - `SCN_SLUG_LENGTH`: Length of random share URLs (default `4`)
 - `SCN_ENABLE_NOTE_HISTORY`: Set to `"1"` for D1 history
 
