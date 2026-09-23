@@ -2,11 +2,15 @@
 
 Back to the [project homepage](../README.md) · [Usage guide](USAGE.md) · [Installation](INSTALLATION.md) · [Changelog](../CHANGELOG.md)
 
+888wiki is a **Markdown-first** wiki: portable Markdown is the base format, with Block, Canvas, and Whiteboard available for work that benefits from structured blocks or a visual surface. Choose from 20 colorful themes for Markdown previews and reading layouts.
+
 ## Editor screenshots
 
-![Markdown editor and live preview](../orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
+![Markdown editor with search and replace](../orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
 
 ![Editor workspace](../orca-paste-1787127786636-d3cf3fb4-c057-41ef-8c77-9fa2db22a43e.png)
+
+![Markdown syntax and rendered feature example](../image.png)
 
 ## ⚡ Feature Highlights
 
@@ -42,7 +46,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
 - **Automatic `[TOC]` Table of Contents**: Insert `[TOC]` to scan document heading hierarchy and render smooth-scrolling TOC jump links.
 - **Two/Three-Column Layouts**: Wrap selected text in `<div class="two-column-layout">` or `three-column-layout` for multi-column presentation (stacks on mobile).
 - **Auto Media Previews**: Automatically converts YouTube URLs to privacy-enhanced players, PDFs to embedded viewers, and MP4/MP3 links to native players.
-- **Four Fixed Note Formats &amp; Creation Menu (Markdown / Block / Canvas / Whiteboard)**: The leftmost Footer `+ New` menu creates a [Markdown note](https://wiki.david888.com/new/markdown), a [Block note](https://wiki.david888.com/new/block), a [Canvas](https://wiki.david888.com/new/canvas), or an [Excalidraw Whiteboard](https://wiki.david888.com/new/whiteboard). The format is fixed after creation: Markdown retains its linear workflow, Block uses a Notion-like WYSIWYG editor, Canvas provides 2D cards and relationship lines, and Whiteboard offers freeform sketch drawing, doodles, and sticky notes.
+- **Four Fixed Note Formats &amp; Creation Menu (Markdown / Block / Canvas / Whiteboard)**: The leftmost Footer `+ New` menu creates a [Markdown note](https://wiki.david888.com/new/markdown), a [Block note](https://wiki.david888.com/new/block), a [Canvas](https://wiki.david888.com/new/canvas), or an [Excalidraw Whiteboard](https://wiki.david888.com/new/whiteboard). The format is fixed after creation: Markdown retains its portable text workflow, Block provides editable content blocks, Canvas provides 2D cards and relationship lines, and Whiteboard offers freeform sketch drawing, doodles, and sticky notes.
 - **🎨 Canvas v2 Architecture (Canvas v2 with Ameliorate Architecture &amp; JSON Canvas)**: A third native format (`editorFormat: 'canvas'`) for visual thinking, mind-mapping, and Zettelkasten card linking. Fully upgraded to Canvas v2 with deep parity to the open-source **Ameliorate** project (`0cacee5577438979b651dd808793c4cbd13864ee`, MIT License, credited in `THIRD_PARTY_NOTICES.md`):
   - **Ameliorate Thought Nodes & Low-Chroma Design System**: Cards feature Ameliorate's signature corner badge with refined, low-chroma type tags (`Problem`, `Benefit`, `Solution`, `Cause`, `Criterion`, `Detriment`, `Question`, `Note`), meeting strict WCAG AA/AAA contrast guidelines (≥ 5.5:1–8:1). Built with clean white card surfaces and subtle 1px borders (`#e2e8f0`) to avoid oversaturated neon colors.
   - **Full Lucide SVG Vector Icon Suite**: Integrated `lucide-react` across corner badges, quick node action buttons (copy, delete, palette), the bottom MainToolbar (add, undo, redo, fit, file), top-right floating pill (language, text-to-speech, book mode), and edge toolbar, replacing inconsistent platform emojis with crisp, elegant vector icons.
@@ -63,7 +67,7 @@ Use the cURL/HTTP request tools detailed in that document to save the content on
   - **100% Official Standard Component**: Zero reinvented canvas controls. Bundled with esbuild into `static/js/whiteboard-editor.bundle.mjs` and `bundle.css`, with on-demand runtime fonts loaded via unpkg CDN.
   - **Seamless Persistence &amp; Read-Only Sharing**: Synchronizes Excalidraw JSON (`elements` and `appState`) through `#contents.value` into existing D1/KV storage without schema alterations. Public shares (`/share/:id`) render in read-only mode (`viewModeEnabled: true`), dynamically matching dark/light themes and supporting PNG/SVG export.
   - **LLM Agent WebMCP &amp; REST API**: Native WebMCP exposes `validate_whiteboard`, `write_whiteboard`, and `read_whiteboard`; REST API accepts complete Excalidraw JSON via `editorFormat: 'whiteboard'` and projects clean text for search indexing and LLMs.
-- **Notion-like Block Editing & Live Voice Recording**: Block notes use BlockNote's ready-made Notion-style canvas, including the cursor-side `+`, drag handle, slash menu, floating formatting toolbar, and mobile UI. Supports `/record` or `/錄音` slash commands and '+ New' footer menu to trigger live microphone voice recording with the Dynamic Island HUD and automated Whisper AI transcription into block notes. It supports images, links, YouTube, PDFs, audio, files, Mermaid, ECharts, and raw HTML. Existing notes continue to serialize to the compatible Tiptap JSON format, so Share pages and APIs remain unchanged. Block edit pages support PNG, standalone HTML, PDF, and print export; Markdown export remains available in Markdown edit pages.
+- **Block Editing & Live Voice Recording**: Block notes use BlockNote with a cursor-side `+`, drag handle, slash menu, floating formatting toolbar, and mobile UI. Supports `/record` or `/錄音` slash commands and the '+ New' footer menu to trigger live microphone recording with the Dynamic Island HUD and Whisper transcription into block notes. It supports images, links, YouTube, PDFs, audio, files, Mermaid, ECharts, and raw HTML. Existing notes continue to serialize to the compatible Tiptap JSON format, so Share pages and APIs remain unchanged. Block edit pages support PNG, standalone HTML, PDF, and print export; Markdown export remains available in Markdown edit pages.
 - **Split Welcome View & Parallel Typewriter Effect**: A fresh Markdown note presents Stray Birds poetry on the left editor pane and randomly selected writing tips on the right preview pane (`#preview-welcome`) with synchronized, parallel typewriter animations, disappearing seamlessly as soon as the author begins typing.
 - **Accessible Dialogs**: Editor dialogs use proper dialog semantics, trap Tab focus, restore focus to their trigger when closed, and support Escape. The interface also honors the system `prefers-reduced-motion` setting.
 - **Card-Grouped Share & Publish Menu**: The floating share menu triggered by the globe icon in the footer is structured into clear, card-grouped sections (`.dropdown-group-card`) distinguishing View Modes (Share page, Presentation, Book mode), Quick Copy URLs, Share Settings (Public Index, Paragraph Annotations), and Unpublish, with consistent vertical rhythm, concise destination subtitles that do not repeat the action title, full-row aligned hover/focus surfaces across Edit, Share, and Block Edit menus, viewport-aware scrolling for long menus, and complete dark/light theme support.
@@ -218,11 +222,15 @@ When asked to author a tutorial series, documentation handbook, or comprehensive
 - **Interactive Language Switcher in Editor Preference Modal**:
   - Embedded `En / 中` toggle pill buttons in the top-right of the "Choose your editor" dialog (`EDITOR_PREFERENCE_MODAL`). International visitors can switch to English with zero page reloads, instantly updating card descriptions, badges, and action buttons.
 - **Slide Presentation Mode (Slidev-Lite 2.0)**: Splice notes using `---` dividers for 16:9 fullscreen slide presentations. Features KaTeX math, Mermaid diagrams, interactive ECharts, floating translucent toolbar (Overview `O`, Laser `L`, Blackout `B`, Fullscreen `F`), 20 theme color inheritances, and PDF/Slide export.
+
+  ![Markdown rendered as a themed slide presentation](../orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 - **KaTeX Math Formula Copy (7 Formats) & Smart Currency Protection**:
   - Click any KaTeX math equation in preview or share mode to copy it directly to the clipboard.
   - Dedicated copy format menu (`fx` button) supports 7 formats: Auto Detect, LaTeX (with $), Plain LaTeX (without $, for Desmos/WolframAlpha), Notion (double $$), MathML (pastes into Microsoft Word as native formulas), PNG Image, and SVG Vector.
   - **💵 Smart Currency Protection**: Automatically protects monetary dollar amounts (e.g. `$10.00`, `$0.32`, `$3.87`, `NT$100`, `US$50`, `$10-$20`) from being misidentified by `remark-math` as LaTeX math delimiters, preserving bold tags `**` and surrounding formatting, while flawlessly preserving genuine LaTeX equations (such as `$E = mc^2$`, `$10$`, `$1 + 1 = 2$`, and `$10 < x < 20$`).
 - **Paragraph Annotations & REST API**: Highlight text on Share pages for inline discussions and deep-linking, backed by Cloudflare D1 persistence and standard REST endpoints (`/api/shares/:shareId/annotations`). Features consecutive annotation creation across multiple text passages without reloading, smooth composer auto-scrolling, hover preview cards, touch action sheets, and device HMAC delete tokens.
+
+  ![Published Markdown with the paragraph annotation sidebar](../orca-paste-1787127786636-d3cf3fb4-c057-41ef-8c77-9fa2db22a43e.png)
 - **Stateless Markdown Processing Utilities**:
   - `POST /api/markdown/render`: Markdown to HTML with 20 CSS theme choices.
   - `POST /api/markdown/parse`: HTML / Web URL to clean Markdown.

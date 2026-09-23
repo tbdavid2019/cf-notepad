@@ -2,11 +2,15 @@
 
 回到[繁體中文專案首頁](../README.zh-TW.md) · [使用指南](USAGE.zh-TW.md) · [安裝指南](INSTALLATION.zh-TW.md) · [更新紀錄](../CHANGELOG.md)
 
+888wiki **從 Markdown 起家**：以可攜的 Markdown 純文字為基礎，再依需求使用 Block、Canvas 或 Whiteboard。Markdown 預覽與閱讀版面提供 20 款繽紛主題。
+
 ## 編輯器畫面
 
-![Markdown 編輯器與即時預覽](../orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
+![Markdown 編輯器的搜尋與取代功能](../orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
 
 ![編輯工作區](../orca-paste-1787127786636-d3cf3fb4-c057-41ef-8c77-9fa2db22a43e.png)
+
+![Markdown 語法與渲染範例](../image.png)
 
 ## ⚡ 強大亮點功能一覽 (Feature Highlights)
 
@@ -48,7 +52,7 @@
 - **自動 `[TOC]` 文章目錄**：插入 `[TOC]` 標籤自動掃描文件標題階層（`#` ~ `###`），生成可點擊平滑跳轉的索引目錄。
 - **二欄／三欄多欄版面**：工具列一鍵圈選文字生成 `<div class="two-column-layout">` 或 `three-column-layout` 橫向多欄排版（手機自動切換單欄）。
 - **多媒體網址自動預覽**：自動將 YouTube 連結轉為隱私保護播放器、PDF 轉為嵌入式閱覽器、MP4/MP3 轉為原生播放器。
-- **四軌筆記格式與建立入口 (Markdown / Block / Canvas / Whiteboard)**：Footer 最左側的「＋ 新增」選單支援建立 [Markdown 筆記](https://wiki.david888.com/new/markdown)、[Block 筆記](https://wiki.david888.com/new/block)、[Canvas 畫布](https://wiki.david888.com/new/canvas) 或 [Excalidraw 白板](https://wiki.david888.com/new/whiteboard)。建立後格式鎖定；Markdown 專注線性純文字排版，Block 提供 Notion 風格區塊操作，Canvas 專注 2D 空間卡片與關係線，Whiteboard 則提供自由手繪草圖、塗鴉與便籤。
+- **四種固定筆記格式與建立入口 (Markdown / Block / Canvas / Whiteboard)**：Footer 最左側的「＋ 新增」選單支援建立 [Markdown 筆記](https://wiki.david888.com/new/markdown)、[Block 筆記](https://wiki.david888.com/new/block)、[Canvas 畫布](https://wiki.david888.com/new/canvas) 或 [Excalidraw 白板](https://wiki.david888.com/new/whiteboard)。建立後格式鎖定；Markdown 保留可攜純文字工作流，Block 提供可編輯內容區塊，Canvas 專注 2D 空間卡片與關係線，Whiteboard 則提供自由手繪草圖、塗鴉與便籤。
 - **🎨 Canvas v2 畫布整體架構 (Canvas v2 with Ameliorate Architecture &amp; JSON Canvas)**：專為空間視覺化思考與卡片盒筆記（Zettelkasten）打造的第三種原生模式 (`editorFormat: 'canvas'`)。全面升級為 Canvas v2 架構，深度對齊開源專案 **Ameliorate**（`0cacee5577438979b651dd808793c4cbd13864ee`，MIT License，版權致謝於 `THIRD_PARTY_NOTICES.md`）：
   - **Ameliorate 思考節點與精緻低彩度色票**：卡片左上角內嵌典雅的類型標籤（`Problem`, `Benefit`, `Solution`, `Cause`, `Criterion`, `Detriment`, `Question`, `Note`），圓角貼合卡片外緣。依據 Frontend Design 與 Impeccable 準則重構為低彩度色票（文字對比度 ≥ 5.5:1～8:1，符合 WCAG AA/AAA），搭配純淨白底卡片與細緻 1px 邊框（`#e2e8f0`），徹底告別高飽和熒光刺眼感。
   - **全套 Lucide 向量圖示庫**：整合 `lucide-react`，全面取代系統 Emoji 與方塊字符，卡片角標、頂部快捷列（複製、刪除、色彩）、置底主工具列（新增、復原、重做、適應、檔案）、右上懸浮膠囊（多語、語音、書本）與連線工具列全面換裝為洗鍊的 Lucide SVG 向量圖示。
@@ -69,7 +73,7 @@
   - **100% 官方標準封裝**：零發明客製畫布組件，採用 esbuild 打包至 `static/js/whiteboard-editor.bundle.mjs` 與 `bundle.css`，字型由 unpkg CDN 動態載入。
   - **資料相容與唯讀分享**：狀態透過 `#contents.value` 防抖同步，完整保留 Excalidraw JSON (`elements` 與 `appState`) 於 D1/KV 資料庫，無需更改 schema；分享頁 (`/share/:id`) 自動呈現唯讀手繪畫布 (`viewModeEnabled: true`)，支援 20 款深淺主題切換與 PNG/SVG 高清匯出。
   - **LLM Agent WebMCP 與 REST API**：原生提供 `validate_whiteboard`、`write_whiteboard`、`read_whiteboard`，REST API 透過 `editorFormat: 'whiteboard'` 接收完整 Excalidraw 文件；自動提取文字投影供搜尋與 LLM 讀取。
-- **Notion-like Block 編輯體驗與即時錄音**：Block 筆記使用 BlockNote 的現成 Notion 式畫布，內建游標左側的 `＋`、拖曳把手、slash menu、浮動格式工具列與行動版介面。支援 `/record`、`/錄音` 斜線指令與底欄選單一鍵啟動「🎙️ 即時錄音」，透過靈動島懸浮 HUD 即時計時並自動經由 Whisper AI 轉錄為文字區塊。可插入圖片、連結、YouTube、PDF、音訊、檔案、Mermaid、ECharts 與 Raw HTML；嵌入區塊可直接編輯，網址與圖表 JSON 會先驗證。既有筆記仍以原本 Tiptap JSON 格式保存，分享頁與 API 完全相容。Block 編輯頁支援 PNG、HTML、PDF／列印導出；Markdown 導出保留在 Markdown 編輯頁。
+- **Block 區塊編輯與即時錄音**：Block 筆記使用 BlockNote，內建游標左側的 `＋`、拖曳把手、slash menu、浮動格式工具列與行動版介面。支援 `/record`、`/錄音` 斜線指令與底欄選單一鍵啟動「🎙️ 即時錄音」，透過靈動島懸浮 HUD 即時計時並自動經由 Whisper AI 轉錄為文字區塊。可插入圖片、連結、YouTube、PDF、音訊、檔案、Mermaid、ECharts 與 Raw HTML；嵌入區塊可直接編輯，網址與圖表 JSON 會先驗證。既有筆記仍以原本 Tiptap JSON 格式保存，分享頁與 API 完全相容。Block 編輯頁支援 PNG、HTML、PDF／列印匯出；Markdown 匯出保留在 Markdown 編輯頁。
 - **雙欄小訣竅與打字機歡迎畫面 (Split Welcome View & Parallel Typewriter)**：建立新筆記時，左側編輯區專注呈現泰戈爾《飛鳥集》中英詩句，右側預覽區則獨立呈現隨機精選寫作技巧（`#preview-welcome`），雙欄平行展開流暢打字機動畫，作者開始打字時兩側自動淡出隱藏。
 - **可及性的對話視窗**：所有編輯器對話視窗都具備正確 dialog 語意、Tab 焦點鎖定、關閉後回到原觸發按鈕與 Escape 關閉行為；系統設定「減少動態效果」時，介面會停用不必要的動畫。
 - **網址轉 Markdown 剪藏 (URL to Markdown Clipper)**：Footer「＋ 新增」選單內建「從網址匯入」功能。貼上任意公開網頁網址，即由 Worker 後端 API (`/api/url2md`，具備 `http://2md.aiurl.tw/` 主服務與 `2md.glsoft.ai` / `create360.ai` 三層 Failover 備援) 擷取文章標題與乾淨的 Markdown 內文，可選擇插入/取代目前編輯器或自動新建筆記。
@@ -94,7 +98,7 @@
 - **🔑 管理員 Touch ID / FIDO2 指紋一鍵登入 (Admin Passkey & Touch ID)**：後台登入介面支援 WebAuthn / FIDO2 生物辨識一鍵刷指紋進入；後台支援隨時綁定新裝置（Mac Touch ID、iPhone Face ID、Windows Hello）與管理憑證。
 - **📐 自適應緊湊行號槽與自動折行同步 (Adaptive Line Numbers Gutter with Auto-Wrap Sync)**：行號區塊採用動態寬度計算（1~99 行超緊湊 ~26px，並隨百行、千行、萬行平滑動態擴展），搭配 13px 輔助字號與垂直精準像素對齊；獨家內建**長行折行高度鏡像同步 (Mirror DOM Line Height Sync)**，超長段落自動對齊行首，視窗縮放或雙欄調整時即時重新量測，確保行號與文字內容 1:1 精準對齊。
 - **🎨 全面深色模式與標準化彈窗 (Unified Modal Architecture & Full Dark Mode)**：全站彈出視窗（`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`）全面導入標準化 Design System，統一採用 `--modal-*` CSS 變數適配 20 款深淺主題；內建全域 Escape 鍵關閉、Tab 焦點鎖定 (Focus Trap)、`data-modal-close` 事件委派與無障礙關閉按鈕。
-- **字體與 20+ 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20+ 款 CSS 主題（預設 `claude-canvas`）與寬度切換；編輯器預設固定為桌面預覽（100% 全寬度），並支援隨時切換左右/上下分割與桌面/手機模式。
+- **字體與 20 款主題**：預設繁中 `GenJyuu Gothic` 與程式碼 `Maple Mono` / `JetBrains Mono`。Footer 提供 20 款 CSS 主題（預設 `claude-canvas`）與寬度切換；編輯器預設固定為桌面預覽（100% 全寬度），並支援隨時切換左右／上下分割與桌面／手機模式。
 - **⚡ 即時動態標題同步 (Real-time Dynamic Title Sync)**：在編輯器內輸入或修改 `# 標題` 時，瀏覽器分頁標籤（`<title>`）與全域應用狀態即時同步更新，無需重新整理頁面。同時強化後端標題提取器，優先抓取 `# Title` 並自動跳過前置 `[TOC]`、提示區塊與寒暄前綴。
 - **卡片化分組發布與分享選單 (Card-Grouped Share Menu)**：點擊底部分享按鈕彈出的浮動選單全面採用結構化卡片分組（`.dropdown-group-card`），明確劃分「檢視閱讀模式」（打開分享頁面、簡報模式、書本模式）、「快速複製連結」（複製分享網址、簡報網址、書本網址）、「分享設定」（公開索引、段落註解開關）與「取消發布」。每一條目皆具備統一的呼吸間距、清晰的標題與補充目的地說明，避免標題和副標題重複；Edit、Share、Block Edit 的 New／Export／Copy／Theme／Width 選單共用完整對齊的 hover/focus 表面，並支援長選單依視窗高度滾動，100% 完美相容 20 款深淺主題。
 - **整合式發布設定與狀態列**：發布對話窗集中設定「發布、自動儲存、公開索引」，預設三項全開並記住這台裝置的選擇。發布後，Edit 預覽上方會顯示分享 URL、公開索引、保留版本、不重複瀏覽與最後儲存時間；深色介面下狀態列與底部控制列會使用一致的高對比冷色系，並以青藍、亮藍、靛藍與紫藍區分發布、版面、字體與語言操作。
@@ -215,7 +219,9 @@
 
 - **雙重密碼鎖定 (Edit Lock vs View Lock)**：獨立設定「編輯鎖」（限制修改）與「閱讀鎖」（限制閱讀），均以 Salted MD5 雜湊保護。
 - **D1 歷史版本快照**：Cloudflare D1 自動儲存 10 份版本快照（5 分鐘防刷節流），提供對比、還原與複製。
-- **簡報模式 (Slidev-Lite 2.0 演示)**：使用 `---` 進行 Markdown 分頁，一鍵轉換為 16:9 專業投影片簡報。支援 KaTeX 數學公式、Mermaid 流程圖、ECharts 圖表即時繪製；配備底部快捷懸浮導覽列（大綱 Overview、數位雷射筆 `L`、黑屏暫停 `B`、全螢幕 `F`、頁碼跳轉）；深度繼承 20 款主題色彩與字型；支援封面頁 (`<!-- layout: cover -->`)、雙欄/三欄版型、自訂背景與程式碼逐行高亮；支援一鍵導出 PDF 簡報與單張 Slide 圖片。
+- **簡報模式 (Slidev-Lite 2.0 演示)**：使用 `---` 進行 Markdown 分頁，一鍵轉換為 16:9 專業投影片簡報。支援 KaTeX 數學公式、Mermaid 流程圖、ECharts 圖表即時繪製；配備底部快捷懸浮導覽列（大綱 Overview、數位雷射筆 `L`、黑屏暫停 `B`、全螢幕 `F`、頁碼跳轉）；深度繼承 20 款主題色彩與字型；支援封面頁 (`<!-- layout: cover -->`)、雙欄/三欄版型、自訂背景與程式碼逐行高亮；支援一鍵匯出 PDF 簡報與單張 Slide 圖片。
+
+  ![Markdown 以主題樣式呈現為簡報](../orca-paste-1787127752557-b13cd284-bb9c-450a-8846-cff0c9992951.png)
 - **全能導出與多目標複製矩陣 (`[ ⭳ 匯出 ▾ ]` & `[ 📋 複製 ▾ ]`)**：
   - **檔案導出 (`[ ⭳ 匯出 ▾ ]`)**：
     - **長圖導出 (.png)**：動態載入 `html2canvas`，以 2x Retina 高解析度輸出完整文章長圖。
@@ -252,6 +258,8 @@
   - **🌐 翻譯**：自動辨識語系進行中英雙向 AI 翻譯，並在原位小卡（Inline Popover）展示譯文與一鍵複製。
   - **💬 註解**：一鍵開啟段落劃線討論側邊欄，支援連續多段劃線發起討論與平滑自動聚焦捲動，免重新載入頁面即可流暢連續註解。
 - **段落劃線註解與就地預覽 (Inline Popover & Deep Link)**：
+
+  ![公開 Markdown 筆記與段落註解側欄](../orca-paste-1787127786636-d3cf3fb4-c057-41ef-8c77-9fa2db22a43e.png)
   - 讀者可在分享頁劃線進行段落討論與「複製精準連結」，開啟時會自動跳轉並高亮指定段落。
   - **連續劃線討論 (Continuous Annotations)**：圈選並送出留言後，工具列隨選即用，側邊欄留言框自動平滑捲動至視窗範圍內，支援連續多段劃線發起不同討論串。
   - **桌機 Hover 預覽**：滑鼠懸停劃線段落即時彈出迷你浮層（Tooltip），快速瀏覽最新留言與作者。

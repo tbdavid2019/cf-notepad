@@ -1,6 +1,6 @@
 # 888wiki
 
-**部署在自己 Cloudflare 帳戶中的 Notion 風格知識庫。** 擷取錄音、檔案與網頁，用四種模式撰寫，再以 Seal 控制內容何時釋出。
+**從 Markdown 出發、可部署在自己 Cloudflare 帳戶中的知識工作區。** 先用純文字 Markdown 記錄，再匯入錄音、檔案與網頁；需要不同表達方式時，可切換 Block、Canvas 或 Whiteboard。
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tbdavid2019/888wiki)
 
@@ -23,7 +23,7 @@
 | 模式 | 適合用途 | 主要特色 |
 | --- | --- | --- |
 | **Markdown** | 文章、研究與技術筆記 | 即時預覽、數學公式、圖表、引用、匯入、搜尋取代與彈性版面。 |
-| **Block** | 結構化頁面與多媒體內容 | Notion 風格區塊、Slash 指令、拖曳排序、可編輯嵌入內容與直接匯出。 |
+| **Block** | 結構化頁面與多媒體內容 | 可編輯內容區塊、Slash 指令、拖曳排序、可編輯嵌入內容與直接匯出。 |
 | **Canvas** | 心智圖、計畫與關聯整理 | 八種思考卡片、關係連線、多媒體卡片、復原／重做，以及 `.canvas`／PNG／SVG 匯出。 |
 | **Whiteboard** | 草圖與視覺說明 | Excalidraw 繪圖工具、唯讀分享，以及 PNG／SVG 匯出。 |
 
@@ -37,6 +37,14 @@ Seal 將內容密碼與釋出時機分開設定。可預約時間解鎖、設定
 - **發布與展示：** 公開或密碼保護分享、還原 D1 版本、討論選取段落，並以書本或簡報展示內容。
 - **離線工作：** 草稿保存在瀏覽器 IndexedDB，恢復連線後同步待處理變更。
 - **自行管理技術堆疊：** 一鍵部署 Worker、KV／D1 筆記資料與 R2 圖片儲存至自己的 Cloudflare 帳戶。核心筆記與圖片留在自己的帳戶；錄音發布／同步及大型附件使用外部 888box 服務。
+
+## Markdown 起家的寫作空間
+
+Markdown 是 888wiki 的起點：以可攜的純文字撰寫，即時預覽數學公式、圖表、引用、註腳、提示區塊與擴充語法。可選擇 20 款繽紛深淺主題、字體、預覽寬度與分割版面；同一份 Markdown 也能整理成書本或簡報。
+
+## 為 Agents 與自動化而設
+
+相容的 Agent／LLM 可透過原生 `/mcp`、瀏覽器 WebMCP 工具、REST API 與 OpenAPI 規格，或已發布的 [Agent Skill](https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md) 讀取、建立及發布內容，並依照文件定義的格式與權限操作。
 
 ## 開始使用
 

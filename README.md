@@ -1,6 +1,6 @@
 # 888wiki
 
-**A Notion-style wiki you can run in your own Cloudflare account.** Capture voice, files, and web pages; write in four formats; then publish with Seal-controlled release.
+**A Markdown-first knowledge workspace you can run in your own Cloudflare account.** Start with plain Markdown, capture voice, files, and web pages into it, then use Block, Canvas, or Whiteboard when the work calls for another shape.
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tbdavid2019/888wiki)
 
@@ -23,7 +23,7 @@ The same import choices can create Markdown notes or convert content into editab
 | Mode | Best for | What you get |
 | --- | --- | --- |
 | **Markdown** | Articles, research, and technical notes | Live preview, math, diagrams, citations, imports, search and replace, and flexible layouts. |
-| **Block** | Structured pages and mixed media | Notion-style blocks, slash commands, drag-to-reorder, editable embeds, and direct exports. |
+| **Block** | Structured pages and mixed media | Rich editable blocks, slash commands, drag-to-reorder, editable embeds, and direct exports. |
 | **Canvas** | Maps, plans, and connected ideas | Eight kinds of thought cards, labeled relationships, media cards, undo/redo, and `.canvas` / PNG / SVG export. |
 | **Whiteboard** | Sketches and visual explanations | Excalidraw drawing tools, read-only sharing, and PNG / SVG export. |
 
@@ -37,6 +37,14 @@ Seal separates content passwords from release timing. Set a scheduled unlock, bu
 - **Publish and present:** Share public or password-protected notes, restore D1 history, discuss selected passages, and present content as books or slides.
 - **Work offline:** Keep browser drafts in IndexedDB and sync pending changes when the connection returns.
 - **Keep control of the stack:** One-click deploy the Worker, KV/D1 note storage, and R2 image storage to your Cloudflare account. Core notes and images stay in your account; published audio and large-file attachments use the external 888box service.
+
+## A Markdown workspace with room to shape the page
+
+Markdown is the starting point: write portable plain text, preview it live, and use math, diagrams, citations, footnotes, alerts, and extended Markdown syntax. Choose from 20 colorful light and dark themes, fonts, preview widths, and split layouts. The same Markdown can become a book or slide presentation.
+
+## Built for agents and automation
+
+Connect compatible agents and LLM clients through the native `/mcp` endpoint, browser WebMCP tools, the REST API and OpenAPI description, or the published [Agent Skill](https://wiki.david888.com/.well-known/agent-skills/david888-wiki-publisher/SKILL.md). These interfaces let agents read, create, and publish wiki content using documented formats and permissions.
 
 ## Get started
 

@@ -2,7 +2,7 @@
 
 [Project homepage](../README.md) · [Traditional Chinese](USAGE.zh-TW.md) · [Installation](INSTALLATION.md) · [Feature guide](FEATURES.md)
 
-This guide covers the four note formats, the shared publish flow, and Seal release controls.
+888wiki is Markdown-first. This guide starts with Markdown, then covers capture, the other three workspaces, publishing, and Seal release controls.
 
 ## 1. Create a note in the right format
 
@@ -14,11 +14,19 @@ Create a [Markdown note](https://wiki.david888.com/new/markdown). The editor has
 
 Markdown supports GFM, math, Mermaid and Graphviz diagrams, ECharts, citations and footnotes, GitHub-style alerts, and the project's extended formatting syntax. Use `Cmd/Ctrl+F` to search and `Cmd/Ctrl+H` to search and replace. Paste or drop an image to choose direct R2 upload, local OCR, or table recognition.
 
+![Markdown editor with search and replace](../orca-paste-1787127718063-d5855e68-4e94-4779-a053-a962fb11cbd0.png)
+
+![Markdown features and syntax examples](../image.png)
+
+Choose from 20 colorful light and dark preview themes, then adjust font, width, and split layout from the editor footer. A Markdown note can also open as a book or slide presentation.
+
 For audio, choose transcript import or smart formatting. The transcript can include timestamps. You can also record from the toolbar; review participant consent before recording.
 
 ### Capture audio, files, and web pages
 
 Open **+ New → Import content** to use the capture options shown in the menu:
+
+![Capture menu for recording, audio, file, and website imports](images/import-menu.png)
 
 | Menu item | Result |
 | --- | --- |
@@ -73,6 +81,8 @@ Seal is configured independently from reader and edit passwords. In the editor, 
 | **Expiration** | The share expires and is removed when its retention period ends. | Choose `10m`, `1h`, `1d`, `7d`, or `30d`. |
 
 The Seal dialog includes ten presets. Each one fills in the release rule; it does not edit the note body.
+
+![Seal access control and quick presets](images/seal-presets.png)
 
 | Preset | Rule filled in |
 | --- | --- |

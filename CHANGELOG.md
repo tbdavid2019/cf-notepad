@@ -2,6 +2,7 @@
 
 ## [2026-09-23]
 
+- **📸 將實際產品截圖放入對應指南 (Product Screenshots in Context)**：中英文使用指南在 Markdown 撰寫／搜尋取代、音訊與檔案匯入、Seal 情境範本段落旁加入介面截圖；功能詳情在 Markdown 編輯、簡報及段落註解段落旁加入截圖。首頁定位明確改為 Markdown-first，並補充 20 款繽紛主題，以及 MCP、WebMCP、REST/OpenAPI 和 Agent Skill 整合入口。
 - **🔒 修正封存筆記按編輯時的 Worker Error (Seal Edit Route Template Mapping)**：一般筆記路由在 Time Lock／Dead Man’s Switch 狀態誤呼叫不存在的 `ShareLocked` 模板，導致 `template_exports[type] is not a function`。現在分別使用已匯出的 `ShareTimeLocked` 與 `ShareDeadmanLocked` 訪客頁，並新增路由模板對應回歸測試。
 - **🔎 修正審查發現的錄音、Seal 與 AI 敘述邊界 (Reviewed Audio, Seal & AI Claims)**：雙語文件現在說明錄音先存於 IndexedDB、連線後將音訊副本送往 Groq-first／Workers AI-fallback 轉錄，發布／同步時再上傳 888box 外部附件服務；閱後即焚只銷毀公開分享，保留作者原文；「一次性密碼」明確標示為單次憑據分享，不產生 OTP 驗證碼。
 - **🚀 投稿導向首頁與特色呈現 (Submission-Ready Product Positioning)**：首頁改以「擷取 → 整理 → 釋出」呈現價值，直接列出即時錄音、逐字稿／智慧排版、檔案／網頁匯入、四種編輯模式及 Seal 十種安全釋出情境；中英文使用指南補齊每個選單項目與情境範本的實際效果。
