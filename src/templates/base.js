@@ -5452,6 +5452,7 @@ ${getMarkdownCss()}
                 e.preventDefault();
                 const modal = document.getElementById('vault-presets-modal');
                 const mode = document.getElementById('seal-mode-select')?.value || 'none';
+                const presetExpires = modal?.dataset.presetExpires || '';
                 const isZh = (modal?.querySelector('.vault-pref-lang-btn.is-active')?.getAttribute('data-vault-lang') || APP_STATE.lang) === 'zh-TW';
 
                 const settingPayload = {};
@@ -5475,6 +5476,7 @@ ${getMarkdownCss()}
                     settingPayload.shareMode = 'burn';
                     settingPayload.sealMaxViews = views;
                     settingPayload.shareBurnAfterReading = true;
+                    if (presetExpires) settingPayload.shareExpiresIn = presetExpires;
                 } else if (mode === 'deadman') {
                     const mins = parseInt(document.getElementById('seal-pulse-minutes')?.value, 10) || 10080;
                     settingPayload.sealMode = 'deadman';
@@ -5509,6 +5511,9 @@ ${getMarkdownCss()}
                         APP_STATE.shareMode = 'burn';
                         APP_STATE.shareBurnAfterReading = true;
                         APP_STATE.shareMaxViews = settingPayload.sealMaxViews;
+                        if (settingPayload.shareExpiresIn !== undefined) {
+                            APP_STATE.shareExpiresIn = settingPayload.shareExpiresIn;
+                        }
                     } else if (mode === 'deadman') {
                         APP_STATE.sealMode = 'deadman';
                         APP_STATE.shareMode = 'deadman';
@@ -5580,6 +5585,8 @@ ${getMarkdownCss()}
                 const expires = presetBtn.getAttribute('data-expires') || '';
                 const unlock = presetBtn.getAttribute('data-unlock') || '';
                 const pulse = presetBtn.getAttribute('data-pulse') || '';
+                const sealModal = document.getElementById('vault-presets-modal');
+                if (sealModal) sealModal.dataset.presetExpires = expires;
 
                 if (mode === 'standard' && expires) {
                     mode = 'expires';
@@ -5605,6 +5612,10 @@ ${getMarkdownCss()}
                 } else if (mode === 'burn') {
                     const maxViewsInput = document.getElementById('seal-max-views');
                     if (maxViewsInput) maxViewsInput.value = 1;
+                    if (expires) {
+                        const expiresInput = document.getElementById('seal-expires-select');
+                        if (expiresInput) expiresInput.value = expires;
+                    }
                 } else if (mode === 'deadman') {
                     let mins = 10080;
                     if (pulse === '3d') mins = 4320;
@@ -5630,11 +5641,14 @@ ${getMarkdownCss()}
                         shareMode: (mode === 'expires' || mode === 'standard') ? 'standard' : mode,
                         shareBurnAfterReading: isBurn,
                     };
-                    if (mode === 'expires' && expires) settingPayload.shareExpiresIn = expires;
+                    if ((mode === 'expires' || mode === 'burn') && expires) settingPayload.shareExpiresIn = expires;
                     if (unlock) settingPayload.shareUnlockIn = unlock;
                     if (pulse) settingPayload.sharePulseInterval = pulse;
                     try {
                         await persistSetting(settingPayload);
+                        if (settingPayload.shareExpiresIn !== undefined) {
+                            APP_STATE.shareExpiresIn = settingPayload.shareExpiresIn;
+                        }
                     } catch (err) {
                         errHandle(err);
                     }

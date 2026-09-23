@@ -12,6 +12,7 @@ import {
 import {
     VAULT_MODES,
     VAULT_MODE_INFO,
+    VAULT_QUICK_PRESETS,
     EXPIRATION_OPTIONS,
     PULSE_INTERVAL_OPTIONS,
     SUPPORTED_LANG,
@@ -109,6 +110,20 @@ test('constant: contains complete bilingual vault mode configurations and option
     assert.ok(SUPPORTED_LANG['en-US'].burnRevealWarning)
     assert.ok(EXPIRATION_OPTIONS.some(o => o.value === '1d'))
     assert.ok(PULSE_INTERVAL_OPTIONS.some(o => o.value === '7d'))
+})
+
+test('constant: Seal presets provide the advertised release rules', () => {
+    const byId = Object.fromEntries(VAULT_QUICK_PRESETS.map(preset => [preset.id, preset]))
+    assert.equal(VAULT_QUICK_PRESETS.length, 10)
+    assert.deepEqual(
+        ['otp', 'crypto', 'whistleblower', 'launch', 'birthday', 'legal', 'scavenger', 'course', 'backup', 'secret'],
+        VAULT_QUICK_PRESETS.map(preset => preset.id),
+    )
+    assert.equal(byId.otp.mode, 'burn')
+    assert.equal(byId.otp.expiresIn, '1h')
+    assert.equal(byId.secret.mode, 'burn')
+    assert.equal(byId.secret.expiresIn, '1d')
+    assert.equal(byId.legal.expiresIn, '30d')
 })
 
 function validateScriptsInHtml(html, contextName) {
@@ -532,6 +547,10 @@ test('index.js and base.js: direct path vault enforcement and batched preset upd
     assert.ok(!presetClickBlock.includes("modeSelect.dispatchEvent(new Event('change'))"), 'Must not dispatch separate change events that cause racing requests')
     assert.ok(!presetClickBlock.includes('editArea.value'), 'Presets must never overwrite or modify note content')
     assert.match(presetClickBlock, /#seal-mode-select/, 'Must update seal mode select')
+    assert.match(presetClickBlock, /mode === 'expires' \|\| mode === 'burn'[\s\S]*?settingPayload\.shareExpiresIn = expires/, 'Burn presets must persist their configured expiration')
+
+    const saveSealBlock = baseSource.substring(baseSource.indexOf("const saveSealBtn = e.target.closest('#seal-save-btn')"), baseSource.indexOf("const removeSealBtn = e.target.closest('#seal-remove-btn')"))
+    assert.match(saveSealBlock, /mode === 'burn'[\s\S]*?presetExpires[\s\S]*?settingPayload\.shareExpiresIn = presetExpires/, 'Saving a burn preset must keep its expiration rule')
 })
 
 test('templates/common.js & base.js: VAULT_PRESETS_MODAL provides bilingual toggle and preserves note text', async () => {
@@ -604,6 +623,3 @@ test('templates/common.js & base.js & index.js: Seal Access Control integrates o
     assert.match(deadmanPage, /David888 Wiki \/ Seal/)
     assert.match(deadmanPage, /Dead Man/)
 })
-
-
-
