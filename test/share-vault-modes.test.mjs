@@ -23,6 +23,7 @@ import {
     ShareTimeLocked,
     ShareDeadmanLocked,
 } from '../src/templates/pages.js'
+import * as TEMPL from '../src/template.js'
 import { handleMcpRequest } from '../src/mcp_server.mjs'
 
 const indexSource = readFileSync(new URL('../src/index.js', import.meta.url), 'utf8')
@@ -551,6 +552,19 @@ test('index.js and base.js: direct path vault enforcement and batched preset upd
 
     const saveSealBlock = baseSource.substring(baseSource.indexOf("const saveSealBtn = e.target.closest('#seal-save-btn')"), baseSource.indexOf("const removeSealBtn = e.target.closest('#seal-remove-btn')"))
     assert.match(saveSealBlock, /mode === 'burn'[\s\S]*?presetExpires[\s\S]*?settingPayload\.shareExpiresIn = presetExpires/, 'Saving a burn preset must keep its expiration rule')
+})
+
+test('index.js: direct-path Seal locks dispatch to exported visitor templates', () => {
+    const directPathBlock = indexSource.substring(
+        indexSource.indexOf("router.get('/:path'"),
+        indexSource.indexOf("router.head('/:path'"),
+    )
+
+    assert.match(directPathBlock, /returnPage\('ShareTimeLocked'/)
+    assert.match(directPathBlock, /returnPage\('ShareDeadmanLocked'/)
+    assert.doesNotMatch(directPathBlock, /returnPage\('ShareLocked'/)
+    assert.equal(typeof TEMPL.ShareTimeLocked, 'function')
+    assert.equal(typeof TEMPL.ShareDeadmanLocked, 'function')
 })
 
 test('templates/common.js & base.js: VAULT_PRESETS_MODAL provides bilingual toggle and preserves note text', async () => {

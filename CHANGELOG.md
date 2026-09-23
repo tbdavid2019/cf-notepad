@@ -2,6 +2,7 @@
 
 ## [2026-09-23]
 
+- **🔒 修正封存筆記按編輯時的 Worker Error (Seal Edit Route Template Mapping)**：一般筆記路由在 Time Lock／Dead Man’s Switch 狀態誤呼叫不存在的 `ShareLocked` 模板，導致 `template_exports[type] is not a function`。現在分別使用已匯出的 `ShareTimeLocked` 與 `ShareDeadmanLocked` 訪客頁，並新增路由模板對應回歸測試。
 - **🔎 修正審查發現的錄音、Seal 與 AI 敘述邊界 (Reviewed Audio, Seal & AI Claims)**：雙語文件現在說明錄音先存於 IndexedDB、連線後將音訊副本送往 Groq-first／Workers AI-fallback 轉錄，發布／同步時再上傳 888box 外部附件服務；閱後即焚只銷毀公開分享，保留作者原文；「一次性密碼」明確標示為單次憑據分享，不產生 OTP 驗證碼。
 - **🚀 投稿導向首頁與特色呈現 (Submission-Ready Product Positioning)**：首頁改以「擷取 → 整理 → 釋出」呈現價值，直接列出即時錄音、逐字稿／智慧排版、檔案／網頁匯入、四種編輯模式及 Seal 十種安全釋出情境；中英文使用指南補齊每個選單項目與情境範本的實際效果。
 - **🔒 修正閱後即焚 Seal 範本未套用到期時間**：一次性密碼與機密金鑰範本現在會同時保存瀏覽上限與各自到期時間（1 小時／1 天），避免範本顯示期限卻只套用閱後即焚規則；新增回歸測試覆蓋 preset 設定與儲存流程。

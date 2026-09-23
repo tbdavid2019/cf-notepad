@@ -3774,13 +3774,13 @@ router.get('/:path', async (request) => {
             if (requestAcceptsMarkdown(request)) {
                 return new Response('Share is time-locked and cannot be viewed yet', { status: 423, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
             }
-            return returnPage('ShareLocked', { lang, title, path, ext: { ...pageMetadata, ...blockPageExt, timelocked: true, unlockAt: metadata.shareUnlockAt } }, { status: 423 })
+            return returnPage('ShareTimeLocked', { lang, title: 'Time-Locked Note', shareId, path, ext: { ...pageMetadata, ...blockPageExt, isAuthor: false } }, { status: 423 })
         }
         if (metadata.shareMode === 'deadman' && metadata.sharePulseDueAt && metadata.sharePulseDueAt > now) {
             if (requestAcceptsMarkdown(request)) {
                 return new Response("Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
             }
-            return returnPage('ShareLocked', { lang, title, path, ext: { ...pageMetadata, ...blockPageExt, deadman: true, pulseDueAt: metadata.sharePulseDueAt } }, { status: 423 })
+            return returnPage('ShareDeadmanLocked', { lang, title: "Dead Man's Switch Active", shareId, path, ext: { ...pageMetadata, ...blockPageExt, isAuthor: false } }, { status: 423 })
         }
         if (metadata.shareBurnAfterReading === true) {
             return Response.redirect(`${new URL(request.url).origin}/share/${shareId}`, 302)
