@@ -90,7 +90,7 @@
   - **音訊檔案**：彈窗提供三合一選項，預設「🎙️ 匯入音訊（逐字稿）」，亦可選擇「✨ 匯入音訊（智慧排版）」或「☁️ 上傳至 888box 嵌入 `<audio controls>` 播放器」。
   - **圖片檔案**：直傳 Cloudflare R2 並在游標處插入 `![alt](url)`。
   - **Office / Markdown 文件**：支援 DOCX/PPTX/XLSX WASM 本地轉檔或 888box 上傳；拖曳 `.md`/`.txt` 提示游標插入或全篇替換。
-- **🎙️ 工具列錄音與逐字稿 (Toolbar Recording & Transcript)**：Markdown 編輯器頂部提供麥克風控制，可開始、暫停、繼續與停止錄音；停止後會將 WebM 音檔上傳至 888box、在游標處插入原生播放器，並以既有 Whisper 流程插入帶時間戳的逐字稿。錄音最大 25 MB，開始前必須確認所有參與者同意錄音與轉錄。
+- **🎙️ 工具列錄音與逐字稿 (Toolbar Recording & Transcript)**：Markdown 編輯器頂部提供麥克風控制，可開始、暫停、繼續與停止錄音。完成的 WebM 錄音先存入瀏覽器 IndexedDB 並插入本機播放器；連線後轉錄依序嘗試 Groq `whisper-large-v3`、Groq Turbo，再回退至 Cloudflare Workers AI Whisper。發布／同步時，音訊附件會上傳至外部 888box 服務並將本機播放器網址換成永久 HTTPS 網址。錄音上限為 25 MB，開始前必須確認所有參與者同意錄音。
 - **🔑 管理員 Touch ID / FIDO2 指紋一鍵登入 (Admin Passkey & Touch ID)**：後台登入介面支援 WebAuthn / FIDO2 生物辨識一鍵刷指紋進入；後台支援隨時綁定新裝置（Mac Touch ID、iPhone Face ID、Windows Hello）與管理憑證。
 - **📐 自適應緊湊行號槽與自動折行同步 (Adaptive Line Numbers Gutter with Auto-Wrap Sync)**：行號區塊採用動態寬度計算（1~99 行超緊湊 ~26px，並隨百行、千行、萬行平滑動態擴展），搭配 13px 輔助字號與垂直精準像素對齊；獨家內建**長行折行高度鏡像同步 (Mirror DOM Line Height Sync)**，超長段落自動對齊行首，視窗縮放或雙欄調整時即時重新量測，確保行號與文字內容 1:1 精準對齊。
 - **🎨 全面深色模式與標準化彈窗 (Unified Modal Architecture & Full Dark Mode)**：全站彈出視窗（`.share-modal`, `.embed-modal`, `.url-import-modal`, `#cite-modal`, `#math-format-modal`, `.password-modal`, `.note-history-modal`, `.app-dialog-modal`, `.file-drop-modal`）全面導入標準化 Design System，統一採用 `--modal-*` CSS 變數適配 20 款深淺主題；內建全域 Escape 鍵關閉、Tab 焦點鎖定 (Focus Trap)、`data-modal-close` 事件委派與無障礙關閉按鈕。
@@ -102,13 +102,13 @@
   - **正交存取控制核心哲學 (Orthogonal Access Control Philosophy)**：借鑒 888box (`box.david888.com/seal/`) 架構，將內容機密性與釋出生命週期徹底解耦——「**密碼保護內容，Seal 控制何時或如何釋出**」。無論筆記是否已設定編輯密碼或閱讀密碼，均可獨立加蓋或解除 Seal；建立或解除立即生效。
   - **4 種進階釋出控制模式**：
     - **定時解鎖／時間膠囊 (Time-Locked Capsule)**：封印機密內容至指定日期時間釋出。訪客檢視時返回 423 狀態碼並顯示 `David888 Wiki / Seal` 深色品牌卡片與即時跳動倒數計時器（日、時、分、秒）；作者享有專屬預覽橫幅與提前解封調整權限。
-    - **閱後即焚 (Burn-After-Reading / Ephemeral)**：訪客檢視達到自訂上限次數（預設 1 次，可自訂任意次數）後即自動從伺服器永久銷毀。內建**兩階段確認揭示卡 (Two-Step Interstitial Reveal)**，徹底阻擋通訊軟體爬蟲抓取摘要時意外燒毀連結；**嚴格實作作者存取豁免（作者編輯、存檔或預覽永不計次、永不焚毀）**；銷毀後永久返回 410 墓碑頁。
+    - **閱後即焚 (Burn-After-Reading / Ephemeral)**：公開分享達自訂瀏覽上限（預設 1 次）後，分享連結會永久銷毀；作者原始筆記仍保留在 Wiki。兩階段確認揭示卡可避免連結預覽爬蟲消耗瀏覽次數；作者編輯與預覽不計次。分享銷毀後訪客會看到 410 墓碑頁。
     - **亡者開關／保活心跳 (Dead Man's Switch)**：在作者定期打卡保活期間持續維持機密封印（支援自訂分鐘數或快捷晶片 1 天、3 天、7 天、14 天、30 天等）。作者編輯存檔、在 Seal 彈窗點擊「⚡ 立即簽到保活 (Pulse)」或透過私有 Webhook (`/api/shares/:id/pulse?token=...`) 刷新心跳；若作者超期失聯未簽到，保險庫自動對外公開並展示解封橫幅。
     - **標準發布與保留期限 (Standard & Expiration)**：自訂分享過期時間（10 分鐘、1 小時、1 天、7 天、30 天或永久），結合 Cloudflare KV 原生 TTL 與 Worker 雙重檢查，到期自動下架並返回 410 友好墓碑頁。
     - **底欄獨立入口與極簡分享選單**：底欄右側提供獨立「🔒 Seal」按鈕（`#vault-presets-toolbar-btn` / `.seal-toolbar-btn`），當筆記已加蓋 Seal 時點亮青色圓點指示燈（`.seal-dot-indicator`）；分享選單徹底移除舊版冗餘之保險庫下拉選單，回歸極簡專注，僅以單列動態展示「🔒 Seal 存取控制」即時狀態。
     - **精美卡片式彈窗與三欄式網格排版 (3-Column Grid & Dedicated Scroll)**：支援電腦版三欄網格、平板雙欄與手機單欄自適應；右上角關閉鈕與雙語切換分離絕不重疊；情境卡片去除重複徽章贅詞更清爽緊湊；內建內部捲軸與固定底部操作列，所有範本均可輕鬆檢視。全數採用官方 Lucide SVG 向量圖標，頂部展示即時狀態徽章（未設定、定時解鎖、閱後即焚、亡者開關），支援中／英雙語切換、快捷晶片（`+1h`、`+1d` 等）以及一鍵「解除 Seal」與「建立 Seal」。
     - **10 款快速情境範本**：純釋出參數配置，點選自動代入最佳 Seal 模式與釋出參數，**嚴格不修改、不注入任何筆記內文**：
-      1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：閱後即焚 (`burn`)，上限 1 次，有效 1 小時，適合傳遞臨時金鑰。
+      1. **一次性密碼 (One-Time Password)** (`shieldAlert`)：單次瀏覽憑據分享，1 小時到期；此範本不會產生或驗證 OTP 驗證碼。
       2. **加密資產傳承 (Crypto Inheritance)** (`bitcoin`)：亡者開關 (`deadman`)，30 天心跳，守護冷錢包與繼承指引。
       3. **吹哨揭弊保護 (Whistleblower)** (`megaphone`)：亡者開關 (`deadman`)，7 天心跳，失聯即釋出公共利益事證。
       4. **產品發布解鎖 (Product Launch)** (`rocket`)：時間膠囊 (`timelock`)，7 天後解鎖正式公告與促銷代碼。
@@ -117,7 +117,7 @@
       7. **闖關尋寶線索 (Scavenger Hunt)** (`target`)：時間膠囊 (`timelock`)，1 小時後解密下一道謎題。
       8. **課程定時教材 (Course Content)** (`graduationCap`)：時間膠囊 (`timelock`)，7 天後隨課堂進度定時解鎖講義與作業解答。
       9. **緊急災備通道 (Emergency Backup)** (`lifeBuoy`)：亡者開關 (`deadman`)，14 天無簽到自動釋出應急救援 SSH 與主控台存取。
-      10. **機密金鑰分享 (Shared Secret)** (`key`)：閱後即焚 (`burn`)，適合安全傳送 `.env` API Key 與連線密鑰。
+      10. **機密金鑰分享 (Shared Secret)** (`key`)：單次瀏覽 `.env` 憑據分享，1 天後到期。
   - **🛡️ 訪客鎖定頁品牌升級與嚴格安全防護 (Visitor Seal Lock Pages & Security Hardening)**：
     - 訪客封印頁採用 `David888 Wiki / Seal` 品牌深石板色高質感卡片，呈現受保護資產資訊與即時跳動的日、時、分、秒倒數計時器。
     - 實作防範雙重揭密的高併發原子鎖標記、強制閱讀密碼校驗、PDF 匯出銷毀保護、預覽過渡頁不洩漏任何機密內文、動態 UUID 隔離密鑰。
@@ -272,13 +272,13 @@
   - **全功能雙欄 Markdown 離線工作站 (`/_pwa-offline`)**：斷網時自動啟用獨立離線工作站，提供「✏️ 編輯 / 🌗 雙欄 / 👁️ 預覽」模式切換、Dark/Light/Tokyo Night/Dracula/Nord 主題切換、即時搜尋過濾、筆記管理、獨立「⭳ 導出 HTML」網頁與一鍵 JSON 備份/匯入。
   - **即時 Markdown-to-HTML 預覽與離線格式工具列 (Live Preview & Markdown Toolbar)**：內建離線格式工具列（粗體、斜體、螢光筆、H1-H3 標題、引用、行內/區塊代碼、清單、表格、超連結、圖片、GitHub Alert 提示框、雙欄佈局），注入完整 Markdown CSS 排版樣式（`.markdown-body`）與雙向捲動同步，支援 `Cmd+B`、`Cmd+I`、`Cmd+K` 與 `Tab` 縮排。
   - **Service Worker v6 智慧快取與 CDN 動態攔截 (Stale-While-Revalidate & CDN Caching)**：全面升級至 `v6`，預先快取核心 Markdown 渲染管道（`marked`、`purify`、`markdown-extensions`、`media-preview`），並自動動態快取外部 CDN 依賴（`esm.sh`、`cdn.jsdelivr.net`、`cdnjs.cloudflare.com`）與 R2 圖床媒體庫，離線閱讀圖文筆記零破圖。
-  - **Local-First 本機離線錄音、Dynamic Island 懸浮提醒膠囊、連線 ASR 轉錄與發布延遲 S3 雲端同步 (Local-First Offline Audio Recording, Dynamic Island Recording HUD, Online ASR & Deferred S3 Upload)**：
+  - **Local-First 本機離線錄音、Dynamic Island 懸浮提醒膠囊、連線 ASR 轉錄與發布時 888box 附件同步 (Local-First Offline Audio Recording, Dynamic Island Recording HUD, Online ASR & Deferred 888box Upload)**：
     - **Dynamic Island 錄音提醒懸浮膠囊 (Dynamic Island Recording HUD)**：錄音時頂部優雅滑下毛玻璃懸浮膠囊，提供呼吸脈衝紅點、4 柱聲波動畫、`MM:SS` 即時計時器，並內建純向量 SVG「⏸️ 暫停 / ▶️ 繼續」、「⏹️ 完成並插入」主按鈕與「✕ 放棄」取消鈕；頂部 Markdown 工具列保持極簡純粹。
     - **250ms 精密切片與緩衝沖刷 (250ms Audio Chunking & Guaranteed Finalization)**：採用 250ms 短切片與停止前主動 `requestData()`，徹底解決短秒數錄音無音檔產生的問題。
     - **本機即時播放**：錄音完成音檔立即存入客戶端 **IndexedDB (IndexedDB database -> `audios` store)**，游標處插入本機播放器 `<audio controls data-offline-audio-id="rec_..." src="blob:..."></audio>`，提供 0ms 本機即時播放。
-    - **連線即時 ASR 辨識**：有網路或恢復連線時，直接呼叫 Cloudflare Workers AI Whisper 將逐字稿補齊於播放器下方，**完全不上傳音檔至 S3 / 888box**，避免浪費雲端儲存空間。
-    - **發布 / 儲存時才上傳 S3**：只有當使用者點擊「發布筆記」或「儲存至雲端」時，系統才會將 IndexedDB 的音訊 Blob 上傳至 S3 換取永久 HTTPS 連結，並自動將文章中的本機標籤替換為正式網址，狀態列切換為 `☁️ 雲端已同步`。
-    - 離線工作站 (`/_pwa-offline`) 工具列新增 `🎙️` 錄音按鈕，支援完整斷網錄音、即時 ASR 與筆記同步時 S3 自動補推。
+    - **本機暫存與連線轉錄**：錄音 Blob 先存入 IndexedDB 並插入本機播放器。連線後將音訊送至轉錄端點：優先使用 Groq `whisper-large-v3`，再依序回退至 Groq Turbo 與 Cloudflare Workers AI Whisper。
+    - **發布／同步時上傳附件**：使用者發布或同步筆記時，IndexedDB 音訊 Blob 才會上傳至外部 888box 附件服務；系統再以永久 HTTPS URL 取代本機播放器來源。
+    - 離線工作站 (`/_pwa-offline`) 工具列也支援錄音與 IndexedDB 暫存；待筆記同步時再將錄音附件上傳至 888box。
   - **混合儲存架構**：元數據同步儲存於 `localStorage`，完整內文與歷史儲存於 `IndexedDB`（IndexedDB database），支援 memory fallback 降級備援。
   - **快捷鍵支援**：
     - `Cmd/Ctrl + S`：編輯模式即時存入 IndexedDB 與雲端（顯示存檔 Toast）；分享/檢視模式一鍵下載 `.md` 檔案。

@@ -10,11 +10,11 @@
 
 The **+ New** menu moves content from wherever it starts into a note:
 
-- **Live recording:** Record a thought, keep the audio player, and add a timestamped transcript.
+- **Live recording:** Save a local recording and player in IndexedDB, transcribe it when online, then upload it to the 888box attachment service when you publish or sync.
 - **Import audio (Transcript):** Get a faithful transcript with timestamps.
 - **Import audio (Smart format):** Turn speech into organized sections with AI.
 - **Import file:** Convert Markdown, Office documents, PDFs, spreadsheets, and more into a note. Supported document conversion runs in the browser; drag and drop also offers attachment upload when you want to keep the original file.
-- **Import website:** Clip a public web page into clean Markdown, then insert or replace content or create a new note.
+- **Import website:** Extract supported public pages into Markdown; insert or replace content in the current note, or create the note from an empty editor.
 
 The same import choices can create Markdown notes or convert content into editable Block documents.
 
@@ -29,14 +29,14 @@ The same import choices can create Markdown notes or convert content into editab
 
 ## Seal: publish on a schedule, or let a rule decide
 
-Seal separates content passwords from release timing. Set a scheduled unlock, burn a note after a chosen number of views, release it after a missed check-in, or expire a link on a deadline. Ten presets cover One-Time Passwords (one view, one-hour expiry), Shared Secrets (one view, one-day expiry), Crypto Inheritance, Emergency Backup, Whistleblower disclosures, Product Launches, Birthday Gifts, Legal Holds, Scavenger Hunts, and Course Content. A preset configures release settings without changing the note body.
+Seal separates content passwords from release timing. Set a scheduled unlock, burn a public share after a chosen number of views, release it after a missed check-in, or expire a link on a deadline. Ten presets cover single-view credential sharing (including the One-Time Password preset; 1-hour expiry), Shared Secrets (1-day expiry), Crypto Inheritance, Emergency Backup, Whistleblower disclosures, Product Launches, Birthday Gifts, Legal Holds, Scavenger Hunts, and Course Content. The One-Time Password preset controls a share; it does not generate or verify OTP codes. Presets never change the note body, and burning a share leaves the author's original note intact.
 
 ## Your writing and publishing workspace
 
-- **AI writing:** Format, rewrite, and translate drafts; turn recordings into timestamped transcripts with Groq or Workers AI.
+- **AI writing:** Format, rewrite, and translate drafts; transcribe recordings with Groq as the primary provider and Workers AI as fallback.
 - **Publish and present:** Share public or password-protected notes, restore D1 history, discuss selected passages, and present content as books or slides.
 - **Work offline:** Keep browser drafts in IndexedDB and sync pending changes when the connection returns.
-- **Keep control of the stack:** One-click deploy to your Cloudflare account with KV, D1, R2, and a native MCP/REST API.
+- **Keep control of the stack:** One-click deploy the Worker, KV/D1 note storage, and R2 image storage to your Cloudflare account. Core notes and images stay in your account; published audio and large-file attachments use the external 888box service.
 
 ## Get started
 

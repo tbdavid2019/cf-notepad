@@ -22,8 +22,8 @@ Open **+ New → Import content** to use the capture options shown in the menu:
 
 | Menu item | Result |
 | --- | --- |
-| **Live voice recording** | Records WebM audio, uploads it to the configured 888box attachment service, and inserts a player with the transcript. Recordings are limited to 25 MB; confirm participant consent first. |
-| **Import audio (Transcript)** | Transcribes an audio file and adds the timestamped transcript to the note. |
+| **Live voice recording** | Saves WebM audio in browser IndexedDB and inserts a local player. When online, it sends the audio to the Worker transcription endpoint (Groq first, Workers AI fallback); publishing or syncing uploads the attachment to 888box. Recordings are limited to 25 MB; confirm participant consent first. |
+| **Import audio (Transcript)** | Sends an audio file for transcription and adds the timestamped transcript to the note. Groq is tried first; Workers AI is the fallback when configured. |
 | **Import audio (Smart format)** | Transcribes the audio, then uses the configured AI provider to organize the transcript into readable Markdown. |
 | **Import file (creates a Markdown note)** | Imports Markdown, text, Office/OpenDocument files, CSV, RTF, EPUB, and supported PDFs. Supported document conversion runs in the browser. |
 | **Import website (creates a Markdown note)** | Enter a publicly accessible URL to extract its title and article content as Markdown. |
@@ -68,7 +68,7 @@ Seal is configured independently from reader and edit passwords. In the editor, 
 | Seal mode | What happens | Configure |
 | --- | --- | --- |
 | **Time Lock** | Visitors see a countdown page until the release time, then the note becomes available. | Pick the date and time, or use a `+1h`, `+1d`, `+3d`, `+7d`, or `+30d` shortcut. |
-| **Burn After Read** | The note is destroyed after it reaches its view limit. | Set the maximum number of views. A reveal step helps prevent link preview crawlers from consuming a view. |
+| **Burn After Read** | The public share link is destroyed after it reaches its view limit; the author's original note remains in the wiki. | Set the maximum number of views. A reveal step helps prevent link preview crawlers from consuming a view. |
 | **Dead Man's Switch** | The note stays sealed while you check in on schedule; it is released if the interval passes without a pulse. | Set the interval in minutes. Send a pulse in the Seal dialog or use its private pulse URL. Saving an edit also refreshes the pulse. |
 | **Expiration** | The share expires and is removed when its retention period ends. | Choose `10m`, `1h`, `1d`, `7d`, or `30d`. |
 
@@ -76,7 +76,7 @@ The Seal dialog includes ten presets. Each one fills in the release rule; it doe
 
 | Preset | Rule filled in |
 | --- | --- |
-| **One-Time Password** | Burn after 1 view; 1-hour expiration. |
+| **One-Time Password** | Single-view credential share; 1-hour expiration. This preset does not generate or verify OTP codes. |
 | **Crypto Inheritance** | Dead Man's Switch; 30-day pulse interval. |
 | **Whistleblower** | Dead Man's Switch; 7-day pulse interval. |
 | **Product Launch** | Time Lock; unlock in 7 days. |
@@ -85,7 +85,7 @@ The Seal dialog includes ten presets. Each one fills in the release rule; it doe
 | **Scavenger Hunt** | Time Lock; unlock in 1 hour. |
 | **Course Content** | Time Lock; unlock in 7 days. |
 | **Emergency Backup** | Dead Man's Switch; 14-day pulse interval. |
-| **Shared Secret** | Burn after 1 view; 1-day expiration. |
+| **Shared Secret** | Single-view credential share; 1-day expiration. |
 
 Review the selected mode, date, view limit, and pulse interval before creating the Seal.
 

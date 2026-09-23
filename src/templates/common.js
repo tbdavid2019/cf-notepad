@@ -1406,7 +1406,7 @@ export const VAULT_PRESETS_MODAL = (lang) => {
                                 <input type="number" id="seal-max-views" class="seal-input seal-number-input" min="1" max="999" value="1">
                                 <span class="seal-input-addon" data-i18n-key="viewsUnit">${zh ? '次 (預設 1 次)' : 'views (Default 1)'}</span>
                             </div>
-                            <small class="seal-field-hint" data-i18n-key="burnHint">${zh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.'}</small>
+                            <small class="seal-field-hint" data-i18n-key="burnHint">${zh ? '分享連結達到瀏覽上限後會永久銷毀；作者原始筆記仍保留。' : 'The share is permanently destroyed at the view limit; the author’s original note remains in the wiki.'}</small>
                         </div>
                     </div>
                 </div>

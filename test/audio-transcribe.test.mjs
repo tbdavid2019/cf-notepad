@@ -46,7 +46,7 @@ test('base template routes audio imports to AI transcribe endpoint with bilingua
     assert.doesNotMatch(baseSource, /diarize=1/)
 })
 
-test('Markdown editor toolbar records microphone audio with Local-First IndexedDB, Recording HUD, live timer, and deferred S3 upload upon publishing', () => {
+test('Markdown editor toolbar records microphone audio with Local-First IndexedDB, Recording HUD, live timer, and deferred 888box upload on publish/sync', () => {
     assert.match(commonSource, /command: 'record'/)
     assert.doesNotMatch(commonSource, /command: 'recordPause'/)
     assert.match(baseSource, /cf-notepad-recorded-audio/)

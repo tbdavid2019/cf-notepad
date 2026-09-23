@@ -2125,7 +2125,7 @@ async function renderSharePage(request, presentationMode = false, execution = {}
             return new Response("Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
         }
         if (metadata.shareBurnAfterReading === true && !isAuthor && !burnUnlocked) {
-            return new Response('Burn-after-reading note requires user confirmation before access.', { status: 403 })
+            return new Response('Burn-after-reading share requires user confirmation before access.', { status: 403 })
         }
         return createMarkdownResponse(
             buildMarkdownDocument(markdownExportContent, {
@@ -2450,7 +2450,7 @@ async function handleSharePdfExport(request) {
         if (metadata.shareBurnAfterReading === true && !isAuthor) {
             const confirm = url.searchParams.get('burn_confirm') === 'true' || url.searchParams.get('burn_confirm') === '1'
             if (!confirm) {
-                return returnJSON(400, 'PDF export will permanently destroy this burn-after-reading note. Pass burn_confirm=true to confirm.', { status: 400 })
+                return returnJSON(400, 'PDF export will permanently destroy this burn-after-reading share. Pass burn_confirm=true to confirm.', { status: 400 })
             }
             const tombstone = await driverGetShareStatus(shareId)
             if (tombstone?.status === 'burned') {
@@ -3263,7 +3263,7 @@ router.get('/api/:path', async (request) => {
             return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
         }
         if (metadata.shareBurnAfterReading === true) {
-            return returnJSON(400, 'Burn-after-reading notes must be revealed via /share/:shareId or /api/shares/:shareId/reveal', { status: 400 })
+            return returnJSON(400, 'Burn-after-reading shares must be revealed via /share/:shareId or /api/shares/:shareId/reveal', { status: 400 })
         }
     }
 
@@ -3324,7 +3324,7 @@ async function handleNotePdfExport(request) {
                 return returnJSON(423, "Dead Man's Switch is active. Vault is sealed until check-in expires.", { status: 423 })
             }
             if (metadata.shareBurnAfterReading === true) {
-                return returnJSON(400, 'Burn-after-reading notes cannot be exported directly via path', { status: 400 })
+                return returnJSON(400, 'Burn-after-reading shares cannot be exported directly via path', { status: 400 })
             }
         }
 
@@ -3762,7 +3762,7 @@ router.get('/:path', async (request) => {
             if (requestAcceptsMarkdown(request)) {
                 return new Response('Share has been burned and destroyed', { status: 410, headers: { 'content-type': 'text/plain; charset=UTF-8' } })
             }
-            return returnPage('Page404', { lang, title: 'Burned', message: 'This note was configured to burn after reading and has already been destroyed.' }, { status: 410 })
+            return returnPage('Page404', { lang, title: 'Burned', message: 'This share was configured to burn after reading and has already been destroyed.' }, { status: 410 })
         }
         if (metadata.shareExpiresAt && metadata.shareExpiresAt <= now) {
             if (requestAcceptsMarkdown(request)) {

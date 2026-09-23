@@ -4108,7 +4108,7 @@ ${getMarkdownCss()}
                     const record = await window.offlineStore.getOfflineAudio(audioId)
                     if (record && record.blob && record.syncStatus !== 'synced') {
                         if (typeof window.showToast === 'function') {
-                            window.showToast(APP_STATE.lang === 'zh-TW' ? '正在將錄音檔上傳至雲端 S3...' : 'Uploading recording to S3...')
+                            window.showToast(APP_STATE.lang === 'zh-TW' ? '正在上傳錄音至 888box 附件服務...' : 'Uploading recording to the 888box attachment service...')
                         }
                         const audioFile = new File([record.blob], record.name || 'recording.webm', { type: record.type || 'audio/webm' })
                         const url = await uploadTo888Box(audioFile)
@@ -4129,7 +4129,7 @@ ${getMarkdownCss()}
                         }
                     }
                 } catch (err) {
-                    console.warn('Failed to upload audio ' + audioId + ' to S3:', err)
+                    console.warn('Failed to upload audio ' + audioId + ' to 888box:', err)
                 }
             }
 
@@ -4227,7 +4227,7 @@ ${getMarkdownCss()}
             } else {
                 showSaveStatus(APP_STATE.lang === 'zh-TW' ? '🟢 本機已存（音訊待辨識）' : '🟢 Saved locally (Audio pending ASR)', false, 'local')
                 if (typeof window.showToast === 'function') {
-                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 錄音已暫存於本機 (IndexedDB)，連線後將自動產生逐字稿；發布時才會上傳至 S3。' : '🎙️ Recording saved locally (IndexedDB). Will transcribe when online, and upload to S3 upon publishing.')
+                    window.showToast(APP_STATE.lang === 'zh-TW' ? '🎙️ 錄音已暫存於本機 (IndexedDB)，連線後將自動產生逐字稿；發布／同步時會上傳至 888box 附件服務。' : '🎙️ Recording saved locally (IndexedDB). It will be transcribed when online and uploaded to 888box when published or synced.')
                 }
             }
         })
@@ -5215,7 +5215,7 @@ ${getMarkdownCss()}
             const timelockHint = modal.querySelector('[data-i18n-key="timelockHint"]');
             if (timelockHint) timelockHint.textContent = isZh ? '解鎖時間到達前訪客只能查看倒數封印頁面，時間到達時自動公開內容。' : 'Visitors see a countdown lock page until unlock time arrives, then note is released.';
             const burnHint = modal.querySelector('[data-i18n-key="burnHint"]');
-            if (burnHint) burnHint.textContent = isZh ? '達到瀏覽次數後內容立即銷毀，無法再讀取。' : 'Content is permanently destroyed once the view threshold is reached.';
+            if (burnHint) burnHint.textContent = isZh ? '分享連結達到瀏覽上限後會永久銷毀；作者原始筆記仍保留。' : 'The share is permanently destroyed at the view limit; the author’s original note remains in the wiki.';
             const deadmanHint = modal.querySelector('[data-i18n-key="deadmanHint"]');
             if (deadmanHint) deadmanHint.textContent = isZh ? '作者定時簽到保活；若失聯逾期未發送心跳，筆記將自動解鎖釋出。' : 'Author must check in regularly; if pulse heartbeat lapses, note is released.';
             const expirationHint = modal.querySelector('[data-i18n-key="expirationHint"]');

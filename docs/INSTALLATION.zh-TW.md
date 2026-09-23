@@ -63,7 +63,7 @@ Worker 也會從 `static/` 提供靜態檔案，並依設定每天於 UTC 01:00�
 
 | 參數 | 預設值 | 需要設定的情況 |
 | --- | --- | --- |
-| `GROQ_API_KEY` Secret | 未設定 | 啟用 Groq AI 寫作與音訊轉錄。AI 功能需要這組 Key 或 Workers AI 綁定。 |
+| `GROQ_API_KEY` Secret | 未設定 | 啟用 Groq AI 功能與主要音訊轉錄。未設定時，可由 Workers AI 提供支援的 AI 功能與轉錄備援。 |
 | `SCN_R2_DOMAIN` | 空白 | 透過自己的公開網域提供上傳圖片，而非使用 Worker 網址。 |
 | `SCN_GA_MEASUREMENT_ID` | 未設定 | 將流量資料送至自己的 Google Analytics 資源。 |
 | `SCN_ENABLE_WEBTALK` | `0` | 完成下方 WebTalk 設定後才改為 `1`。 |
@@ -71,7 +71,7 @@ Worker 也會從 `static/` 提供靜態檔案，並依設定每天於 UTC 01:00�
 | `SCN_WEBTALK_AI_ENDPOINT` | 空白 | 連接自有 WebTalk AI 端點。 |
 | `SCN_WEBTALK_SCOPE` | `meta` | 調整 WebTalk Widget 使用的 DOM 範圍。 |
 | `SCN_WEBTALK_SITE_ID` | 空白 | 提供註冊於 WebTalk 服務的站台 ID。 |
-| Workers AI 綁定 `AI` | 未設定 | 使用 Cloudflare Workers AI 支援的功能；設定後會優先於 Groq 備援。請將綁定加入 `wrangler.toml`。 |
+| Workers AI 綁定 `AI` | 未設定 | 提供支援的 AI 寫作功能，並作為音訊轉錄備援。若已設定 `GROQ_API_KEY`，轉錄會先嘗試 Groq。請將綁定加入 `wrangler.toml`。 |
 | Worker 自訂網域 | `workers.dev` 網址 | 使用自己的網域；部署後在 Cloudflare Dashboard 設定。 |
 
 WebTalk 預設關閉，部署設定中的 Script 與 AI 端點也留空。請先填入自己管理的服務資訊，再開啟功能。

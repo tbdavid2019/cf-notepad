@@ -420,7 +420,7 @@ test('index.js: security hardening patterns are implemented', () => {
     assert.match(indexSource, /Password required to reveal this note/)
 
     // 3. PDF export requires confirmation for burn shares
-    assert.match(indexSource, /PDF export will permanently destroy this burn-after-reading note/)
+    assert.match(indexSource, /PDF export will permanently destroy this burn-after-reading share/)
 
     // 4. Quick preset handler wired in base.js
     assert.match(baseTemplateSource, /\.vault-preset-btn/)
@@ -428,11 +428,11 @@ test('index.js: security hardening patterns are implemented', () => {
 
     // 5. Password verified before burn destruction on PDF export
     const pdfPasswordIdx = indexSource.indexOf('hasViewAccess = valid || isAuthor || (providedPw')
-    const pdfBurnClaimIdx = indexSource.indexOf('PDF export will permanently destroy this burn-after-reading note')
+    const pdfBurnClaimIdx = indexSource.indexOf('PDF export will permanently destroy this burn-after-reading share')
     assert.ok(pdfPasswordIdx > 0 && pdfBurnClaimIdx > 0 && pdfPasswordIdx < pdfBurnClaimIdx, 'Password verification must run before burn destruction in handleSharePdfExport')
 
     // 6. Path-based API enforces vault modes for non-authors
-    assert.match(indexSource, /Burn-after-reading notes must be revealed via \/share\/:shareId or \/api\/shares\/:shareId\/reveal/)
+    assert.match(indexSource, /Burn-after-reading shares must be revealed via \/share\/:shareId or \/api\/shares\/:shareId\/reveal/)
     assert.match(indexSource, /Share is time-locked and cannot be viewed yet/)
 
     // 7. Draft preset selects use draft IDs when unpublished

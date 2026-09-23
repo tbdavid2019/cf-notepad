@@ -1998,7 +1998,7 @@ export const createOfflinePageResponse = () => {
                         renderPreview()
                         await saveCurrent({ showNotification: false })
 
-                        showToast('🎙️ 錄音已存於本機 (IndexedDB)，發布/同步時才會上傳至 S3')
+                        showToast('🎙️ 錄音已存於本機 (IndexedDB)，發布／同步時會上傳至 888box 附件服務')
 
                         if (navigator.onLine) {
                             try {
@@ -2114,5 +2114,4 @@ export const createOfflinePageResponse = () => {
         },
     })
 }
-
 

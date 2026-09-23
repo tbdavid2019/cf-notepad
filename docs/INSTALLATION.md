@@ -63,7 +63,7 @@ These values are already defined in `wrangler.toml`. Change them in your copied 
 
 | Parameter | Default | Configure it when |
 | --- | --- | --- |
-| `GROQ_API_KEY` secret | Unset | Enable Groq-powered AI writing and audio transcription. AI features require this key or a Workers AI binding. |
+| `GROQ_API_KEY` secret | Unset | Enable Groq-powered AI features and primary audio transcription. Without it, configured Workers AI can provide supported AI operations and the transcription fallback. |
 | `SCN_R2_DOMAIN` | Empty | Serve uploaded images from your own public domain instead of the Worker. |
 | `SCN_GA_MEASUREMENT_ID` | Unset | Send analytics to your own Google Analytics property. |
 | `SCN_ENABLE_WEBTALK` | `0` | Set to `1` after configuring every WebTalk value below. |
@@ -71,7 +71,7 @@ These values are already defined in `wrangler.toml`. Change them in your copied 
 | `SCN_WEBTALK_AI_ENDPOINT` | Empty | Connect your WebTalk widget to your AI endpoint. |
 | `SCN_WEBTALK_SCOPE` | `meta` | Change the DOM scope used by your WebTalk widget. |
 | `SCN_WEBTALK_SITE_ID` | Empty | Identify your site to your WebTalk service. |
-| Workers AI binding `AI` | Not configured | Use Cloudflare Workers AI for supported operations. When configured, it takes precedence over the Groq fallback. Add the binding to `wrangler.toml`. |
+| Workers AI binding `AI` | Not configured | Use Cloudflare Workers AI for supported writing operations and as an audio-transcription fallback. Transcription tries Groq first when `GROQ_API_KEY` is set. Add the binding to `wrangler.toml`. |
 | Worker custom domain | `workers.dev` URL | Use your own hostname. Configure it in the Cloudflare dashboard after deployment. |
 
 WebTalk is disabled by default. Its script and endpoint are empty in the deployment configuration. Add values for a service you control before enabling it.
