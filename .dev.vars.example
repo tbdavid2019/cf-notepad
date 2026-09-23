@@ -1,0 +1,8 @@
+# Fill these values in the Cloudflare Deploy flow or Worker Secrets settings.
+# Generate unique values for every 888wiki deployment.
+SCN_SALT=
+SCN_SECRET=
+SCN_ADMIN_PW=
+
+# Optional: add a Groq API key to enable hosted AI features.
+GROQ_API_KEY=

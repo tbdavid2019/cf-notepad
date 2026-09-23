@@ -21,6 +21,51 @@
       },
       "GROQ_API_KEY": {
         "description": "Optional. Add a Groq API key to enable hosted AI transcription and writing features."
+      },
+      "SCN_STORAGE_DRIVER": {
+        "description": "Storage mode: `auto` uses D1 with KV fallback; `kv` uses KV only; `d1` uses D1 only."
+      },
+      "SCN_APP_NAME": {
+        "description": "Optional. App name displayed in the interface."
+      },
+      "SCN_ADMIN_PATH": {
+        "description": "Admin dashboard route. Default: `/admin`. Choose a less predictable route if desired."
+      },
+      "SCN_SLUG_LENGTH": {
+        "description": "Length of generated note URLs. Default: `4`."
+      },
+      "SCN_ENABLE_R2": {
+        "description": "Enable image uploads to the R2 bucket. Default: `1`."
+      },
+      "SCN_R2_DOMAIN": {
+        "description": "Optional custom public image domain. Leave empty to serve images through the Worker."
+      },
+      "SCN_ENABLE_WEBTALK": {
+        "description": "WebTalk is disabled by default. Set to `1` only after configuring your own WebTalk values."
+      },
+      "SCN_WEBTALK_SCRIPT_URL": {
+        "description": "Optional. Your WebTalk client script URL. Required to enable your own WebTalk widget."
+      },
+      "SCN_WEBTALK_AI_ENDPOINT": {
+        "description": "Optional. Your WebTalk AI endpoint. Required to enable your own WebTalk widget."
+      },
+      "SCN_WEBTALK_SCOPE": {
+        "description": "Optional WebTalk widget scope. Default: `meta`."
+      },
+      "SCN_WEBTALK_SITE_ID": {
+        "description": "Optional. Site ID registered with your WebTalk service."
+      },
+      "SCN_GA_MEASUREMENT_ID": {
+        "description": "Optional. Your Google Analytics measurement ID."
+      },
+      "SCN_ENABLE_NOTE_HISTORY": {
+        "description": "Enable D1 note history, statistics, and annotations. Default: `1`."
+      },
+      "SCN_NOTE_HISTORY_LIMIT": {
+        "description": "Maximum retained note history versions. Default: `10`."
+      },
+      "SCN_NOTE_HISTORY_MIN_INTERVAL_SECONDS": {
+        "description": "Minimum interval between automatic history snapshots in seconds. Default: `300`."
       }
     }
   },

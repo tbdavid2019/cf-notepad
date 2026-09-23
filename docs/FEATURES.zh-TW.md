@@ -1,6 +1,6 @@
 # 888wiki 功能詳情（繁體中文）
 
-回到[繁體中文專案首頁](../README.zh-TW.md) · [安裝指南](INSTALLATION.zh-TW.md) · [更新紀錄](../CHANGELOG.md)
+回到[繁體中文專案首頁](../README.zh-TW.md) · [使用指南](USAGE.zh-TW.md) · [安裝指南](INSTALLATION.zh-TW.md) · [更新紀錄](../CHANGELOG.md)
 
 ## 編輯器畫面
 

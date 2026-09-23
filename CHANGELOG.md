@@ -2,6 +2,7 @@
 
 ## [2026-09-23]
 
+- **📚 補齊模式操作、Seal 與完整部署參數文件 (Editor Guides, Seal Workflow & Full Deployment Configuration)**：首頁新增 Markdown、Block、Canvas、Whiteboard 與 Seal 的產品特色；加入中英文逐步使用指南，說明四種編輯模式、發布及 Seal 釋出流程。安裝文件完整列出所有 Wrangler 預設變數、KV/D1/R2 綁定與選填整合參數，並補上必填 Secrets 的安全產生方式；公開部署預設關閉 WebTalk，避免新站沿用其他站台的服務設定。
 - **📚 重整中英文專案文件並移除舊產品名稱 (English-First Documentation & Brand Cleanup)**：將根目錄 `README.md` 改為英文優先的精簡推廣頁，新增獨立繁中首頁 `README.zh-TW.md`、中英文安裝指南與完整功能詳情文件；更新紀錄維持獨立於 README。移除首頁與安裝文件中的舊產品名稱，並保留原有中英文功能說明於獨立文件。
 - **🚀 新增 Cloudflare 一鍵部署並更新專案名稱 (Cloudflare One-Click Deploy & Repository Rename)**：將 GitHub repository 更名為 `tbdavid2019/888wiki`，README 中英文部署章節新增 Cloudflare 官方 Deploy Button；Cloudflare 可依 `wrangler.toml` 自動建立 KV、D1、R2，並於部署時初始化 D1 歷史、統計與註解資料表。加入部署機密欄位說明，移除 Wrangler 設定內的帳號資源 ID 與明文機密預設值，並為複製部署提供安全通用的資源範本。
 

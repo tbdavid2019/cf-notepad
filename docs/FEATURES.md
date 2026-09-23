@@ -1,6 +1,6 @@
 # 888wiki Feature Guide
 
-Back to the [project homepage](../README.md) · [Installation](INSTALLATION.md) · [Changelog](../CHANGELOG.md)
+Back to the [project homepage](../README.md) · [Usage guide](USAGE.md) · [Installation](INSTALLATION.md) · [Changelog](../CHANGELOG.md)
 
 ## Editor screenshots
 
